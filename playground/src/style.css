@@ -1337,6 +1337,32 @@ body {
   color: var(--muted);
   font-size: 11px;
 }
+.round-table-pot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #ffcc66;
+  font-size: 12px;
+  font-weight: bold;
+  font-family: var(--mono);
+  background: rgba(0, 0, 0, 0.5);
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 204, 102, 0.3);
+}
+.round-table-pot .pot-detail {
+  font-size: 9px;
+  color: var(--muted);
+  font-weight: normal;
+}
+.round-table-seat .seat-commit {
+  font-size: 9px;
+  color: #ffcc66;
+  font-weight: bold;
+  margin-top: 2px;
+}
 
 /* ===== 練習問題 ===== */
 .practice-area {

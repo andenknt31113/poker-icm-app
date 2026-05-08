@@ -2220,10 +2220,12 @@ function generateRandomPracticeProblem(): PracticeProblem {
 function renderRoundTable(
   container: HTMLElement,
   scenarioPlayers: { stack: number; role: Role; position: Position }[],
+  blinds?: { sb: number; bb: number; totalAnte: number },
 ): void {
   const n = scenarioPlayers.length;
   const heroIdx = scenarioPlayers.findIndex((p) => p.role === "hero");
   const seats: string[] = [];
+  const antePerPlayer = blinds ? blinds.totalAnte / n : 0;
   // hero を 6 時方向 (90度=π/2) に配置、他は時計回り
   for (let i = 0; i < n; i++) {
     const offset = heroIdx >= 0 ? (i - heroIdx + n) % n : i;
@@ -2234,15 +2236,32 @@ function renderRoundTable(
     const cls =
       p.role === "hero" ? "hero" : p.role === "villain" ? "villain" : "";
     const tag = p.role === "hero" ? "🎯 " : p.role === "villain" ? "⚔️ " : "";
+
+    // 各シートのポット拠出: ブラインド + ante
+    let committed = antePerPlayer;
+    if (p.position === "SB" && blinds) committed += blinds.sb;
+    if (p.position === "BB" && blinds) committed += blinds.bb;
+    const remaining = p.stack - committed;
+    const commitText = committed > 0
+      ? `<div class="seat-commit">📥 場 ${committed.toFixed(2)}</div>`
+      : "";
+
     seats.push(`
       <div class="round-table-seat ${cls}" style="left:${x}%;top:${y}%">
         <div class="seat-pos">${tag}${p.position || `P${i + 1}`}</div>
-        <div class="seat-stack">${p.stack}<span style="font-size:9px;color:var(--muted);">BB</span></div>
+        <div class="seat-stack">${remaining.toFixed(remaining % 1 === 0 ? 0 : 2)}<span style="font-size:9px;color:var(--muted);">BB 残</span></div>
+        ${commitText}
       </div>
     `);
   }
+  // 中央: ポット合計
+  const potTotal = blinds ? blinds.sb + blinds.bb + blinds.totalAnte : 0;
+  const potHtml = blinds
+    ? `<div class="round-table-pot">💰 pot ${potTotal.toFixed(1)} BB<br /><span class="pot-detail">SB ${blinds.sb} + BB ${blinds.bb} + ante ${blinds.totalAnte}</span></div>`
+    : "";
   container.innerHTML = `
     <div class="round-table">
+      ${potHtml}
       ${seats.join("")}
     </div>
   `;
@@ -2274,7 +2293,9 @@ function renderPracticeProblem(p: PracticeProblem): void {
     <div id="practice-feedback"></div>
   `;
   const tableWrap = document.getElementById("practice-table-wrapper");
-  if (tableWrap) renderRoundTable(tableWrap, p.scenarioPlayers);
+  if (tableWrap) renderRoundTable(tableWrap, p.scenarioPlayers, {
+    sb: p.sb, bb: p.bb, totalAnte: p.totalAnte,
+  });
   const villainGridEl = document.getElementById(
     "practice-villain-grid",
   ) as HTMLDivElement | null;
