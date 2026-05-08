@@ -1465,38 +1465,30 @@ autofillBtn.addEventListener("click", () => {
   });
 });
 
-// Nash の frequency マップを使ったグラデーション描画。
-// freq < 0.05 → fold (灰)、0.05〜0.95 → mixed (濃淡赤/緑)、> 0.95 → pure
+// Nash の frequency マップで描画。既存のレンジ表示と同じ class を使い、
+// pure (>0.5) なら solid、mixed (0.05-0.5) は marginal 扱いで色の濃淡区別。
+// frequency の値は title 属性 (long-press tooltip) でのみ確認可。
 function renderNashGridWithFreq(
   container: HTMLDivElement,
   freqMap: ReadonlyMap<HandNotation, number>,
   type: "push" | "call",
 ): void {
+  const solidClass = type === "push" ? "in-range-villain" : "in-range-hero";
   const cells: string[] = [];
   for (let row = 0; row < 13; row++) {
     for (let col = 0; col < 13; col++) {
       const hand = handAt(row, col);
       const freq = freqMap.get(hand) ?? 0;
       const isPair = row === col;
-      let bg = "";
-      let label = hand;
-      if (freq >= 0.95) {
-        // pure action
-        bg =
-          type === "push"
-            ? "background: rgba(239, 83, 80, 0.65);"
-            : "background: rgba(102, 187, 106, 0.55);";
+      let cls = "";
+      if (freq >= 0.5) {
+        cls = solidClass;
       } else if (freq >= 0.05) {
-        // mixed - 透明度で濃淡
-        const alpha = 0.15 + freq * 0.5;
-        bg =
-          type === "push"
-            ? `background: rgba(239, 83, 80, ${alpha.toFixed(2)});`
-            : `background: rgba(102, 187, 106, ${alpha.toFixed(2)});`;
-        label = `${hand}<sub>${Math.round(freq * 100)}</sub>`;
+        cls = "marginal";
       }
+      const pct = Math.round(freq * 100);
       cells.push(
-        `<div class="hand-cell ${isPair ? "pair" : ""}" style="${bg}" title="${hand} (${(freq * 100).toFixed(0)}%)">${label}</div>`,
+        `<div class="hand-cell ${isPair ? "pair" : ""} ${cls}" title="${hand} (${pct}%)">${hand}</div>`,
       );
     }
   }
