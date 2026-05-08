@@ -1029,6 +1029,35 @@ body {
   touch-action: none;
 }
 
+/* ===== 方向タブ (push⇄call 逆算) ===== */
+.direction-tabs {
+  display: flex;
+  gap: 4px;
+  background: #0f1419;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+  margin-bottom: 10px;
+}
+.direction-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  padding: 8px 6px;
+  font-size: 12px;
+  font-family: inherit;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+.direction-tab.active {
+  background: var(--accent);
+  color: #000;
+  font-weight: bold;
+}
+
 /* ===== ステッパー (+/- ボタン付き数値入力) ===== */
 .num-stepper {
   display: flex;

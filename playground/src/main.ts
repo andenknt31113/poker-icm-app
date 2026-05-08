@@ -803,6 +803,9 @@ function renderGrid(
 // レンジ比較の状態
 type RangeMode = "preset" | "custom";
 let villainRangeMode: RangeMode = "preset";
+// 方向: callBack = 相手 push → 自分 call (従来), pushBack = 相手 call → 自分 push (逆算)
+type Direction = "callBack" | "pushBack";
+let direction: Direction = "callBack";
 const customVillainRange = new Set<HandNotation>();
 
 const STORAGE_KEY = "poker-icm-custom-range";
@@ -834,6 +837,90 @@ function getCurrentVillainRange(): Set<HandNotation> {
   return topRange(Number(pushRangeInput.value));
 }
 
+// 「相手 call → 自分 push (逆算)」モード用: 相手 call レンジを所与に
+// hero がどのハンドで push +EV になるかを計算
+interface PushBackResult {
+  pushRange: Set<HandNotation>;
+  marginal: Set<HandNotation>;
+}
+
+function computePushBackRange(villainCallRange: Set<HandNotation>): PushBackResult {
+  const heroIdx = players.findIndex((p) => p.role === "hero");
+  const villainIdx = players.findIndex((p) => p.role === "villain");
+  const empty: PushBackResult = { pushRange: new Set(), marginal: new Set() };
+  if (heroIdx < 0 || villainIdx < 0 || heroIdx === villainIdx) return empty;
+
+  const stacks = players.map((p) => p.stack);
+  if (stacks[heroIdx]! <= 0 || stacks[villainIdx]! <= 0) return empty;
+  const payouts = parseList(payoutsInput.value);
+  if (payouts.length === 0) return empty;
+
+  const sb = Number(nashSbInput.value) || 0.5;
+  const bb = Number(nashBbInput.value) || 1;
+  const anteRaw = Number(nashAnteInput.value) || 0;
+  const anteMode =
+    (document.querySelector<HTMLInputElement>(
+      'input[name="ante-mode"]:checked',
+    )?.value ?? "total") as "total" | "perPlayer";
+  const ante =
+    anteMode === "perPlayer" ? anteRaw : anteRaw / Math.max(1, stacks.length);
+  const totalAnte = ante * stacks.length;
+
+  const baseStacks = stacks.map((s) => s - ante);
+  if (baseStacks[heroIdx]! - sb < 0 || baseStacks[villainIdx]! - bb < 0) {
+    return empty;
+  }
+  const matched = Math.min(baseStacks[heroIdx]!, baseStacks[villainIdx]!);
+
+  function icmAt(hStack: number, vStack: number): number {
+    const s = baseStacks.slice();
+    s[heroIdx] = Math.max(0, hStack);
+    s[villainIdx] = Math.max(0, vStack);
+    return calculateICM(s, payouts)[heroIdx]!;
+  }
+
+  // hero(=pusher) 視点の各シナリオ ICM
+  const foldEq = icmAt(baseStacks[heroIdx]! - sb, baseStacks[villainIdx]! + sb + totalAnte);
+  const stealEq = icmAt(baseStacks[heroIdx]! + bb + totalAnte, baseStacks[villainIdx]! - bb);
+  const winEq = icmAt(baseStacks[heroIdx]! + matched + totalAnte, baseStacks[villainIdx]! - matched);
+  const loseEq = icmAt(baseStacks[heroIdx]! - matched, baseStacks[villainIdx]! + matched + totalAnte);
+
+  // combo weight
+  const comboCount = (h: HandNotation): number => {
+    if (h.length === 2) return 6;
+    return h[2] === "s" ? 4 : 12;
+  };
+  let totalCombos = 0;
+  let callCombos = 0;
+  for (const h of ALL_169_HANDS) {
+    const c = comboCount(h);
+    totalCombos += c;
+    if (villainCallRange.has(h)) callCombos += c;
+  }
+  const foldRate = (totalCombos - callCombos) / totalCombos;
+
+  const pushRange = new Set<HandNotation>();
+  const marginal = new Set<HandNotation>();
+  for (const heroHand of ALL_169_HANDS) {
+    let evPush = foldRate * stealEq;
+    if (callCombos > 0) {
+      let sdSum = 0;
+      for (const v of villainCallRange) {
+        const w = comboCount(v);
+        const heq = huEquity(heroHand, v);
+        sdSum += w * (heq * winEq + (1 - heq) * loseEq);
+      }
+      evPush += sdSum / totalCombos;
+    }
+    const margin = evPush - foldEq;
+    // foldEq の 0.5% を 1 単位として境界判定 (0=境界、+で push、-で fold)
+    const norm = foldEq > 0 ? margin / foldEq : margin;
+    if (norm >= 0.005) pushRange.add(heroHand);
+    else if (norm >= -0.003) marginal.add(heroHand);
+  }
+  return { pushRange, marginal };
+}
+
 function renderRangeComparison(requiredEquity: number): void {
   const pushPct = Number(pushRangeInput.value);
   pushPctLabel.textContent = String(pushPct);
@@ -847,29 +934,56 @@ function renderRangeComparison(requiredEquity: number): void {
     villainGrid.classList.remove("editable");
   }
 
+  // 方向に応じてラベルを切替
+  const villainGridTitle = document.getElementById("villain-grid-title");
+  const heroGridTitle = document.getElementById("hero-grid-title");
+  const villainRangeLabel = document.getElementById("villain-range-label");
+  if (direction === "callBack") {
+    if (villainGridTitle) villainGridTitle.textContent = "相手のpushレンジ 🔴";
+    if (heroGridTitle) heroGridTitle.textContent = "自分のcallレンジ 🟢";
+    if (villainRangeLabel) villainRangeLabel.textContent = "相手のpushレンジ";
+  } else {
+    if (villainGridTitle) villainGridTitle.textContent = "相手のcallレンジ 🔴 (タイト想定)";
+    if (heroGridTitle) heroGridTitle.textContent = "自分のpushレンジ 🟢 (推奨)";
+    if (villainRangeLabel) villainRangeLabel.textContent = "相手のcallレンジ";
+  }
+
   renderGrid(villainGrid, (hand) =>
     villainRange.has(hand) ? "in-range-villain" : "",
   );
 
-  let callable = 0;
-  let marginal = 0;
-  renderGrid(heroGrid, (hand) => {
-    const eq = equity(hand, villainRange);
-    const margin = eq - requiredEquity;
-    if (margin >= 0.03) {
-      callable++;
-      return "in-range-hero";
-    }
-    if (margin >= -0.02) {
-      marginal++;
-      return "marginal";
-    }
-    return "";
-  });
-
   const totalHands = ALL_169_HANDS.length;
-  const callPct = ((callable / totalHands) * 100).toFixed(0);
-  callStats.innerHTML = `必要勝率 <strong>${(requiredEquity * 100).toFixed(1)}%</strong> 以上のハンド: <strong>${callable}</strong>個 (Top ${callPct}%) ／ ボーダーライン: ${marginal}個`;
+
+  if (direction === "callBack") {
+    // 既存ロジック: 相手 push に対し自分 call できるハンド
+    let callable = 0;
+    let marginal = 0;
+    renderGrid(heroGrid, (hand) => {
+      const eq = equity(hand, villainRange);
+      const margin = eq - requiredEquity;
+      if (margin >= 0.03) {
+        callable++;
+        return "in-range-hero";
+      }
+      if (margin >= -0.02) {
+        marginal++;
+        return "marginal";
+      }
+      return "";
+    });
+    const callPct = ((callable / totalHands) * 100).toFixed(0);
+    callStats.innerHTML = `必要勝率 <strong>${(requiredEquity * 100).toFixed(1)}%</strong> 以上のハンド: <strong>${callable}</strong>個 (Top ${callPct}%) ／ ボーダーライン: ${marginal}個`;
+  } else {
+    // 逆算: 相手 call (villainRange) に対し自分が push +EV になるハンド
+    const result = computePushBackRange(villainRange);
+    renderGrid(heroGrid, (hand) => {
+      if (result.pushRange.has(hand)) return "in-range-hero";
+      if (result.marginal.has(hand)) return "marginal";
+      return "";
+    });
+    const pPct = ((result.pushRange.size / totalHands) * 100).toFixed(1);
+    callStats.innerHTML = `相手が call <strong>${((villainRange.size / totalHands) * 100).toFixed(0)}%</strong> してくる前提で、自分が push +EV のハンド: <strong>${result.pushRange.size}</strong>個 (${pPct}%) ／ ボーダー: ${result.marginal.size}個。<br />相手が call ワイドだと push を狭めるべき方向に動きます。`;
+  }
 
   // カスタムモードのカウント表示
   if (villainRangeMode === "custom") {
@@ -894,6 +1008,18 @@ document.querySelectorAll<HTMLButtonElement>(".mode-tab").forEach((btn) => {
       presetControls.classList.add("hidden");
       customControls.classList.remove("hidden");
     }
+    recompute();
+  });
+});
+
+// 方向 (push⇄call 逆算) 切替
+document.querySelectorAll<HTMLButtonElement>(".direction-tab").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document
+      .querySelectorAll<HTMLButtonElement>(".direction-tab")
+      .forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    direction = btn.dataset.direction as Direction;
     recompute();
   });
 });

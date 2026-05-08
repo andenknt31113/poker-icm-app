@@ -291,10 +291,17 @@
       <section class="card" data-tab="hand">
         <h2>7. ハンドレンジ比較 🆕</h2>
         <p class="hint">
-          相手のpushレンジを設定 → 自分のコールできる範囲を自動描画。
-          <br />
-          <strong>※ 暫定的な近似 equity を使用（後で Monte Carlo で精密化予定）</strong>
+          相手のレンジを設定 → 自分が打つべきレンジを自動描画。
         </p>
+
+        <div class="direction-tabs" role="tablist">
+          <button type="button" class="direction-tab active" data-direction="callBack">
+            相手 push → 自分 call
+          </button>
+          <button type="button" class="direction-tab" data-direction="pushBack">
+            相手 call → 自分 push (逆算)
+          </button>
+        </div>
 
         <div class="mode-tabs" role="tablist">
           <button
@@ -311,7 +318,7 @@
 
         <div id="preset-controls">
           <label class="range-label">
-            相手のpushレンジ: <span id="push-pct">25</span>%
+            <span id="villain-range-label">相手のpushレンジ</span>: <span id="push-pct">25</span>%
             <input
               id="push-range"
               type="range"
@@ -338,11 +345,11 @@
 
         <div class="range-grids">
           <div>
-            <h3>相手のpushレンジ 🔴</h3>
+            <h3 id="villain-grid-title">相手のpushレンジ 🔴</h3>
             <div id="grid-villain" class="hand-grid"></div>
           </div>
           <div>
-            <h3>自分のcallレンジ 🟢</h3>
+            <h3 id="hero-grid-title">自分のcallレンジ 🟢</h3>
             <div id="grid-hero" class="hand-grid"></div>
             <p class="hint call-stats-below" id="call-stats"></p>
           </div>
