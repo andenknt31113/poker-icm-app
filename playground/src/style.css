@@ -426,6 +426,7 @@ th {
 
 /* ===== ボトムタブナビ ===== */
 body {
+  padding-top: env(safe-area-inset-top, 0);
   padding-bottom: calc(72px + env(safe-area-inset-bottom, 0));
 }
 .tab-bar {
