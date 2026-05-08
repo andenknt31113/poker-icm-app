@@ -1029,6 +1029,132 @@ body {
   touch-action: none;
 }
 
+/* ===== ステッパー (+/- ボタン付き数値入力) ===== */
+.num-stepper {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+.num-stepper input {
+  flex: 1;
+  text-align: center;
+}
+.num-step-btn {
+  background: #0f1419;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-family: var(--mono);
+  cursor: pointer;
+  white-space: nowrap;
+  font-weight: bold;
+}
+.num-step-btn:active {
+  background: var(--accent);
+  color: #000;
+}
+
+/* ===== メモ + 共有 ===== */
+#scenario-memo {
+  width: 100%;
+  background: #0f1419;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  resize: vertical;
+}
+#scenario-memo:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.share-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.share-btn {
+  width: auto !important;
+}
+
+/* ===== 情報モーダル ===== */
+.info-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.info-modal.hidden {
+  display: none;
+}
+.info-modal-content {
+  background: #0f1419;
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  max-width: 480px;
+  max-height: 80vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.info-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.info-modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--accent);
+}
+#info-modal-close {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+#info-modal-body {
+  padding: 14px;
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.65;
+}
+#info-modal-body strong {
+  color: var(--accent);
+}
+#info-modal-body code {
+  background: rgba(255, 255, 255, 0.06);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+/* hero-summary 内の info タップ可能ラベル */
+.hero-summary-label.tappable,
+.hero-summary-row-label.tappable {
+  text-decoration: underline dotted rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+}
+
 /* 注意/警告ボックス */
 .warn-box {
   background: rgba(255, 167, 38, 0.08);

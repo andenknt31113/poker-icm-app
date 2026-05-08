@@ -24,6 +24,15 @@
       </header>
 
       <div id="hero-summary" class="hero-summary"></div>
+      <div id="info-modal" class="info-modal hidden">
+        <div class="info-modal-content">
+          <div class="info-modal-header">
+            <h3 id="info-modal-title"></h3>
+            <button type="button" id="info-modal-close" aria-label="閉じる">✕</button>
+          </div>
+          <div id="info-modal-body"></div>
+        </div>
+      </div>
 
       <nav class="tab-bar" role="tablist" aria-label="セクション">
         <button type="button" class="tab-btn active" data-tab="setup">⚙️ 設定</button>
@@ -90,6 +99,16 @@
           </button>
         </div>
         <div id="saved-payouts" class="presets saved"></div>
+      </section>
+
+      <section class="card" data-tab="setup">
+        <h2>📝 メモ</h2>
+        <p class="hint">このシナリオに関する気付きや復習用メモ。次回起動時にも残ります。</p>
+        <textarea id="scenario-memo" rows="3" placeholder="例: JOPT Day2 FT バブル。相手 X さん。AKo で push した時の判断..."></textarea>
+        <div class="share-row">
+          <button id="share-url-btn" type="button" class="solve-btn share-btn">🔗 シナリオを URL で共有</button>
+          <span id="share-url-hint" class="hint"></span>
+        </div>
       </section>
 
       <section class="card" data-tab="result">
@@ -194,11 +213,19 @@
         <div class="grid">
           <label>
             コール額
-            <input id="call" type="number" inputmode="decimal" placeholder="例: 8.0" min="0.1" step="0.1" />
+            <div class="num-stepper">
+              <button type="button" class="num-step-btn" data-target="call" data-delta="-1">−1</button>
+              <input id="call" type="number" inputmode="decimal" placeholder="例: 8.0" min="0.1" step="0.1" />
+              <button type="button" class="num-step-btn" data-target="call" data-delta="1">+1</button>
+            </div>
           </label>
           <label>
             勝った時の純利得
-            <input id="potwin" type="number" inputmode="decimal" placeholder="例: 10.5" min="0.1" step="0.1" />
+            <div class="num-stepper">
+              <button type="button" class="num-step-btn" data-target="potwin" data-delta="-1">−1</button>
+              <input id="potwin" type="number" inputmode="decimal" placeholder="例: 10.5" min="0.1" step="0.1" />
+              <button type="button" class="num-step-btn" data-target="potwin" data-delta="1">+1</button>
+            </div>
           </label>
         </div>
         <button id="autofill-call" type="button" class="solve-btn" style="margin-top: 10px; width: auto;">
@@ -301,6 +328,7 @@
             選択中: <strong id="custom-count">0</strong>個 (<span id="custom-pct">0</span>%)
           </p>
           <div class="custom-actions">
+            <button type="button" id="custom-all">全選択</button>
             <button type="button" id="custom-clear">全消去</button>
             <button type="button" id="custom-from-preset">
               プリセットから読み込む

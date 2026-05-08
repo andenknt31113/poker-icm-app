@@ -665,25 +665,25 @@ function renderHeroSummary(a: HeroSummaryArg): void {
     : `<div class="hero-summary-row villain muted-row">⚔️ 相手未指定</div>`;
 
   heroSummaryEl.innerHTML = `
-    <div class="hero-summary-title">状況サマリー</div>
+    <div class="hero-summary-title">状況サマリー (タップ＝用語解説)</div>
     <div class="hero-summary-row hero">
       <div class="hero-summary-row-label">🎯 自分</div>
       <div class="hero-summary-row-stat">${heroStack}<span class="unit">BB</span></div>
       <div class="hero-summary-row-stat">${heroPos}</div>
-      <div class="hero-summary-row-stat accent">${heroEqPct.toFixed(1)}<span class="unit">%</span></div>
+      <div class="hero-summary-row-stat accent tappable" data-info="ICM">${heroEqPct.toFixed(1)}<span class="unit">%</span></div>
     </div>
     ${villainRow}
     <div class="hero-summary-grid">
-      <div class="hero-summary-item">
-        <div class="hero-summary-label">BF</div>
+      <div class="hero-summary-item" data-info="BF">
+        <div class="hero-summary-label tappable">BF ⓘ</div>
         <div class="hero-summary-value ${bfClass}">${a.bf.toFixed(2)}</div>
       </div>
-      <div class="hero-summary-item">
-        <div class="hero-summary-label">必要勝率</div>
+      <div class="hero-summary-item" data-info="必要勝率">
+        <div class="hero-summary-label tappable">必要勝率 ⓘ</div>
         <div class="hero-summary-value">${(a.requiredEq * 100).toFixed(1)}<span class="unit">%</span></div>
       </div>
-      <div class="hero-summary-item">
-        <div class="hero-summary-label">RP</div>
+      <div class="hero-summary-item" data-info="RP">
+        <div class="hero-summary-label tappable">RP ⓘ</div>
         <div class="hero-summary-value warn">+${(a.rp * 100).toFixed(1)}<span class="unit">%</span></div>
       </div>
     </div>
@@ -1234,6 +1234,217 @@ const POSITION_ACT_ORDER = [
 function actionOrderIdx(pos: string): number {
   return POSITION_ACT_ORDER.indexOf(pos as (typeof POSITION_ACT_ORDER)[number]);
 }
+
+// ===== コール額 / 純利得の +/- ステッパー =====
+document.querySelectorAll<HTMLButtonElement>(".num-step-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const targetId = btn.dataset.target;
+    const delta = Number(btn.dataset.delta) || 0;
+    if (!targetId) return;
+    const input = document.getElementById(targetId) as HTMLInputElement | null;
+    if (!input) return;
+    const cur = Number(input.value) || 0;
+    const next = Math.max(0.1, cur + delta);
+    input.value = next.toFixed(1);
+    callManualOverride = true;
+    recompute();
+  });
+});
+
+// ===== カスタムレンジ「全選択」 =====
+const customAllBtn = document.getElementById("custom-all") as HTMLButtonElement | null;
+if (customAllBtn) {
+  customAllBtn.addEventListener("click", () => {
+    customVillainRange.clear();
+    for (const h of ALL_169_HANDS) customVillainRange.add(h);
+    saveCustomRange();
+    recompute();
+  });
+}
+
+// ===== メモ機能 (localStorage 永続化) =====
+const MEMO_KEY = "poker-icm-scenario-memo";
+const memoEl = document.getElementById("scenario-memo") as HTMLTextAreaElement | null;
+if (memoEl) {
+  try {
+    memoEl.value = localStorage.getItem(MEMO_KEY) ?? "";
+  } catch {
+    /* ignore */
+  }
+  memoEl.addEventListener("input", () => {
+    try {
+      localStorage.setItem(MEMO_KEY, memoEl.value);
+    } catch {
+      /* ignore */
+    }
+  });
+}
+
+// ===== シナリオ URL 共有 =====
+function encodeStateToHash(): string {
+  const sbEl = document.getElementById("nash-sb") as HTMLInputElement | null;
+  const bbEl = document.getElementById("nash-bb") as HTMLInputElement | null;
+  const anteEl = document.getElementById("nash-ante") as HTMLInputElement | null;
+  const anteMode =
+    (document.querySelector<HTMLInputElement>(
+      'input[name="ante-mode"]:checked',
+    )?.value ?? "total") as "total" | "perPlayer";
+  const compact = {
+    p: players.map((p) => [p.stack, p.role[0], p.position]),
+    py: payoutsArr,
+    n: {
+      sb: Number(sbEl?.value) || 0.5,
+      bb: Number(bbEl?.value) || 1,
+      a: Number(anteEl?.value) || 0,
+      m: anteMode === "perPlayer" ? "p" : "t",
+    },
+  };
+  const json = JSON.stringify(compact);
+  return btoa(encodeURIComponent(json));
+}
+
+function decodeStateFromHash(hash: string): void {
+  try {
+    const json = decodeURIComponent(atob(hash));
+    const data = JSON.parse(json) as {
+      p?: [number, string, string][];
+      py?: number[];
+      n?: { sb?: number; bb?: number; a?: number; m?: string };
+    };
+    if (Array.isArray(data.p)) {
+      players.length = 0;
+      for (const [stack, roleC, position] of data.p) {
+        const role: Role =
+          roleC === "h" ? "hero" : roleC === "v" ? "villain" : "other";
+        players.push({ id: nextId++, stack, role, position: position as Position });
+      }
+      renderPlayers();
+    }
+    if (Array.isArray(data.py) && data.py.length > 0) {
+      setPayouts(data.py);
+    }
+    if (data.n) {
+      const sbEl = document.getElementById("nash-sb") as HTMLInputElement | null;
+      const bbEl = document.getElementById("nash-bb") as HTMLInputElement | null;
+      const anteEl = document.getElementById("nash-ante") as HTMLInputElement | null;
+      if (sbEl && data.n.sb != null) sbEl.value = String(data.n.sb);
+      if (bbEl && data.n.bb != null) bbEl.value = String(data.n.bb);
+      if (anteEl && data.n.a != null) anteEl.value = String(data.n.a);
+      const modeValue = data.n.m === "p" ? "perPlayer" : "total";
+      const radio = document.querySelector<HTMLInputElement>(
+        `input[name="ante-mode"][value="${modeValue}"]`,
+      );
+      if (radio) radio.checked = true;
+    }
+    callManualOverride = false;
+    recompute();
+  } catch (e) {
+    console.warn("URL hash decode 失敗", e);
+  }
+}
+
+const shareBtn = document.getElementById("share-url-btn") as HTMLButtonElement | null;
+const shareHint = document.getElementById("share-url-hint");
+if (shareBtn) {
+  shareBtn.addEventListener("click", async () => {
+    const hash = encodeStateToHash();
+    const url = `${location.origin}${location.pathname}#s=${hash}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      if (shareHint) shareHint.textContent = "✓ URL をクリップボードにコピー！";
+    } catch {
+      if (shareHint) shareHint.textContent = url;
+    }
+  });
+}
+
+// 起動時に URL hash があれば復元
+if (location.hash.startsWith("#s=")) {
+  const hash = location.hash.slice(3);
+  setTimeout(() => decodeStateFromHash(hash), 50);
+}
+
+// ===== 用語解説モーダル =====
+const INFO_TEXTS: Record<string, { title: string; body: string }> = {
+  ICM: {
+    title: "ICM (Independent Chip Model)",
+    body: `
+      <p>トナメの<strong>チップを「今すぐ$に換金したらいくら？」</strong>に変換する計算式。</p>
+      <p>賞金は順位ごとに固定なので、チップ 2倍 ≠ 賞金 2倍。<br />
+      バストすると最低順位の賞金しか貰えない非対称性を反映する。</p>
+      <p>ICM% は <code>その人の $EV ÷ 総賞金</code>。例: 25% = 平均すると総賞金の 1/4 を持っていける期待値。</p>
+    `,
+  },
+  BF: {
+    title: "BF (Bubble Factor)",
+    body: `
+      <p><strong>「チップの痛さ ÷ チップの嬉しさ」</strong>を表す係数。HU all-in 想定。</p>
+      <ul>
+        <li><strong>1.00</strong>: チップ ⇄ $ がリニア (ICM 圧ゼロ)</li>
+        <li><strong>1.20</strong>: 「100失う痛さ = 83取る嬉しさ」→ 20%余分にタイト</li>
+        <li><strong>1.50+</strong>: バブル/サテライトレベル、超タイト</li>
+      </ul>
+      <p>HRC や ICMIZER と同じ定義。BF = 1 + Risk Premium / 0.5。</p>
+    `,
+  },
+  RP: {
+    title: "Risk Premium (RP)",
+    body: `
+      <p><strong>cEV (チップ EV) と $EV (ICM EV) の差</strong>。ICM の重みでどれだけ余分に勝率が必要か。</p>
+      <ul>
+        <li>RP = 0%: cEV と $EV が同じ (ICM 影響なし)</li>
+        <li>RP = +10%: コインフリップ (50%) でも実際は 60% 必要</li>
+        <li>RP = +20%: バブル時、+30% でサテライト</li>
+      </ul>
+      <p>計算: <code>RP = $EV 必要勝率 − cEV 必要勝率</code></p>
+    `,
+  },
+  必要勝率: {
+    title: "必要勝率 (Required Equity)",
+    body: `
+      <p>このコールが <strong>EV 0 になる最低勝率</strong>。ハンドの実勝率がこれを超えるなら call、下なら fold。</p>
+      <ul>
+        <li><strong>cEV 必要勝率</strong>: ポット odds だけ (ICM 無視)</li>
+        <li><strong>$EV 必要勝率</strong>: BF (ICM 圧) を反映、こっちが実戦判断用</li>
+      </ul>
+      <p>例: コール 8 BB / pot 20 BB → cEV = 8/(8+20) = 28.6%。BF=1.4 なら $EV = 28.6% × 1.4 = 40%。</p>
+    `,
+  },
+};
+
+const infoModal = document.getElementById("info-modal") as HTMLDivElement | null;
+const infoTitle = document.getElementById("info-modal-title") as HTMLHeadingElement | null;
+const infoBody = document.getElementById("info-modal-body") as HTMLDivElement | null;
+const infoClose = document.getElementById("info-modal-close") as HTMLButtonElement | null;
+
+function openInfoModal(key: string): void {
+  const info = INFO_TEXTS[key];
+  if (!info || !infoModal || !infoTitle || !infoBody) return;
+  infoTitle.textContent = info.title;
+  infoBody.innerHTML = info.body;
+  infoModal.classList.remove("hidden");
+}
+
+function closeInfoModal(): void {
+  infoModal?.classList.add("hidden");
+}
+
+infoClose?.addEventListener("click", closeInfoModal);
+infoModal?.addEventListener("click", (e) => {
+  if (e.target === infoModal) closeInfoModal();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeInfoModal();
+});
+
+// hero-summary 内の解説可能ラベルにクリック listener を delegate
+heroSummaryEl?.addEventListener("click", (e) => {
+  const t = (e.target as HTMLElement).closest<HTMLElement>("[data-info]");
+  if (t) {
+    const key = t.dataset.info;
+    if (key) openInfoModal(key);
+  }
+});
 
 // HU 限界に関する警告ボックス更新
 // hero/villain の双方より後に行動するプレイヤー (over-caller 候補) が
