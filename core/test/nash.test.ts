@@ -237,6 +237,7 @@ describe("solveHUNash", () => {
 
   it("HRC ベンチ: 4人 × 8BB / WTA(50) / SB 0.5 BB 1 ante 1/人 → SB push 90%+", () => {
     // Reference: holdemresources.net/nashicm?action=calculate&s1=8&s2=8&s3=8&s4=8&p1=50&sb=0.5&bb=1&ante=1
+    // HRC は ante=1 を per-player と解釈。core ソルバも ante を per-player で受け取るので 1 をそのまま渡す。
     // 期待: SB push ≈ 94.6%, BB call ≈ 96.4%
     const result = solveHUNash({
       stacks: [8, 8, 8, 8],
@@ -245,7 +246,7 @@ describe("solveHUNash", () => {
       bbIndex: 1,
       sb: 0.5,
       bb: 1,
-      ante: 1, // 1人あたり 1 BB
+      ante: 1, // per-player
       huEquity: fakeEq,
       allHands: ALL_HANDS,
       maxIterations: 200,
