@@ -2144,6 +2144,15 @@ function pickRandom<T>(arr: T[]): T {
 }
 
 function generatePracticeProblem(): PracticeProblem {
+  // 当たり前すぎる (|margin| > 15%) 問題はリロール、最大 30 試行
+  for (let attempt = 0; attempt < 30; attempt++) {
+    const p = generateRandomPracticeProblem();
+    if (Math.abs(p.heroEq - p.dollarEV) <= 0.15) return p;
+  }
+  return generateRandomPracticeProblem();
+}
+
+function generateRandomPracticeProblem(): PracticeProblem {
   const n = 3 + Math.floor(Math.random() * 4); // 3-6
   const positions = POSITION_SETS_PRACTICE[n]!;
   const scenarioPlayers: { stack: number; role: Role; position: Position }[] = [];
