@@ -233,99 +233,117 @@ export function solveHUNash(input: HUNashInput): HUNashResult {
   }));
   const totalCombos = weights.reduce((a, x) => a + x.w, 0);
 
-  // ===== 反復ベストレスポンス =====
-  let sbPushRange: Set<HandLabel> = new Set(allHands); // any-two
-  let bbCallRange: Set<HandLabel> = new Set(); // empty
+  // ===== Fictitious Play (混合戦略の平均化更新) =====
+  // 各ハンドの push/call 確率を実数で持ち、毎 iter で best response (binary 0/1) を計算、
+  // 学習率 lr で平均化更新: prob = (1 - lr) * prob + lr * best_response
+  // pure best response の振動を抑え、HU push/fold の真の Nash 均衡（ほぼ pure）に収束する。
+
+  // ハンドのインデックスマップ
+  const handIndex = new Map<HandLabel, number>(
+    allHands.map((h, i) => [h, i] as const),
+  );
+  const handCombo = allHands.map((h) => comboCount(h));
+
+  // 確率（0..1）。初期値: SB=1.0 (any-two push), BB=0.0 (empty call)
+  const sbPushProb = new Array<number>(allHands.length).fill(1.0);
+  const bbCallProb = new Array<number>(allHands.length).fill(0.0);
+
+  // huEquity をキャッシュ（同じセルを毎iter何度も叩くため）
+  const equityCache = new Float32Array(allHands.length * allHands.length);
+  const equityCached = new Uint8Array(allHands.length * allHands.length);
+  function cachedEq(hi: number, vi: number): number {
+    const idx = hi * allHands.length + vi;
+    if (!equityCached[idx]) {
+      equityCache[idx] = huEquity(allHands[hi]!, allHands[vi]!);
+      equityCached[idx] = 1;
+    }
+    return equityCache[idx]!;
+  }
 
   let iter = 0;
   let converged = false;
 
   for (iter = 1; iter <= maxIterations; iter++) {
-    // ----- (a) SB の各ハンドで push vs fold を判定 -----
-    // EV(fold) = SB が SB blind を失った場合の SB の $ エクイティ
+    const lr = 1.0 / (iter + 1); // 古典 fictitious play の learning rate (1/(t+1))
+
+    // BB call の混合 weight 合計
+    let bbCallW = 0;
+    for (let i = 0; i < allHands.length; i++) bbCallW += handCombo[i]! * bbCallProb[i]!;
+    const bbFoldW = totalCombos - bbCallW;
+
+    // (a) SB best response (binary 0/1) given current bbCallProb
     const evFoldSb = foldICM.sbEq;
-
-    // BB の現 call range の重み合計（コールされる確率に対応する分母）
-    let bbCallWeight = 0;
-    for (const h of bbCallRange) bbCallWeight += comboCount(h);
-    const bbFoldWeight = totalCombos - bbCallWeight;
-
-    const newSbPushRange = new Set<HandLabel>();
-    for (const heroHand of allHands) {
-      // EV(push) = (BB が fold する確率) * stealICM.sbEq
-      //          + Σ (BB が call ハンド h_v で call する確率) * showdownEV
-      // showdownEV(hero, h_v) = huEquity(hero, h_v) * winICM.sbEq + (1 - huEquity) * loseICM.sbEq
-
-      let evPush = 0;
-      // BB fold 部分
-      if (bbFoldWeight > 0) {
-        evPush += (bbFoldWeight / totalCombos) * stealICM.sbEq;
-      }
-      // BB call 部分
-      if (bbCallWeight > 0) {
-        let showdownSum = 0;
-        for (const hv of bbCallRange) {
-          const w = comboCount(hv);
-          const heq = huEquity(heroHand, hv);
-          const sdEv = heq * winICM.sbEq + (1 - heq) * loseICM.sbEq;
-          showdownSum += w * sdEv;
+    const sbBR = new Array<number>(allHands.length);
+    for (let hi = 0; hi < allHands.length; hi++) {
+      let evPush = (bbFoldW / totalCombos) * stealICM.sbEq;
+      if (bbCallW > 0) {
+        let sdSum = 0;
+        for (let vi = 0; vi < allHands.length; vi++) {
+          const cp = bbCallProb[vi]!;
+          if (cp <= 0) continue;
+          const w = handCombo[vi]! * cp;
+          const heq = cachedEq(hi, vi);
+          sdSum += w * (heq * winICM.sbEq + (1 - heq) * loseICM.sbEq);
         }
-        evPush += showdownSum / totalCombos;
+        evPush += sdSum / totalCombos;
       }
-
-      if (evPush > evFoldSb) {
-        newSbPushRange.add(heroHand);
-      }
+      sbBR[hi] = evPush > evFoldSb ? 1 : 0;
     }
 
-    // ----- (b) BB の各ハンドで call vs fold を判定 -----
-    // SB が push してくる前提。
-    // EV(fold) = stealICM.bbEq (BB が降りた=SBがstealしたシナリオ)
+    // SB push の混合 weight 合計（NEW best response）
+    let sbPushW = 0;
+    for (let i = 0; i < allHands.length; i++) sbPushW += handCombo[i]! * sbBR[i]!;
+
+    // (b) BB best response given SB's NEW best response (binary 0/1)
     const evFoldBb = stealICM.bbEq;
-
-    // SB の new push range の重み合計
-    let sbPushWeight = 0;
-    for (const h of newSbPushRange) sbPushWeight += comboCount(h);
-
-    const newBbCallRange = new Set<HandLabel>();
-
-    if (sbPushWeight === 0) {
-      // SB が誰も push しないなら BB の判断対象がない（call range は空）
+    const bbBR = new Array<number>(allHands.length);
+    if (sbPushW === 0) {
+      for (let i = 0; i < allHands.length; i++) bbBR[i] = 0;
     } else {
-      for (const villainHand of allHands) {
-        // EV(call) = Σ (SB の push hand h_s) の重み付き平均で
-        //   showdownEV_BB(villain, h_s) = (1 - huEquity(h_s, villain)) * winICM.bbEq + huEquity * loseICM.bbEq
-        //   ※ winICM.bbEq は SB が勝った時の BB の $ エクイティ
-        //   ※ loseICM.bbEq は SB が負けた時の BB の $ エクイティ → これが BB 視点では「BB が勝った」
-        //   なので: BB のショーダウン EV = P(BB勝) * loseICM.bbEq + P(BB負) * winICM.bbEq
-        //                                = (1 - huEquity(h_s, v)) * loseICM.bbEq + huEquity * winICM.bbEq
-        let showdownSum = 0;
-        for (const hs of newSbPushRange) {
-          const w = comboCount(hs);
-          const sbWinProb = huEquity(hs, villainHand);
-          const bbEv = sbWinProb * winICM.bbEq + (1 - sbWinProb) * loseICM.bbEq;
-          showdownSum += w * bbEv;
+      for (let vi = 0; vi < allHands.length; vi++) {
+        let sdSum = 0;
+        for (let hi = 0; hi < allHands.length; hi++) {
+          const pp = sbBR[hi]!;
+          if (pp <= 0) continue;
+          const w = handCombo[hi]! * pp;
+          const sbWin = cachedEq(hi, vi);
+          sdSum += w * (sbWin * winICM.bbEq + (1 - sbWin) * loseICM.bbEq);
         }
-        const evCall = showdownSum / sbPushWeight;
-
-        if (evCall > evFoldBb) {
-          newBbCallRange.add(villainHand);
-        }
+        const evCall = sdSum / sbPushW;
+        bbBR[vi] = evCall > evFoldBb ? 1 : 0;
       }
     }
 
-    // ----- (c) 収束判定 -----
-    const sbDiff = symmetricDiffSize(sbPushRange, newSbPushRange) / allHands.length;
-    const bbDiff = symmetricDiffSize(bbCallRange, newBbCallRange) / allHands.length;
+    // (c) 平均化更新 (fictitious play): prob = (1-lr)*prob + lr*BR
+    let maxDelta = 0;
+    for (let i = 0; i < allHands.length; i++) {
+      const newSb = (1 - lr) * sbPushProb[i]! + lr * sbBR[i]!;
+      const newBb = (1 - lr) * bbCallProb[i]! + lr * bbBR[i]!;
+      const dSb = Math.abs(newSb - sbPushProb[i]!);
+      const dBb = Math.abs(newBb - bbCallProb[i]!);
+      if (dSb > maxDelta) maxDelta = dSb;
+      if (dBb > maxDelta) maxDelta = dBb;
+      sbPushProb[i] = newSb;
+      bbCallProb[i] = newBb;
+    }
 
-    sbPushRange = newSbPushRange;
-    bbCallRange = newBbCallRange;
-
-    if (sbDiff < convergenceTolerance && bbDiff < convergenceTolerance) {
+    // 収束: 全ハンドの確率変化が tolerance 未満
+    if (maxDelta < convergenceTolerance) {
       converged = true;
       break;
     }
   }
+
+  // 確率 > 0.5 を「レンジに含む」として binary 出力
+  const sbPushRange = new Set<HandLabel>();
+  const bbCallRange = new Set<HandLabel>();
+  for (let i = 0; i < allHands.length; i++) {
+    if (sbPushProb[i]! > 0.5) sbPushRange.add(allHands[i]!);
+    if (bbCallProb[i]! > 0.5) bbCallRange.add(allHands[i]!);
+  }
+
+  // handIndex は使わないので破棄させる（lint 抑制 + 将来の混合戦略出力用予約）
+  void handIndex;
 
   return {
     sbPushRange,
