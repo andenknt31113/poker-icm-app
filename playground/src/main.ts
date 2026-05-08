@@ -2225,7 +2225,7 @@ function renderRoundTable(
   const n = scenarioPlayers.length;
   const heroIdx = scenarioPlayers.findIndex((p) => p.role === "hero");
   const seats: string[] = [];
-  const antePerPlayer = blinds ? blinds.totalAnte / n : 0;
+  // BB ante 構造: BB が ante 全部を負担、他はゼロ
   // hero を 6 時方向 (90度=π/2) に配置、他は時計回り
   for (let i = 0; i < n; i++) {
     const offset = heroIdx >= 0 ? (i - heroIdx + n) % n : i;
@@ -2237,10 +2237,10 @@ function renderRoundTable(
       p.role === "hero" ? "hero" : p.role === "villain" ? "villain" : "";
     const tag = p.role === "hero" ? "🎯 " : p.role === "villain" ? "⚔️ " : "";
 
-    // 各シートのポット拠出: ブラインド + ante
-    let committed = antePerPlayer;
-    if (p.position === "SB" && blinds) committed += blinds.sb;
-    if (p.position === "BB" && blinds) committed += blinds.bb;
+    // BB ante 構造: SB は SB blind のみ、BB は BB blind + 全 ante、他は 0
+    let committed = 0;
+    if (p.position === "SB" && blinds) committed = blinds.sb;
+    if (p.position === "BB" && blinds) committed = blinds.bb + blinds.totalAnte;
     const remaining = p.stack - committed;
     const commitText = committed > 0
       ? `<div class="seat-commit">📥 場 ${committed.toFixed(2)}</div>`
@@ -2254,10 +2254,10 @@ function renderRoundTable(
       </div>
     `);
   }
-  // 中央: ポット合計
+  // 中央: ポット合計 (BB ante 構造: BB が ante 全部負担)
   const potTotal = blinds ? blinds.sb + blinds.bb + blinds.totalAnte : 0;
   const potHtml = blinds
-    ? `<div class="round-table-pot">💰 pot ${potTotal.toFixed(1)} BB<br /><span class="pot-detail">SB ${blinds.sb} + BB ${blinds.bb} + ante ${blinds.totalAnte}</span></div>`
+    ? `<div class="round-table-pot">💰 pot ${potTotal.toFixed(1)} BB<br /><span class="pot-detail">SB ${blinds.sb} + BB ${blinds.bb} + BB ante ${blinds.totalAnte}</span></div>`
     : "";
   container.innerHTML = `
     <div class="round-table">
