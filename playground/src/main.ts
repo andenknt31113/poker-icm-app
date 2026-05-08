@@ -556,6 +556,11 @@ function recompute(): void {
       if (risk > 0 && !callManualOverride) {
         callInput.value = risk.toFixed(1);
         potWinInput.value = (risk + dead).toFixed(1);
+        const modeLabel =
+          anteMode === "perPlayer"
+            ? `1人${anteRaw}×${stacks.length}人`
+            : "合計";
+        autofillHint.innerHTML = `✓ コール <strong>${risk}</strong>, 純利得 <strong>${(risk + dead).toFixed(1)}</strong> = リスク ${risk} + 死に金 ${dead.toFixed(1)} (SB ${sbV} + BB ${bbV} + アンティ ${totalAnteVal.toFixed(1)} [${modeLabel}])`;
       }
     }
     const callAmount = Number(callInput.value);
@@ -1097,14 +1102,21 @@ autofillBtn.addEventListener("click", () => {
   const anteEl = document.getElementById("nash-ante") as HTMLInputElement | null;
   const sb = sbEl ? Number(sbEl.value) || 0 : 0.5;
   const bb = bbEl ? Number(bbEl.value) || 0 : 1.0;
-  const totalAnte = anteEl ? Number(anteEl.value) || 0 : 0;
+  const anteRawV = anteEl ? Number(anteEl.value) || 0 : 0;
+  const anteMode =
+    (document.querySelector<HTMLInputElement>(
+      'input[name="ante-mode"]:checked',
+    )?.value ?? "total") as "total" | "perPlayer";
+  const totalAnte =
+    anteMode === "perPlayer" ? anteRawV * players.length : anteRawV;
   const dead = sb + bb + totalAnte;
 
   callInput.value = risk.toFixed(1);
   potWinInput.value = (risk + dead).toFixed(1);
   callManualOverride = false; // autofill 押したら自動追従モードに戻す
 
-  autofillHint.innerHTML = `✓ コール <strong>${risk}</strong>, 純利得 <strong>${(risk + dead).toFixed(1)}</strong> = リスク ${risk} + 死に金 ${dead.toFixed(1)} (SB ${sb} + BB ${bb} + アンティ計 ${totalAnte.toFixed(1)})`;
+  const modeLabel = anteMode === "perPlayer" ? `1人${anteRawV}×${players.length}人` : "合計";
+  autofillHint.innerHTML = `✓ コール <strong>${risk}</strong>, 純利得 <strong>${(risk + dead).toFixed(1)}</strong> = リスク ${risk} + 死に金 ${dead.toFixed(1)} (SB ${sb} + BB ${bb} + アンティ ${totalAnte.toFixed(1)} [${modeLabel}])`;
   recompute();
 });
 
