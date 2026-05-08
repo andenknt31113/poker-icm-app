@@ -20,6 +20,7 @@
         <div class="header-row">
           <h1>🎰 Poker ICM/BF</h1>
           <div class="header-actions">
+            <button id="share-url-btn-top" class="header-btn" type="button" title="シナリオを URL で共有" aria-label="共有">🔗</button>
             <button id="lang-toggle" class="header-btn" type="button" title="言語切替" aria-label="言語切替">JP</button>
             <button id="theme-toggle" class="header-btn" type="button" title="テーマ切替" aria-label="テーマ切替">🌙</button>
           </div>
@@ -27,6 +28,7 @@
         <p class="subtitle" data-i18n="subtitle">
           値を変えるとリアルタイムに再計算されます。
         </p>
+        <p id="share-url-toast" class="share-toast hidden"></p>
       </header>
 
       <div id="hero-summary" class="hero-summary"></div>
@@ -69,7 +71,7 @@
       </section>
 
       <section class="card" data-tab="setup">
-        <h2>1. プレイヤー</h2>
+        <h2>プレイヤー</h2>
         <p class="hint">
           各プレイヤーのスタックを入力。<strong>🎯 自分</strong> /
           <strong>⚔️ 相手</strong> をタップで指定。最大9人。
@@ -86,7 +88,7 @@
       </section>
 
       <section class="card" data-tab="setup">
-        <h2>2. ペイ構造</h2>
+        <h2>ペイ構造</h2>
         <p class="hint">1位から順に賞金を入力。単位は % でも $ でも OK。</p>
         <div id="payouts-list" class="payouts-list"></div>
         <button id="add-payout" class="add-btn" type="button">
@@ -121,7 +123,7 @@
       </section>
 
       <section class="card" data-tab="result">
-        <h2>3. ICMエクイティ</h2>
+        <h2>ICM エクイティ</h2>
         <table id="icm-table">
           <thead>
             <tr>
@@ -136,7 +138,7 @@
       </section>
 
       <section class="card" data-tab="result">
-        <h2>4. Bubble Factor (BF)</h2>
+        <h2>Bubble Factor (BF)</h2>
         <p class="hint">
           🎯自分と⚔️相手のオールイン想定。リスクするチップは小さい方のスタックに自動調整されます。
         </p>
@@ -215,7 +217,7 @@
       </section>
 
       <section class="card" data-tab="result">
-        <h2>5. 必要勝率 (cEV / $EV / RP)</h2>
+        <h2>必要勝率 (cEV / $EV / RP)</h2>
         <p class="hint">
           🎯と⚔️のオールイン想定で自動計算。手動入力したい場合は数値を上書きしてください。
         </p>
@@ -245,7 +247,7 @@
       </section>
 
       <section class="card" data-tab="nash">
-        <h2>6. Nash 均衡 (HU push/fold) 🆕</h2>
+        <h2>Nash 均衡 (HU push/fold)</h2>
         <p class="hint">
           🎯自分 (pusher) と ⚔️相手 (caller) のヘッズアップ Nash 均衡を計算（ICM反映済み）。
           <br />
@@ -298,7 +300,7 @@
       </section>
 
       <section class="card" data-tab="hand">
-        <h2>7. ハンドレンジ比較 🆕</h2>
+        <h2>ハンドレンジ比較</h2>
         <p class="hint">
           スタック差ベースの抽象レンジ比較（HU all-in 想定、position の行動順は無視）。
         </p>

@@ -1641,20 +1641,30 @@ function decodeStateFromHash(hash: string): void {
   }
 }
 
-const shareBtn = document.getElementById("share-url-btn") as HTMLButtonElement | null;
-const shareHint = document.getElementById("share-url-hint");
-if (shareBtn) {
-  shareBtn.addEventListener("click", async () => {
-    const hash = encodeStateToHash();
-    const url = `${location.origin}${location.pathname}#s=${hash}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      if (shareHint) shareHint.textContent = "✓ URL をクリップボードにコピー！";
-    } catch {
-      if (shareHint) shareHint.textContent = url;
+async function doShareScenario(): Promise<void> {
+  const hash = encodeStateToHash();
+  const url = `${location.origin}${location.pathname}#s=${hash}`;
+  const hint = document.getElementById("share-url-hint");
+  const toast = document.getElementById("share-url-toast");
+  try {
+    await navigator.clipboard.writeText(url);
+    if (hint) hint.textContent = "✓ URL をクリップボードにコピー！";
+    if (toast) {
+      toast.textContent = "✓ URL をクリップボードにコピーしました";
+      toast.classList.remove("hidden");
+      setTimeout(() => toast.classList.add("hidden"), 2500);
     }
-  });
+  } catch {
+    if (hint) hint.textContent = url;
+    if (toast) {
+      toast.textContent = url;
+      toast.classList.remove("hidden");
+    }
+  }
 }
+
+document.getElementById("share-url-btn")?.addEventListener("click", doShareScenario);
+document.getElementById("share-url-btn-top")?.addEventListener("click", doShareScenario);
 
 // 起動時に URL hash があれば復元
 if (location.hash.startsWith("#s=")) {

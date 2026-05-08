@@ -410,6 +410,19 @@ th {
   background: var(--accent);
   color: #000;
 }
+.share-toast {
+  background: var(--accent);
+  color: #000;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  margin-top: 8px;
+  text-align: center;
+  font-weight: bold;
+}
+.share-toast.hidden {
+  display: none;
+}
 
 /* ===== ボトムタブナビ ===== */
 body {
