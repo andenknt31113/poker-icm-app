@@ -2308,6 +2308,9 @@ function judgePractice(answer: "call" | "fold"): void {
     <div>余裕: <strong style="color: ${margin >= 0 ? "var(--good)" : "var(--bad)"}">${margin >= 0 ? "+" : ""}${(margin * 100).toFixed(1)}%</strong></div>
     <h3 style="font-size: 13px; margin: 12px 0 4px;">🎯 自分の call レンジ 🟢 (必要勝率 ${(p.dollarEV * 100).toFixed(1)}% 超のハンド)</h3>
     <div id="practice-hero-grid" class="hand-grid"></div>
+    <div style="margin-top: 12px;">
+      <button id="practice-apply-btn" type="button" class="solve-btn">📥 この問題を設定に取り込む (詳細分析)</button>
+    </div>
   `;
   const heroGridEl = document.getElementById(
     "practice-hero-grid",
@@ -2334,9 +2337,34 @@ practiceNewBtn?.addEventListener("click", () => {
 });
 
 document.getElementById("practice-area")?.addEventListener("click", (e) => {
-  const t = (e.target as HTMLElement).closest<HTMLButtonElement>(".practice-btn");
-  if (!t) return;
-  const ans = t.dataset.answer as "call" | "fold" | undefined;
+  const target = e.target as HTMLElement;
+  // 取り込みボタン
+  if (target.closest("#practice-apply-btn")) {
+    if (!currentProblem) return;
+    const p = currentProblem;
+    players.length = 0;
+    for (const sp of p.scenarioPlayers) {
+      players.push({
+        id: nextId++,
+        stack: sp.stack,
+        role: sp.role,
+        position: sp.position,
+      });
+    }
+    renderPlayers();
+    setPayouts(p.payouts);
+    nashSbInput.value = String(p.sb);
+    nashBbInput.value = String(p.bb);
+    nashAnteInput.value = String(p.totalAnte);
+    callManualOverride = false;
+    recompute();
+    applyTab("setup");
+    return;
+  }
+  // call / fold ボタン
+  const btn = target.closest<HTMLButtonElement>(".practice-btn");
+  if (!btn) return;
+  const ans = btn.dataset.answer as "call" | "fold" | undefined;
   if (ans) judgePractice(ans);
 });
 
