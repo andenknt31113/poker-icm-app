@@ -159,6 +159,10 @@ const customFromPresetBtn = $<HTMLButtonElement>("custom-from-preset");
 
 // ===== ユーティリティ =====
 
+// セクション 5 のコール額/純利得を手動編集したかどうかのフラグ。
+// true の間は自動更新を抑制。シナリオ変更や autofill ボタンで false にリセット。
+let callManualOverride = false;
+
 function parseList(v: string): number[] {
   return v
     .split(/[,\s]+/)
@@ -452,6 +456,8 @@ function applyScenario(scenarioId: string): void {
     `input[name="ante-mode"][value="${scenario.anteMode}"]`,
   );
   if (radio) radio.checked = true;
+  // コール額/純利得を自動追従モードに戻す
+  callManualOverride = false;
   recompute();
 }
 
@@ -528,12 +534,11 @@ function recompute(): void {
     // BF マトリックス（全員 vs 全員）
     renderBFMatrix(stacks, payouts);
 
-    // 必要勝率: 入力が空 & hero/villain あれば自動推定
+    // 必要勝率: hero/villain あれば常に自動更新（手動上書きは callManualOverride で保持）
     if (
       heroIndex >= 0 &&
       villainIndex >= 0 &&
-      heroIndex !== villainIndex &&
-      (callInput.value === "" || potWinInput.value === "")
+      heroIndex !== villainIndex
     ) {
       const heroStack = stacks[heroIndex]!;
       const villainStack = stacks[villainIndex]!;
@@ -548,9 +553,9 @@ function recompute(): void {
       const totalAnteVal =
         anteMode === "perPlayer" ? anteRaw * stacks.length : anteRaw;
       const dead = sbV + bbV + totalAnteVal;
-      if (risk > 0) {
-        if (callInput.value === "") callInput.value = risk.toFixed(1);
-        if (potWinInput.value === "") potWinInput.value = (risk + dead).toFixed(1);
+      if (risk > 0 && !callManualOverride) {
+        callInput.value = risk.toFixed(1);
+        potWinInput.value = (risk + dead).toFixed(1);
       }
     }
     const callAmount = Number(callInput.value);
@@ -1097,9 +1102,17 @@ autofillBtn.addEventListener("click", () => {
 
   callInput.value = risk.toFixed(1);
   potWinInput.value = (risk + dead).toFixed(1);
+  callManualOverride = false; // autofill 押したら自動追従モードに戻す
 
   autofillHint.innerHTML = `✓ コール <strong>${risk}</strong>, 純利得 <strong>${(risk + dead).toFixed(1)}</strong> = リスク ${risk} + 死に金 ${dead.toFixed(1)} (SB ${sb} + BB ${bb} + アンティ計 ${totalAnte.toFixed(1)})`;
   recompute();
+});
+
+// 手動編集を検知して override フラグを立てる
+[callInput, potWinInput].forEach((el) => {
+  el.addEventListener("input", () => {
+    callManualOverride = true;
+  });
 });
 
 // ===== Nash 均衡 (HU) =====
