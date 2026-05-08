@@ -57,14 +57,80 @@ interface Player {
 }
 
 let nextId = 0;
-const players: Player[] = [
-  { id: nextId++, stack: 14, role: "hero", position: "SB" },
-  { id: nextId++, stack: 23, role: "villain", position: "BB" },
-  { id: nextId++, stack: 8, role: "other", position: "BTN" },
-  { id: nextId++, stack: 8, role: "other", position: "CO" },
-  { id: nextId++, stack: 8, role: "other", position: "HJ" },
-  { id: nextId++, stack: 8, role: "other", position: "LJ" },
+const players: Player[] = [];
+
+// localStorage 永続化キー
+const STATE_KEY = "poker-icm-app-state-v1";
+interface PersistedState {
+  players: { stack: number; role: Role; position: Position }[];
+  payouts: number[];
+  nash: { sb: number; bb: number; ante: number; anteMode: "total" | "perPlayer" };
+}
+
+function loadState(): PersistedState | null {
+  try {
+    const raw = localStorage.getItem(STATE_KEY);
+    if (!raw) return null;
+    const obj = JSON.parse(raw) as PersistedState;
+    if (!Array.isArray(obj.players) || !Array.isArray(obj.payouts) || !obj.nash) {
+      return null;
+    }
+    return obj;
+  } catch {
+    return null;
+  }
+}
+
+function saveState(): void {
+  try {
+    const sbEl = document.getElementById("nash-sb") as HTMLInputElement | null;
+    const bbEl = document.getElementById("nash-bb") as HTMLInputElement | null;
+    const anteEl = document.getElementById("nash-ante") as HTMLInputElement | null;
+    const anteMode =
+      (document.querySelector<HTMLInputElement>(
+        'input[name="ante-mode"]:checked',
+      )?.value ?? "total") as "total" | "perPlayer";
+    const state: PersistedState = {
+      players: players.map((p) => ({
+        stack: p.stack,
+        role: p.role,
+        position: p.position,
+      })),
+      payouts: payoutsArr.length > 0 ? payoutsArr : [50, 30, 20],
+      nash: {
+        sb: sbEl ? Number(sbEl.value) || 0.5 : 0.5,
+        bb: bbEl ? Number(bbEl.value) || 1.0 : 1.0,
+        ante: anteEl ? Number(anteEl.value) || 0 : 0,
+        anteMode,
+      },
+    };
+    localStorage.setItem(STATE_KEY, JSON.stringify(state));
+  } catch {
+    /* quota / serialize エラーは無視 */
+  }
+}
+
+// デフォルト状態（初回起動時）
+const DEFAULT_PLAYERS: { stack: number; role: Role; position: Position }[] = [
+  { stack: 14, role: "hero", position: "SB" },
+  { stack: 23, role: "villain", position: "BB" },
+  { stack: 8, role: "other", position: "BTN" },
+  { stack: 8, role: "other", position: "CO" },
+  { stack: 8, role: "other", position: "HJ" },
+  { stack: 8, role: "other", position: "LJ" },
 ];
+
+// 起動時に state を復元
+const persistedState = loadState();
+const initialPlayers = persistedState?.players ?? DEFAULT_PLAYERS;
+for (const p of initialPlayers) {
+  players.push({
+    id: nextId++,
+    stack: p.stack,
+    role: p.role,
+    position: p.position,
+  });
+}
 
 // ===== DOM参照 =====
 const playersList = $<HTMLDivElement>("players-list");
@@ -278,6 +344,124 @@ function randomizeStacks(): void {
 
 randomizeStacksBtn.addEventListener("click", randomizeStacks);
 
+// ===== シナリオプリセット =====
+
+interface Scenario {
+  players: { stack: number; role: Role; position: Position }[];
+  payouts: number[];
+  sb: number;
+  bb: number;
+  ante: number;
+  anteMode: "total" | "perPlayer";
+}
+
+const SCENARIOS: Record<string, Scenario> = {
+  ft9: {
+    players: [
+      { stack: 35, role: "hero", position: "BTN" },
+      { stack: 28, role: "villain", position: "SB" },
+      { stack: 22, role: "other", position: "BB" },
+      { stack: 18, role: "other", position: "UTG" },
+      { stack: 15, role: "other", position: "UTG+1" },
+      { stack: 12, role: "other", position: "MP" },
+      { stack: 10, role: "other", position: "LJ" },
+      { stack: 7, role: "other", position: "HJ" },
+      { stack: 5, role: "other", position: "CO" },
+    ],
+    payouts: [40, 25, 15, 10, 5, 3, 2, 1, 0.5],
+    sb: 0.5, bb: 1, ante: 1, anteMode: "perPlayer",
+  },
+  ftBubble: {
+    players: [
+      { stack: 4, role: "hero", position: "BTN" },
+      { stack: 18, role: "villain", position: "SB" },
+      { stack: 22, role: "other", position: "BB" },
+      { stack: 16, role: "other", position: "CO" },
+    ],
+    payouts: [50, 30, 20],
+    sb: 0.5, bb: 1, ante: 1, anteMode: "perPlayer",
+  },
+  ft6: {
+    players: [
+      { stack: 18, role: "hero", position: "BTN" },
+      { stack: 12, role: "villain", position: "SB" },
+      { stack: 22, role: "other", position: "BB" },
+      { stack: 8, role: "other", position: "UTG" },
+      { stack: 14, role: "other", position: "HJ" },
+      { stack: 10, role: "other", position: "CO" },
+    ],
+    payouts: [45, 25, 15, 8, 4, 3],
+    sb: 0.5, bb: 1, ante: 1, anteMode: "perPlayer",
+  },
+  ft4: {
+    players: [
+      { stack: 12, role: "hero", position: "BTN" },
+      { stack: 18, role: "villain", position: "SB" },
+      { stack: 8, role: "other", position: "BB" },
+      { stack: 15, role: "other", position: "CO" },
+    ],
+    payouts: [50, 30, 15, 5],
+    sb: 0.5, bb: 1, ante: 1, anteMode: "perPlayer",
+  },
+  ft3: {
+    players: [
+      { stack: 18, role: "hero", position: "BTN" },
+      { stack: 14, role: "villain", position: "SB" },
+      { stack: 20, role: "other", position: "BB" },
+    ],
+    payouts: [50, 30, 20],
+    sb: 0.5, bb: 1, ante: 1, anteMode: "perPlayer",
+  },
+  hu: {
+    players: [
+      { stack: 10, role: "hero", position: "BTN" },
+      { stack: 10, role: "villain", position: "BB" },
+    ],
+    payouts: [100],
+    sb: 0.5, bb: 1, ante: 0, anteMode: "perPlayer",
+  },
+  huShort: {
+    players: [
+      { stack: 5, role: "hero", position: "BTN" },
+      { stack: 18, role: "villain", position: "BB" },
+    ],
+    payouts: [100],
+    sb: 0.5, bb: 1, ante: 0, anteMode: "perPlayer",
+  },
+};
+
+function applyScenario(scenarioId: string): void {
+  const scenario = SCENARIOS[scenarioId];
+  if (!scenario) return;
+  // プレイヤーリスト置換
+  players.length = 0;
+  for (const p of scenario.players) {
+    players.push({ id: nextId++, stack: p.stack, role: p.role, position: p.position });
+  }
+  renderPlayers();
+  // ペイアウト
+  setPayouts(scenario.payouts);
+  // Nash パラメータ
+  const sbEl = document.getElementById("nash-sb") as HTMLInputElement | null;
+  const bbEl = document.getElementById("nash-bb") as HTMLInputElement | null;
+  const anteEl = document.getElementById("nash-ante") as HTMLInputElement | null;
+  if (sbEl) sbEl.value = String(scenario.sb);
+  if (bbEl) bbEl.value = String(scenario.bb);
+  if (anteEl) anteEl.value = String(scenario.ante);
+  const radio = document.querySelector<HTMLInputElement>(
+    `input[name="ante-mode"][value="${scenario.anteMode}"]`,
+  );
+  if (radio) radio.checked = true;
+  recompute();
+}
+
+document.querySelectorAll<HTMLButtonElement>(".scenario-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const id = btn.dataset.scenario;
+    if (id) applyScenario(id);
+  });
+});
+
 // ===== メイン計算 =====
 
 function recompute(): void {
@@ -361,12 +545,93 @@ function recompute(): void {
 
     // レンジ比較
     renderRangeComparison(eq.dollarEV);
+
+    // Hero サマリー
+    renderHeroSummary({
+      heroIndex,
+      villainIndex,
+      stacks,
+      heroEq: heroIndex >= 0 ? equities[heroIndex] ?? 0 : 0,
+      totalPrize,
+      bf,
+      requiredEq: eq.dollarEV,
+      rp: eq.riskPremium,
+    });
+
+    // 状態を保存
+    saveState();
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     icmRows.innerHTML = `<tr><td colspan="4" class="error">${msg}</td></tr>`;
     bfResult.innerHTML = "";
     eqResult.innerHTML = "";
+    heroSummaryEl.classList.remove("active");
   }
+}
+
+// ===== Hero サマリーカード =====
+const heroSummaryEl = $<HTMLDivElement>("hero-summary");
+
+interface HeroSummaryArg {
+  heroIndex: number;
+  villainIndex: number;
+  stacks: number[];
+  heroEq: number;
+  totalPrize: number;
+  bf: number;
+  requiredEq: number;
+  rp: number;
+}
+
+function renderHeroSummary(a: HeroSummaryArg): void {
+  if (a.heroIndex < 0) {
+    heroSummaryEl.classList.remove("active");
+    return;
+  }
+  heroSummaryEl.classList.add("active");
+  const heroStack = a.stacks[a.heroIndex]!;
+  const heroPos = players[a.heroIndex]?.position || "—";
+  const eqPct = a.totalPrize > 0 ? (a.heroEq / a.totalPrize) * 100 : 0;
+  const villainStr =
+    a.villainIndex >= 0
+      ? `vs ${a.stacks[a.villainIndex]} BB`
+      : "相手未指定";
+
+  // BF 色
+  let bfClass = "accent";
+  if (a.bf < 0.95) bfClass = "good";
+  else if (a.bf > 1.15) bfClass = "bad";
+  else if (a.bf > 1.05) bfClass = "warn";
+
+  heroSummaryEl.innerHTML = `
+    <div class="hero-summary-title">🎯 自分の状況サマリー</div>
+    <div class="hero-summary-grid">
+      <div class="hero-summary-item">
+        <div class="hero-summary-label">スタック</div>
+        <div class="hero-summary-value">${heroStack}<span style="font-size:11px;color:var(--muted);">BB</span></div>
+      </div>
+      <div class="hero-summary-item">
+        <div class="hero-summary-label">ポジ</div>
+        <div class="hero-summary-value">${heroPos}</div>
+      </div>
+      <div class="hero-summary-item">
+        <div class="hero-summary-label">ICM</div>
+        <div class="hero-summary-value accent">${eqPct.toFixed(1)}<span style="font-size:11px;color:var(--muted);">%</span></div>
+      </div>
+      <div class="hero-summary-item">
+        <div class="hero-summary-label">BF (${villainStr})</div>
+        <div class="hero-summary-value ${bfClass}">${a.bf.toFixed(2)}</div>
+      </div>
+      <div class="hero-summary-item">
+        <div class="hero-summary-label">必要勝率</div>
+        <div class="hero-summary-value">${(a.requiredEq * 100).toFixed(1)}<span style="font-size:11px;color:var(--muted);">%</span></div>
+      </div>
+      <div class="hero-summary-item">
+        <div class="hero-summary-label">RP</div>
+        <div class="hero-summary-value warn">+${(a.rp * 100).toFixed(1)}<span style="font-size:11px;color:var(--muted);">%</span></div>
+      </div>
+    </div>
+  `;
 }
 
 // ===== BF マトリックス =====
@@ -607,8 +872,11 @@ loadCustomRange();
 const payoutsList = $<HTMLDivElement>("payouts-list");
 const addPayoutBtn = $<HTMLButtonElement>("add-payout");
 const MAX_PAYOUTS = 12;
-let payoutsArr: number[] = parseList(payoutsInput.value);
+let payoutsArr: number[] = persistedState?.payouts && persistedState.payouts.length > 0
+  ? persistedState.payouts.slice()
+  : parseList(payoutsInput.value);
 if (payoutsArr.length === 0) payoutsArr = [50, 30, 20];
+payoutsInput.value = payoutsArr.join(", ");
 
 function syncPayoutsInput(): void {
   payoutsInput.value = payoutsArr.join(", ");
@@ -821,6 +1089,25 @@ const nashSbStats = $<HTMLParagraphElement>("nash-sb-stats");
 const nashBbStats = $<HTMLParagraphElement>("nash-bb-stats");
 const nashSbGrid = $<HTMLDivElement>("nash-sb-grid");
 const nashBbGrid = $<HTMLDivElement>("nash-bb-grid");
+
+// 起動時に保存された Nash パラメータを復元
+if (persistedState?.nash) {
+  nashSbInput.value = String(persistedState.nash.sb);
+  nashBbInput.value = String(persistedState.nash.bb);
+  nashAnteInput.value = String(persistedState.nash.ante);
+  const radio = document.querySelector<HTMLInputElement>(
+    `input[name="ante-mode"][value="${persistedState.nash.anteMode}"]`,
+  );
+  if (radio) radio.checked = true;
+}
+
+// Nash 入力変更時に状態保存
+[nashSbInput, nashBbInput, nashAnteInput].forEach((el) => {
+  el.addEventListener("input", saveState);
+});
+document.querySelectorAll<HTMLInputElement>('input[name="ante-mode"]').forEach((el) => {
+  el.addEventListener("change", saveState);
+});
 
 // 初期描画（空のグリッド）
 renderGrid(nashSbGrid, () => "");

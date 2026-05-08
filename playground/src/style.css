@@ -362,6 +362,87 @@ th {
   font-family: var(--mono);
 }
 
+/* ===== Hero サマリー ===== */
+.hero-summary {
+  display: none;
+  background: linear-gradient(135deg, #0f1d2e 0%, #1a2840 100%);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 12px rgba(56, 168, 255, 0.15);
+}
+.hero-summary.active {
+  display: block;
+}
+.hero-summary-title {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  letter-spacing: 0.05em;
+}
+.hero-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 8px;
+}
+.hero-summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 4px 2px;
+}
+.hero-summary-label {
+  font-size: 10px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.hero-summary-value {
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--text);
+  margin-top: 2px;
+}
+.hero-summary-value.accent {
+  color: var(--accent);
+}
+.hero-summary-value.good {
+  color: var(--good);
+}
+.hero-summary-value.warn {
+  color: var(--warn);
+}
+.hero-summary-value.bad {
+  color: var(--bad);
+}
+
+/* ===== シナリオプリセット ===== */
+.scenario-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.scenario-btn {
+  background: #0f1419;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.scenario-btn:hover {
+  border-color: var(--accent);
+  background: #1a2027;
+}
+.scenario-btn:active {
+  background: var(--accent);
+  color: #000;
+}
+
 .ante-mode-row {
   display: flex;
   gap: 10px;
