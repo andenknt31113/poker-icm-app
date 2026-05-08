@@ -293,11 +293,11 @@ th {
 
 .player-row {
   display: grid;
-  grid-template-columns: 28px 1fr 26px 56px auto 30px;
-  gap: 6px;
+  grid-template-columns: 22px minmax(56px, 1fr) 18px 46px auto 26px;
+  gap: 4px;
   align-items: center;
   background: #0f1419;
-  padding: 6px 8px;
+  padding: 6px 6px;
   border: 1px solid var(--border);
   border-radius: 8px;
 }
@@ -333,11 +333,13 @@ th {
   background: transparent;
   border: 1px solid transparent;
   border-radius: 4px;
-  padding: 6px 8px;
+  padding: 6px 4px;
   font-family: var(--mono);
-  font-size: 16px;
+  font-size: 15px;
   color: var(--text);
   font-weight: bold;
+  text-align: center;
+  min-width: 0;
 }
 
 .player-stack:focus {
@@ -611,14 +613,14 @@ body {
 }
 
 .role-btn {
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   border: 1px solid var(--border);
   background: transparent;
   color: var(--muted);
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -646,14 +648,14 @@ body {
 }
 
 .player-remove {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border: 1px solid var(--border);
   background: transparent;
   color: var(--muted);
   border-radius: 4px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 11px;
   padding: 0;
 }
 

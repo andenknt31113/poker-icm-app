@@ -198,7 +198,7 @@ function renderPlayers(): void {
       .join("");
     row.innerHTML = `
       <span class="player-num">#${i + 1}</span>
-      <input type="number" inputmode="decimal" class="player-stack" min="0" step="0.5" value="${p.stack}" data-id="${p.id}" />
+      <input type="number" inputmode="decimal" class="player-stack" min="0" step="1" value="${p.stack}" data-id="${p.id}" />
       <span class="player-unit">BB</span>
       <select class="player-pos" data-id="${p.id}" title="ポジション">${posOptions}</select>
       <div class="player-roles" data-id="${p.id}">
@@ -337,10 +337,9 @@ playersList.addEventListener("change", (e) => {
 addPlayerBtn.addEventListener("click", addPlayer);
 
 function randomizeStacks(): void {
-  // 3 〜 30 BB のランダム整数（0.5 BB 刻み）。トナメ終盤の幅広いスタックを再現。
+  // 3 〜 30 BB のランダム整数。トナメ終盤の幅広いスタックを再現。
   for (const p of players) {
-    const raw = 3 + Math.random() * 27;
-    p.stack = Math.round(raw * 2) / 2;
+    p.stack = 3 + Math.floor(Math.random() * 28); // 3..30
   }
   renderPlayers();
   recompute();
