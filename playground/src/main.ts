@@ -870,7 +870,8 @@ function runNash(): void {
         ante,
         huEquity,
         allHands: ALL_169_HANDS,
-        maxIterations: 100,
+        maxIterations: 500,
+        convergenceTolerance: 0.005,
       });
       const elapsedMs = performance.now() - t0;
 
