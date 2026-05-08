@@ -2144,10 +2144,10 @@ function pickRandom<T>(arr: T[]): T {
 }
 
 function generatePracticeProblem(): PracticeProblem {
-  // 当たり前すぎる (|margin| > 15%) 問題はリロール、最大 30 試行
-  for (let attempt = 0; attempt < 30; attempt++) {
+  // 境界問題のみ (|margin| <= 5%) 出題、最大 80 試行
+  for (let attempt = 0; attempt < 80; attempt++) {
     const p = generateRandomPracticeProblem();
-    if (Math.abs(p.heroEq - p.dollarEV) <= 0.15) return p;
+    if (Math.abs(p.heroEq - p.dollarEV) <= 0.05) return p;
   }
   return generateRandomPracticeProblem();
 }
