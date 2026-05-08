@@ -45,10 +45,14 @@ export interface HUNashInput {
 }
 
 export interface HUNashResult {
-  /** SB のプッシュレンジ（push する hand の集合）。 */
+  /** SB のプッシュレンジ（push する hand の集合、prob > 0.5）。 */
   readonly sbPushRange: ReadonlySet<HandLabel>;
-  /** BB のコールレンジ（call する hand の集合）。 */
+  /** BB のコールレンジ（call する hand の集合、prob > 0.5）。 */
   readonly bbCallRange: ReadonlySet<HandLabel>;
+  /** SB の各ハンドの push 確率 (mixed strategy frequency, 0..1)。 */
+  readonly sbPushFreq: ReadonlyMap<HandLabel, number>;
+  /** BB の各ハンドの call 確率 (mixed strategy frequency, 0..1)。 */
+  readonly bbCallFreq: ReadonlyMap<HandLabel, number>;
   /** 反復回数。 */
   readonly iterations: number;
   /** 収束したか（false なら maxIterations 到達）。 */
@@ -328,11 +332,17 @@ export function solveHUNash(input: HUNashInput): HUNashResult {
   }
 
   // 確率 > 0.5 を「レンジに含む」として binary 出力
+  // 同時に各ハンドの確率を frequency map として返す
   const sbPushRange = new Set<HandLabel>();
   const bbCallRange = new Set<HandLabel>();
+  const sbPushFreq = new Map<HandLabel, number>();
+  const bbCallFreq = new Map<HandLabel, number>();
   for (let i = 0; i < allHands.length; i++) {
-    if (sbPushProb[i]! > 0.5) sbPushRange.add(allHands[i]!);
-    if (bbCallProb[i]! > 0.5) bbCallRange.add(allHands[i]!);
+    const h = allHands[i]!;
+    sbPushFreq.set(h, sbPushProb[i]!);
+    bbCallFreq.set(h, bbCallProb[i]!);
+    if (sbPushProb[i]! > 0.5) sbPushRange.add(h);
+    if (bbCallProb[i]! > 0.5) bbCallRange.add(h);
   }
 
   // handIndex は使わないので破棄させる（lint 抑制 + 将来の混合戦略出力用予約）
@@ -341,6 +351,8 @@ export function solveHUNash(input: HUNashInput): HUNashResult {
   return {
     sbPushRange,
     bbCallRange,
+    sbPushFreq,
+    bbCallFreq,
     iterations: iter,
     converged,
     sbPushPct: sbPushRange.size / allHands.length,

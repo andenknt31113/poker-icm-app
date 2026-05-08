@@ -524,6 +524,39 @@ body {
   flex-wrap: wrap;
   gap: 6px;
 }
+.user-scenario-item {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.user-scenario-item .user-load {
+  background: #0f1419;
+  color: var(--text);
+  border: none;
+  padding: 8px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.user-scenario-item .user-load:hover {
+  background: #1a2027;
+}
+.user-scenario-item .user-del {
+  background: transparent;
+  border: none;
+  border-left: 1px solid var(--border);
+  color: var(--muted);
+  width: 24px;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 0;
+}
+.user-scenario-item .user-del:hover {
+  color: var(--bad);
+  background: rgba(239, 83, 80, 0.1);
+}
 .scenario-btn {
   background: #0f1419;
   color: var(--text);

@@ -480,6 +480,134 @@ document.querySelectorAll<HTMLButtonElement>(".scenario-btn").forEach((btn) => {
   });
 });
 
+// ===== ユーザー定義シナリオ (保存・呼び出し・削除) =====
+const USER_SCENARIOS_KEY = "poker-icm-user-scenarios";
+interface UserScenario {
+  name: string;
+  s: Scenario;
+}
+
+function loadUserScenarios(): UserScenario[] {
+  try {
+    const raw = localStorage.getItem(USER_SCENARIOS_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw) as unknown;
+    if (!Array.isArray(arr)) return [];
+    return arr.filter(
+      (x): x is UserScenario =>
+        typeof x === "object" && x !== null && typeof (x as UserScenario).name === "string",
+    );
+  } catch {
+    return [];
+  }
+}
+
+function saveUserScenarios(list: UserScenario[]): void {
+  try {
+    localStorage.setItem(USER_SCENARIOS_KEY, JSON.stringify(list));
+  } catch {
+    /* quota error は無視 */
+  }
+}
+
+function captureCurrentScenario(): Scenario {
+  const sbV = Number(nashSbInput.value) || 0.5;
+  const bbV = Number(nashBbInput.value) || 1;
+  const anteV = Number(nashAnteInput.value) || 0;
+  const anteMode =
+    (document.querySelector<HTMLInputElement>(
+      'input[name="ante-mode"]:checked',
+    )?.value ?? "total") as "total" | "perPlayer";
+  return {
+    players: players.map((p) => ({
+      stack: p.stack,
+      role: p.role,
+      position: p.position,
+    })),
+    payouts: payoutsArr.slice(),
+    sb: sbV,
+    bb: bbV,
+    ante: anteV,
+    anteMode,
+  };
+}
+
+function escapeAttr(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function renderUserScenarios(): void {
+  const container = document.getElementById("user-scenarios");
+  if (!container) return;
+  const list = loadUserScenarios();
+  if (list.length === 0) {
+    container.innerHTML = `<span class="hint" style="font-size:11px;color:var(--muted);">まだ保存なし。「＋ 現在の状況を保存」を押すと追加</span>`;
+    return;
+  }
+  container.innerHTML = list
+    .map(
+      (s, i) => `
+      <span class="user-scenario-item" data-i="${i}">
+        <button type="button" class="scenario-btn user-load">${escapeAttr(s.name)}</button>
+        <button type="button" class="user-del" title="削除">✕</button>
+      </span>
+    `,
+    )
+    .join("");
+}
+
+const saveScenarioBtn = document.getElementById("save-scenario-btn") as HTMLButtonElement | null;
+saveScenarioBtn?.addEventListener("click", () => {
+  const name = window.prompt("シナリオ名を入力", "");
+  if (!name) return;
+  const list = loadUserScenarios();
+  list.push({ name: name.slice(0, 30), s: captureCurrentScenario() });
+  saveUserScenarios(list);
+  renderUserScenarios();
+});
+
+document.getElementById("user-scenarios")?.addEventListener("click", (e) => {
+  const t = e.target as HTMLElement;
+  const wrap = t.closest<HTMLSpanElement>(".user-scenario-item");
+  if (!wrap) return;
+  const idx = Number(wrap.dataset.i);
+  const list = loadUserScenarios();
+  if (t.classList.contains("user-del")) {
+    if (window.confirm("このシナリオを削除しますか？")) {
+      list.splice(idx, 1);
+      saveUserScenarios(list);
+      renderUserScenarios();
+    }
+    return;
+  }
+  if (t.classList.contains("user-load")) {
+    const s = list[idx]?.s;
+    if (s) {
+      players.length = 0;
+      for (const p of s.players) {
+        players.push({ id: nextId++, stack: p.stack, role: p.role, position: p.position });
+      }
+      renderPlayers();
+      setPayouts(s.payouts);
+      nashSbInput.value = String(s.sb);
+      nashBbInput.value = String(s.bb);
+      nashAnteInput.value = String(s.ante);
+      const radio = document.querySelector<HTMLInputElement>(
+        `input[name="ante-mode"][value="${s.anteMode}"]`,
+      );
+      if (radio) radio.checked = true;
+      callManualOverride = false;
+      recompute();
+    }
+  }
+});
+
+renderUserScenarios();
+
 // ===== メイン計算 =====
 
 function recompute(): void {
@@ -1337,6 +1465,44 @@ autofillBtn.addEventListener("click", () => {
   });
 });
 
+// Nash の frequency マップを使ったグラデーション描画。
+// freq < 0.05 → fold (灰)、0.05〜0.95 → mixed (濃淡赤/緑)、> 0.95 → pure
+function renderNashGridWithFreq(
+  container: HTMLDivElement,
+  freqMap: ReadonlyMap<HandNotation, number>,
+  type: "push" | "call",
+): void {
+  const cells: string[] = [];
+  for (let row = 0; row < 13; row++) {
+    for (let col = 0; col < 13; col++) {
+      const hand = handAt(row, col);
+      const freq = freqMap.get(hand) ?? 0;
+      const isPair = row === col;
+      let bg = "";
+      let label = hand;
+      if (freq >= 0.95) {
+        // pure action
+        bg =
+          type === "push"
+            ? "background: rgba(239, 83, 80, 0.65);"
+            : "background: rgba(102, 187, 106, 0.55);";
+      } else if (freq >= 0.05) {
+        // mixed - 透明度で濃淡
+        const alpha = 0.15 + freq * 0.5;
+        bg =
+          type === "push"
+            ? `background: rgba(239, 83, 80, ${alpha.toFixed(2)});`
+            : `background: rgba(102, 187, 106, ${alpha.toFixed(2)});`;
+        label = `${hand}<sub>${Math.round(freq * 100)}</sub>`;
+      }
+      cells.push(
+        `<div class="hand-cell ${isPair ? "pair" : ""}" style="${bg}" title="${hand} (${(freq * 100).toFixed(0)}%)">${label}</div>`,
+      );
+    }
+  }
+  container.innerHTML = cells.join("");
+}
+
 // ===== Nash 均衡 (HU) =====
 
 const nashSbInput = $<HTMLInputElement>("nash-sb");
@@ -1758,13 +1924,9 @@ function runNash(): void {
       });
       const elapsedMs = performance.now() - t0;
 
-      // 描画
-      renderGrid(nashSbGrid, (h) =>
-        result.sbPushRange.has(h) ? "in-range-villain" : "",
-      );
-      renderGrid(nashBbGrid, (h) =>
-        result.bbCallRange.has(h) ? "in-range-hero" : "",
-      );
+      // 描画: frequency に応じて濃淡（mixed strategy 表示）
+      renderNashGridWithFreq(nashSbGrid, result.sbPushFreq, "push");
+      renderNashGridWithFreq(nashBbGrid, result.bbCallFreq, "call");
 
       const sbCount = result.sbPushRange.size;
       const bbCount = result.bbCallRange.size;
