@@ -190,12 +190,11 @@ export function solveHUNash(input: HUNashInput): HUNashResult {
 
   // ----- 各終端のスタック -----
 
-  // (1) SB folds: SB は SB blind を失う、BB は SB blind を得る。
-  //   SB stack = baseStacks[sb] - sb,  BB stack = baseStacks[bb] + sb
-  //   ※ ante は dead money として失われる（誰も得ない、payout の一部とは別）。
-  //   現実的には ante はラウンド毎にチップが減る扱いで構わない。
+  // (1) SB folds: BB がポット全部（SB blind + 全員のアンティ）を回収。
+  //   SB stack = baseStacks[sb] - sb
+  //   BB stack = baseStacks[bb] + sb + totalAnte
   const foldSbStack = baseStacks[sbIndex]! - sb;
-  const foldBbStack = baseStacks[bbIndex]! + sb;
+  const foldBbStack = baseStacks[bbIndex]! + sb + totalAnte;
   const foldICM = icmAt(foldSbStack, foldBbStack);
 
   // (2) SB pushes, BB folds: SB は BB blind と ante (dead money) を回収する。

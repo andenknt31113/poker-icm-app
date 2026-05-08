@@ -41,7 +41,7 @@ function heuristicEquity(hero: HandNotation, villain: HandNotation): number {
   const rH = rankOf(hero); // 0=最強, 168=最弱
   const rV = rankOf(villain);
   // -168..+168 のランク差を 0..1 にマップ
-  const diff = (rV - rH) / 60; // 60 で割って sigmoid に通す
+  const diff = (rV - rH) / 100; // 100 で割って sigmoid に通す（弱ハンド equity を低く見積もりすぎないため）
   let eq = 1 / (1 + Math.exp(-diff));
   // pair vs non-pair 補正
   const heroIsPair = hero.length === 2;

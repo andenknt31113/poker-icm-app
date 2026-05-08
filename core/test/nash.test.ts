@@ -235,6 +235,27 @@ describe("solveHUNash", () => {
     ).toThrow();
   });
 
+  it("HRC ベンチ: 4人 × 8BB / WTA(50) / SB 0.5 BB 1 ante 1/人 → SB push 90%+", () => {
+    // Reference: holdemresources.net/nashicm?action=calculate&s1=8&s2=8&s3=8&s4=8&p1=50&sb=0.5&bb=1&ante=1
+    // 期待: SB push ≈ 94.6%, BB call ≈ 96.4%
+    const result = solveHUNash({
+      stacks: [8, 8, 8, 8],
+      payouts: [50],
+      sbIndex: 0,
+      bbIndex: 1,
+      sb: 0.5,
+      bb: 1,
+      ante: 1, // 1人あたり 1 BB
+      huEquity: fakeEq,
+      allHands: ALL_HANDS,
+      maxIterations: 200,
+    });
+
+    // 巨額 ante (4 BB 死に金) で push レンジは any-two に近づくはず
+    expect(result.sbPushPct).toBeGreaterThan(0.9);
+    expect(result.bbCallPct).toBeGreaterThan(0.85);
+  });
+
   it("不正な入力: stacks 不足でエラー", () => {
     expect(() =>
       solveHUNash({

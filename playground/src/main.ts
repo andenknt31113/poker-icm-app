@@ -787,13 +787,14 @@ autofillBtn.addEventListener("click", () => {
   const anteEl = document.getElementById("nash-ante") as HTMLInputElement | null;
   const sb = sbEl ? Number(sbEl.value) || 0 : 0.5;
   const bb = bbEl ? Number(bbEl.value) || 0 : 1.0;
-  const totalAnte = anteEl ? Number(anteEl.value) || 0 : 0;
+  const antePerPlayer = anteEl ? Number(anteEl.value) || 0 : 0;
+  const totalAnte = antePerPlayer * Math.max(1, players.length);
   const dead = sb + bb + totalAnte;
 
   callInput.value = risk.toFixed(1);
   potWinInput.value = (risk + dead).toFixed(1);
 
-  autofillHint.innerHTML = `✓ コール <strong>${risk}</strong>, 純利得 <strong>${(risk + dead).toFixed(1)}</strong> = リスク ${risk} + 死に金 ${dead.toFixed(1)} (SB ${sb} + BB ${bb} + アンティ計 ${totalAnte.toFixed(1)})`;
+  autofillHint.innerHTML = `✓ コール <strong>${risk}</strong>, 純利得 <strong>${(risk + dead).toFixed(1)}</strong> = リスク ${risk} + 死に金 ${dead.toFixed(1)} (SB ${sb} + BB ${bb} + アンティ計 ${totalAnte.toFixed(1)} = ${antePerPlayer} × ${players.length}人)`;
   recompute();
 });
 
@@ -834,7 +835,7 @@ function runNash(): void {
   }
   const sb = Number(nashSbInput.value);
   const bb = Number(nashBbInput.value);
-  const totalAnte = Number(nashAnteInput.value);
+  const ante = Number(nashAnteInput.value);
   if (!Number.isFinite(sb) || sb <= 0) {
     nashStatus.innerHTML = `<span class="error">SB が不正</span>`;
     return;
@@ -843,12 +844,10 @@ function runNash(): void {
     nashStatus.innerHTML = `<span class="error">BB が不正</span>`;
     return;
   }
-  if (!Number.isFinite(totalAnte) || totalAnte < 0) {
-    nashStatus.innerHTML = `<span class="error">アンティ合計 が不正</span>`;
+  if (!Number.isFinite(ante) || ante < 0) {
+    nashStatus.innerHTML = `<span class="error">アンティが不正</span>`;
     return;
   }
-  // ソルバは per-player ante を期待するので変換
-  const ante = totalAnte / Math.max(1, stacks.length);
 
   // ボタンを「計算中…」に
   nashSolveBtn.disabled = true;
