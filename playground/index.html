@@ -211,7 +211,9 @@
       <section class="card" data-tab="nash">
         <h2>6. Nash 均衡 (HU push/fold) 🆕</h2>
         <p class="hint">
-          🎯自分(SB) と ⚔️相手(BB) のヘッズアップ Nash 均衡を計算（ICM反映済み）。
+          🎯自分 (pusher) と ⚔️相手 (caller) のヘッズアップ Nash 均衡を計算（ICM反映済み）。
+          <br />
+          ※ HU 2-way 想定。BTN+BB のように間に他プレイヤーがいる場合は警告が出ます。
           <br />
           上の「1. プレイヤー」で 🎯/⚔️ を指定してから Nash 計算を押してください。
         </p>
@@ -247,12 +249,12 @@
 
         <div class="range-grids">
           <div>
-            <h3>🎯自分(SB) push レンジ 🔴</h3>
+            <h3>🎯自分 push レンジ 🔴</h3>
             <p class="hint" id="nash-sb-stats"></p>
             <div id="nash-sb-grid" class="hand-grid"></div>
           </div>
           <div>
-            <h3>⚔️相手(BB) call レンジ 🟢</h3>
+            <h3>⚔️相手 call レンジ 🟢</h3>
             <p class="hint" id="nash-bb-stats"></p>
             <div id="nash-bb-grid" class="hand-grid"></div>
           </div>

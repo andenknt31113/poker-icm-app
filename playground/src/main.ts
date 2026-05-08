@@ -1258,27 +1258,49 @@ function updateNashOvercallWarn(): void {
     return;
   }
 
-  const lastActorIdx = Math.max(heroAct, villainAct);
-  // hero/villain より後に行動する生存プレイヤー
-  const overCallers = players.filter((p, i) => {
+  // pusher = 行動順が早い方 (idx が小さい方)。caller = もう片方。
+  const pusherAct = Math.min(heroAct, villainAct);
+  // pusher の後ろに行動する全プレイヤー (= caller 含む全員) のうち、
+  // villain でないプレイヤーが介在 (間 / 後) してれば「HU 想定外の介入者」あり。
+  const intruders = players.filter((p, i) => {
     if (i === heroIdx || i === villainIdx) return false;
     if (p.stack <= 0) return false;
     const a = actionOrderIdx(p.position);
-    return a > lastActorIdx;
+    return a > pusherAct;
   });
 
-  if (overCallers.length === 0) {
+  if (intruders.length === 0) {
     warnEl.classList.add("hidden");
     return;
   }
 
-  const list = overCallers
-    .map((p) => `${p.position}(${p.stack}BB)`)
-    .join(", ");
+  // 介在者の位置を「間」「後ろ」で分類
+  const callerAct = Math.max(heroAct, villainAct);
+  const between: typeof intruders = [];
+  const behind: typeof intruders = [];
+  for (const p of intruders) {
+    const a = actionOrderIdx(p.position);
+    if (a < callerAct) between.push(p);
+    else behind.push(p);
+  }
+
+  const partsHtml: string[] = [];
+  if (between.length > 0) {
+    partsHtml.push(
+      `<strong>${between.length}</strong> 人が pusher と caller の間 (${between.map((p) => `${p.position}(${p.stack}BB)`).join(", ")})`,
+    );
+  }
+  if (behind.length > 0) {
+    partsHtml.push(
+      `<strong>${behind.length}</strong> 人が caller の後ろ (${behind.map((p) => `${p.position}(${p.stack}BB)`).join(", ")})`,
+    );
+  }
+
   warnEl.classList.remove("hidden");
   warnEl.innerHTML = `
-    ⚠ <strong>over-call リスクあり</strong>: 後ろに <strong>${overCallers.length}</strong> 人 (${list}) が控えてます。
-    実戦の <em>call</em> 側は HU Nash よりさらに<strong>狭く call</strong>すべきです (BB が AA で over-call する等のリスク分)。
+    ⚠ <strong>HU Nash 想定外の介入者あり</strong>: ${partsHtml.join(" / ")}。
+    実戦では各介入者が call/over-call/3bet する可能性があるため、
+    <strong>caller (${players[heroAct < villainAct ? villainIdx : heroIdx]?.position}) は HU Nash よりさらに狭く call</strong>すべきです。
     <br />当 Nash 結果は HU 2-way 想定の参考値として読んでください。
   `;
 }
