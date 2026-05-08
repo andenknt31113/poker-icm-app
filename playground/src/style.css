@@ -293,13 +293,32 @@ th {
 
 .player-row {
   display: grid;
-  grid-template-columns: 28px 1fr 26px auto 30px;
+  grid-template-columns: 28px 1fr 26px 56px auto 30px;
   gap: 6px;
   align-items: center;
   background: #0f1419;
   padding: 6px 8px;
   border: 1px solid var(--border);
   border-radius: 8px;
+}
+
+.player-pos {
+  background: #050709;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 4px;
+  font-size: 11px;
+  font-family: var(--mono);
+  cursor: pointer;
+  height: 30px;
+  appearance: none;
+  text-align: center;
+}
+
+.player-pos:focus {
+  outline: none;
+  border-color: var(--accent);
 }
 
 .player-num {

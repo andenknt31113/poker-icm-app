@@ -31,20 +31,39 @@ const $ = <T extends HTMLElement>(id: string): T => {
 // ===== プレイヤー状態管理 =====
 
 type Role = "hero" | "villain" | "other";
+type Position = "" | "SB" | "BB" | "BTN" | "CO" | "HJ" | "LJ" | "MP" | "UTG+1" | "UTG";
+
+/** N人テーブルでの時計回りポジション順（BTN起点）。 */
+const POSITION_SETS: Record<number, Position[]> = {
+  2: ["BTN", "BB"],
+  3: ["BTN", "SB", "BB"],
+  4: ["BTN", "SB", "BB", "CO"],
+  5: ["BTN", "SB", "BB", "UTG", "CO"],
+  6: ["BTN", "SB", "BB", "UTG", "HJ", "CO"],
+  7: ["BTN", "SB", "BB", "UTG", "MP", "HJ", "CO"],
+  8: ["BTN", "SB", "BB", "UTG", "MP", "LJ", "HJ", "CO"],
+  9: ["BTN", "SB", "BB", "UTG", "UTG+1", "MP", "LJ", "HJ", "CO"],
+};
+
+function positionsForN(n: number): Position[] {
+  return POSITION_SETS[n] ?? [];
+}
+
 interface Player {
   id: number;
   stack: number;
   role: Role;
+  position: Position;
 }
 
 let nextId = 0;
 const players: Player[] = [
-  { id: nextId++, stack: 14, role: "hero" },
-  { id: nextId++, stack: 23, role: "villain" },
-  { id: nextId++, stack: 8, role: "other" },
-  { id: nextId++, stack: 8, role: "other" },
-  { id: nextId++, stack: 8, role: "other" },
-  { id: nextId++, stack: 8, role: "other" },
+  { id: nextId++, stack: 14, role: "hero", position: "SB" },
+  { id: nextId++, stack: 23, role: "villain", position: "BB" },
+  { id: nextId++, stack: 8, role: "other", position: "BTN" },
+  { id: nextId++, stack: 8, role: "other", position: "CO" },
+  { id: nextId++, stack: 8, role: "other", position: "HJ" },
+  { id: nextId++, stack: 8, role: "other", position: "LJ" },
 ];
 
 // ===== DOM参照 =====
@@ -96,13 +115,21 @@ function fmtPct(n: number, digits = 1): string {
 
 function renderPlayers(): void {
   playersList.innerHTML = "";
+  const validPositions: Position[] = ["", ...positionsForN(players.length)];
   players.forEach((p, i) => {
     const row = document.createElement("div");
     row.className = "player-row";
+    const posOptions = validPositions
+      .map(
+        (pos) =>
+          `<option value="${pos}" ${pos === p.position ? "selected" : ""}>${pos === "" ? "—" : pos}</option>`,
+      )
+      .join("");
     row.innerHTML = `
       <span class="player-num">#${i + 1}</span>
       <input type="number" inputmode="decimal" class="player-stack" min="0" step="0.5" value="${p.stack}" data-id="${p.id}" />
       <span class="player-unit">BB</span>
+      <select class="player-pos" data-id="${p.id}" title="ポジション">${posOptions}</select>
       <div class="player-roles" data-id="${p.id}">
         <button type="button" class="role-btn ${p.role === "hero" ? "active hero" : ""}" data-role="hero" title="自分">🎯</button>
         <button type="button" class="role-btn ${p.role === "villain" ? "active villain" : ""}" data-role="villain" title="相手">⚔️</button>
@@ -168,7 +195,38 @@ function addPlayer(): void {
     id: nextId++,
     stack: Math.round(avg * 10) / 10,
     role: "other",
+    position: "",
   });
+  renderPlayers();
+  recompute();
+}
+
+function setPosition(playerId: number, position: Position): void {
+  const i = players.findIndex((p) => p.id === playerId);
+  if (i < 0) return;
+
+  if (position === "") {
+    // この行だけクリア
+    players[i]!.position = "";
+    renderPlayers();
+    recompute();
+    return;
+  }
+
+  const N = players.length;
+  const set = positionsForN(N);
+  const k = set.indexOf(position);
+
+  if (k < 0) {
+    // 該当 N の正規セットに無いポジション → 単独セット（他には影響しない）
+    players[i]!.position = position;
+  } else {
+    // 自動連動: i を起点に時計回り (j-i) ぶんセットからずらして割り当て
+    for (let j = 0; j < N; j++) {
+      const offset = (j - i + N) % N;
+      players[j]!.position = (set[(k + offset) % set.length] ?? "") as Position;
+    }
+  }
   renderPlayers();
   recompute();
 }
@@ -196,6 +254,13 @@ playersList.addEventListener("input", (e) => {
   if (!t.classList.contains("player-stack")) return;
   const id = Number(t.dataset.id);
   if (Number.isFinite(id)) updateStack(id, Number(t.value));
+});
+
+playersList.addEventListener("change", (e) => {
+  const t = e.target as HTMLSelectElement;
+  if (!t.classList.contains("player-pos")) return;
+  const id = Number(t.dataset.id);
+  if (Number.isFinite(id)) setPosition(id, t.value as Position);
 });
 
 addPlayerBtn.addEventListener("click", addPlayer);
