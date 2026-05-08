@@ -169,13 +169,11 @@ export function solveHUNash(input: HUNashInput): HUNashResult {
     throw new Error("HUNash: BB の支払い後スタックが負");
   }
 
-  // effStack = min(SB, BB) の blinds 控除後の残額。
-  // これが「all-in で実際に動くチップ量（自分の bet 全額）」。
-  // SB が all-in する時、SB の bet 額 = sb + sbBaseAfterBlind = SB の総スタック - ante.
-  // BB がコールする額 = sbBaseAfterBlind + (sb - bb) = SB と同額になるよう調整、
-  // ただし BB のスタックを超えない範囲で。
-  // 簡単のため effStack = min(sbBaseAfterBlind, bbBaseAfterBlind) としてコールは all-in 前提。
-  const effRemaining = Math.min(sbBaseAfterBlind, bbBaseAfterBlind);
+  // 両者 all-in 時の matched 額（pot に入る各プレイヤーの total commitment）。
+  // = min(baseStacks[sb], baseStacks[bb]) = 短いスタックの全 chip。
+  // ※ 旧 effRemaining = min(sbBaseAfterBlind, bbBaseAfterBlind) はブラインド非対称時に
+  //   matched と 0.5 BB ずれて chip conservation を歪める（SB 負け時に 0 → 0.5 BB の幻 dust）。
+  const matched = Math.min(baseStacks[sbIndex]!, baseStacks[bbIndex]!);
 
   // ===== 終端 ICM 評価ヘルパ =====
   // 任意の (sbStack, bbStack) を所与に、その他のスタックは baseStacks のまま ICM を評価し、
@@ -208,22 +206,17 @@ export function solveHUNash(input: HUNashInput): HUNashResult {
   const stealICM = icmAt(stealSbStack, stealBbStack);
 
   // (3) SB pushes, BB calls. SB が勝ち。
-  //   SB の bet = sb + effRemaining (実プット), BB の bet = bb + effRemaining
-  //   勝者が pot を全取り。pot = (SB bet) + (BB bet) + totalAnte
-  //   (ただし SB の元スタックから effRemaining 余剰がある場合、それは戻ってこない簡略化:
-  //    BB のスタックが小さい場合 SB の超過分は SB に戻すべきだが、ここでは effRemaining を
-  //    両者共通の bet 額としているのでこの問題は発生しない。)
-  //   SB の最終スタック = baseStacks[sb] - sb - effRemaining + pot
-  //                    = baseStacks[sb] + (BB bet) + totalAnte
-  //                    = baseStacks[sb] + bb + effRemaining + totalAnte
-  //   BB の最終スタック = baseStacks[bb] - bb - effRemaining
-  const winSbStack = baseStacks[sbIndex]! + bb + effRemaining + totalAnte;
-  const winBbStack = baseStacks[bbIndex]! - bb - effRemaining;
+  //   両者 matched chip ずつ commit。pot = 2×matched + totalAnte。
+  //   勝者は (自分の余剰 = baseStacks - matched) + pot を取る。
+  //   = baseStacks[winner] - matched + 2×matched + totalAnte = baseStacks[winner] + matched + totalAnte
+  //   敗者は baseStacks[loser] - matched が残る（短い側なら 0、長い側なら正の余剰）。
+  const winSbStack = baseStacks[sbIndex]! + matched + totalAnte;
+  const winBbStack = baseStacks[bbIndex]! - matched;
   const winICM = icmAt(winSbStack, winBbStack);
 
   // (4) SB pushes, BB calls. BB が勝ち。SB と BB を逆に。
-  const loseSbStack = baseStacks[sbIndex]! - sb - effRemaining;
-  const loseBbStack = baseStacks[bbIndex]! + sb + effRemaining + totalAnte;
+  const loseSbStack = baseStacks[sbIndex]! - matched;
+  const loseBbStack = baseStacks[bbIndex]! + matched + totalAnte;
   const loseICM = icmAt(loseSbStack, loseBbStack);
 
   // ===== ハンドの組合せ重み =====
