@@ -189,7 +189,57 @@
       </section>
 
       <section class="card">
-        <h2>6. ハンドレンジ比較 🆕</h2>
+        <h2>6. Nash 均衡 (HU push/fold) 🆕</h2>
+        <p class="hint">
+          🎯自分(SB) と ⚔️相手(BB) のヘッズアップ Nash 均衡を計算（ICM反映済み）。
+          <br />
+          上の「1. プレイヤー」で 🎯/⚔️ を指定してから Nash 計算を押してください。
+        </p>
+
+        <div class="grid">
+          <label>
+            SB
+            <input id="nash-sb" type="number" inputmode="decimal" value="0.5" min="0" step="0.1" />
+          </label>
+          <label>
+            BB
+            <input id="nash-bb" type="number" inputmode="decimal" value="1.0" min="0.1" step="0.1" />
+          </label>
+          <label>
+            アンティ
+            <input id="nash-ante" type="number" inputmode="decimal" value="1.0" min="0" step="0.05" />
+            <span class="ante-mode-row">
+              <label class="ante-mode-opt">
+                <input type="radio" name="ante-mode" value="total" checked />
+                <span>テーブル合計</span>
+              </label>
+              <label class="ante-mode-opt">
+                <input type="radio" name="ante-mode" value="perPlayer" />
+                <span>1人あたり (HRC)</span>
+              </label>
+            </span>
+          </label>
+        </div>
+
+        <button id="nash-solve" type="button" class="solve-btn">Nash 計算</button>
+        <p id="nash-status" class="hint"></p>
+
+        <div class="range-grids">
+          <div>
+            <h3>🎯自分(SB) push レンジ 🔴</h3>
+            <p class="hint" id="nash-sb-stats"></p>
+            <div id="nash-sb-grid" class="hand-grid"></div>
+          </div>
+          <div>
+            <h3>⚔️相手(BB) call レンジ 🟢</h3>
+            <p class="hint" id="nash-bb-stats"></p>
+            <div id="nash-bb-grid" class="hand-grid"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>7. ハンドレンジ比較 🆕</h2>
         <p class="hint">
           相手のpushレンジを設定 → 自分のコールできる範囲を自動描画。
           <br />
@@ -244,56 +294,6 @@
             <h3>自分のcallレンジ 🟢</h3>
             <div id="grid-hero" class="hand-grid"></div>
             <p class="hint call-stats-below" id="call-stats"></p>
-          </div>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>7. Nash 均衡 (HU push/fold) 🆕</h2>
-        <p class="hint">
-          🎯自分(SB) と ⚔️相手(BB) のヘッズアップ Nash 均衡を計算（ICM反映済み）。
-          <br />
-          上の「1. プレイヤー」で 🎯/⚔️ を指定してから Nash 計算を押してください。
-        </p>
-
-        <div class="grid">
-          <label>
-            SB
-            <input id="nash-sb" type="number" inputmode="decimal" value="0.5" min="0" step="0.1" />
-          </label>
-          <label>
-            BB
-            <input id="nash-bb" type="number" inputmode="decimal" value="1.0" min="0.1" step="0.1" />
-          </label>
-          <label>
-            アンティ
-            <input id="nash-ante" type="number" inputmode="decimal" value="1.0" min="0" step="0.05" />
-            <span class="ante-mode-row">
-              <label class="ante-mode-opt">
-                <input type="radio" name="ante-mode" value="total" checked />
-                <span>テーブル合計</span>
-              </label>
-              <label class="ante-mode-opt">
-                <input type="radio" name="ante-mode" value="perPlayer" />
-                <span>1人あたり (HRC)</span>
-              </label>
-            </span>
-          </label>
-        </div>
-
-        <button id="nash-solve" type="button" class="solve-btn">Nash 計算</button>
-        <p id="nash-status" class="hint"></p>
-
-        <div class="range-grids">
-          <div>
-            <h3>🎯自分(SB) push レンジ 🔴</h3>
-            <p class="hint" id="nash-sb-stats"></p>
-            <div id="nash-sb-grid" class="hand-grid"></div>
-          </div>
-          <div>
-            <h3>⚔️相手(BB) call レンジ 🟢</h3>
-            <p class="hint" id="nash-bb-stats"></p>
-            <div id="nash-bb-grid" class="hand-grid"></div>
           </div>
         </div>
       </section>
