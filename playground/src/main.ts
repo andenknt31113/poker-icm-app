@@ -2046,7 +2046,7 @@ document.getElementById("lang-toggle")?.addEventListener("click", () => {
 
 // ===== タブ切替のスワイプ ジェスチャー =====
 (() => {
-  const TABS: TabId[] = ["setup", "result", "hand", "nash"];
+  const TABS: TabId[] = ["setup", "result", "hand", "nash", "practice"];
   let touchStartX = 0;
   let touchStartY = 0;
   let touchStartT = 0;
@@ -2098,6 +2098,195 @@ if ("serviceWorker" in navigator && location.protocol !== "file:") {
     });
   });
 }
+
+// ===== 練習問題モード =====
+interface PracticeProblem {
+  scenarioPlayers: { stack: number; role: Role; position: Position }[];
+  payouts: number[];
+  sb: number;
+  bb: number;
+  totalAnte: number;
+  villainCallRangePct: number;
+  heroHand: HandNotation;
+  // 計算結果
+  cEV: number;
+  dollarEV: number;
+  bf: number;
+  heroEq: number; // hero hand vs villain push range
+}
+
+const POSITION_SETS_PRACTICE: Record<number, Position[]> = {
+  3: ["BTN", "SB", "BB"],
+  4: ["BTN", "SB", "BB", "CO"],
+  5: ["BTN", "SB", "BB", "UTG", "CO"],
+  6: ["BTN", "SB", "BB", "UTG", "HJ", "CO"],
+};
+
+const PAYOUT_TEMPLATES = [
+  [50, 30, 20],
+  [40, 25, 15, 10, 5, 3, 2],
+  [100],
+  [33, 33, 33], // satellite
+  [60, 40],
+];
+
+function pickRandom<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)]!;
+}
+
+function generatePracticeProblem(): PracticeProblem {
+  const n = 3 + Math.floor(Math.random() * 4); // 3-6
+  const positions = POSITION_SETS_PRACTICE[n]!;
+  const scenarioPlayers: { stack: number; role: Role; position: Position }[] = [];
+  for (let i = 0; i < n; i++) {
+    scenarioPlayers.push({
+      stack: 5 + Math.floor(Math.random() * 25), // 5-30 BB
+      role: "other",
+      position: positions[i] ?? "",
+    });
+  }
+  // hero と villain をランダム選定
+  const heroIdx = Math.floor(Math.random() * n);
+  let villainIdx = Math.floor(Math.random() * n);
+  while (villainIdx === heroIdx) villainIdx = Math.floor(Math.random() * n);
+  scenarioPlayers[heroIdx]!.role = "hero";
+  scenarioPlayers[villainIdx]!.role = "villain";
+
+  const payouts = pickRandom(PAYOUT_TEMPLATES);
+  const sb = 0.5;
+  const bb = 1;
+  const totalAnte = pickRandom([0, 0.5, 1, 1.5]);
+  const villainCallRangePct = 5 + Math.floor(Math.random() * 95); // 5-100%
+
+  // 自分のハンド
+  const heroHand = ALL_169_HANDS[Math.floor(Math.random() * ALL_169_HANDS.length)]!;
+
+  // BF / 必要勝率 / equity 計算
+  const stacks = scenarioPlayers.map((p) => p.stack);
+  const heroStack = stacks[heroIdx]!;
+  const villainStack = stacks[villainIdx]!;
+  const safeRisk = Math.min(heroStack, villainStack);
+  const bfResult = calculateBubbleFactor({
+    stacks,
+    payouts,
+    heroIndex: heroIdx,
+    villainIndex: villainIdx,
+    riskChips: safeRisk,
+  });
+  const dead = sb + bb + totalAnte;
+  const eqRes = calculateRequiredEquity({
+    callAmount: safeRisk,
+    potIfWin: safeRisk + dead,
+    bubbleFactor: bfResult.bf,
+  });
+
+  // hero hand equity vs villain push range (Top X%)
+  const villainRange = topRange(villainCallRangePct);
+  const heroEq = equity(heroHand, villainRange);
+
+  return {
+    scenarioPlayers,
+    payouts,
+    sb, bb, totalAnte,
+    villainCallRangePct,
+    heroHand,
+    cEV: eqRes.cEV,
+    dollarEV: eqRes.dollarEV,
+    bf: bfResult.bf,
+    heroEq,
+  };
+}
+
+function renderRoundTable(
+  container: HTMLElement,
+  scenarioPlayers: { stack: number; role: Role; position: Position }[],
+): void {
+  const n = scenarioPlayers.length;
+  const heroIdx = scenarioPlayers.findIndex((p) => p.role === "hero");
+  const seats: string[] = [];
+  // hero を 6 時方向 (90度=π/2) に配置、他は時計回り
+  for (let i = 0; i < n; i++) {
+    const offset = heroIdx >= 0 ? (i - heroIdx + n) % n : i;
+    const angle = Math.PI / 2 + (offset / n) * 2 * Math.PI;
+    const x = 50 + Math.cos(angle) * 38;
+    const y = 50 + Math.sin(angle) * 38;
+    const p = scenarioPlayers[i]!;
+    const cls =
+      p.role === "hero" ? "hero" : p.role === "villain" ? "villain" : "";
+    const tag = p.role === "hero" ? "🎯 " : p.role === "villain" ? "⚔️ " : "";
+    seats.push(`
+      <div class="round-table-seat ${cls}" style="left:${x}%;top:${y}%">
+        <div class="seat-pos">${tag}${p.position || `P${i + 1}`}</div>
+        <div class="seat-stack">${p.stack}<span style="font-size:9px;color:var(--muted);">BB</span></div>
+      </div>
+    `);
+  }
+  container.innerHTML = `
+    <div class="round-table">
+      ${seats.join("")}
+    </div>
+  `;
+}
+
+let currentProblem: PracticeProblem | null = null;
+
+function renderPracticeProblem(p: PracticeProblem): void {
+  const area = document.getElementById("practice-area");
+  if (!area) return;
+  const totalPrize = p.payouts.reduce((a, b) => a + b, 0);
+  const payoutStr = p.payouts
+    .map((v) => ((v / totalPrize) * 100).toFixed(0) + "%")
+    .join(" / ");
+  area.innerHTML = `
+    <div id="practice-table-wrapper"></div>
+    <div class="practice-info">
+      ペイ: <strong>${payoutStr}</strong><br />
+      ブラインド: SB ${p.sb} / BB ${p.bb} / アンティ合計 ${p.totalAnte}<br />
+      <span style="color: var(--bad);">⚔️ 相手の push 想定レンジ: <strong>Top ${p.villainCallRangePct}%</strong></span>
+    </div>
+    <div class="practice-hand">あなたのハンド: ${p.heroHand}</div>
+    <div class="practice-actions">
+      <button class="practice-btn call" data-answer="call">✅ コール</button>
+      <button class="practice-btn fold" data-answer="fold">❌ フォールド</button>
+    </div>
+    <div id="practice-feedback"></div>
+  `;
+  const tableWrap = document.getElementById("practice-table-wrapper");
+  if (tableWrap) renderRoundTable(tableWrap, p.scenarioPlayers);
+}
+
+function judgePractice(answer: "call" | "fold"): void {
+  if (!currentProblem) return;
+  const p = currentProblem;
+  const fb = document.getElementById("practice-feedback");
+  if (!fb) return;
+  const margin = p.heroEq - p.dollarEV;
+  // call が +EV か?
+  const correctIsCall = margin >= 0;
+  const isCorrect = (correctIsCall && answer === "call") || (!correctIsCall && answer === "fold");
+  const verdict = correctIsCall ? "✅ コール (+EV)" : "❌ フォールド (-EV)";
+  fb.className = "practice-feedback " + (isCorrect ? "correct" : "wrong");
+  fb.innerHTML = `
+    <div class="verdict">${isCorrect ? "🎉 正解!" : "😅 不正解"} 正答: ${verdict}</div>
+    <div>cEV 必要勝率: <strong>${(p.cEV * 100).toFixed(1)}%</strong></div>
+    <div>$EV 必要勝率 (BF=${p.bf.toFixed(2)}): <strong>${(p.dollarEV * 100).toFixed(1)}%</strong></div>
+    <div>${p.heroHand} の equity vs Top${p.villainCallRangePct}%: <strong>${(p.heroEq * 100).toFixed(1)}%</strong></div>
+    <div>余裕: <strong style="color: ${margin >= 0 ? "var(--good)" : "var(--bad)"}">${margin >= 0 ? "+" : ""}${(margin * 100).toFixed(1)}%</strong></div>
+  `;
+}
+
+const practiceNewBtn = document.getElementById("practice-new-btn");
+practiceNewBtn?.addEventListener("click", () => {
+  currentProblem = generatePracticeProblem();
+  renderPracticeProblem(currentProblem);
+});
+
+document.getElementById("practice-area")?.addEventListener("click", (e) => {
+  const t = (e.target as HTMLElement).closest<HTMLButtonElement>(".practice-btn");
+  if (!t) return;
+  const ans = t.dataset.answer as "call" | "fold" | undefined;
+  if (ans) judgePractice(ans);
+});
 
 // ===== 初期描画 =====
 applyTab(activeTab);
