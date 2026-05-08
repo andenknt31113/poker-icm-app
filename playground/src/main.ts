@@ -888,8 +888,8 @@ function runNash(): void {
         ante,
         huEquity,
         allHands: ALL_169_HANDS,
-        maxIterations: 500,
-        convergenceTolerance: 0.005,
+        maxIterations: 2000,
+        convergenceTolerance: 0.0005,
       });
       const elapsedMs = performance.now() - t0;
 
