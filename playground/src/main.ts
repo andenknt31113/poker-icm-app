@@ -354,8 +354,7 @@ interface Scenario {
   payouts: number[];
   sb: number;
   bb: number;
-  ante: number;
-  anteMode: "total" | "perPlayer";
+  ante: number; // テーブル合計
 }
 
 const SCENARIOS: Record<string, Scenario> = {
@@ -372,7 +371,7 @@ const SCENARIOS: Record<string, Scenario> = {
       { stack: 5, role: "other", position: "CO" },
     ],
     payouts: [40, 25, 15, 10, 5, 3, 2, 1, 0.5],
-    sb: 0.5, bb: 1, ante: 1, anteMode: "perPlayer",
+    sb: 0.5, bb: 1, ante: 1,
   },
   ftBubble: {
     players: [
@@ -382,7 +381,7 @@ const SCENARIOS: Record<string, Scenario> = {
       { stack: 16, role: "other", position: "CO" },
     ],
     payouts: [50, 30, 20],
-    sb: 0.5, bb: 1, ante: 1, anteMode: "perPlayer",
+    sb: 0.5, bb: 1, ante: 1,
   },
   ft6: {
     players: [
@@ -394,7 +393,7 @@ const SCENARIOS: Record<string, Scenario> = {
       { stack: 10, role: "other", position: "CO" },
     ],
     payouts: [45, 25, 15, 8, 4, 3],
-    sb: 0.5, bb: 1, ante: 1, anteMode: "perPlayer",
+    sb: 0.5, bb: 1, ante: 1,
   },
   ft4: {
     players: [
@@ -404,7 +403,7 @@ const SCENARIOS: Record<string, Scenario> = {
       { stack: 15, role: "other", position: "CO" },
     ],
     payouts: [50, 30, 15, 5],
-    sb: 0.5, bb: 1, ante: 1, anteMode: "perPlayer",
+    sb: 0.5, bb: 1, ante: 1,
   },
   ft3: {
     players: [
@@ -413,7 +412,7 @@ const SCENARIOS: Record<string, Scenario> = {
       { stack: 20, role: "other", position: "BB" },
     ],
     payouts: [50, 30, 20],
-    sb: 0.5, bb: 1, ante: 1, anteMode: "perPlayer",
+    sb: 0.5, bb: 1, ante: 1,
   },
   hu: {
     players: [
@@ -421,7 +420,7 @@ const SCENARIOS: Record<string, Scenario> = {
       { stack: 10, role: "villain", position: "BB" },
     ],
     payouts: [100],
-    sb: 0.5, bb: 1, ante: 0, anteMode: "perPlayer",
+    sb: 0.5, bb: 1, ante: 0,
   },
   huShort: {
     players: [
@@ -429,7 +428,7 @@ const SCENARIOS: Record<string, Scenario> = {
       { stack: 18, role: "villain", position: "BB" },
     ],
     payouts: [100],
-    sb: 0.5, bb: 1, ante: 0, anteMode: "perPlayer",
+    sb: 0.5, bb: 1, ante: 0,
   },
   // サテライト: 5 人卓、上位 3 人が同額入賞 (4 位以下は 0)。極端な ICM バブル圧。
   // hero は中堅スタック、villain は短いほうのバブル候補。
@@ -442,7 +441,7 @@ const SCENARIOS: Record<string, Scenario> = {
       { stack: 5, role: "villain", position: "HJ" },
     ],
     payouts: [33, 33, 33],
-    sb: 0.5, bb: 1, ante: 1, anteMode: "total",
+    sb: 0.5, bb: 1, ante: 1,
   },
 };
 
@@ -696,11 +695,7 @@ function recompute(): void {
       if (risk > 0 && !callManualOverride) {
         callInput.value = risk.toFixed(1);
         potWinInput.value = (risk + dead).toFixed(1);
-        const modeLabel =
-          anteMode === "perPlayer"
-            ? `1人${anteRaw}×${stacks.length}人`
-            : "合計";
-        autofillHint.innerHTML = `✓ コール <strong>${risk}</strong>, 純利得 <strong>${(risk + dead).toFixed(1)}</strong> = リスク ${risk} + 死に金 ${dead.toFixed(1)} (SB ${sbV} + BB ${bbV} + アンティ ${totalAnteVal.toFixed(1)} [${modeLabel}])`;
+        autofillHint.innerHTML = `✓ コール <strong>${risk}</strong>, 純利得 <strong>${(risk + dead).toFixed(1)}</strong> = リスク ${risk} + 死に金 ${dead.toFixed(1)} (SB ${sbV} + BB ${bbV} + アンティ合計 ${totalAnteVal.toFixed(1)})`;
       }
     }
     const callAmount = Number(callInput.value);
@@ -1952,12 +1947,12 @@ function runNash(): void {
 nashSolveBtn.addEventListener("click", runNash);
 
 // ===== タブナビ =====
-type TabId = "setup" | "result" | "hand" | "nash";
+type TabId = "setup" | "result" | "hand" | "nash" | "practice";
 const TAB_KEY = "poker-icm-active-tab";
 let activeTab: TabId = "setup";
 try {
   const saved = localStorage.getItem(TAB_KEY) as TabId | null;
-  if (saved && ["setup", "result", "hand", "nash"].includes(saved)) {
+  if (saved && ["setup", "result", "hand", "nash", "practice"].includes(saved)) {
     activeTab = saved;
   }
 } catch {

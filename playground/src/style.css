@@ -1277,6 +1277,144 @@ body {
   cursor: pointer;
 }
 
+/* ===== 円卓ビュー ===== */
+.round-table {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+  aspect-ratio: 1.3 / 1;
+  margin: 12px auto;
+  background: radial-gradient(ellipse at center, #244437 0%, #142b21 100%);
+  border: 6px solid #5d4126;
+  border-radius: 50%;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.6);
+}
+.round-table-seat {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #0f1419;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 4px 6px;
+  min-width: 52px;
+  font-size: 10px;
+  font-family: var(--mono);
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 1;
+}
+.round-table-seat.hero {
+  border-color: var(--good);
+  background: rgba(102, 187, 106, 0.18);
+  box-shadow: 0 0 8px rgba(102, 187, 106, 0.4);
+}
+.round-table-seat.villain {
+  border-color: var(--bad);
+  background: rgba(239, 83, 80, 0.18);
+  box-shadow: 0 0 8px rgba(239, 83, 80, 0.4);
+}
+.round-table-seat .seat-pos {
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: bold;
+  letter-spacing: 0.05em;
+}
+.round-table-seat .seat-stack {
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--text);
+}
+.round-table-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+/* ===== 練習問題 ===== */
+.practice-area {
+  margin-top: 10px;
+}
+.practice-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  background: #0f1419;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 10px;
+  font-family: var(--mono);
+}
+.practice-info strong {
+  color: var(--text);
+}
+.practice-hand {
+  font-size: 30px;
+  font-weight: bold;
+  text-align: center;
+  letter-spacing: 0.05em;
+  margin: 12px 0;
+  font-family: var(--mono);
+  color: var(--accent);
+}
+.practice-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 10px 0;
+}
+.practice-btn {
+  padding: 14px;
+  border: 2px solid var(--border);
+  background: #0f1419;
+  color: var(--text);
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  font-family: inherit;
+  cursor: pointer;
+}
+.practice-btn.call {
+  border-color: var(--good);
+}
+.practice-btn.fold {
+  border-color: var(--bad);
+}
+.practice-btn:active {
+  transform: translateY(1px);
+}
+.practice-feedback {
+  background: #0f1419;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.practice-feedback.correct {
+  border-color: var(--good);
+  background: rgba(102, 187, 106, 0.08);
+}
+.practice-feedback.wrong {
+  border-color: var(--bad);
+  background: rgba(239, 83, 80, 0.08);
+}
+.practice-feedback .verdict {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
 /* 注意/警告ボックス */
 .warn-box {
   background: rgba(255, 167, 38, 0.08);

@@ -43,10 +43,11 @@
       </div>
 
       <nav class="tab-bar" role="tablist" aria-label="セクション">
-        <button type="button" class="tab-btn active" data-tab="setup">⚙️ 設定</button>
-        <button type="button" class="tab-btn" data-tab="result">📊 結果</button>
-        <button type="button" class="tab-btn" data-tab="hand">🃏 ハンド</button>
-        <button type="button" class="tab-btn" data-tab="nash">🎯 Nash</button>
+        <button type="button" class="tab-btn active" data-tab="setup">⚙️</button>
+        <button type="button" class="tab-btn" data-tab="result">📊</button>
+        <button type="button" class="tab-btn" data-tab="hand">🃏</button>
+        <button type="button" class="tab-btn" data-tab="nash">🎯</button>
+        <button type="button" class="tab-btn" data-tab="practice">🎲</button>
       </nav>
 
 
@@ -266,18 +267,8 @@
             <input id="nash-bb" type="number" inputmode="decimal" value="1.0" min="0.1" step="0.1" />
           </label>
           <label>
-            アンティ
+            アンティ合計
             <input id="nash-ante" type="number" inputmode="decimal" value="1.0" min="0" step="0.05" />
-            <span class="ante-mode-row">
-              <label class="ante-mode-opt">
-                <input type="radio" name="ante-mode" value="total" checked />
-                <span>テーブル合計</span>
-              </label>
-              <label class="ante-mode-opt">
-                <input type="radio" name="ante-mode" value="perPlayer" />
-                <span>1人あたり (HRC)</span>
-              </label>
-            </span>
           </label>
         </div>
 
@@ -365,6 +356,16 @@
             <p class="hint call-stats-below" id="call-stats"></p>
           </div>
         </div>
+      </section>
+
+      <section class="card" data-tab="practice">
+        <h2>🎲 練習問題 — call/fold 判断</h2>
+        <p class="hint">
+          ランダムシナリオ + 相手 push 想定レンジ + 自分のハンド → call/fold を即判定。
+          答え合わせで equity と必要勝率を確認できる。
+        </p>
+        <button id="practice-new-btn" type="button" class="solve-btn">🎲 新しい問題</button>
+        <div id="practice-area" class="practice-area"></div>
       </section>
 
       <footer>
