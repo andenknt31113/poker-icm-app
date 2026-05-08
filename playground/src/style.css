@@ -445,21 +445,36 @@ th {
 
 .ante-mode-row {
   display: flex;
-  gap: 10px;
-  margin-top: 4px;
+  margin-top: 6px;
   font-size: 11px;
-  color: var(--muted);
   font-weight: normal;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  background: #0f1419;
 }
 .ante-mode-opt {
-  display: inline-flex;
+  flex: 1;
+  display: flex;
   align-items: center;
-  gap: 3px;
+  justify-content: center;
   cursor: pointer;
+  padding: 8px 6px;
+  color: var(--muted);
+  text-align: center;
+  border-right: 1px solid var(--border);
+  transition: background 0.1s;
+}
+.ante-mode-opt:last-child {
+  border-right: none;
 }
 .ante-mode-opt input[type="radio"] {
-  margin: 0;
-  cursor: pointer;
+  display: none;
+}
+.ante-mode-opt:has(input:checked) {
+  background: var(--accent);
+  color: #000;
+  font-weight: bold;
 }
 
 .players-actions {
