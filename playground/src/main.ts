@@ -1531,6 +1531,7 @@ const INFO_TEXTS: Record<string, { title: string; body: string }> = {
         <li>RP = +20%: バブル時、+30% でサテライト</li>
       </ul>
       <p>計算: <code>RP = $EV 必要勝率 − cEV 必要勝率</code></p>
+      <p>1:1 オッズの場合: <code>RP = BF/(BF+1) − 50%</code></p>
     `,
   },
   必要勝率: {
@@ -1541,7 +1542,11 @@ const INFO_TEXTS: Record<string, { title: string; body: string }> = {
         <li><strong>cEV 必要勝率</strong>: ポット odds だけ (ICM 無視)</li>
         <li><strong>$EV 必要勝率</strong>: BF (ICM 圧) を反映、こっちが実戦判断用</li>
       </ul>
-      <p>例: コール 8 BB / pot 20 BB → cEV = 8/(8+20) = 28.6%。BF=1.4 なら $EV = 28.6% × 1.4 = 40%。</p>
+      <p>厳密式: <code>$EV = (call × BF) ÷ (call × BF + win)</code></p>
+      <p>例: コール 8 BB / pot 20 BB / BF 1.4<br />
+      → cEV = 8/(8+20) = 28.6%<br />
+      → $EV = (8×1.4)/(8×1.4 + 20) = 11.2/31.2 = <strong>35.9%</strong><br />
+      (1:1 オッズ時は <code>BF/(BF+1)</code>)</p>
     `,
   },
 };
