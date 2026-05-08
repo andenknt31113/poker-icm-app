@@ -17,8 +17,14 @@
   <body>
     <main class="container">
       <header>
-        <h1>🎰 Poker ICM / BF プレイグラウンド</h1>
-        <p class="subtitle">
+        <div class="header-row">
+          <h1>🎰 Poker ICM / BF プレイグラウンド</h1>
+          <div class="header-actions">
+            <button id="lang-toggle" class="header-btn" type="button" title="言語切替" aria-label="言語切替">JP</button>
+            <button id="theme-toggle" class="header-btn" type="button" title="テーマ切替" aria-label="テーマ切替">🌙</button>
+          </div>
+        </div>
+        <p class="subtitle" data-i18n="subtitle">
           値を変えるとリアルタイムに再計算されます。
         </p>
       </header>
@@ -294,15 +300,15 @@
       <section class="card" data-tab="hand">
         <h2>7. ハンドレンジ比較 🆕</h2>
         <p class="hint">
-          相手のレンジを設定 → 自分が打つべきレンジを自動描画。
+          スタック差ベースの抽象レンジ比較（HU all-in 想定、position の行動順は無視）。
         </p>
 
         <div class="direction-tabs" role="tablist">
           <button type="button" class="direction-tab active" data-direction="callBack">
-            相手 push → 自分 call
+            相手のレンジ → 自分の call レンジ
           </button>
           <button type="button" class="direction-tab" data-direction="pushBack">
-            相手 call → 自分 push (逆算)
+            相手の call レンジ → 自分の push レンジ
           </button>
         </div>
 
