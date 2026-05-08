@@ -2155,7 +2155,7 @@ function generatePracticeProblem(): PracticeProblem {
   const payouts = pickRandom(PAYOUT_TEMPLATES);
   const sb = 0.5;
   const bb = 1;
-  const totalAnte = pickRandom([0, 0.5, 1, 1.5]);
+  const totalAnte = 1; // 1 BB 合計に固定
   const villainCallRangePct = 5 + Math.floor(Math.random() * 95); // 5-100%
 
   // 自分のハンド
