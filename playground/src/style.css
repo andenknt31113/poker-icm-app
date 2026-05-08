@@ -362,6 +362,16 @@ th {
   font-family: var(--mono);
 }
 
+.players-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.players-actions .add-btn {
+  flex: 1 1 auto;
+  min-width: 140px;
+}
+
 /* ===== ペイアウトリスト ===== */
 .payouts-list {
   display: flex;

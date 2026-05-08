@@ -69,6 +69,7 @@ const players: Player[] = [
 // ===== DOM参照 =====
 const playersList = $<HTMLDivElement>("players-list");
 const addPlayerBtn = $<HTMLButtonElement>("add-player");
+const randomizeStacksBtn = $<HTMLButtonElement>("randomize-stacks");
 const payoutsInput = $<HTMLInputElement>("payouts");
 const callInput = $<HTMLInputElement>("call");
 const potWinInput = $<HTMLInputElement>("potwin");
@@ -264,6 +265,18 @@ playersList.addEventListener("change", (e) => {
 });
 
 addPlayerBtn.addEventListener("click", addPlayer);
+
+function randomizeStacks(): void {
+  // 3 〜 30 BB のランダム整数（0.5 BB 刻み）。トナメ終盤の幅広いスタックを再現。
+  for (const p of players) {
+    const raw = 3 + Math.random() * 27;
+    p.stack = Math.round(raw * 2) / 2;
+  }
+  renderPlayers();
+  recompute();
+}
+
+randomizeStacksBtn.addEventListener("click", randomizeStacks);
 
 // ===== メイン計算 =====
 
