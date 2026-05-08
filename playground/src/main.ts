@@ -607,6 +607,7 @@ function recompute(): void {
 
     // 状態を保存
     saveState();
+    updateNashOvercallWarn();
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     icmRows.innerHTML = `<tr><td colspan="4" class="error">${msg}</td></tr>`;
@@ -1208,6 +1209,28 @@ const nashSbStats = $<HTMLParagraphElement>("nash-sb-stats");
 const nashBbStats = $<HTMLParagraphElement>("nash-bb-stats");
 const nashSbGrid = $<HTMLDivElement>("nash-sb-grid");
 const nashBbGrid = $<HTMLDivElement>("nash-bb-grid");
+
+// HU 限界に関する警告ボックス更新
+function updateNashOvercallWarn(): void {
+  const warnEl = document.getElementById("nash-overcall-warn");
+  if (!warnEl) return;
+  const heroIdx = players.findIndex((p) => p.role === "hero");
+  const villainIdx = players.findIndex((p) => p.role === "villain");
+  const aliveOthers = players.filter(
+    (p, i) => i !== heroIdx && i !== villainIdx && p.stack > 0,
+  ).length;
+  if (heroIdx < 0 || villainIdx < 0 || aliveOthers === 0) {
+    warnEl.classList.add("hidden");
+    return;
+  }
+  warnEl.classList.remove("hidden");
+  warnEl.innerHTML = `
+    ⚠ <strong>HU 2-way Nash の限界</strong>: 他に <strong>${aliveOthers}</strong> 人が生存中。
+    実戦で 🎯 が <em>call</em> 側 (=後ろにまだ生きてる人がいる) の場合、
+    <strong>over-call リスク</strong>分だけ実際は本来より<strong>狭く call</strong>すべきです。
+    <br />Nash 結果は HU 想定なので参考値として読み、ICM が厳しいシナリオでは更に絞ってください。
+  `;
+}
 
 // 起動時に保存された Nash パラメータを復元
 // アンティモードは「合計」を必ずデフォルトにする（保存値は無視）。

@@ -1029,6 +1029,24 @@ body {
   touch-action: none;
 }
 
+/* 注意/警告ボックス */
+.warn-box {
+  background: rgba(255, 167, 38, 0.08);
+  border: 1px solid rgba(255, 167, 38, 0.4);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #ffb74d;
+}
+.warn-box.hidden {
+  display: none;
+}
+.warn-box strong {
+  color: #ffd54f;
+}
+
 .hand-cell {
   background: #0f1419;
   color: var(--muted);
