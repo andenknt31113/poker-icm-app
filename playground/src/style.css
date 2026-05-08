@@ -1024,6 +1024,10 @@ body {
   border-radius: 4px;
   user-select: none;
 }
+.hand-grid.draggable-grid.editable {
+  /* ドラッグ中スクロールしないように */
+  touch-action: none;
+}
 
 .hand-cell {
   background: #0f1419;

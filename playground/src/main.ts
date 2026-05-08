@@ -890,20 +890,69 @@ document.querySelectorAll<HTMLButtonElement>(".mode-tab").forEach((btn) => {
   });
 });
 
-// カスタムモードでセルクリック
-villainGrid.addEventListener("click", (e) => {
+// ===== カスタムモード: タップ + ドラッグ塗り =====
+// 動作:
+//   - 押した最初のセルの状態を見て「追加」or「削除」モードを決定
+//   - 指/マウスを動かして他セルを通過するたび同じ処理を適用
+//   - タップだけならトグル動作（従来通り）
+let dragMode: "add" | "remove" | null = null;
+const dragVisited = new Set<string>();
+
+function applyDragAction(hand: string): void {
+  if (dragVisited.has(hand)) return;
+  dragVisited.add(hand);
+  if (dragMode === "add") {
+    customVillainRange.add(hand);
+  } else if (dragMode === "remove") {
+    customVillainRange.delete(hand);
+  }
+  saveCustomRange();
+  recompute();
+}
+
+function getCellHandFromPoint(x: number, y: number): string | null {
+  const el = document.elementFromPoint(x, y) as HTMLElement | null;
+  if (!el) return null;
+  const cell = el.closest<HTMLDivElement>(".hand-cell");
+  if (!cell || !villainGrid.contains(cell)) return null;
+  return cell.title || null;
+}
+
+villainGrid.addEventListener("pointerdown", (e) => {
   if (villainRangeMode !== "custom") return;
   const cell = (e.target as HTMLElement).closest<HTMLDivElement>(".hand-cell");
   if (!cell) return;
   const hand = cell.title;
-  if (customVillainRange.has(hand)) {
-    customVillainRange.delete(hand);
-  } else {
-    customVillainRange.add(hand);
-  }
-  saveCustomRange();
-  recompute();
+  // 最初のセルの状態で mode 決定
+  dragMode = customVillainRange.has(hand) ? "remove" : "add";
+  dragVisited.clear();
+  applyDragAction(hand);
+  // ポインターキャプチャしてドラッグ中スクロール抑制
+  villainGrid.setPointerCapture(e.pointerId);
+  e.preventDefault();
 });
+
+villainGrid.addEventListener("pointermove", (e) => {
+  if (villainRangeMode !== "custom" || dragMode === null) return;
+  const hand = getCellHandFromPoint(e.clientX, e.clientY);
+  if (hand) applyDragAction(hand);
+});
+
+const endDrag = (e: PointerEvent): void => {
+  if (dragMode !== null) {
+    dragMode = null;
+    dragVisited.clear();
+    if (villainGrid.hasPointerCapture(e.pointerId)) {
+      villainGrid.releasePointerCapture(e.pointerId);
+    }
+  }
+};
+villainGrid.addEventListener("pointerup", endDrag);
+villainGrid.addEventListener("pointercancel", endDrag);
+villainGrid.addEventListener("pointerleave", endDrag);
+
+// CSS で touch-action: none を有効化するため class 付与
+villainGrid.classList.add("draggable-grid");
 
 customClearBtn.addEventListener("click", () => {
   customVillainRange.clear();
