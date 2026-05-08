@@ -1458,6 +1458,13 @@ body {
   background: var(--bad);
   color: white;
 }
+.hand-cell.picked {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  font-weight: bold;
+  color: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+}
 
 .hand-cell.in-range-hero {
   background: var(--good);

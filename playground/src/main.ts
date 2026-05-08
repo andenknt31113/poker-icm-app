@@ -2250,8 +2250,10 @@ function renderPracticeProblem(p: PracticeProblem): void {
     <div class="practice-info">
       ペイ: <strong>${payoutStr}</strong><br />
       ブラインド: SB ${p.sb} / BB ${p.bb} / アンティ合計 ${p.totalAnte}<br />
-      <span style="color: var(--bad);">⚔️ 相手の push 想定レンジ: <strong>Top ${p.villainCallRangePct}%</strong></span>
+      <span style="color: var(--bad);">⚔️ 相手の push 想定レンジ: <strong>Top ${p.villainCallRangePct}%</strong> (下のグリッド参照)</span>
     </div>
+    <h3 style="font-size: 13px; margin: 12px 0 4px;">⚔️ 相手の push レンジ 🔴</h3>
+    <div id="practice-villain-grid" class="hand-grid"></div>
     <div class="practice-hand">あなたのハンド: ${p.heroHand}</div>
     <div class="practice-actions">
       <button class="practice-btn call" data-answer="call">✅ コール</button>
@@ -2261,6 +2263,19 @@ function renderPracticeProblem(p: PracticeProblem): void {
   `;
   const tableWrap = document.getElementById("practice-table-wrapper");
   if (tableWrap) renderRoundTable(tableWrap, p.scenarioPlayers);
+  const villainGridEl = document.getElementById(
+    "practice-villain-grid",
+  ) as HTMLDivElement | null;
+  if (villainGridEl) {
+    const range = topRange(p.villainCallRangePct);
+    renderGrid(villainGridEl, (h) => {
+      const isPicked = h === p.heroHand;
+      const inRange = range.has(h);
+      if (isPicked && inRange) return "in-range-villain picked";
+      if (isPicked) return "picked";
+      return inRange ? "in-range-villain" : "";
+    });
+  }
 }
 
 function judgePractice(answer: "call" | "fold"): void {
@@ -2269,7 +2284,6 @@ function judgePractice(answer: "call" | "fold"): void {
   const fb = document.getElementById("practice-feedback");
   if (!fb) return;
   const margin = p.heroEq - p.dollarEV;
-  // call が +EV か?
   const correctIsCall = margin >= 0;
   const isCorrect = (correctIsCall && answer === "call") || (!correctIsCall && answer === "fold");
   const verdict = correctIsCall ? "✅ コール (+EV)" : "❌ フォールド (-EV)";
@@ -2280,7 +2294,25 @@ function judgePractice(answer: "call" | "fold"): void {
     <div>$EV 必要勝率 (BF=${p.bf.toFixed(2)}): <strong>${(p.dollarEV * 100).toFixed(1)}%</strong></div>
     <div>${p.heroHand} の equity vs Top${p.villainCallRangePct}%: <strong>${(p.heroEq * 100).toFixed(1)}%</strong></div>
     <div>余裕: <strong style="color: ${margin >= 0 ? "var(--good)" : "var(--bad)"}">${margin >= 0 ? "+" : ""}${(margin * 100).toFixed(1)}%</strong></div>
+    <h3 style="font-size: 13px; margin: 12px 0 4px;">🎯 自分の call レンジ 🟢 (必要勝率 ${(p.dollarEV * 100).toFixed(1)}% 超のハンド)</h3>
+    <div id="practice-hero-grid" class="hand-grid"></div>
   `;
+  const heroGridEl = document.getElementById(
+    "practice-hero-grid",
+  ) as HTMLDivElement | null;
+  if (heroGridEl) {
+    const villainRange = topRange(p.villainCallRangePct);
+    renderGrid(heroGridEl, (h) => {
+      const eq = equity(h, villainRange);
+      const margin2 = eq - p.dollarEV;
+      const isPicked = h === p.heroHand;
+      let cls = "";
+      if (margin2 >= 0.03) cls = "in-range-hero";
+      else if (margin2 >= -0.02) cls = "marginal";
+      if (isPicked) cls += " picked";
+      return cls;
+    });
+  }
 }
 
 const practiceNewBtn = document.getElementById("practice-new-btn");
