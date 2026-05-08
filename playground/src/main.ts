@@ -943,13 +943,19 @@ function renderRangeComparison(requiredEquity: number): void {
     if (heroGridTitle) heroGridTitle.textContent = "自分のcallレンジ 🟢";
     if (villainRangeLabel) villainRangeLabel.textContent = "相手のpushレンジ";
   } else {
-    if (villainGridTitle) villainGridTitle.textContent = "相手のcallレンジ 🔴";
-    if (heroGridTitle) heroGridTitle.textContent = "自分のpushレンジ 🟢";
+    if (villainGridTitle) villainGridTitle.textContent = "相手のcallレンジ 🟢";
+    if (heroGridTitle) heroGridTitle.textContent = "自分のpushレンジ 🔴";
     if (villainRangeLabel) villainRangeLabel.textContent = "相手のcallレンジ";
   }
 
+  // 色ルール: push = 赤 (in-range-villain), call = 緑 (in-range-hero)
+  // callBack 方向: villain=push(赤), hero=call(緑) ← 従来通り
+  // pushBack 方向: villain=call(緑), hero=push(赤) ← 反転
+  const villainClass = direction === "callBack" ? "in-range-villain" : "in-range-hero";
+  const heroPushClass = direction === "callBack" ? "in-range-hero" : "in-range-villain";
+
   renderGrid(villainGrid, (hand) =>
-    villainRange.has(hand) ? "in-range-villain" : "",
+    villainRange.has(hand) ? villainClass : "",
   );
 
   const totalHands = ALL_169_HANDS.length;
@@ -963,7 +969,7 @@ function renderRangeComparison(requiredEquity: number): void {
       const margin = eq - requiredEquity;
       if (margin >= 0.03) {
         callable++;
-        return "in-range-hero";
+        return heroPushClass;
       }
       if (margin >= -0.02) {
         marginal++;
@@ -977,7 +983,7 @@ function renderRangeComparison(requiredEquity: number): void {
     // 逆算: 相手 call (villainRange) に対し自分が push +EV になるハンド
     const result = computePushBackRange(villainRange);
     renderGrid(heroGrid, (hand) => {
-      if (result.pushRange.has(hand)) return "in-range-hero";
+      if (result.pushRange.has(hand)) return heroPushClass;
       if (result.marginal.has(hand)) return "marginal";
       return "";
     });
