@@ -528,7 +528,31 @@ function recompute(): void {
     // BF マトリックス（全員 vs 全員）
     renderBFMatrix(stacks, payouts);
 
-    // 必要勝率
+    // 必要勝率: 入力が空 & hero/villain あれば自動推定
+    if (
+      heroIndex >= 0 &&
+      villainIndex >= 0 &&
+      heroIndex !== villainIndex &&
+      (callInput.value === "" || potWinInput.value === "")
+    ) {
+      const heroStack = stacks[heroIndex]!;
+      const villainStack = stacks[villainIndex]!;
+      const risk = Math.min(heroStack, villainStack);
+      const sbV = Number(nashSbInput?.value) || 0.5;
+      const bbV = Number(nashBbInput?.value) || 1.0;
+      const anteRaw = Number(nashAnteInput?.value) || 0;
+      const anteMode =
+        (document.querySelector<HTMLInputElement>(
+          'input[name="ante-mode"]:checked',
+        )?.value ?? "total") as "total" | "perPlayer";
+      const totalAnteVal =
+        anteMode === "perPlayer" ? anteRaw * stacks.length : anteRaw;
+      const dead = sbV + bbV + totalAnteVal;
+      if (risk > 0) {
+        if (callInput.value === "") callInput.value = risk.toFixed(1);
+        if (potWinInput.value === "") potWinInput.value = (risk + dead).toFixed(1);
+      }
+    }
     const callAmount = Number(callInput.value);
     const potIfWin = Number(potWinInput.value);
     const eq = calculateRequiredEquity({
