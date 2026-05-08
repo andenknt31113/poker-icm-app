@@ -1140,15 +1140,17 @@ const nashSbGrid = $<HTMLDivElement>("nash-sb-grid");
 const nashBbGrid = $<HTMLDivElement>("nash-bb-grid");
 
 // 起動時に保存された Nash パラメータを復元
+// アンティモードは「合計」を必ずデフォルトにする（保存値は無視）。
+// HRC 互換にしたい時はユーザーが明示的にラジオを切り替える。
 if (persistedState?.nash) {
   nashSbInput.value = String(persistedState.nash.sb);
   nashBbInput.value = String(persistedState.nash.bb);
   nashAnteInput.value = String(persistedState.nash.ante);
-  const radio = document.querySelector<HTMLInputElement>(
-    `input[name="ante-mode"][value="${persistedState.nash.anteMode}"]`,
-  );
-  if (radio) radio.checked = true;
 }
+const totalRadio = document.querySelector<HTMLInputElement>(
+  'input[name="ante-mode"][value="total"]',
+);
+if (totalRadio) totalRadio.checked = true;
 
 // Nash 入力変更時に状態保存
 [nashSbInput, nashBbInput, nashAnteInput].forEach((el) => {
