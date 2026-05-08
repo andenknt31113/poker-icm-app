@@ -250,8 +250,16 @@
             <input id="nash-bb" type="number" inputmode="decimal" value="1.0" min="0.1" step="0.1" />
           </label>
           <label>
-            アンティ合計
+            アンティ
             <input id="nash-ante" type="number" inputmode="decimal" value="1.0" min="0" step="0.05" />
+            <span class="ante-mode-row">
+              <label class="ante-mode-opt">
+                <input type="radio" name="ante-mode" value="total" checked />合計
+              </label>
+              <label class="ante-mode-opt">
+                <input type="radio" name="ante-mode" value="perPlayer" />1人あたり (HRC)
+              </label>
+            </span>
           </label>
         </div>
 

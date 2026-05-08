@@ -362,6 +362,25 @@ th {
   font-family: var(--mono);
 }
 
+.ante-mode-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: normal;
+}
+.ante-mode-opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+}
+.ante-mode-opt input[type="radio"] {
+  margin: 0;
+  cursor: pointer;
+}
+
 .players-actions {
   display: flex;
   gap: 8px;

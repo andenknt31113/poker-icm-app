@@ -847,7 +847,7 @@ function runNash(): void {
   }
   const sb = Number(nashSbInput.value);
   const bb = Number(nashBbInput.value);
-  const totalAnte = Number(nashAnteInput.value);
+  const anteRaw = Number(nashAnteInput.value);
   if (!Number.isFinite(sb) || sb <= 0) {
     nashStatus.innerHTML = `<span class="error">SB が不正</span>`;
     return;
@@ -856,12 +856,17 @@ function runNash(): void {
     nashStatus.innerHTML = `<span class="error">BB が不正</span>`;
     return;
   }
-  if (!Number.isFinite(totalAnte) || totalAnte < 0) {
-    nashStatus.innerHTML = `<span class="error">アンティ合計が不正</span>`;
+  if (!Number.isFinite(anteRaw) || anteRaw < 0) {
+    nashStatus.innerHTML = `<span class="error">アンティが不正</span>`;
     return;
   }
-  // ソルバは「1人あたり ante」を期待するので人数で割る
-  const ante = totalAnte / Math.max(1, stacks.length);
+  // ante モード判定: total なら人数で割る、perPlayer ならそのまま
+  const anteMode =
+    (document.querySelector<HTMLInputElement>(
+      'input[name="ante-mode"]:checked',
+    )?.value ?? "total") as "total" | "perPlayer";
+  const ante =
+    anteMode === "perPlayer" ? anteRaw : anteRaw / Math.max(1, stacks.length);
 
   // ボタンを「計算中…」に
   nashSolveBtn.disabled = true;
