@@ -2329,6 +2329,11 @@ function judgePractice(answer: "call" | "fold"): void {
     <div>余裕: <strong style="color: ${margin >= 0 ? "var(--good)" : "var(--bad)"}">${margin >= 0 ? "+" : ""}${(margin * 100).toFixed(1)}%</strong></div>
     <h3 style="font-size: 13px; margin: 12px 0 4px;">🎯 自分の call レンジ 🟢 (必要勝率 ${(p.dollarEV * 100).toFixed(1)}% 超のハンド)</h3>
     <div id="practice-hero-grid" class="hand-grid"></div>
+    <div class="grid-legend">
+      <span><span class="legend-box in-range-hero"></span>明確に call (余裕 +3% 以上)</span>
+      <span><span class="legend-box marginal"></span>ボーダー (余裕 -2%〜+3%)</span>
+      <span><span class="legend-box"></span>fold (余裕 -2% 未満)</span>
+    </div>
     <div style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px;">
       <button id="practice-next-btn" type="button" class="solve-btn">🎲 次の問題</button>
       <button id="practice-apply-btn" type="button" class="solve-btn" style="background: var(--card); color: var(--text); border: 1px solid var(--border);">📥 設定に取り込む (詳細分析)</button>
