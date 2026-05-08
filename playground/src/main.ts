@@ -725,18 +725,25 @@ function renderBFMatrix(stacks: number[], payouts: number[]): void {
 
   const cells: string[] = [];
 
+  // ラベル: ポジ指定があればポジ表記、なければ P1/P2/...
+  const labelOf = (idx: number): string => {
+    const pos = players[idx]?.position;
+    if (pos && pos.length > 0) return pos;
+    return `P${idx + 1}`;
+  };
+
   // 1行目: 角空白 + ヘッダ
   cells.push('<div class="bf-hdr-corner"></div>');
   for (let j = 0; j < n; j++) {
     cells.push(
-      `<div class="bf-hdr-col">P${j + 1}<span class="stack-info">${stacks[j]}</span></div>`,
+      `<div class="bf-hdr-col">${labelOf(j)}<span class="stack-info">${stacks[j]}</span></div>`,
     );
   }
 
   // 2行目以降
   for (let i = 0; i < n; i++) {
     cells.push(
-      `<div class="bf-hdr-row">P${i + 1}<span class="stack-info">${stacks[i]}</span></div>`,
+      `<div class="bf-hdr-row">${labelOf(i)}<span class="stack-info">${stacks[i]}</span></div>`,
     );
     for (let j = 0; j < n; j++) {
       if (i === j) {
@@ -1210,25 +1217,69 @@ const nashBbStats = $<HTMLParagraphElement>("nash-bb-stats");
 const nashSbGrid = $<HTMLDivElement>("nash-sb-grid");
 const nashBbGrid = $<HTMLDivElement>("nash-bb-grid");
 
+// プリフロップ行動順 (UTG → UTG+1 → MP → LJ → HJ → CO → BTN → SB → BB)
+// (BB が最後に行動する)
+const POSITION_ACT_ORDER = [
+  "UTG",
+  "UTG+1",
+  "MP",
+  "LJ",
+  "HJ",
+  "CO",
+  "BTN",
+  "SB",
+  "BB",
+] as const;
+
+function actionOrderIdx(pos: string): number {
+  return POSITION_ACT_ORDER.indexOf(pos as (typeof POSITION_ACT_ORDER)[number]);
+}
+
 // HU 限界に関する警告ボックス更新
+// hero/villain の双方より後に行動するプレイヤー (over-caller 候補) が
+// 生存している場合のみ警告を出す。
 function updateNashOvercallWarn(): void {
   const warnEl = document.getElementById("nash-overcall-warn");
   if (!warnEl) return;
   const heroIdx = players.findIndex((p) => p.role === "hero");
   const villainIdx = players.findIndex((p) => p.role === "villain");
-  const aliveOthers = players.filter(
-    (p, i) => i !== heroIdx && i !== villainIdx && p.stack > 0,
-  ).length;
-  if (heroIdx < 0 || villainIdx < 0 || aliveOthers === 0) {
+  if (heroIdx < 0 || villainIdx < 0) {
     warnEl.classList.add("hidden");
     return;
   }
+  const heroPos = players[heroIdx]!.position;
+  const villainPos = players[villainIdx]!.position;
+  const heroAct = actionOrderIdx(heroPos);
+  const villainAct = actionOrderIdx(villainPos);
+
+  // hero/villain どちらかにポジ未指定があるなら判定不可 → 警告は出さない
+  if (heroAct < 0 || villainAct < 0) {
+    warnEl.classList.add("hidden");
+    return;
+  }
+
+  const lastActorIdx = Math.max(heroAct, villainAct);
+  // hero/villain より後に行動する生存プレイヤー
+  const overCallers = players.filter((p, i) => {
+    if (i === heroIdx || i === villainIdx) return false;
+    if (p.stack <= 0) return false;
+    const a = actionOrderIdx(p.position);
+    return a > lastActorIdx;
+  });
+
+  if (overCallers.length === 0) {
+    warnEl.classList.add("hidden");
+    return;
+  }
+
+  const list = overCallers
+    .map((p) => `${p.position}(${p.stack}BB)`)
+    .join(", ");
   warnEl.classList.remove("hidden");
   warnEl.innerHTML = `
-    ⚠ <strong>HU 2-way Nash の限界</strong>: 他に <strong>${aliveOthers}</strong> 人が生存中。
-    実戦で 🎯 が <em>call</em> 側 (=後ろにまだ生きてる人がいる) の場合、
-    <strong>over-call リスク</strong>分だけ実際は本来より<strong>狭く call</strong>すべきです。
-    <br />Nash 結果は HU 想定なので参考値として読み、ICM が厳しいシナリオでは更に絞ってください。
+    ⚠ <strong>over-call リスクあり</strong>: 後ろに <strong>${overCallers.length}</strong> 人 (${list}) が控えてます。
+    実戦の <em>call</em> 側は HU Nash よりさらに<strong>狭く call</strong>すべきです (BB が AA で over-call する等のリスク分)。
+    <br />当 Nash 結果は HU 2-way 想定の参考値として読んでください。
   `;
 }
 
