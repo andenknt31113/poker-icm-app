@@ -598,6 +598,7 @@ function recompute(): void {
       villainIndex,
       stacks,
       heroEq: heroIndex >= 0 ? equities[heroIndex] ?? 0 : 0,
+      villainEq: villainIndex >= 0 ? equities[villainIndex] ?? 0 : 0,
       totalPrize,
       bf,
       requiredEq: eq.dollarEV,
@@ -623,6 +624,7 @@ interface HeroSummaryArg {
   villainIndex: number;
   stacks: number[];
   heroEq: number;
+  villainEq: number;
   totalPrize: number;
   bf: number;
   requiredEq: number;
@@ -637,11 +639,13 @@ function renderHeroSummary(a: HeroSummaryArg): void {
   heroSummaryEl.classList.add("active");
   const heroStack = a.stacks[a.heroIndex]!;
   const heroPos = players[a.heroIndex]?.position || "—";
-  const eqPct = a.totalPrize > 0 ? (a.heroEq / a.totalPrize) * 100 : 0;
-  const villainStr =
-    a.villainIndex >= 0
-      ? `vs ${a.stacks[a.villainIndex]} BB`
-      : "相手未指定";
+  const heroEqPct = a.totalPrize > 0 ? (a.heroEq / a.totalPrize) * 100 : 0;
+
+  const hasVillain = a.villainIndex >= 0;
+  const villainStack = hasVillain ? a.stacks[a.villainIndex]! : 0;
+  const villainPos = hasVillain ? players[a.villainIndex]?.position || "—" : "—";
+  const villainEqPct =
+    hasVillain && a.totalPrize > 0 ? (a.villainEq / a.totalPrize) * 100 : 0;
 
   // BF 色
   let bfClass = "accent";
@@ -649,32 +653,37 @@ function renderHeroSummary(a: HeroSummaryArg): void {
   else if (a.bf > 1.15) bfClass = "bad";
   else if (a.bf > 1.05) bfClass = "warn";
 
+  const villainRow = hasVillain
+    ? `
+      <div class="hero-summary-row villain">
+        <div class="hero-summary-row-label">⚔️ 相手</div>
+        <div class="hero-summary-row-stat">${villainStack}<span class="unit">BB</span></div>
+        <div class="hero-summary-row-stat">${villainPos}</div>
+        <div class="hero-summary-row-stat accent">${villainEqPct.toFixed(1)}<span class="unit">%</span></div>
+      </div>`
+    : `<div class="hero-summary-row villain muted-row">⚔️ 相手未指定</div>`;
+
   heroSummaryEl.innerHTML = `
-    <div class="hero-summary-title">🎯 自分の状況サマリー</div>
+    <div class="hero-summary-title">状況サマリー</div>
+    <div class="hero-summary-row hero">
+      <div class="hero-summary-row-label">🎯 自分</div>
+      <div class="hero-summary-row-stat">${heroStack}<span class="unit">BB</span></div>
+      <div class="hero-summary-row-stat">${heroPos}</div>
+      <div class="hero-summary-row-stat accent">${heroEqPct.toFixed(1)}<span class="unit">%</span></div>
+    </div>
+    ${villainRow}
     <div class="hero-summary-grid">
       <div class="hero-summary-item">
-        <div class="hero-summary-label">スタック</div>
-        <div class="hero-summary-value">${heroStack}<span style="font-size:11px;color:var(--muted);">BB</span></div>
-      </div>
-      <div class="hero-summary-item">
-        <div class="hero-summary-label">ポジ</div>
-        <div class="hero-summary-value">${heroPos}</div>
-      </div>
-      <div class="hero-summary-item">
-        <div class="hero-summary-label">ICM</div>
-        <div class="hero-summary-value accent">${eqPct.toFixed(1)}<span style="font-size:11px;color:var(--muted);">%</span></div>
-      </div>
-      <div class="hero-summary-item">
-        <div class="hero-summary-label">BF (${villainStr})</div>
+        <div class="hero-summary-label">BF</div>
         <div class="hero-summary-value ${bfClass}">${a.bf.toFixed(2)}</div>
       </div>
       <div class="hero-summary-item">
         <div class="hero-summary-label">必要勝率</div>
-        <div class="hero-summary-value">${(a.requiredEq * 100).toFixed(1)}<span style="font-size:11px;color:var(--muted);">%</span></div>
+        <div class="hero-summary-value">${(a.requiredEq * 100).toFixed(1)}<span class="unit">%</span></div>
       </div>
       <div class="hero-summary-item">
         <div class="hero-summary-label">RP</div>
-        <div class="hero-summary-value warn">+${(a.rp * 100).toFixed(1)}<span style="font-size:11px;color:var(--muted);">%</span></div>
+        <div class="hero-summary-value warn">+${(a.rp * 100).toFixed(1)}<span class="unit">%</span></div>
       </div>
     </div>
   `;

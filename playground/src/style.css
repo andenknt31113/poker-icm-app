@@ -434,10 +434,57 @@ body {
   margin-bottom: 6px;
   letter-spacing: 0.05em;
 }
+.hero-summary-row {
+  display: grid;
+  grid-template-columns: 56px 1fr 1fr 1fr;
+  gap: 4px;
+  align-items: center;
+  padding: 4px 4px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+  font-family: var(--mono);
+}
+.hero-summary-row.hero {
+  background: rgba(102, 187, 106, 0.08);
+}
+.hero-summary-row.villain {
+  background: rgba(239, 83, 80, 0.08);
+}
+.hero-summary-row.muted-row {
+  display: flex;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--muted);
+  padding: 6px 4px;
+}
+.hero-summary-row-label {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.hero-summary-row-stat {
+  text-align: center;
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--text);
+}
+.hero-summary-row-stat.accent {
+  color: var(--accent);
+}
+.hero-summary-row-stat .unit,
+.hero-summary-value .unit {
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: normal;
+  margin-left: 1px;
+}
 .hero-summary-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 .hero-summary-item {
   display: flex;
