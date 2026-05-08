@@ -943,8 +943,8 @@ function renderRangeComparison(requiredEquity: number): void {
     if (heroGridTitle) heroGridTitle.textContent = "自分のcallレンジ 🟢";
     if (villainRangeLabel) villainRangeLabel.textContent = "相手のpushレンジ";
   } else {
-    if (villainGridTitle) villainGridTitle.textContent = "相手のcallレンジ 🔴 (タイト想定)";
-    if (heroGridTitle) heroGridTitle.textContent = "自分のpushレンジ 🟢 (推奨)";
+    if (villainGridTitle) villainGridTitle.textContent = "相手のcallレンジ 🔴";
+    if (heroGridTitle) heroGridTitle.textContent = "自分のpushレンジ 🟢";
     if (villainRangeLabel) villainRangeLabel.textContent = "相手のcallレンジ";
   }
 
@@ -1510,7 +1510,9 @@ const INFO_TEXTS: Record<string, { title: string; body: string }> = {
         <li><strong>1.20</strong>: 「100失う痛さ = 83取る嬉しさ」→ 20%余分にタイト</li>
         <li><strong>1.50+</strong>: バブル/サテライトレベル、超タイト</li>
       </ul>
-      <p>HRC や ICMIZER と同じ定義。BF = 1 + Risk Premium / 0.5。</p>
+      <p>厳密な定義: <code>BF = (現在 - 負け時の $) ÷ (勝ち時 - 現在の $)</code>。
+      HRC / ICMIZER と同じ計算。</p>
+      <p>※ 1:1 ポットオッズ時に <code>必要勝率 = BF/(BF+1)</code>。BF=1.2 なら 54.5%、BF=1.5 なら 60%。</p>
     `,
   },
   RP: {
