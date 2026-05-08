@@ -1969,6 +1969,12 @@ function applyTab(tab: TabId): void {
     if (el.classList.contains("tab-btn")) return; // ボタン自体は対象外
     el.classList.toggle("hidden-tab", el.dataset.tab !== tab);
   });
+  // 練習タブ中は Hero サマリーを隠す（メイン画面の状態と無関係なので邪魔）
+  const heroSum = document.getElementById("hero-summary");
+  if (heroSum) {
+    if (tab === "practice") heroSum.classList.add("hidden-tab");
+    else heroSum.classList.remove("hidden-tab");
+  }
   // ハンド or Nash タブ初表示時にスムーズトップ
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
