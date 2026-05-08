@@ -409,49 +409,6 @@ body {
   display: none;
 }
 
-/* ===== ハンドピッカー (decision card) ===== */
-.hand-decision .decision-card {
-  background: #0f1419;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 14px;
-  margin: 12px 0;
-  text-align: center;
-  min-height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.decision-empty {
-  color: var(--muted);
-  font-size: 13px;
-}
-.decision-result {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 100%;
-}
-.decision-verdict {
-  font-size: 22px;
-  font-weight: bold;
-  font-family: var(--mono);
-}
-.decision-verdict.push {
-  color: var(--good);
-}
-.decision-verdict.fold {
-  color: var(--bad);
-}
-.decision-verdict.marginal {
-  color: var(--warn);
-}
-.decision-detail {
-  font-size: 12px;
-  color: var(--muted);
-  font-family: var(--mono);
-}
-
 /* ===== Hero サマリー ===== */
 .hero-summary {
   display: none;
