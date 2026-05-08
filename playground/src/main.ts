@@ -2145,8 +2145,10 @@ function generatePracticeProblem(): PracticeProblem {
       position: positions[i] ?? "",
     });
   }
-  // hero と villain をランダム選定
-  const heroIdx = Math.floor(Math.random() * n);
+  // hero は常に BB (call 側 = 最後に行動するポジション)
+  // POSITION_SETS の各サイズで BB は index 2 に配置されている
+  const heroIdx = positions.indexOf("BB");
+  // villain (push 側) は BB 以外からランダム選定
   let villainIdx = Math.floor(Math.random() * n);
   while (villainIdx === heroIdx) villainIdx = Math.floor(Math.random() * n);
   scenarioPlayers[heroIdx]!.role = "hero";
