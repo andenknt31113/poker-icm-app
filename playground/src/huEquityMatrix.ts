@@ -61,6 +61,13 @@ export function huEquity(
     const v = row[villain];
     if (typeof v === "number") return v;
   }
+  // 対称性 fallback: huEquity(A, B) = 1 - huEquity(B, A)
+  // build script が片方向しか書かないバグへの対処
+  const reverseRow = TABLE[villain];
+  if (reverseRow && !("trials" in reverseRow)) {
+    const reverse = reverseRow[hero];
+    if (typeof reverse === "number") return 1 - reverse;
+  }
   return heuristicEquity(hero, villain);
 }
 
