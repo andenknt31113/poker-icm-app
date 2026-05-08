@@ -589,6 +589,76 @@ customFromPresetBtn.addEventListener("click", () => {
 
 loadCustomRange();
 
+// ===== ペイアウト行管理 =====
+
+const payoutsList = $<HTMLDivElement>("payouts-list");
+const addPayoutBtn = $<HTMLButtonElement>("add-payout");
+const MAX_PAYOUTS = 12;
+let payoutsArr: number[] = parseList(payoutsInput.value);
+if (payoutsArr.length === 0) payoutsArr = [50, 30, 20];
+
+function syncPayoutsInput(): void {
+  payoutsInput.value = payoutsArr.join(", ");
+}
+
+function renderPayouts(): void {
+  payoutsList.innerHTML = "";
+  payoutsArr.forEach((amt, i) => {
+    const row = document.createElement("div");
+    row.className = "payout-row";
+    row.innerHTML = `
+      <span class="payout-num">${i + 1}位</span>
+      <input type="number" inputmode="decimal" class="payout-amount" min="0" step="0.5" value="${amt}" data-i="${i}" />
+      <button type="button" class="payout-remove" data-i="${i}" title="削除" ${payoutsArr.length <= 1 ? "disabled" : ""}>✕</button>
+    `;
+    payoutsList.appendChild(row);
+  });
+  addPayoutBtn.disabled = payoutsArr.length >= MAX_PAYOUTS;
+}
+
+function setPayouts(values: number[]): void {
+  payoutsArr = values.length > 0 ? values.slice() : [100];
+  syncPayoutsInput();
+  renderPayouts();
+  recompute();
+}
+
+payoutsList.addEventListener("input", (e) => {
+  const t = e.target as HTMLInputElement;
+  if (!t.classList.contains("payout-amount")) return;
+  const i = Number(t.dataset.i);
+  const v = Number(t.value);
+  if (Number.isFinite(i) && i >= 0 && i < payoutsArr.length) {
+    payoutsArr[i] = Number.isFinite(v) && v >= 0 ? v : 0;
+    syncPayoutsInput();
+    recompute();
+  }
+});
+
+payoutsList.addEventListener("click", (e) => {
+  const t = e.target as HTMLElement;
+  const remove = t.closest<HTMLButtonElement>(".payout-remove");
+  if (remove && payoutsArr.length > 1) {
+    const i = Number(remove.dataset.i);
+    if (Number.isFinite(i) && i >= 0 && i < payoutsArr.length) {
+      payoutsArr.splice(i, 1);
+      syncPayoutsInput();
+      renderPayouts();
+      recompute();
+    }
+  }
+});
+
+addPayoutBtn.addEventListener("click", () => {
+  if (payoutsArr.length >= MAX_PAYOUTS) return;
+  payoutsArr.push(0);
+  syncPayoutsInput();
+  renderPayouts();
+  recompute();
+});
+
+renderPayouts();
+
 // ===== その他のリスナー =====
 
 document
@@ -596,10 +666,7 @@ document
   .forEach((btn) => {
     btn.addEventListener("click", () => {
       const v = btn.dataset.preset;
-      if (v) {
-        payoutsInput.value = v.split(",").join(", ");
-        recompute();
-      }
+      if (v) setPayouts(parseList(v));
     });
   });
 
@@ -675,8 +742,7 @@ savedPayoutsContainer.addEventListener("click", (e) => {
     return;
   }
   if (t.classList.contains("load")) {
-    payoutsInput.value = t.dataset.value ?? "";
-    recompute();
+    setPayouts(parseList(t.dataset.value ?? ""));
   }
 });
 

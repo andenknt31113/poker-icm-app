@@ -29,8 +29,12 @@
 
       <section class="card">
         <h2>2. ペイ構造</h2>
-        <p class="hint">カンマ区切り。1位賞金から順に。単位は % でも $ でもOK。</p>
-        <input id="payouts" type="text" inputmode="decimal" value="50, 30, 20" />
+        <p class="hint">1位から順に賞金を入力。単位は % でも $ でも OK。</p>
+        <div id="payouts-list" class="payouts-list"></div>
+        <button id="add-payout" class="add-btn" type="button">
+          + 順位追加
+        </button>
+        <input id="payouts" type="hidden" value="50, 30, 20" />
         <div class="presets-label">プリセット</div>
         <div class="presets">
           <button data-preset="50,30,20" type="button">Top3 (50/30/20)</button>

@@ -362,6 +362,73 @@ th {
   font-family: var(--mono);
 }
 
+/* ===== ペイアウトリスト ===== */
+.payouts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.payout-row {
+  display: grid;
+  grid-template-columns: 44px 1fr 30px;
+  gap: 6px;
+  align-items: center;
+  background: #0f1419;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.payout-num {
+  font-family: var(--mono);
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+.payout-amount {
+  width: 100%;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-family: var(--mono);
+  font-size: 16px;
+  color: var(--text);
+  font-weight: bold;
+}
+.payout-amount:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: #1a2027;
+}
+.payout-amount::-webkit-outer-spin-button,
+.payout-amount::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.payout-amount[type="number"] {
+  -moz-appearance: textfield;
+}
+.payout-remove {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0;
+}
+.payout-remove:hover:not(:disabled) {
+  border-color: var(--bad);
+  color: var(--bad);
+}
+.payout-remove:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
 .player-roles {
   display: flex;
   gap: 2px;
