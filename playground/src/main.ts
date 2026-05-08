@@ -546,6 +546,10 @@ function recompute(): void {
     // レンジ比較
     renderRangeComparison(eq.dollarEV);
 
+    // ハンドピッカーの最新 required equity を更新
+    latestRequiredEq = eq.dollarEV;
+    renderDecision();
+
     // Hero サマリー
     renderHeroSummary({
       heroIndex,
@@ -1209,6 +1213,141 @@ function runNash(): void {
 
 nashSolveBtn.addEventListener("click", runNash);
 
+// ===== タブナビ =====
+type TabId = "setup" | "result" | "hand" | "nash";
+const TAB_KEY = "poker-icm-active-tab";
+let activeTab: TabId = "setup";
+try {
+  const saved = localStorage.getItem(TAB_KEY) as TabId | null;
+  if (saved && ["setup", "result", "hand", "nash"].includes(saved)) {
+    activeTab = saved;
+  }
+} catch {
+  /* ignore */
+}
+
+function applyTab(tab: TabId): void {
+  activeTab = tab;
+  try { localStorage.setItem(TAB_KEY, tab); } catch { /* ignore */ }
+  document.querySelectorAll<HTMLButtonElement>(".tab-btn").forEach((b) => {
+    b.classList.toggle("active", b.dataset.tab === tab);
+  });
+  document.querySelectorAll<HTMLElement>("[data-tab]").forEach((el) => {
+    if (el.classList.contains("tab-btn")) return; // ボタン自体は対象外
+    el.classList.toggle("hidden-tab", el.dataset.tab !== tab);
+  });
+  // ハンド or Nash タブ初表示時にスムーズトップ
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+document.querySelectorAll<HTMLButtonElement>(".tab-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const t = btn.dataset.tab as TabId | undefined;
+    if (t) applyTab(t);
+  });
+});
+
+// ===== ハンドピッカー (Section: hand) =====
+const hdGrid = $<HTMLDivElement>("hd-grid");
+const hdDecision = $<HTMLDivElement>("hd-decision");
+let pickedHand: HandNotation | null = null;
+let latestRequiredEq = 0.5; // recompute で更新される
+
+function renderHandPicker(): void {
+  const cells: string[] = [];
+  for (let row = 0; row < 13; row++) {
+    for (let col = 0; col < 13; col++) {
+      const hand = handAt(row, col);
+      const isPair = row === col;
+      const picked = hand === pickedHand ? "picked" : "";
+      cells.push(
+        `<div class="hand-cell ${isPair ? "pair" : ""} ${picked}" data-hand="${hand}" title="${hand}">${hand}</div>`,
+      );
+    }
+  }
+  hdGrid.innerHTML = cells.join("");
+}
+
+function renderDecision(): void {
+  if (!pickedHand) {
+    hdDecision.innerHTML = `<div class="decision-empty">下のグリッドからハンドを選んでください</div>`;
+    return;
+  }
+  // 必要勝率は recompute で計算した最新の dollarEV を使う（eq-result から取得）
+  const callAmtRaw = Number(callInput.value);
+  const potWinRaw = Number(potWinInput.value);
+  if (!Number.isFinite(callAmtRaw) || callAmtRaw <= 0) {
+    hdDecision.innerHTML = `<div class="decision-empty">セクション 5 でコール額/利得を設定してください</div>`;
+    return;
+  }
+  // 直近の villain push range (preset slider または custom) を取得
+  const villainRange = (() => {
+    const customMode = document.querySelector<HTMLButtonElement>(".mode-tab.active")?.dataset.mode === "custom";
+    if (customMode) return customVillainRange;
+    return topRange(Number(pushRangeInput.value));
+  })();
+
+  // 自分のハンド equity vs villain push range
+  const heroEq = equity(pickedHand, villainRange);
+
+  // 必要勝率 (BF 反映後の dollarEV) — recompute で最新値を保存している
+  const requiredEq = latestRequiredEq > 0
+    ? latestRequiredEq
+    : callAmtRaw / (callAmtRaw + potWinRaw);
+
+  const margin = heroEq - requiredEq;
+  let verdictClass = "fold";
+  let verdict = "FOLD ❌";
+  if (margin >= 0.05) {
+    verdictClass = "push";
+    verdict = "PUSH/CALL ✅";
+  } else if (margin >= -0.02) {
+    verdictClass = "marginal";
+    verdict = "ボーダーライン ⚠";
+  }
+  hdDecision.innerHTML = `
+    <div class="decision-result">
+      <div class="decision-verdict ${verdictClass}">${pickedHand} → ${verdict}</div>
+      <div class="decision-detail">
+        ハンドの勝率: <strong>${(heroEq * 100).toFixed(1)}%</strong>
+        / 必要勝率: <strong>${(requiredEq * 100).toFixed(1)}%</strong>
+        / 余裕: <strong>${margin >= 0 ? "+" : ""}${(margin * 100).toFixed(1)}%</strong>
+      </div>
+      <div class="decision-detail">
+        相手のレンジ: ${villainRange.size} ハンド (Top ${((villainRange.size / 169) * 100).toFixed(0)}%)
+      </div>
+    </div>
+  `;
+}
+
+hdGrid.addEventListener("click", (e) => {
+  const t = e.target as HTMLElement;
+  const cell = t.closest<HTMLDivElement>(".hand-cell");
+  if (!cell) return;
+  const hand = cell.dataset.hand as HandNotation | undefined;
+  if (!hand) return;
+  pickedHand = pickedHand === hand ? null : hand;
+  renderHandPicker();
+  renderDecision();
+});
+
+renderHandPicker();
+renderDecision();
+
+// recompute 後にも decision を更新するため hook
+const origRecompute = recompute;
+(globalThis as { __recomputeOrig?: typeof recompute }).__recomputeOrig = origRecompute;
+
+// ===== Service Worker 登録 (PWA) =====
+if ("serviceWorker" in navigator && location.protocol !== "file:") {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {
+      /* SW 登録失敗は無視 */
+    });
+  });
+}
+
 // ===== 初期描画 =====
+applyTab(activeTab);
 renderPlayers();
 recompute();

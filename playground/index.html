@@ -2,9 +2,17 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>🎰 Poker ICM/BF Playground</title>
     <link rel="stylesheet" href="/src/style.css" />
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="theme-color" content="#0f1419" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Poker ICM" />
   </head>
   <body>
     <main class="container">
@@ -17,7 +25,24 @@
 
       <div id="hero-summary" class="hero-summary"></div>
 
-      <section class="card">
+      <nav class="tab-bar" role="tablist" aria-label="セクション">
+        <button type="button" class="tab-btn active" data-tab="setup">⚙️ 設定</button>
+        <button type="button" class="tab-btn" data-tab="result">📊 結果</button>
+        <button type="button" class="tab-btn" data-tab="hand">🃏 ハンド</button>
+        <button type="button" class="tab-btn" data-tab="nash">🎯 Nash</button>
+      </nav>
+
+      <section class="card hand-decision" data-tab="hand">
+        <h2>🃏 このハンド どうする？</h2>
+        <p class="hint">
+          グリッドからハンドをタップ → 必要勝率と比較して PUSH/CALL/FOLD を即判定。
+          相手のレンジは下部の「ハンドレンジ比較」のスライダーで設定。
+        </p>
+        <div id="hd-decision" class="decision-card"></div>
+        <div id="hd-grid" class="hand-grid"></div>
+      </section>
+
+      <section class="card" data-tab="setup">
         <h2>シナリオプリセット</h2>
         <p class="hint">タップで状況一発セット。スタック・ポジション・ペイアウトを丸ごと反映。</p>
         <div class="scenario-presets">
@@ -31,7 +56,7 @@
         </div>
       </section>
 
-      <section class="card">
+      <section class="card" data-tab="setup">
         <h2>1. プレイヤー</h2>
         <p class="hint">
           各プレイヤーのスタックを入力。<strong>🎯 自分</strong> /
@@ -48,7 +73,7 @@
         </div>
       </section>
 
-      <section class="card">
+      <section class="card" data-tab="setup">
         <h2>2. ペイ構造</h2>
         <p class="hint">1位から順に賞金を入力。単位は % でも $ でも OK。</p>
         <div id="payouts-list" class="payouts-list"></div>
@@ -72,7 +97,7 @@
         <div id="saved-payouts" class="presets saved"></div>
       </section>
 
-      <section class="card">
+      <section class="card" data-tab="result">
         <h2>3. ICMエクイティ</h2>
         <table id="icm-table">
           <thead>
@@ -87,7 +112,7 @@
         </table>
       </section>
 
-      <section class="card">
+      <section class="card" data-tab="result">
         <h2>4. Bubble Factor (BF)</h2>
         <p class="hint">
           🎯自分と⚔️相手のオールイン想定。リスクするチップは小さい方のスタックに自動調整されます。
@@ -166,7 +191,7 @@
         </div>
       </section>
 
-      <section class="card">
+      <section class="card" data-tab="result">
         <h2>5. 必要勝率 (cEV / $EV / RP)</h2>
         <p class="hint">
           🎯と⚔️のオールイン想定で自動計算。手動入力したい場合は数値を上書きしてください。
@@ -188,7 +213,7 @@
         <div id="eq-result" class="result"></div>
       </section>
 
-      <section class="card">
+      <section class="card" data-tab="nash">
         <h2>6. Nash 均衡 (HU push/fold) 🆕</h2>
         <p class="hint">
           🎯自分(SB) と ⚔️相手(BB) のヘッズアップ Nash 均衡を計算（ICM反映済み）。
@@ -238,7 +263,7 @@
         </div>
       </section>
 
-      <section class="card">
+      <section class="card" data-tab="hand">
         <h2>7. ハンドレンジ比較 🆕</h2>
         <p class="hint">
           相手のpushレンジを設定 → 自分のコールできる範囲を自動描画。

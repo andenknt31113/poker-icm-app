@@ -1,0 +1,31 @@
+{
+  "name": "Poker ICM/BF プレイグラウンド",
+  "short_name": "Poker ICM",
+  "description": "ポーカートーナメント用 ICM/BF/Nash 計算機",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#0f1419",
+  "background_color": "#0a0d12",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ]
+}
