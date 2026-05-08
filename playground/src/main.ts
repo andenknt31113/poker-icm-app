@@ -431,6 +431,19 @@ const SCENARIOS: Record<string, Scenario> = {
     payouts: [100],
     sb: 0.5, bb: 1, ante: 0, anteMode: "perPlayer",
   },
+  // サテライト: 5 人卓、上位 3 人が同額入賞 (4 位以下は 0)。極端な ICM バブル圧。
+  // hero は中堅スタック、villain は短いほうのバブル候補。
+  satellite3: {
+    players: [
+      { stack: 28, role: "other", position: "BTN" },
+      { stack: 22, role: "hero", position: "SB" },
+      { stack: 18, role: "other", position: "BB" },
+      { stack: 15, role: "other", position: "CO" },
+      { stack: 5, role: "villain", position: "HJ" },
+    ],
+    payouts: [33, 33, 33],
+    sb: 0.5, bb: 1, ante: 1, anteMode: "total",
+  },
 };
 
 function applyScenario(scenarioId: string): void {
