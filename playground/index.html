@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🎰 Poker ICM/BF Playground</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>🎰 Poker ICM / BF プレイグラウンド</h1>
+        <p class="subtitle">
+          値を変えるとリアルタイムに再計算されます。
+        </p>
+      </header>
+
+      <section class="card">
+        <h2>1. プレイヤー</h2>
+        <p class="hint">
+          各プレイヤーのスタックを入力。<strong>🎯 自分</strong> /
+          <strong>⚔️ 相手</strong> をタップで指定。最大9人。
+        </p>
+        <div id="players-list" class="players-list"></div>
+        <button id="add-player" class="add-btn" type="button">
+          + プレイヤー追加
+        </button>
+      </section>
+
+      <section class="card">
+        <h2>2. ペイ構造</h2>
+        <p class="hint">カンマ区切り。1位賞金から順に。単位は % でも $ でもOK。</p>
+        <input id="payouts" type="text" inputmode="decimal" value="50, 30, 20" />
+        <div class="presets-label">プリセット</div>
+        <div class="presets">
+          <button data-preset="50,30,20" type="button">Top3 (50/30/20)</button>
+          <button data-preset="65,35" type="button">Top2 (65/35)</button>
+          <button data-preset="100" type="button">WTA</button>
+          <button data-preset="40,25,15,10,5,3,2" type="button">9-max FT</button>
+        </div>
+        <div class="presets-label">
+          保存済み
+          <button id="save-payout" type="button" class="save-btn">
+            ＋ 現在の値を保存
+          </button>
+        </div>
+        <div id="saved-payouts" class="presets saved"></div>
+      </section>
+
+      <section class="card">
+        <h2>3. ICMエクイティ</h2>
+        <table id="icm-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>スタック</th>
+              <th>$ エクイティ</th>
+              <th>%</th>
+            </tr>
+          </thead>
+          <tbody id="icm-rows"></tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <h2>4. Bubble Factor (BF)</h2>
+        <p class="hint">
+          🎯自分と⚔️相手のオールイン想定。リスクするチップは小さい方のスタックに自動調整されます。
+        </p>
+        <div id="bf-result" class="result"></div>
+
+        <h3 class="bf-matrix-title">全員 vs 全員 BF マップ 🆕</h3>
+        <p class="hint">
+          縦軸 = Hero（自分）、横軸 = Villain（相手）。
+          上段=1:1ポット時のRisk Premium、下段=BF値。
+        </p>
+        <details class="howto">
+          <summary>📖 表の見方（クリックで展開）</summary>
+          <div class="howto-body">
+            <h4>1. 各セルの数字</h4>
+            <p>
+              <strong>下段の BF（Bubble Factor）</strong>がメイン指標。
+            </p>
+            <ul>
+              <li><strong>1.00</strong> = チップ ⇄ $ がリニア（ICM圧ゼロ）</li>
+              <li>
+                <strong>1.16</strong> = チップ100失う痛さ ＝ チップ86を取る嬉しさ。
+                <strong>16%余分にタイト</strong>に打つべき
+              </li>
+              <li>
+                <strong>1.41</strong> = チップ100失う痛さ ＝ チップ71を取る嬉しさ。
+                <strong>41%余分にタイト</strong>に打つべき（やばい）
+              </li>
+            </ul>
+            <p>
+              <strong>上段の Risk Premium</strong>は、コール額＝ポット（1:1オッズ）の時に
+              cEVより何%余分に勝率が必要か。たとえば +8.5% なら
+              「コインフリップ（50%）でも実は 58.5% 勝てないとコール NG」。
+            </p>
+            <h4>2. 色の意味</h4>
+            <ul>
+              <li>🟢 <strong>濃い緑</strong> (BF &lt; 0.85): ICM追い風、広くコール可</li>
+              <li>🟢 緑 (0.85〜1.0): やや有利</li>
+              <li>🟡 黄緑〜黄 (1.0〜1.1): 中立、ほぼ cEV 通り</li>
+              <li>🟠 オレンジ (1.1〜1.25): ICM圧、タイトに</li>
+              <li>🔴 赤 (&gt; 1.25): 超危険、プレミア限定</li>
+            </ul>
+            <h4>3. 戦略的な読み方</h4>
+            <ul>
+              <li>
+                <strong>赤いセル</strong>の相手が絡んできたら → 降りる方向にウェイト
+              </li>
+              <li>
+                <strong>緑のセル</strong>の相手 → ややルース寄せOK
+              </li>
+              <li>
+                <strong>自分が最短スタック</strong>の行は全体的にBFが低い（=失うものが少ない）→ 比較的気楽に勝負できる
+              </li>
+              <li>
+                <strong>チップリーダー対 2番手</strong>のセルは BF が跳ね上がる
+                → リーダー同士の絡みは慎重に
+              </li>
+              <li>
+                <strong>中堅スタック</strong>がリーダーに絡まれた時が最もタイトに打つべき場面（典型的な ICM プレッシャー）
+              </li>
+            </ul>
+            <h4>4. 実戦での使い方</h4>
+            <ol>
+              <li>テーブル着席後、全員のスタックを入力</li>
+              <li>左端の<strong>自分の行</strong>を見て「誰に対してタイト/ルース打つべきか」を把握</li>
+              <li>ハンド中に「あれ、この相手ヤバい？」となったら該当セルを確認</li>
+            </ol>
+            <p class="howto-note">
+              ※ 表は左右対称ではない（hero/villain入れ替えると BF が微妙に違う）。
+              これはコール側がリスクを取るためで、他プレイヤーの分布によって非対称になる。
+            </p>
+          </div>
+        </details>
+        <div class="bf-matrix-wrapper">
+          <div id="bf-matrix" class="bf-matrix"></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>5. 必要勝率 (cEV / $EV / RP)</h2>
+        <p class="hint">
+          🎯と⚔️のオールイン想定で自動計算。手動入力したい場合は数値を上書きしてください。
+        </p>
+        <div class="grid">
+          <label>
+            コール額
+            <input id="call" type="number" inputmode="decimal" value="14" min="0.1" step="0.1" />
+          </label>
+          <label>
+            勝った時の純利得
+            <input id="potwin" type="number" inputmode="decimal" value="20" min="0.1" step="0.1" />
+          </label>
+        </div>
+        <button id="autofill-call" type="button" class="solve-btn" style="margin-top: 10px; width: auto;">
+          🎯⚔️ から自動算出
+        </button>
+        <p class="hint" id="autofill-hint" style="margin-top: 6px;"></p>
+        <div id="eq-result" class="result"></div>
+      </section>
+
+      <section class="card">
+        <h2>6. ハンドレンジ比較 🆕</h2>
+        <p class="hint">
+          相手のpushレンジを設定 → 自分のコールできる範囲を自動描画。
+          <br />
+          <strong>※ 暫定的な近似 equity を使用（後で Monte Carlo で精密化予定）</strong>
+        </p>
+
+        <div class="mode-tabs" role="tablist">
+          <button
+            type="button"
+            class="mode-tab active"
+            data-mode="preset"
+          >
+            プリセット (Top X%)
+          </button>
+          <button type="button" class="mode-tab" data-mode="custom">
+            カスタム編集
+          </button>
+        </div>
+
+        <div id="preset-controls">
+          <label class="range-label">
+            相手のpushレンジ: <span id="push-pct">25</span>%
+            <input
+              id="push-range"
+              type="range"
+              min="1"
+              max="100"
+              value="25"
+              step="1"
+            />
+          </label>
+        </div>
+        <div id="custom-controls" class="hidden">
+          <p class="hint">
+            グリッドのセルをタップして相手のレンジに追加/削除。<br />
+            選択中: <strong id="custom-count">0</strong>個 (<span id="custom-pct">0</span>%)
+          </p>
+          <div class="custom-actions">
+            <button type="button" id="custom-clear">全消去</button>
+            <button type="button" id="custom-from-preset">
+              プリセットから読み込む
+            </button>
+          </div>
+        </div>
+
+        <div class="range-grids">
+          <div>
+            <h3>相手のpushレンジ 🔴</h3>
+            <div id="grid-villain" class="hand-grid"></div>
+          </div>
+          <div>
+            <h3>自分のcallレンジ 🟢</h3>
+            <div id="grid-hero" class="hand-grid"></div>
+            <p class="hint call-stats-below" id="call-stats"></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>7. Nash 均衡 (HU push/fold) 🆕</h2>
+        <p class="hint">
+          🎯自分(SB) と ⚔️相手(BB) のヘッズアップ Nash 均衡を計算（ICM反映済み）。
+          <br />
+          上の「1. プレイヤー」で 🎯/⚔️ を指定してから Nash 計算を押してください。
+        </p>
+
+        <div class="grid">
+          <label>
+            SB
+            <input id="nash-sb" type="number" inputmode="decimal" value="0.5" min="0" step="0.1" />
+          </label>
+          <label>
+            BB
+            <input id="nash-bb" type="number" inputmode="decimal" value="1.0" min="0.1" step="0.1" />
+          </label>
+          <label>
+            アンティ合計
+            <input id="nash-ante" type="number" inputmode="decimal" value="0" min="0" step="0.05" />
+          </label>
+        </div>
+
+        <button id="nash-solve" type="button" class="solve-btn">Nash 計算</button>
+        <p id="nash-status" class="hint"></p>
+
+        <div class="range-grids">
+          <div>
+            <h3>🎯自分(SB) push レンジ 🔴</h3>
+            <p class="hint" id="nash-sb-stats"></p>
+            <div id="nash-sb-grid" class="hand-grid"></div>
+          </div>
+          <div>
+            <h3>⚔️相手(BB) call レンジ 🟢</h3>
+            <p class="hint" id="nash-bb-stats"></p>
+            <div id="nash-bb-grid" class="hand-grid"></div>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <p>Phase 0 動作確認 · @poker-icm/core</p>
+      </footer>
+    </main>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

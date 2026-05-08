@@ -1,0 +1,800 @@
+:root {
+  --bg: #0f1419;
+  --card: #1a2027;
+  --border: #2a3038;
+  --text: #e6e6e6;
+  --muted: #8a9099;
+  --accent: #4fc3f7;
+  --good: #66bb6a;
+  --warn: #ffa726;
+  --bad: #ef5350;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+    "Yu Gothic", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+h1 {
+  font-size: 24px;
+  margin: 0 0 8px;
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.card h2 {
+  font-size: 16px;
+  margin: 0 0 8px;
+  color: var(--accent);
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 0 0 8px;
+}
+
+input[type="text"],
+input[type="number"] {
+  width: 100%;
+  background: #0f1419;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 8px 10px;
+  font-family: var(--mono);
+  font-size: 14px;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.presets-label {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 12px;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.save-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.save-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.presets.saved {
+  min-height: 28px;
+}
+
+.presets.saved:empty::before {
+  content: "（保存済みなし）";
+  font-size: 11px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.saved-preset {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(79, 195, 247, 0.08);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.saved-preset .load {
+  background: transparent;
+  border: none;
+  color: var(--text);
+  padding: 6px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: var(--mono);
+}
+
+.saved-preset .load:hover {
+  color: var(--accent);
+}
+
+.saved-preset .del {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  padding: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  border-left: 1px solid var(--border);
+}
+
+.saved-preset .del:hover {
+  color: var(--bad);
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.presets button {
+  background: #0f1419;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--mono);
+}
+
+.presets button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+th,
+td {
+  padding: 6px 8px;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+}
+
+th:first-child,
+td:first-child {
+  text-align: left;
+}
+
+th {
+  color: var(--muted);
+  font-weight: normal;
+  font-size: 12px;
+}
+
+.result {
+  font-family: var(--mono);
+  font-size: 14px;
+  margin-top: 12px;
+  display: grid;
+  gap: 4px;
+}
+
+.result .row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.result .label {
+  color: var(--muted);
+}
+
+.result .value {
+  font-weight: bold;
+}
+
+.value.big {
+  font-size: 20px;
+  color: var(--accent);
+}
+
+.verdict {
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.verdict .badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  margin-right: 6px;
+}
+
+.badge.call {
+  background: var(--good);
+  color: #002b00;
+}
+
+.badge.fold {
+  background: var(--bad);
+  color: #2b0000;
+}
+
+.badge.marginal {
+  background: var(--warn);
+  color: #2b1500;
+}
+
+.error {
+  color: var(--bad);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+/* ===== プレイヤーリスト ===== */
+
+.players-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.player-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 26px auto 30px;
+  gap: 6px;
+  align-items: center;
+  background: #0f1419;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.player-num {
+  font-family: var(--mono);
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.player-stack {
+  width: 100%;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-family: var(--mono);
+  font-size: 16px;
+  color: var(--text);
+  font-weight: bold;
+}
+
+.player-stack:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: #1a2027;
+}
+
+/* スピナーは消す（モバイルで邪魔） */
+.player-stack::-webkit-outer-spin-button,
+.player-stack::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.player-stack[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.player-unit {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: var(--mono);
+}
+
+.player-roles {
+  display: flex;
+  gap: 2px;
+}
+
+.role-btn {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.role-btn:hover {
+  border-color: var(--accent);
+}
+
+.role-btn.active {
+  background: var(--border);
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.role-btn.active.hero {
+  background: rgba(102, 187, 106, 0.25);
+  border-color: var(--good);
+}
+
+.role-btn.active.villain {
+  background: rgba(239, 83, 80, 0.25);
+  border-color: var(--bad);
+}
+
+.player-remove {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0;
+}
+
+.player-remove:hover:not(:disabled) {
+  border-color: var(--bad);
+  color: var(--bad);
+}
+
+.player-remove:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.add-btn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px;
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--muted);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.add-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.add-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== 見方の説明 ===== */
+.howto {
+  margin: 12px 0;
+  background: #0a0e12;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.howto > summary {
+  cursor: pointer;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--accent);
+  list-style: none;
+  user-select: none;
+}
+
+.howto > summary::-webkit-details-marker {
+  display: none;
+}
+
+.howto > summary::before {
+  content: "▶ ";
+  display: inline-block;
+  margin-right: 4px;
+  transition: transform 0.15s ease;
+}
+
+.howto[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.howto > summary:hover {
+  background: rgba(79, 195, 247, 0.05);
+}
+
+.howto-body {
+  padding: 4px 16px 14px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text);
+  border-top: 1px solid var(--border);
+}
+
+.howto-body h4 {
+  font-size: 13px;
+  margin: 12px 0 4px;
+  color: var(--accent);
+}
+
+.howto-body ul,
+.howto-body ol {
+  margin: 4px 0;
+  padding-left: 22px;
+}
+
+.howto-body li {
+  margin: 2px 0;
+}
+
+.howto-body p {
+  margin: 6px 0;
+}
+
+.howto-note {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 10px;
+  padding: 6px 8px;
+  background: #050709;
+  border-radius: 4px;
+}
+
+/* ===== BF マトリックス ===== */
+.bf-matrix-title {
+  font-size: 14px;
+  margin: 20px 0 4px;
+  color: var(--accent);
+}
+
+
+.bf-matrix {
+  display: grid;
+  gap: 2px;
+  font-family: var(--mono);
+  font-size: 11px;
+  max-width: 540px;
+}
+
+.bf-matrix-wrapper {
+  overflow-x: auto;
+}
+
+.bf-matrix .bf-hdr-corner {
+  background: transparent;
+}
+
+.bf-matrix .bf-hdr-col,
+.bf-matrix .bf-hdr-row {
+  background: #0a0e12;
+  color: var(--text);
+  font-weight: bold;
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  padding: 4px;
+}
+
+.bf-matrix .bf-hdr-row {
+  align-items: center;
+}
+
+.bf-matrix .stack-info {
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: normal;
+  margin-top: 2px;
+}
+
+.bf-matrix .bf-cell,
+.bf-matrix .bf-diag {
+  aspect-ratio: 1 / 1;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: #0f1419;
+}
+
+.bf-matrix .bf-cell {
+  color: white;
+  font-weight: bold;
+  line-height: 1.15;
+}
+
+.bf-matrix .bf-diag {
+  background: #050709;
+}
+
+.bf-matrix .bf-rp {
+  font-size: 10px;
+  display: block;
+}
+
+.bf-matrix .bf-val {
+  font-size: 13px;
+  display: block;
+}
+
+#bf-matrix .bf-cell .bf-rp {
+  font-size: 10px;
+  display: block;
+}
+
+#bf-matrix .bf-cell .bf-val {
+  font-size: 12px;
+  display: block;
+}
+
+#bf-matrix .bf-diag {
+  background: #050709;
+}
+
+#bf-matrix .stack-info {
+  font-size: 9px;
+  color: var(--muted);
+  display: block;
+  font-weight: normal;
+}
+
+/* ===== モードタブ ===== */
+.mode-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  background: #0a0e12;
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.mode-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.mode-tab.active {
+  background: var(--card);
+  color: var(--accent);
+  font-weight: bold;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.custom-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.custom-actions button {
+  background: #0f1419;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.custom-actions button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* カスタム編集中はカーソルをポインターに */
+.hand-grid.editable .hand-cell {
+  cursor: pointer;
+}
+
+.hand-grid.editable .hand-cell:hover {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+  z-index: 1;
+}
+
+.range-label {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.range-label span {
+  color: var(--accent);
+  font-weight: bold;
+  font-size: 14px;
+  font-family: var(--mono);
+}
+
+.range-label input[type="range"] {
+  width: 100%;
+  margin-top: 4px;
+  accent-color: var(--accent);
+}
+
+.range-grids {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.range-grids h3 {
+  font-size: 13px;
+  margin: 0 0 6px;
+  color: var(--text);
+}
+
+.hand-grid {
+  display: grid;
+  grid-template-columns: repeat(13, 1fr);
+  gap: 1px;
+  font-family: var(--mono);
+  font-size: 9px;
+  background: var(--border);
+  padding: 1px;
+  border-radius: 4px;
+  user-select: none;
+}
+
+.hand-cell {
+  background: #0f1419;
+  color: var(--muted);
+  text-align: center;
+  font-size: 9px;
+  border-radius: 1px;
+  transition: background 0.15s ease, color 0.15s ease;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.call-stats-below {
+  margin-top: 8px;
+}
+
+.hand-cell.pair {
+  font-weight: bold;
+}
+
+.hand-cell.in-range-villain {
+  background: var(--bad);
+  color: white;
+}
+
+.hand-cell.in-range-hero {
+  background: var(--good);
+  color: white;
+  font-weight: bold;
+}
+
+.hand-cell.marginal {
+  background: var(--warn);
+  color: #2b1500;
+}
+
+/* Nash ソルバ ボタン */
+.solve-btn {
+  display: inline-block;
+  background: var(--accent);
+  color: #051018;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 8px 0;
+  transition: filter 0.15s ease, transform 0.05s ease;
+}
+.solve-btn:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+.solve-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.solve-btn:disabled {
+  background: var(--border);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .range-grids {
+    grid-template-columns: 1fr;
+  }
+  .hand-cell {
+    font-size: 10px;
+    padding: 4px 0;
+  }
+}
+
+footer {
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 24px;
+}
+
+footer a {
+  color: var(--accent);
+  text-decoration: none;
+}

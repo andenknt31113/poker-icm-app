@@ -1,0 +1,19 @@
+{
+  "name": "poker-icm-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "日本語UIの店舗トナメ向け ICM/BF/Nash 計算アプリ（モバイルWeb）",
+  "workspaces": [
+    "core",
+    "playground"
+  ],
+  "scripts": {
+    "build": "npm -w @poker-icm/core run build && npm -w @poker-icm/playground run build",
+    "dev": "npm -w @poker-icm/playground run dev",
+    "test": "npm -w @poker-icm/core run test",
+    "typecheck": "npm -w @poker-icm/core run typecheck && npm -w @poker-icm/playground exec -- tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
