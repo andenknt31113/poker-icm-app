@@ -1284,6 +1284,11 @@ function updateNashOvercallWarn(): void {
     else behind.push(p);
   }
 
+  const pusherIdx = heroAct < villainAct ? heroIdx : villainIdx;
+  const callerIdx = heroAct < villainAct ? villainIdx : heroIdx;
+  const pusherPos = players[pusherIdx]?.position;
+  const callerPos = players[callerIdx]?.position;
+
   const partsHtml: string[] = [];
   if (between.length > 0) {
     partsHtml.push(
@@ -1296,11 +1301,17 @@ function updateNashOvercallWarn(): void {
     );
   }
 
+  // 主要な調整: pusher は介在者の over-call リスクを織り込んで tighter に
+  // caller は介在者が fold した後に判断するため HU Nash 通りで概ね OK
+  // (caller の後ろに人がいる場合のみ caller も tighter)
+  const callerNeedsTighten = behind.length > 0;
+
   warnEl.classList.remove("hidden");
   warnEl.innerHTML = `
     ⚠ <strong>HU Nash 想定外の介入者あり</strong>: ${partsHtml.join(" / ")}。
-    実戦では各介入者が call/over-call/3bet する可能性があるため、
-    <strong>caller (${players[heroAct < villainAct ? villainIdx : heroIdx]?.position}) は HU Nash よりさらに狭く call</strong>すべきです。
+    <br />→ <strong>pusher (${pusherPos}) は HU Nash よりさらに狭く push</strong> すべき
+    （介在者が強いハンドで over-call/3bet する分、fold equity が減るため）。
+    ${callerNeedsTighten ? `<br />→ <strong>caller (${callerPos}) も狭く call</strong> すべき (後ろに ${behind.length} 人控えてるため)。` : `<br />→ caller (${callerPos}) は概ね HU Nash 通り (介在者が降りた前提なので)。`}
     <br />当 Nash 結果は HU 2-way 想定の参考値として読んでください。
   `;
 }
