@@ -1,9 +1,11 @@
 import {
   calculateBubbleFactor,
   calculateICM,
+  calculatePotOdds,
   calculateRequiredEquity,
   MAX_PLAYERS,
   solveHUNash,
+  type PotOddsPosition,
 } from "@poker-icm/core";
 import {
   ALL_169_HANDS,
@@ -32,6 +34,18 @@ const $ = <T extends HTMLElement>(id: string): T => {
 
 type Role = "hero" | "villain" | "other";
 type Position = "" | "SB" | "BB" | "BTN" | "CO" | "HJ" | "LJ" | "MP" | "UTG+1" | "UTG";
+
+/** 標準ブラインド (BB 単位)。プリセット/フォールバック値の単一情報源。 */
+const DEFAULT_SB = 0.5;
+const DEFAULT_BB = 1.0;
+const DEFAULT_ANTE = 1.0; // BB ante 構造の標準値
+
+/** Position → calculatePotOdds の position 種別 (SB / BB / OTHER) に変換。 */
+function posToPotOddsPos(pos: Position | undefined): PotOddsPosition {
+  if (pos === "SB") return "SB";
+  if (pos === "BB") return "BB";
+  return "OTHER";
+}
 
 /** N人テーブルでの時計回りポジション順（BTN起点）。 */
 const POSITION_SETS: Record<number, Position[]> = {
@@ -98,8 +112,8 @@ function saveState(): void {
       })),
       payouts: payoutsArr.length > 0 ? payoutsArr : [50, 30, 20],
       nash: {
-        sb: sbEl ? Number(sbEl.value) || 0.5 : 0.5,
-        bb: bbEl ? Number(bbEl.value) || 1.0 : 1.0,
+        sb: sbEl ? Number(sbEl.value) || DEFAULT_SB : DEFAULT_SB,
+        bb: bbEl ? Number(bbEl.value) || DEFAULT_BB : DEFAULT_BB,
         ante: anteEl ? Number(anteEl.value) || 0 : 0,
         anteMode,
       },
@@ -371,7 +385,7 @@ const SCENARIOS: Record<string, Scenario> = {
       { stack: 5, role: "other", position: "CO" },
     ],
     payouts: [40, 25, 15, 10, 5, 3, 2, 1, 0.5],
-    sb: 0.5, bb: 1, ante: 1,
+    sb: DEFAULT_SB, bb: DEFAULT_BB, ante: DEFAULT_ANTE,
   },
   ftBubble: {
     players: [
@@ -381,7 +395,7 @@ const SCENARIOS: Record<string, Scenario> = {
       { stack: 16, role: "other", position: "CO" },
     ],
     payouts: [50, 30, 20],
-    sb: 0.5, bb: 1, ante: 1,
+    sb: DEFAULT_SB, bb: DEFAULT_BB, ante: DEFAULT_ANTE,
   },
   ft6: {
     players: [
@@ -393,7 +407,7 @@ const SCENARIOS: Record<string, Scenario> = {
       { stack: 10, role: "other", position: "CO" },
     ],
     payouts: [45, 25, 15, 8, 4, 3],
-    sb: 0.5, bb: 1, ante: 1,
+    sb: DEFAULT_SB, bb: DEFAULT_BB, ante: DEFAULT_ANTE,
   },
   ft4: {
     players: [
@@ -403,7 +417,7 @@ const SCENARIOS: Record<string, Scenario> = {
       { stack: 15, role: "other", position: "CO" },
     ],
     payouts: [50, 30, 15, 5],
-    sb: 0.5, bb: 1, ante: 1,
+    sb: DEFAULT_SB, bb: DEFAULT_BB, ante: DEFAULT_ANTE,
   },
   ft3: {
     players: [
@@ -412,7 +426,7 @@ const SCENARIOS: Record<string, Scenario> = {
       { stack: 20, role: "other", position: "BB" },
     ],
     payouts: [50, 30, 20],
-    sb: 0.5, bb: 1, ante: 1,
+    sb: DEFAULT_SB, bb: DEFAULT_BB, ante: DEFAULT_ANTE,
   },
   hu: {
     players: [
@@ -420,7 +434,7 @@ const SCENARIOS: Record<string, Scenario> = {
       { stack: 10, role: "villain", position: "BB" },
     ],
     payouts: [100],
-    sb: 0.5, bb: 1, ante: 0,
+    sb: DEFAULT_SB, bb: DEFAULT_BB, ante: 0,
   },
   huShort: {
     players: [
@@ -428,7 +442,7 @@ const SCENARIOS: Record<string, Scenario> = {
       { stack: 18, role: "villain", position: "BB" },
     ],
     payouts: [100],
-    sb: 0.5, bb: 1, ante: 0,
+    sb: DEFAULT_SB, bb: DEFAULT_BB, ante: 0,
   },
   // サテライト: 5 人卓、上位 3 人が同額入賞 (4 位以下は 0)。極端な ICM バブル圧。
   // hero は中堅スタック、villain は短いほうのバブル候補。
@@ -441,7 +455,7 @@ const SCENARIOS: Record<string, Scenario> = {
       { stack: 5, role: "villain", position: "HJ" },
     ],
     payouts: [33, 33, 33],
-    sb: 0.5, bb: 1, ante: 1,
+    sb: DEFAULT_SB, bb: DEFAULT_BB, ante: DEFAULT_ANTE,
   },
 };
 
@@ -510,8 +524,8 @@ function saveUserScenarios(list: UserScenario[]): void {
 }
 
 function captureCurrentScenario(): Scenario {
-  const sbV = Number(nashSbInput.value) || 0.5;
-  const bbV = Number(nashBbInput.value) || 1;
+  const sbV = Number(nashSbInput.value) || DEFAULT_SB;
+  const bbV = Number(nashBbInput.value) || DEFAULT_BB;
   const anteV = Number(nashAnteInput.value) || 0;
   const anteMode =
     (document.querySelector<HTMLInputElement>(
@@ -679,47 +693,27 @@ function recompute(): void {
       villainIndex >= 0 &&
       heroIndex !== villainIndex
     ) {
-      const heroStack = stacks[heroIndex]!;
-      const villainStack = stacks[villainIndex]!;
-      const sbV = Number(nashSbInput?.value) || 0.5;
-      const bbV = Number(nashBbInput?.value) || 1.0;
+      const sbV = Number(nashSbInput?.value) || DEFAULT_SB;
+      const bbV = Number(nashBbInput?.value) || DEFAULT_BB;
       const totalAnteV = Number(nashAnteInput?.value) || 0;
       const heroPos = players[heroIndex]?.position;
       const villainPos = players[villainIndex]?.position;
-      // BB ante 構造: BB のみ ante を払う (dead money)
-      const heroAnte = heroPos === "BB" ? totalAnteV : 0;
-      const villainAnte = villainPos === "BB" ? totalAnteV : 0;
-      // live stack = full stack − 自分の ante 拠出
-      const heroLive = heroStack - heroAnte;
-      const villainLive = villainStack - villainAnte;
-      const matched = Math.min(heroLive, villainLive);
-      // live commit (blind 既出、ante は dead 扱い)
-      const heroLiveCommit =
-        heroPos === "BB" ? bbV : heroPos === "SB" ? sbV : 0;
-      const villainLiveCommit =
-        villainPos === "BB" ? bbV : villainPos === "SB" ? sbV : 0;
-      const callAmt = Math.max(0.01, matched - heroLiveCommit);
-      void villainLiveCommit; // 補足計算用 (今は使わないが将来用)
-      // dead money in pot at showdown:
-      //   SB blind: hero/villain どちらも SB でない場合 dead
-      //   BB blind: hero/villain どちらも BB でない場合 dead
-      //   BB ante:  常に dead (BB ante 構造)
-      const sbInAction = heroPos === "SB" || villainPos === "SB";
-      const bbInAction = heroPos === "BB" || villainPos === "BB";
-      const sbDead = sbInAction ? 0 : sbV;
-      const bbDead = bbInAction ? 0 : bbV;
-      const totalDead = sbDead + bbDead + totalAnteV;
-      const potAtShow = 2 * matched + totalDead;
-      const potWin = potAtShow - callAmt;
-      if (matched > 0 && !callManualOverride) {
-        callInput.value = callAmt.toFixed(1);
-        potWinInput.value = potWin.toFixed(1);
+      const r = calculatePotOdds({
+        heroStack: stacks[heroIndex]!,
+        villainStack: stacks[villainIndex]!,
+        heroPosition: posToPotOddsPos(heroPos),
+        villainPosition: posToPotOddsPos(villainPos),
+        sb: sbV, bb: bbV, ante: totalAnteV,
+      });
+      if (r.matched > 0 && !callManualOverride) {
+        callInput.value = r.callAmount.toFixed(1);
+        potWinInput.value = r.potIfWin.toFixed(1);
         const deadParts: string[] = [];
-        if (sbDead > 0) deadParts.push(`SB ${sbDead}`);
-        if (bbDead > 0) deadParts.push(`BB ${bbDead}`);
-        if (totalAnteV > 0) deadParts.push(`ante ${totalAnteV}`);
+        if (r.deadBreakdown.sbDead > 0) deadParts.push(`SB ${r.deadBreakdown.sbDead}`);
+        if (r.deadBreakdown.bbDead > 0) deadParts.push(`BB ${r.deadBreakdown.bbDead}`);
+        if (r.deadBreakdown.anteDead > 0) deadParts.push(`ante ${r.deadBreakdown.anteDead}`);
         const deadStr = deadParts.length > 0 ? deadParts.join("+") : "なし";
-        autofillHint.innerHTML = `✓ 追加 call <strong>${callAmt.toFixed(1)}</strong>, 純利得 <strong>${potWin.toFixed(1)}</strong> = pot ${potAtShow.toFixed(1)} − call ${callAmt.toFixed(1)} (matched ${matched}×2 + dead [${deadStr}])`;
+        autofillHint.innerHTML = `✓ 追加 call <strong>${r.callAmount.toFixed(1)}</strong>, 純利得 <strong>${r.potIfWin.toFixed(1)}</strong> = pot ${r.potAtShowdown.toFixed(1)} − call ${r.callAmount.toFixed(1)} (matched ${r.matched}×2 + dead [${deadStr}])`;
       }
     }
     const callAmount = Number(callInput.value);
@@ -1020,8 +1014,8 @@ function computePushBackRange(villainCallRange: Set<HandNotation>): PushBackResu
   const payouts = parseList(payoutsInput.value);
   if (payouts.length === 0) return empty;
 
-  const sb = Number(nashSbInput.value) || 0.5;
-  const bb = Number(nashBbInput.value) || 1;
+  const sb = Number(nashSbInput.value) || DEFAULT_SB;
+  const bb = Number(nashBbInput.value) || DEFAULT_BB;
   const anteRaw = Number(nashAnteInput.value) || 0;
   const anteMode =
     (document.querySelector<HTMLInputElement>(
@@ -1475,8 +1469,8 @@ autofillBtn.addEventListener("click", () => {
   const sbEl = document.getElementById("nash-sb") as HTMLInputElement | null;
   const bbEl = document.getElementById("nash-bb") as HTMLInputElement | null;
   const anteEl = document.getElementById("nash-ante") as HTMLInputElement | null;
-  const sb = sbEl ? Number(sbEl.value) || 0 : 0.5;
-  const bb = bbEl ? Number(bbEl.value) || 0 : 1.0;
+  const sb = sbEl ? Number(sbEl.value) || 0 : DEFAULT_SB;
+  const bb = bbEl ? Number(bbEl.value) || 0 : DEFAULT_BB;
   const anteRawV = anteEl ? Number(anteEl.value) || 0 : 0;
   const anteMode =
     (document.querySelector<HTMLInputElement>(
@@ -1620,8 +1614,8 @@ function encodeStateToHash(): string {
     p: players.map((p) => [p.stack, p.role[0], p.position]),
     py: payoutsArr,
     n: {
-      sb: Number(sbEl?.value) || 0.5,
-      bb: Number(bbEl?.value) || 1,
+      sb: Number(sbEl?.value) || DEFAULT_SB,
+      bb: Number(bbEl?.value) || DEFAULT_BB,
       a: Number(anteEl?.value) || 0,
       m: anteMode === "perPlayer" ? "p" : "t",
     },
@@ -2327,9 +2321,9 @@ function generateRandomPracticeProblem(): PracticeProblem {
   scenarioPlayers[villainIdx]!.role = "villain";
 
   const payouts = pickRandom(PAYOUT_TEMPLATES);
-  const sb = 0.5;
-  const bb = 1;
-  const totalAnte = 1; // 1 BB 合計に固定
+  const sb = DEFAULT_SB;
+  const bb = DEFAULT_BB;
+  const totalAnte = DEFAULT_ANTE;
   const villainCallRangePct = 5 + Math.floor(Math.random() * 95); // 5-100%
 
   // 自分のハンド
@@ -2337,9 +2331,7 @@ function generateRandomPracticeProblem(): PracticeProblem {
 
   // BF / 必要勝率 / equity 計算
   const stacks = scenarioPlayers.map((p) => p.stack);
-  const heroStack = stacks[heroIdx]!;
-  const villainStack = stacks[villainIdx]!;
-  const safeRisk = Math.min(heroStack, villainStack);
+  const safeRisk = Math.min(stacks[heroIdx]!, stacks[villainIdx]!);
   const bfResult = calculateBubbleFactor({
     stacks,
     payouts,
@@ -2347,23 +2339,16 @@ function generateRandomPracticeProblem(): PracticeProblem {
     villainIndex: villainIdx,
     riskChips: safeRisk,
   });
-  // BB ante 構造 + hero=BB (BB ante は dead money として扱う poker 標準ルール):
-  // - hero (BB) の live stack = 全 stack − ante (BB ante は dead で BB の bet にならない)
-  // - hero の live commit before = bb (blind のみ、ante は dead)
-  // - matched (all-in) = min(hero live stack, villain live stack)
-  // - 追加 call = matched − bb
-  // - dead money (in pot at showdown) = SB blind (villain≠SB) + BB ante
-  // - pot at showdown = 2 × matched + dead money
-  // - potIfWin (純利得) = pot − 追加 call
-  const heroLiveStack = stacks[heroIdx]! - totalAnte; // BB ante 除外
-  const villainLiveStack = stacks[villainIdx]!; // villain には ante なし
-  const matchedLive = Math.min(heroLiveStack, villainLiveStack);
   const villainPos = scenarioPlayers[villainIdx]!.position;
-  const sbDead = villainPos === "SB" ? 0 : sb;
-  const totalDead = sbDead + totalAnte; // BB ante は常に dead
-  const callAmount = Math.max(0.01, matchedLive - bb);
-  const potAtShowdown = 2 * matchedLive + totalDead;
-  const potIfWin = potAtShowdown - callAmount;
+  const podds = calculatePotOdds({
+    heroStack: stacks[heroIdx]!,
+    villainStack: stacks[villainIdx]!,
+    heroPosition: "BB", // 練習問題では hero は常に BB
+    villainPosition: posToPotOddsPos(villainPos),
+    sb, bb, ante: totalAnte,
+  });
+  const callAmount = podds.callAmount;
+  const potIfWin = podds.potIfWin;
   const eqRes = calculateRequiredEquity({
     callAmount,
     potIfWin,

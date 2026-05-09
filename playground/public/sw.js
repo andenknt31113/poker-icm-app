@@ -1,6 +1,6 @@
 // Poker ICM/BF プレイグラウンド サービスワーカー
 // シンプルな network-first + offline fallback 戦略
-const CACHE = "poker-icm-v5";
+const CACHE = "poker-icm-v6";
 const PRECACHE_URLS = ["/", "/manifest.json", "/icon.svg"];
 
 self.addEventListener("install", (event) => {
