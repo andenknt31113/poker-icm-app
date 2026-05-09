@@ -1829,8 +1829,10 @@ heroSummaryEl?.addEventListener("click", (e) => {
 });
 
 // ハンドレンジ比較セクションの hero ポジション バナー
-// HU all-in 想定 = hero が最終 actor (= BB) のときのみ厳密に有効。
-// 他ポジションだと「後ろのプレイヤーが over-call しない」想定になり概算止まり。
+// HU all-in 想定 = 「最終 actor = caller」のときのみ厳密に有効:
+//   - call モード: hero が caller → hero=BB が cleanest
+//   - push モード: villain が caller → villain=BB が cleanest (hero は pusher)
+// 「caller の後ろに残るプレイヤー」がいると over-call リスクで概算止まり。
 function updateHandPositionBanner(heroIndex: number): void {
   const banner = document.getElementById("hand-position-banner");
   if (!banner) return;
@@ -1838,35 +1840,47 @@ function updateHandPositionBanner(heroIndex: number): void {
     banner.classList.add("hidden");
     return;
   }
-  const heroPos = players[heroIndex]?.position;
-  if (!heroPos) {
+  const villainIndex = players.findIndex((p) => p.role === "villain");
+  if (villainIndex < 0) {
     banner.classList.add("hidden");
     return;
   }
-  if (heroPos === "BB") {
+  // direction で「caller」を決める
+  const callerIndex = direction === "callBack" ? heroIndex : villainIndex;
+  const callerPos = players[callerIndex]?.position;
+  const callerLabel = direction === "callBack" ? "hero (自分)" : "villain (相手)";
+  if (!callerPos) {
     banner.classList.add("hidden");
     return;
   }
-  // hero の後ろに残ってるプレイヤー (action order で hero より後)
-  const heroAct = actionOrderIdx(heroPos);
+  if (callerPos === "BB") {
+    banner.classList.add("hidden");
+    return;
+  }
+  // caller の後ろに残ってるプレイヤー (caller 自身を除く)
+  const callerAct = actionOrderIdx(callerPos);
   const behind = players
-    .filter((p, i) => i !== heroIndex)
+    .filter((_, i) => i !== callerIndex)
     .map((p) => ({ pos: p.position, act: actionOrderIdx(p.position), stack: p.stack }))
-    .filter((x) => x.act > heroAct && x.act >= 0)
+    .filter((x) => x.act > callerAct && x.act >= 0)
     .sort((a, b) => a.act - b.act);
   banner.classList.remove("hidden");
   if (behind.length === 0) {
     banner.innerHTML = `
-      ℹ️ 現在 hero=<strong>${heroPos}</strong>。後ろにプレイヤーがいないので
+      ℹ️ ${callerLabel}=<strong>${callerPos}</strong>。後ろにプレイヤーがいないので
       HU all-in モデルは厳密に有効です。
     `;
   } else {
     const list = behind.map((x) => `${x.pos} (${x.stack}BB)`).join(", ");
+    const directionNote = direction === "callBack"
+      ? "ここで「call OK」と出ても実戦ではより硬い range で受けるべきです。"
+      : "ここで「push OK」と出ても実戦では over-call の可能性を加味してより硬い range で push するべきです。";
     banner.innerHTML = `
-      ⚠ hero=<strong>${heroPos}</strong>。このセクションは <strong>hero=BB (最終 actor)</strong>
-      想定の HU all-in モデルです。後ろに残ってる ${behind.length} 人 (${list})
-      の <strong>over-call リスク</strong>は反映されないため、
-      ここで「call OK」と出ても実戦ではより硬い range で受けるべきです。
+      ⚠ ${callerLabel}=<strong>${callerPos}</strong>。このセクションは
+      <strong>caller=BB (最終 actor)</strong> 想定の HU all-in モデルです。
+      ${callerLabel} の後ろに残ってる ${behind.length} 人 (${list}) の
+      <strong>over-call リスク</strong>は反映されません。
+      ${directionNote}
     `;
   }
 }
