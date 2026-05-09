@@ -2395,10 +2395,12 @@ function renderRoundTable(
       p.role === "hero" ? "hero" : p.role === "villain" ? "villain" : "";
     const tag = p.role === "hero" ? "🎯 " : p.role === "villain" ? "⚔️ " : "";
 
-    // BB ante 構造: SB は SB blind のみ、BB は BB blind + 全 ante、他は 0
+    // BB ante 構造: 「場」表示は live commit (blind) のみ
+    //   SB は SB blind、BB は BB blind、他は 0
+    //   BB ante は dead 扱いなので中央 pot 表示に含める (ここには出さない)
     let committed = 0;
     if (p.position === "SB" && blinds) committed = blinds.sb;
-    if (p.position === "BB" && blinds) committed = blinds.bb + blinds.totalAnte;
+    if (p.position === "BB" && blinds) committed = blinds.bb;
     const remaining = p.stack - committed;
     const commitText = committed > 0
       ? `<div class="seat-commit">📥 場 ${committed.toFixed(2)}</div>`
