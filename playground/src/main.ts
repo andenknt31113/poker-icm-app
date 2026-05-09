@@ -2330,9 +2330,8 @@ function judgePractice(answer: "call" | "fold"): void {
     <h3 style="font-size: 13px; margin: 12px 0 4px;">🎯 自分の call レンジ 🟢 (必要勝率 ${(p.dollarEV * 100).toFixed(1)}% 超のハンド)</h3>
     <div id="practice-hero-grid" class="hand-grid"></div>
     <div class="grid-legend">
-      <span><span class="legend-box in-range-hero"></span>明確に call (余裕 +3% 以上)</span>
-      <span><span class="legend-box marginal"></span>ボーダー (余裕 -2%〜+3%)</span>
-      <span><span class="legend-box"></span>fold (余裕 -2% 未満)</span>
+      <span><span class="legend-box in-range-hero"></span>call (余裕 +0% 以上 = +EV)</span>
+      <span><span class="legend-box"></span>fold (余裕 マイナス = -EV)</span>
     </div>
     <div style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px;">
       <button id="practice-next-btn" type="button" class="solve-btn">🎲 次の問題</button>
@@ -2348,9 +2347,7 @@ function judgePractice(answer: "call" | "fold"): void {
       const eq = equity(h, villainRange);
       const margin2 = eq - p.dollarEV;
       const isPicked = h === p.heroHand;
-      let cls = "";
-      if (margin2 >= 0.03) cls = "in-range-hero";
-      else if (margin2 >= -0.02) cls = "marginal";
+      let cls = margin2 >= 0 ? "in-range-hero" : "";
       if (isPicked) cls += " picked";
       return cls;
     });
