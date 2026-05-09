@@ -2457,8 +2457,12 @@ function judgePractice(answer: "call" | "fold"): void {
         <ul>
           <li>cEV: <code>${p.callAmount} ÷ (${p.callAmount} + ${p.potIfWin.toFixed(1)}) = ${(p.cEV * 100).toFixed(1)}%</code></li>
           <li>$EV: <code>(${p.callAmount} × ${p.bf.toFixed(2)}) ÷ (${p.callAmount} × ${p.bf.toFixed(2)} + ${p.potIfWin.toFixed(1)}) = ${(p.dollarEV * 100).toFixed(1)}%</code></li>
-          <li><strong>RP</strong>: <code>$EV − cEV = ${(p.dollarEV * 100).toFixed(1)}% − ${(p.cEV * 100).toFixed(1)}% = ${((p.dollarEV - p.cEV) * 100 >= 0 ? "+" : "")}${((p.dollarEV - p.cEV) * 100).toFixed(2)}%</code> (ICM 圧の上乗せ分)</li>
+          <li><strong>RP (実 pot odds)</strong>: <code>$EV − cEV = ${(p.dollarEV * 100).toFixed(1)}% − ${(p.cEV * 100).toFixed(1)}% = ${((p.dollarEV - p.cEV) * 100 >= 0 ? "+" : "")}${((p.dollarEV - p.cEV) * 100).toFixed(2)}%</code></li>
+          <li><strong>RP (1:1 オッズ時)</strong>: <code>BF ÷ (BF+1) − 50% = ${p.bf.toFixed(2)}÷${(p.bf + 1).toFixed(2)} − 50% = ${(p.bf / (p.bf + 1) * 100).toFixed(1)}% − 50% = ${(((p.bf / (p.bf + 1)) - 0.5) * 100 >= 0 ? "+" : "")}${(((p.bf / (p.bf + 1)) - 0.5) * 100).toFixed(2)}%</code></li>
         </ul>
+        <p style="font-size: 11px; color: var(--muted); margin: 4px 0 0;">
+          ※ RP の値は pot odds で変動。1:1 オッズ時は <code>BF/(BF+1)−50%</code> がシンプル指標、それ以外は <code>$EV−cEV</code> が実際の上乗せ分。
+        </p>
 
         <h4>6. ハンド equity</h4>
         <p><code>${p.heroHand}</code> vs Top ${p.villainCallRangePct}% range → <strong>${(p.heroEq * 100).toFixed(1)}%</strong></p>
