@@ -1,5 +1,6 @@
 :root {
   --bg: #0f1419;
+  --bg-deep: #050709;
   --card: #1a2027;
   --border: #2a3038;
   --text: #e6e6e6;
@@ -8,11 +9,14 @@
   --good: #66bb6a;
   --warn: #ffa726;
   --bad: #ef5350;
+  --hero-summary-bg: linear-gradient(135deg, #0f1d2e 0%, #1a2840 100%);
+  --hero-summary-shadow: 0 2px 12px rgba(56, 168, 255, 0.25);
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 
 :root[data-theme="light"] {
   --bg: #f5f7fa;
+  --bg-deep: #e8ebf0;
   --card: #ffffff;
   --border: #d4dae1;
   --text: #1a2027;
@@ -21,6 +25,8 @@
   --good: #2e7d32;
   --warn: #ef6c00;
   --bad: #c62828;
+  --hero-summary-bg: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  --hero-summary-shadow: 0 2px 12px rgba(2, 136, 209, 0.18);
 }
 
 * {
@@ -83,7 +89,7 @@ h1 {
 input[type="text"],
 input[type="number"] {
   width: 100%;
-  background: #0f1419;
+  background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 6px;
   color: var(--text);
@@ -194,7 +200,7 @@ input:focus {
 }
 
 .presets button {
-  background: #0f1419;
+  background: var(--bg);
   border: 1px solid var(--border);
   color: var(--text);
   padding: 6px 10px;
@@ -308,14 +314,14 @@ th {
   grid-template-columns: 22px minmax(56px, 1fr) 18px 46px auto 26px;
   gap: 4px;
   align-items: center;
-  background: #0f1419;
+  background: var(--bg);
   padding: 6px 6px;
   border: 1px solid var(--border);
   border-radius: 8px;
 }
 
 .player-pos {
-  background: #050709;
+  background: var(--bg-deep);
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: 4px;
@@ -357,7 +363,7 @@ th {
 .player-stack:focus {
   outline: none;
   border-color: var(--accent);
-  background: #1a2027;
+  background: var(--card);
 }
 
 /* スピナーは消す（モバイルで邪魔） */
@@ -475,12 +481,12 @@ body {
 /* ===== Hero サマリー ===== */
 .hero-summary {
   display: none;
-  background: linear-gradient(135deg, #0f1d2e 0%, #1a2840 100%);
+  background: var(--hero-summary-bg);
   border: 1px solid var(--accent);
   border-radius: 12px;
   padding: 10px 12px;
   margin-bottom: 14px;
-  box-shadow: 0 2px 12px rgba(56, 168, 255, 0.25);
+  box-shadow: var(--hero-summary-shadow);
   position: sticky;
   top: 4px;
   z-index: 50;
@@ -608,7 +614,7 @@ body {
   overflow: hidden;
 }
 .user-scenario-item .user-load {
-  background: #0f1419;
+  background: var(--bg);
   color: var(--text);
   border: none;
   padding: 8px 10px;
@@ -617,7 +623,7 @@ body {
   font-family: inherit;
 }
 .user-scenario-item .user-load:hover {
-  background: #1a2027;
+  background: var(--card);
 }
 .user-scenario-item .user-del {
   background: transparent;
@@ -634,7 +640,7 @@ body {
   background: rgba(239, 83, 80, 0.1);
 }
 .scenario-btn {
-  background: #0f1419;
+  background: var(--bg);
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -645,7 +651,7 @@ body {
 }
 .scenario-btn:hover {
   border-color: var(--accent);
-  background: #1a2027;
+  background: var(--card);
 }
 .scenario-btn:active {
   background: var(--accent);
@@ -660,7 +666,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 6px;
   overflow: hidden;
-  background: #0f1419;
+  background: var(--bg);
 }
 .ante-mode-opt {
   flex: 1;
@@ -708,7 +714,7 @@ body {
   grid-template-columns: 44px 1fr 30px;
   gap: 6px;
   align-items: center;
-  background: #0f1419;
+  background: var(--bg);
   padding: 6px 8px;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -733,7 +739,7 @@ body {
 .payout-amount:focus {
   outline: none;
   border-color: var(--accent);
-  background: #1a2027;
+  background: var(--card);
 }
 .payout-amount::-webkit-outer-spin-button,
 .payout-amount::-webkit-inner-spin-button {
@@ -850,7 +856,7 @@ body {
 /* ===== 見方の説明 ===== */
 .howto {
   margin: 12px 0;
-  background: #0a0e12;
+  background: var(--bg-deep);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 0;
@@ -918,7 +924,7 @@ body {
   color: var(--muted);
   margin-top: 10px;
   padding: 6px 8px;
-  background: #050709;
+  background: var(--bg-deep);
   border-radius: 4px;
 }
 
@@ -948,7 +954,7 @@ body {
 
 .bf-matrix .bf-hdr-col,
 .bf-matrix .bf-hdr-row {
-  background: #0a0e12;
+  background: var(--bg-deep);
   color: var(--text);
   font-weight: bold;
   font-size: 11px;
@@ -980,7 +986,7 @@ body {
   align-items: center;
   justify-content: center;
   text-align: center;
-  background: #0f1419;
+  background: var(--bg);
 }
 
 .bf-matrix .bf-cell {
@@ -990,7 +996,7 @@ body {
 }
 
 .bf-matrix .bf-diag {
-  background: #050709;
+  background: var(--bg-deep);
 }
 
 .bf-matrix .bf-rp {
@@ -1014,7 +1020,7 @@ body {
 }
 
 #bf-matrix .bf-diag {
-  background: #050709;
+  background: var(--bg-deep);
 }
 
 #bf-matrix .stack-info {
@@ -1029,7 +1035,7 @@ body {
   display: flex;
   gap: 6px;
   margin-bottom: 12px;
-  background: #0a0e12;
+  background: var(--bg-deep);
   padding: 4px;
   border-radius: 8px;
 }
@@ -1063,7 +1069,7 @@ body {
 }
 
 .custom-actions button {
-  background: #0f1419;
+  background: var(--bg);
   border: 1px solid var(--border);
   color: var(--text);
   padding: 6px 12px;
@@ -1142,7 +1148,7 @@ body {
 .direction-tabs {
   display: flex;
   gap: 4px;
-  background: #0f1419;
+  background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 3px;
@@ -1178,7 +1184,7 @@ body {
   text-align: center;
 }
 .num-step-btn {
-  background: #0f1419;
+  background: var(--bg);
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: 4px;
@@ -1197,7 +1203,7 @@ body {
 /* ===== メモ + 共有 ===== */
 #scenario-memo {
   width: 100%;
-  background: #0f1419;
+  background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 10px;
@@ -1237,7 +1243,7 @@ body {
   display: none;
 }
 .info-modal-content {
-  background: #0f1419;
+  background: var(--bg);
   border: 1px solid var(--accent);
   border-radius: 12px;
   max-width: 480px;
@@ -1311,7 +1317,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #0f1419;
+  background: var(--bg);
   border: 2px solid var(--border);
   border-radius: 10px;
   padding: 4px 6px;
@@ -1399,7 +1405,7 @@ body {
 }
 .streak-badge,
 .acc-badge {
-  background: #0f1419;
+  background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 4px 8px;
@@ -1415,7 +1421,7 @@ body {
 .practice-difficulty {
   display: flex;
   gap: 2px;
-  background: #0f1419;
+  background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 2px;
@@ -1448,7 +1454,7 @@ body {
 }
 
 .practice-details {
-  background: #0f1419;
+  background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 8px 12px;
@@ -1493,7 +1499,7 @@ body {
   gap: 4px;
   font-size: 12px;
   color: var(--muted);
-  background: #0f1419;
+  background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 10px;
@@ -1521,7 +1527,7 @@ body {
 .practice-btn {
   padding: 14px;
   border: 2px solid var(--border);
-  background: #0f1419;
+  background: var(--bg);
   color: var(--text);
   border-radius: 10px;
   font-size: 16px;
@@ -1539,7 +1545,7 @@ body {
   transform: translateY(1px);
 }
 .practice-feedback {
-  background: #0f1419;
+  background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 12px;
@@ -1580,7 +1586,7 @@ body {
 }
 
 .hand-cell {
-  background: #0f1419;
+  background: var(--bg);
   color: var(--muted);
   text-align: center;
   font-size: 9px;
@@ -1627,7 +1633,7 @@ body {
   width: 12px;
   height: 12px;
   border-radius: 2px;
-  background: #0f1419;
+  background: var(--bg);
   border: 1px solid var(--border);
   vertical-align: middle;
   margin-right: 3px;

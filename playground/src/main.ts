@@ -2134,42 +2134,6 @@ document.getElementById("theme-toggle")?.addEventListener("click", () => {
   applyTheme(cur === "dark" ? "light" : "dark");
 });
 
-// ===== 言語切替 (JP / EN) =====
-const LANG_KEY = "poker-icm-lang";
-type Lang = "ja" | "en";
-
-const I18N: Record<Lang, Record<string, string>> = {
-  ja: {
-    subtitle: "値を変えるとリアルタイムに再計算されます。",
-  },
-  en: {
-    subtitle: "Values recalculate in real-time as you change them.",
-  },
-};
-
-let currentLang: Lang = "ja";
-try {
-  const v = localStorage.getItem(LANG_KEY);
-  if (v === "ja" || v === "en") currentLang = v;
-} catch { /* ignore */ }
-
-function applyLang(l: Lang): void {
-  currentLang = l;
-  try { localStorage.setItem(LANG_KEY, l); } catch { /* ignore */ }
-  const btn = document.getElementById("lang-toggle");
-  if (btn) btn.textContent = l === "ja" ? "JP" : "EN";
-  document.documentElement.lang = l;
-  // data-i18n 属性を持つ要素を翻訳
-  document.querySelectorAll<HTMLElement>("[data-i18n]").forEach((el) => {
-    const key = el.dataset.i18n;
-    if (key && I18N[l][key]) el.textContent = I18N[l][key];
-  });
-}
-applyLang(currentLang);
-document.getElementById("lang-toggle")?.addEventListener("click", () => {
-  applyLang(currentLang === "ja" ? "en" : "ja");
-});
-
 // ===== タブ切替のスワイプ ジェスチャー =====
 (() => {
   const TABS: TabId[] = ["setup", "result", "hand", "nash", "practice"];
