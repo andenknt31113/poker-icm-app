@@ -708,12 +708,47 @@ function recompute(): void {
       if (r.matched > 0 && !callManualOverride) {
         callInput.value = r.callAmount.toFixed(1);
         potWinInput.value = r.potIfWin.toFixed(1);
-        const deadParts: string[] = [];
-        if (r.deadBreakdown.sbDead > 0) deadParts.push(`SB ${r.deadBreakdown.sbDead}`);
-        if (r.deadBreakdown.bbDead > 0) deadParts.push(`BB ${r.deadBreakdown.bbDead}`);
-        if (r.deadBreakdown.anteDead > 0) deadParts.push(`ante ${r.deadBreakdown.anteDead}`);
-        const deadStr = deadParts.length > 0 ? deadParts.join("+") : "なし";
-        autofillHint.innerHTML = `✓ 追加 call <strong>${r.callAmount.toFixed(1)}</strong>, 純利得 <strong>${r.potIfWin.toFixed(1)}</strong> = pot ${r.potAtShowdown.toFixed(1)} − call ${r.callAmount.toFixed(1)} (matched ${r.matched}×2 + dead [${deadStr}])`;
+        const heroStackV = stacks[heroIndex]!;
+        const heroAntePaid = heroPos === "BB" ? totalAnteV : 0;
+        const heroBlindPaid = r.heroLiveCommit;
+        const heroSunk = heroAntePaid + heroBlindPaid;
+        const heroLive = heroStackV - heroSunk;
+        const stackIfFold = heroLive;
+        const stackIfLose = heroLive - r.callAmount;
+        const stackIfWin = stackIfLose + r.potAtShowdown;
+        const netWin = stackIfWin - heroStackV;
+        const netLose = stackIfLose - heroStackV;
+        const netFold = stackIfFold - heroStackV;
+        const fmt = (v: number) => (v >= 0 ? "+" : "") + v.toFixed(1);
+        autofillHint.innerHTML = `
+          <details class="autofill-details" open>
+            <summary>✓ 追加 call <strong>${r.callAmount.toFixed(1)}</strong> / 純利得 <strong>${r.potIfWin.toFixed(1)}</strong> BB <span style="color: var(--muted); font-size: 11px;">(タップで内訳)</span></summary>
+            <div class="autofill-body">
+              <div class="autofill-section">
+                <div class="autofill-h">📊 ポット構成</div>
+                <ul class="autofill-list">
+                  ${heroBlindPaid > 0 ? `<li>自分(${heroPos}) blind: <code>${heroBlindPaid.toFixed(1)}</code> <span class="muted">(sunk)</span></li>` : ""}
+                  ${heroAntePaid > 0 ? `<li>自分(${heroPos}) ante: <code>${heroAntePaid.toFixed(1)}</code> <span class="muted">(sunk)</span></li>` : ""}
+                  ${r.deadBreakdown.sbDead > 0 ? `<li>SB dead: <code>${r.deadBreakdown.sbDead.toFixed(1)}</code> <span class="muted">(SB folded)</span></li>` : ""}
+                  ${r.deadBreakdown.bbDead > 0 ? `<li>BB dead: <code>${r.deadBreakdown.bbDead.toFixed(1)}</code> <span class="muted">(BB folded)</span></li>` : ""}
+                  ${r.deadBreakdown.anteDead > 0 && heroAntePaid === 0 ? `<li>ante dead: <code>${r.deadBreakdown.anteDead.toFixed(1)}</code></li>` : ""}
+                  <li>自分これから払う <strong>call</strong>: <code>${r.callAmount.toFixed(1)}</code></li>
+                  <li>相手(${villainPos}) match: <code>${(r.matched - r.villainLiveCommit).toFixed(1)}</code> + 既出 ${r.villainLiveCommit.toFixed(1)} = <code>${r.matched.toFixed(1)}</code></li>
+                  <li><strong>合計 pot: ${r.potAtShowdown.toFixed(1)} BB</strong></li>
+                </ul>
+              </div>
+              <div class="autofill-section">
+                <div class="autofill-h">⚖️ コール vs フォールド</div>
+                <table class="autofill-table">
+                  <tr><th>選択</th><th>残スタック</th><th>vs fold</th><th>起点比</th></tr>
+                  <tr><td>fold</td><td>${stackIfFold.toFixed(1)}</td><td>±0</td><td class="${netFold >= 0 ? 'good' : 'bad'}">${fmt(netFold)}</td></tr>
+                  <tr><td>call+win</td><td>${stackIfWin.toFixed(1)}</td><td class="good">+${r.potIfWin.toFixed(1)}</td><td class="${netWin >= 0 ? 'good' : 'bad'}">${fmt(netWin)}</td></tr>
+                  <tr><td>call+lose</td><td>${stackIfLose.toFixed(1)}</td><td class="bad">-${r.callAmount.toFixed(1)}</td><td class="bad">${fmt(netLose)}</td></tr>
+                </table>
+              </div>
+            </div>
+          </details>
+        `;
       }
     }
     const callAmount = Number(callInput.value);
