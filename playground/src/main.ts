@@ -673,7 +673,7 @@ function recompute(): void {
     // BF マトリックス（全員 vs 全員）
     renderBFMatrix(stacks, payouts);
 
-    // 必要勝率: hero/villain あれば常に自動更新（手動上書きは callManualOverride で保持）
+    // 必要勝率: hero/villain あれば自動更新 (BB ante 構造、ante は dead)
     if (
       heroIndex >= 0 &&
       villainIndex >= 0 &&
@@ -681,21 +681,29 @@ function recompute(): void {
     ) {
       const heroStack = stacks[heroIndex]!;
       const villainStack = stacks[villainIndex]!;
-      const risk = Math.min(heroStack, villainStack);
       const sbV = Number(nashSbInput?.value) || 0.5;
       const bbV = Number(nashBbInput?.value) || 1.0;
-      const anteRaw = Number(nashAnteInput?.value) || 0;
-      const anteMode =
-        (document.querySelector<HTMLInputElement>(
-          'input[name="ante-mode"]:checked',
-        )?.value ?? "total") as "total" | "perPlayer";
-      const totalAnteVal =
-        anteMode === "perPlayer" ? anteRaw * stacks.length : anteRaw;
-      const dead = sbV + bbV + totalAnteVal;
-      if (risk > 0 && !callManualOverride) {
-        callInput.value = risk.toFixed(1);
-        potWinInput.value = (risk + dead).toFixed(1);
-        autofillHint.innerHTML = `✓ コール <strong>${risk}</strong>, 純利得 <strong>${(risk + dead).toFixed(1)}</strong> = リスク ${risk} + 死に金 ${dead.toFixed(1)} (SB ${sbV} + BB ${bbV} + アンティ合計 ${totalAnteVal.toFixed(1)})`;
+      const totalAnteV = Number(nashAnteInput?.value) || 0;
+      const heroPos = players[heroIndex]?.position;
+      const villainPos = players[villainIndex]?.position;
+      // BB ante 構造: BB のみ ante を払う (dead money)
+      const heroAnte = heroPos === "BB" ? totalAnteV : 0;
+      const villainAnte = villainPos === "BB" ? totalAnteV : 0;
+      const heroLive = heroStack - heroAnte;
+      const villainLive = villainStack - villainAnte;
+      const matched = Math.min(heroLive, villainLive);
+      const heroLiveCommit =
+        heroPos === "BB" ? bbV : heroPos === "SB" ? sbV : 0;
+      const callAmt = Math.max(0.01, matched - heroLiveCommit);
+      // dead money: SB blind (hero/villain どちらでもない時) + BB ante (常に)
+      const sbDead = heroPos === "SB" || villainPos === "SB" ? 0 : sbV;
+      const totalDead = sbDead + totalAnteV;
+      const potAtShow = 2 * matched + totalDead;
+      const potWin = potAtShow - callAmt;
+      if (matched > 0 && !callManualOverride) {
+        callInput.value = callAmt.toFixed(1);
+        potWinInput.value = potWin.toFixed(1);
+        autofillHint.innerHTML = `✓ 追加 call <strong>${callAmt.toFixed(1)}</strong>, 純利得 <strong>${potWin.toFixed(1)}</strong> = pot ${potAtShow.toFixed(1)} − call ${callAmt.toFixed(1)} (BB ante ${totalAnteV} は dead として扱う)`;
       }
     }
     const callAmount = Number(callInput.value);
@@ -2269,18 +2277,23 @@ function generateRandomPracticeProblem(): PracticeProblem {
     villainIndex: villainIdx,
     riskChips: safeRisk,
   });
-  // BB ante 構造 + hero=BB:
-  // - hero (BB) は既に bb + totalAnte 場入り
-  // - villain は SB なら sb 場入り、それ以外は 0
-  // - pot odds は「追加 call ÷ (追加 call + 純利得)」
-  // - 純利得 = 全 pot 至 showdown − hero の追加 call
-  //         = (2 × safeRisk + 他者dead) − (safeRisk − heroCommitBefore)
-  //         = safeRisk + 他者dead + heroCommitBefore
-  const heroCommitBefore = bb + totalAnte;
+  // BB ante 構造 + hero=BB (BB ante は dead money として扱う poker 標準ルール):
+  // - hero (BB) の live stack = 全 stack − ante (BB ante は dead で BB の bet にならない)
+  // - hero の live commit before = bb (blind のみ、ante は dead)
+  // - matched (all-in) = min(hero live stack, villain live stack)
+  // - 追加 call = matched − bb
+  // - dead money (in pot at showdown) = SB blind (villain≠SB) + BB ante
+  // - pot at showdown = 2 × matched + dead money
+  // - potIfWin (純利得) = pot − 追加 call
+  const heroLiveStack = stacks[heroIdx]! - totalAnte; // BB ante 除外
+  const villainLiveStack = stacks[villainIdx]!; // villain には ante なし
+  const matchedLive = Math.min(heroLiveStack, villainLiveStack);
   const villainPos = scenarioPlayers[villainIdx]!.position;
-  const otherDead = villainPos === "SB" ? 0 : sb;
-  const callAmount = Math.max(0.01, safeRisk - heroCommitBefore);
-  const potIfWin = safeRisk + otherDead + heroCommitBefore;
+  const sbDead = villainPos === "SB" ? 0 : sb;
+  const totalDead = sbDead + totalAnte; // BB ante は常に dead
+  const callAmount = Math.max(0.01, matchedLive - bb);
+  const potAtShowdown = 2 * matchedLive + totalDead;
+  const potIfWin = potAtShowdown - callAmount;
   const eqRes = calculateRequiredEquity({
     callAmount,
     potIfWin,
