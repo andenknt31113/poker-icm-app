@@ -2269,10 +2269,21 @@ function generateRandomPracticeProblem(): PracticeProblem {
     villainIndex: villainIdx,
     riskChips: safeRisk,
   });
-  const dead = sb + bb + totalAnte;
+  // BB ante 構造 + hero=BB:
+  // - hero (BB) は既に bb + totalAnte 場入り
+  // - villain は SB なら sb 場入り、それ以外は 0
+  // - pot odds は「追加 call ÷ (追加 call + 純利得)」
+  // - 純利得 = 全 pot 至 showdown − hero の追加 call
+  //         = (2 × safeRisk + 他者dead) − (safeRisk − heroCommitBefore)
+  //         = safeRisk + 他者dead + heroCommitBefore
+  const heroCommitBefore = bb + totalAnte;
+  const villainPos = scenarioPlayers[villainIdx]!.position;
+  const otherDead = villainPos === "SB" ? 0 : sb;
+  const callAmount = Math.max(0.01, safeRisk - heroCommitBefore);
+  const potIfWin = safeRisk + otherDead + heroCommitBefore;
   const eqRes = calculateRequiredEquity({
-    callAmount: safeRisk,
-    potIfWin: safeRisk + dead,
+    callAmount,
+    potIfWin,
     bubbleFactor: bfResult.bf,
   });
 
@@ -2293,8 +2304,8 @@ function generateRandomPracticeProblem(): PracticeProblem {
     equityNow: bfResult.equityNow,
     equityWin: bfResult.equityWin,
     equityLose: bfResult.equityLose,
-    callAmount: safeRisk,
-    potIfWin: safeRisk + dead,
+    callAmount,
+    potIfWin,
   };
 }
 
@@ -2437,10 +2448,10 @@ function judgePractice(answer: "call" | "fold"): void {
           <li><strong>= プレ pot 合計 ${(p.sb + p.bb + p.totalAnte).toFixed(2)} BB</strong></li>
         </ul>
 
-        <h4>2. all-in 想定の chips</h4>
+        <h4>2. call 判断の chips</h4>
         <ul>
-          <li>リスクチップ (有効スタック): <code>${p.callAmount.toFixed(1)}</code> BB</li>
-          <li>勝った時の純利得: <code>${p.potIfWin.toFixed(1)}</code> BB (リスク + 死に金)</li>
+          <li>追加 call 額 (場入分は控除済): <code>${p.callAmount.toFixed(1)}</code> BB</li>
+          <li>勝った時の純利得 (pot - 追加call): <code>${p.potIfWin.toFixed(1)}</code> BB</li>
         </ul>
 
         <h4>3. ICM エクイティ ($ 単位)</h4>
