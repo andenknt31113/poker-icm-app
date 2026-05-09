@@ -710,6 +710,7 @@ function recompute(): void {
         potWinInput.value = r.potIfWin.toFixed(1);
         const heroStackV = stacks[heroIndex]!;
         const heroAntePaid = heroPos === "BB" ? totalAnteV : 0;
+        const villainAntePaid = villainPos === "BB" ? totalAnteV : 0;
         const heroBlindPaid = r.heroLiveCommit;
         const heroSunk = heroAntePaid + heroBlindPaid;
         const heroLive = heroStackV - heroSunk;
@@ -720,6 +721,12 @@ function recompute(): void {
         const netLose = stackIfLose - heroStackV;
         const netFold = stackIfFold - heroStackV;
         const fmt = (v: number) => (v >= 0 ? "+" : "") + v.toFixed(1);
+        // ante は会計上 dead だが「誰が払ったか」をラベルで明示する
+        const anteOwnerLabel = heroAntePaid > 0
+          ? `自分(${heroPos})`
+          : villainAntePaid > 0
+            ? `相手(${villainPos})`
+            : null; // どちらも BB じゃない (前任 BB folded)
         autofillHint.innerHTML = `
           <details class="autofill-details" open>
             <summary>✓ 追加 call <strong>${r.callAmount.toFixed(1)}</strong> / 純利得 <strong>${r.potIfWin.toFixed(1)}</strong> BB <span style="color: var(--muted); font-size: 11px;">(タップで内訳)</span></summary>
@@ -728,12 +735,13 @@ function recompute(): void {
                 <div class="autofill-h">📊 ポット構成</div>
                 <ul class="autofill-list">
                   ${heroBlindPaid > 0 ? `<li>自分(${heroPos}) blind: <code>${heroBlindPaid.toFixed(1)}</code> <span class="muted">(sunk)</span></li>` : ""}
-                  ${heroAntePaid > 0 ? `<li>自分(${heroPos}) ante: <code>${heroAntePaid.toFixed(1)}</code> <span class="muted">(sunk)</span></li>` : ""}
+                  ${heroAntePaid > 0 ? `<li>自分(${heroPos}) ante: <code>${heroAntePaid.toFixed(1)}</code> <span class="muted">(sunk, BB全額)</span></li>` : ""}
                   ${r.deadBreakdown.sbDead > 0 ? `<li>SB dead: <code>${r.deadBreakdown.sbDead.toFixed(1)}</code> <span class="muted">(SB folded)</span></li>` : ""}
                   ${r.deadBreakdown.bbDead > 0 ? `<li>BB dead: <code>${r.deadBreakdown.bbDead.toFixed(1)}</code> <span class="muted">(BB folded)</span></li>` : ""}
-                  ${r.deadBreakdown.anteDead > 0 && heroAntePaid === 0 ? `<li>ante dead: <code>${r.deadBreakdown.anteDead.toFixed(1)}</code></li>` : ""}
+                  ${villainAntePaid > 0 ? `<li>相手(${villainPos}) ante: <code>${villainAntePaid.toFixed(1)}</code> <span class="muted">(sunk, BB全額)</span></li>` : ""}
+                  ${r.deadBreakdown.anteDead > 0 && anteOwnerLabel === null ? `<li>ante dead: <code>${r.deadBreakdown.anteDead.toFixed(1)}</code> <span class="muted">(前任 BB folded)</span></li>` : ""}
                   <li>自分これから払う <strong>call</strong>: <code>${r.callAmount.toFixed(1)}</code></li>
-                  <li>相手(${villainPos}) match: <code>${(r.matched - r.villainLiveCommit).toFixed(1)}</code> + 既出 ${r.villainLiveCommit.toFixed(1)} = <code>${r.matched.toFixed(1)}</code></li>
+                  <li>相手(${villainPos}) push (live): <code>${(r.matched - r.villainLiveCommit).toFixed(1)}</code>${r.villainLiveCommit > 0 ? ` + 既出 blind ${r.villainLiveCommit.toFixed(1)}` : ""} = <code>${r.matched.toFixed(1)}</code></li>
                   <li><strong>合計 pot: ${r.potAtShowdown.toFixed(1)} BB</strong></li>
                 </ul>
               </div>
@@ -1819,10 +1827,12 @@ heroSummaryEl?.addEventListener("click", (e) => {
   }
 });
 
-// ポジション逆転警告 (Section 5 用)
-// Section 5 は「hero が villain の push を call する」想定なので、
-// 行動順で villain が hero より早く行動 (= 先に push できる) する必要がある。
-// hero が villain より先に行動するポジ (例: hero=CO, villain=BTN) は実戦で起き得ない。
+// ポジション情報ヒント (Section 5 用)
+// Section 5 は「hero が villain の push を call する」想定。
+// シナリオは 2 種類:
+//   1. open-shove: villain が hero より後に行動 → 普通の open push を hero が受ける
+//   2. 3-bet shove: hero が先に open → villain (後ろ) が re-shove → hero が all-in に直面
+// hero が villain より先に行動する組み合わせは (2) を想定したシナリオとして情報表示する。
 function updatePositionWarn(heroIndex: number, villainIndex: number): void {
   const warnEl = document.getElementById("position-warn");
   if (!warnEl) return;
@@ -1842,15 +1852,17 @@ function updatePositionWarn(heroIndex: number, villainIndex: number): void {
     warnEl.classList.add("hidden");
     return;
   }
-  // hero が villain より早く行動するなら call できない
   if (heroAct < villainAct) {
+    // 3-bet shove シナリオ: 情報のみ
     warnEl.classList.remove("hidden");
+    warnEl.classList.add("info");
     warnEl.innerHTML = `
-      ⚠ <strong>ポジション逆転</strong>: 行動順は <code>${heroPos}(${heroAct + 1}) → ${villainPos}(${villainAct + 1})</code>。
-      実戦では <strong>hero (${heroPos}) が先に行動</strong>するため、villain (${villainPos}) の push に対して call することはあり得ません。
-      (call 計算は math 上は動きますが、ポジを入れ替える方が現実的)
+      ℹ️ <strong>3-bet shove シナリオ</strong>: 行動順は <code>${heroPos}(${heroAct + 1}) → ${villainPos}(${villainAct + 1})</code>。
+      hero (${heroPos}) が先に open / raise した後、villain (${villainPos}) が all-in re-raise してきた局面を想定。
+      open-shove (villain が直接 push) ではなく <strong>3-bet shove に対する call 判断</strong>。
     `;
   } else {
+    warnEl.classList.remove("info");
     warnEl.classList.add("hidden");
   }
 }
