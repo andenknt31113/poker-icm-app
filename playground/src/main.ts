@@ -2453,10 +2453,11 @@ function judgePractice(answer: "call" | "fold"): void {
         <h4>4. Bubble Factor</h4>
         <p><code>BF = (現状 - 負け) ÷ (勝ち - 現状) = ${(p.equityNow - p.equityLose).toFixed(3)} ÷ ${(p.equityWin - p.equityNow).toFixed(3)} = ${p.bf.toFixed(3)}</code></p>
 
-        <h4>5. 必要勝率</h4>
+        <h4>5. 必要勝率 + Risk Premium</h4>
         <ul>
           <li>cEV: <code>${p.callAmount} ÷ (${p.callAmount} + ${p.potIfWin.toFixed(1)}) = ${(p.cEV * 100).toFixed(1)}%</code></li>
           <li>$EV: <code>(${p.callAmount} × ${p.bf.toFixed(2)}) ÷ (${p.callAmount} × ${p.bf.toFixed(2)} + ${p.potIfWin.toFixed(1)}) = ${(p.dollarEV * 100).toFixed(1)}%</code></li>
+          <li><strong>RP</strong>: <code>$EV − cEV = ${(p.dollarEV * 100).toFixed(1)}% − ${(p.cEV * 100).toFixed(1)}% = ${((p.dollarEV - p.cEV) * 100 >= 0 ? "+" : "")}${((p.dollarEV - p.cEV) * 100).toFixed(2)}%</code> (ICM 圧の上乗せ分)</li>
         </ul>
 
         <h4>6. ハンド equity</h4>
