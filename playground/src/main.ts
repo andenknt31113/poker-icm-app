@@ -744,6 +744,7 @@ function recompute(): void {
       heroIndex,
       villainIndex,
       stacks,
+      payouts,
       heroEq: heroIndex >= 0 ? equities[heroIndex] ?? 0 : 0,
       villainEq: villainIndex >= 0 ? equities[villainIndex] ?? 0 : 0,
       totalPrize,
@@ -772,6 +773,7 @@ interface HeroSummaryArg {
   heroIndex: number;
   villainIndex: number;
   stacks: number[];
+  payouts: number[];
   heroEq: number;
   villainEq: number;
   totalPrize: number;
@@ -812,8 +814,23 @@ function renderHeroSummary(a: HeroSummaryArg): void {
       </div>`
     : `<div class="hero-summary-row villain muted-row">⚔️ 相手未指定</div>`;
 
+  // 周りスタック (hero/villain 以外)
+  const otherStacks = a.stacks
+    .map((s, i) => ({ s, i }))
+    .filter(({ i }) => i !== a.heroIndex && i !== a.villainIndex)
+    .map(({ s, i }) => `${players[i]?.position || "?"} ${s}`)
+    .join(", ");
+  const payoutText = a.payouts.length > 0 ? a.payouts.join("/") : "—";
+  const contextLine = `
+    <div class="hero-summary-context">
+      <span>💰 <strong>${payoutText}</strong></span>
+      ${otherStacks ? `<span>👥 周り <strong>${otherStacks}</strong> BB</span>` : ""}
+    </div>
+  `;
+
   heroSummaryEl.innerHTML = `
     <div class="hero-summary-title">状況サマリー (タップ＝用語解説)</div>
+    ${contextLine}
     <div class="hero-summary-row hero">
       <div class="hero-summary-row-label">🎯 自分</div>
       <div class="hero-summary-row-stat">${heroStack}<span class="unit">BB</span></div>
@@ -2508,19 +2525,47 @@ function judgePractice(answer: "call" | "fold"): void {
     <details class="practice-details">
       <summary>📖 詳しい計算式 (タップで展開)</summary>
       <div class="practice-details-body">
+        ${(() => {
+          const heroPlayer = p.scenarioPlayers.find((x) => x.role === "hero")!;
+          const villainPlayer = p.scenarioPlayers.find((x) => x.role === "villain")!;
+          const heroStack = heroPlayer.stack;
+          const villainStack = villainPlayer.stack;
+          const villainPos = villainPlayer.position;
+          const sbDead = villainPos === "SB" ? 0 : p.sb;
+          const villainMatch = p.callAmount + p.bb;
+          const pot = p.potIfWin + p.callAmount;
+          const heroLive = heroStack - p.totalAnte - p.bb;
+          const stackIfFold = heroLive;
+          const stackIfLose = heroLive - p.callAmount;
+          const stackIfWin = stackIfLose + pot;
+          const netWinFromStart = stackIfWin - heroStack;
+          const netLoseFromStart = stackIfLose - heroStack;
+          const netFoldFromStart = stackIfFold - heroStack;
+          return `
         <h4>1. ポット構成 (BB ante 構造)</h4>
-        <ul>
-          <li>SB blind: <code>${p.sb}</code></li>
-          <li>BB blind: <code>${p.bb}</code></li>
-          <li>BB ante: <code>${p.totalAnte}</code> (BB が全額負担)</li>
-          <li><strong>= プレ pot 合計 ${(p.sb + p.bb + p.totalAnte).toFixed(2)} BB</strong></li>
+        <ul style="font-size: 12px; line-height: 1.5;">
+          <li>自分(BB) blind: <code>${p.bb.toFixed(1)}</code> BB <span style="color: var(--muted);">(既出 sunk)</span></li>
+          <li>自分(BB) ante: <code>${p.totalAnte.toFixed(1)}</code> BB <span style="color: var(--muted);">(既出 sunk, BBが全額負担)</span></li>
+          ${sbDead > 0 ? `<li>SB dead blind: <code>${sbDead.toFixed(1)}</code> BB <span style="color: var(--muted);">(SB folded → dead)</span></li>` : ""}
+          <li>自分(BB) これから払う <strong>call</strong>: <code>${p.callAmount.toFixed(1)}</code> BB</li>
+          <li>相手(${villainPos}) match: <code>${villainMatch.toFixed(1)}</code> BB <span style="color: var(--muted);">(全 stack ${villainStack} のうちマッチ分)</span></li>
+          <li><strong>合計 pot (showdown 時): ${pot.toFixed(1)} BB</strong></li>
         </ul>
 
-        <h4>2. call 判断の chips</h4>
-        <ul>
-          <li>追加 call 額 (場入分は控除済): <code>${p.callAmount.toFixed(1)}</code> BB</li>
-          <li>勝った時の純利得 (pot - 追加call): <code>${p.potIfWin.toFixed(1)}</code> BB</li>
-        </ul>
+        <h4>2. 判断 (call vs fold 比較)</h4>
+        <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
+          <tr><th style="text-align:left; padding: 4px;">選択</th><th style="text-align:right; padding: 4px;">最終スタック</th><th style="text-align:right; padding: 4px;">vs fold</th><th style="text-align:right; padding: 4px;">起点比</th></tr>
+          <tr><td style="padding: 4px;">フォールド</td><td style="text-align:right; padding: 4px;"><code>${stackIfFold.toFixed(1)}</code></td><td style="text-align:right; padding: 4px;"><code>±0</code></td><td style="text-align:right; padding: 4px; color: ${netFoldFromStart >= 0 ? 'var(--good)' : 'var(--bad)'};"><code>${netFoldFromStart >= 0 ? '+' : ''}${netFoldFromStart.toFixed(1)}</code></td></tr>
+          <tr><td style="padding: 4px;">コール+勝ち</td><td style="text-align:right; padding: 4px;"><code>${stackIfWin.toFixed(1)}</code></td><td style="text-align:right; padding: 4px; color: var(--good);"><code>+${p.potIfWin.toFixed(1)}</code></td><td style="text-align:right; padding: 4px; color: ${netWinFromStart >= 0 ? 'var(--good)' : 'var(--bad)'};"><code>${netWinFromStart >= 0 ? '+' : ''}${netWinFromStart.toFixed(1)}</code></td></tr>
+          <tr><td style="padding: 4px;">コール+負け</td><td style="text-align:right; padding: 4px;"><code>${stackIfLose.toFixed(1)}</code></td><td style="text-align:right; padding: 4px; color: var(--bad);"><code>-${p.callAmount.toFixed(1)}</code></td><td style="text-align:right; padding: 4px; color: var(--bad);"><code>${netLoseFromStart.toFixed(1)}</code></td></tr>
+        </table>
+        <p style="font-size: 11px; color: var(--muted); margin: 6px 0 0;">
+          📌 cEV は call vs fold 比較を使うため「リターン ${p.potIfWin.toFixed(1)}」には自分の blind+ante (${(p.bb + p.totalAnte).toFixed(1)} BB) が含まれます。<br>
+          これは fold しても sunk として戻らないので、call 側で「取り戻す」金額として加算されます。<br>
+          「起点 (hand 開始) からの純利益」は <strong>${netWinFromStart >= 0 ? '+' : ''}${netWinFromStart.toFixed(1)} BB</strong> (= 最終 ${stackIfWin.toFixed(1)} − 起点 ${heroStack})。
+        </p>
+          `;
+        })()}
 
         <h4>3. ICM エクイティ ($ 単位)</h4>
         <ul>
@@ -2534,8 +2579,8 @@ function judgePractice(answer: "call" | "fold"): void {
 
         <h4>5. 必要勝率 + Risk Premium</h4>
         <ul>
-          <li>cEV: <code>${p.callAmount} ÷ (${p.callAmount} + ${p.potIfWin.toFixed(1)}) = ${(p.cEV * 100).toFixed(1)}%</code></li>
-          <li>$EV: <code>(${p.callAmount} × ${p.bf.toFixed(2)}) ÷ (${p.callAmount} × ${p.bf.toFixed(2)} + ${p.potIfWin.toFixed(1)}) = ${(p.dollarEV * 100).toFixed(1)}%</code></li>
+          <li>cEV: <code>リスク ÷ (リスク + リターン) = ${p.callAmount} ÷ (${p.callAmount} + ${p.potIfWin.toFixed(1)}) = ${(p.cEV * 100).toFixed(1)}%</code></li>
+          <li>$EV: <code>(リスク × BF) ÷ (リスク × BF + リターン) = (${p.callAmount} × ${p.bf.toFixed(2)}) ÷ (${p.callAmount} × ${p.bf.toFixed(2)} + ${p.potIfWin.toFixed(1)}) = ${(p.dollarEV * 100).toFixed(1)}%</code></li>
           <li><strong>RP (実 pot odds)</strong>: <code>$EV − cEV = ${(p.dollarEV * 100).toFixed(1)}% − ${(p.cEV * 100).toFixed(1)}% = ${((p.dollarEV - p.cEV) * 100 >= 0 ? "+" : "")}${((p.dollarEV - p.cEV) * 100).toFixed(2)}%</code></li>
           <li><strong>RP (1:1 オッズ時)</strong>: <code>BF ÷ (BF+1) − 50% = ${p.bf.toFixed(2)}÷${(p.bf + 1).toFixed(2)} − 50% = ${(p.bf / (p.bf + 1) * 100).toFixed(1)}% − 50% = ${(((p.bf / (p.bf + 1)) - 0.5) * 100 >= 0 ? "+" : "")}${(((p.bf / (p.bf + 1)) - 0.5) * 100).toFixed(2)}%</code></li>
         </ul>

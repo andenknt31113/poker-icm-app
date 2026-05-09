@@ -495,6 +495,21 @@ body {
   margin-bottom: 6px;
   letter-spacing: 0.05em;
 }
+.hero-summary-context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: 11px;
+  color: var(--muted);
+  padding: 4px 4px 6px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.hero-summary-context strong {
+  color: var(--text);
+  font-weight: 600;
+  font-family: var(--mono);
+}
 .hero-summary-row {
   display: grid;
   grid-template-columns: 56px 1fr 1fr 1fr;
