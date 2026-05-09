@@ -755,6 +755,7 @@ function recompute(): void {
     // 状態を保存
     saveState();
     updateNashOvercallWarn();
+    updatePositionWarn(heroIndex, villainIndex);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     icmRows.innerHTML = `<tr><td colspan="4" class="error">${msg}</td></tr>`;
@@ -1771,6 +1772,42 @@ heroSummaryEl?.addEventListener("click", (e) => {
     if (key) openInfoModal(key);
   }
 });
+
+// ポジション逆転警告 (Section 5 用)
+// Section 5 は「hero が villain の push を call する」想定なので、
+// 行動順で villain が hero より早く行動 (= 先に push できる) する必要がある。
+// hero が villain より先に行動するポジ (例: hero=CO, villain=BTN) は実戦で起き得ない。
+function updatePositionWarn(heroIndex: number, villainIndex: number): void {
+  const warnEl = document.getElementById("position-warn");
+  if (!warnEl) return;
+  if (heroIndex < 0 || villainIndex < 0) {
+    warnEl.classList.add("hidden");
+    return;
+  }
+  const heroPos = players[heroIndex]?.position;
+  const villainPos = players[villainIndex]?.position;
+  if (!heroPos || !villainPos) {
+    warnEl.classList.add("hidden");
+    return;
+  }
+  const heroAct = actionOrderIdx(heroPos);
+  const villainAct = actionOrderIdx(villainPos);
+  if (heroAct < 0 || villainAct < 0) {
+    warnEl.classList.add("hidden");
+    return;
+  }
+  // hero が villain より早く行動するなら call できない
+  if (heroAct < villainAct) {
+    warnEl.classList.remove("hidden");
+    warnEl.innerHTML = `
+      ⚠ <strong>ポジション逆転</strong>: 行動順は <code>${heroPos}(${heroAct + 1}) → ${villainPos}(${villainAct + 1})</code>。
+      実戦では <strong>hero (${heroPos}) が先に行動</strong>するため、villain (${villainPos}) の push に対して call することはあり得ません。
+      (call 計算は math 上は動きますが、ポジを入れ替える方が現実的)
+    `;
+  } else {
+    warnEl.classList.add("hidden");
+  }
+}
 
 // HU 限界に関する警告ボックス更新
 // hero/villain の双方より後に行動するプレイヤー (over-caller 候補) が
