@@ -1827,12 +1827,13 @@ heroSummaryEl?.addEventListener("click", (e) => {
   }
 });
 
-// ポジション情報ヒント (Section 5 用)
-// Section 5 は「hero が villain の push を call する」想定。
-// シナリオは 2 種類:
-//   1. open-shove: villain が hero より後に行動 → 普通の open push を hero が受ける
-//   2. 3-bet shove: hero が先に open → villain (後ろ) が re-shove → hero が all-in に直面
-// hero が villain より先に行動する組み合わせは (2) を想定したシナリオとして情報表示する。
+// ポジション逆転警告 (Section 5 用)
+// この計算機は open-shove (push or fold) モデルを前提とし、
+// hero の既出 commit を blind+ante のみと仮定する。
+// hero が villain より先に行動するポジ (例: hero=SB, villain=BB) は
+// villain が直接 push する余地がないため、このモデルでは成立しない。
+// 3-bet shove (hero open → villain re-shove) は hero の raise 額が
+// pot に含まれるが、本計算機はそれをモデル化しないため警告対象。
 function updatePositionWarn(heroIndex: number, villainIndex: number): void {
   const warnEl = document.getElementById("position-warn");
   if (!warnEl) return;
@@ -1853,16 +1854,13 @@ function updatePositionWarn(heroIndex: number, villainIndex: number): void {
     return;
   }
   if (heroAct < villainAct) {
-    // 3-bet shove シナリオ: 情報のみ
     warnEl.classList.remove("hidden");
-    warnEl.classList.add("info");
     warnEl.innerHTML = `
-      ℹ️ <strong>3-bet shove シナリオ</strong>: 行動順は <code>${heroPos}(${heroAct + 1}) → ${villainPos}(${villainAct + 1})</code>。
-      hero (${heroPos}) が先に open / raise した後、villain (${villainPos}) が all-in re-raise してきた局面を想定。
-      open-shove (villain が直接 push) ではなく <strong>3-bet shove に対する call 判断</strong>。
+      ⚠ <strong>ポジション逆転</strong>: 行動順は <code>${heroPos}(${heroAct + 1}) → ${villainPos}(${villainAct + 1})</code>。
+      実戦では <strong>hero (${heroPos}) が先に行動</strong>するため、villain (${villainPos}) の open push に対して call することはあり得ません。
+      (call 計算は math 上は動きますが、ポジを入れ替える方が現実的)
     `;
   } else {
-    warnEl.classList.remove("info");
     warnEl.classList.add("hidden");
   }
 }
