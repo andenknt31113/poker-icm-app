@@ -293,8 +293,10 @@
       <section class="card" data-tab="hand">
         <h2>ハンドレンジ比較</h2>
         <p class="hint">
-          スタック差ベースの抽象レンジ比較（HU all-in 想定、position の行動順は無視）。
+          HU all-in 想定。<strong>hero=BB</strong>（最終 actor）のときに完全に有効。
+          他ポジションは「後ろのプレイヤーが全員 fold した」想定の概算として参考程度に。
         </p>
+        <div id="hand-position-banner" class="warn-box hidden"></div>
 
         <div class="direction-tabs" role="tablist">
           <button type="button" class="direction-tab active" data-direction="callBack">

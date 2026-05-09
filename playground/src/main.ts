@@ -794,6 +794,7 @@ function recompute(): void {
     saveState();
     updateNashOvercallWarn();
     updatePositionWarn(heroIndex, villainIndex);
+    updateHandPositionBanner(heroIndex);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     icmRows.innerHTML = `<tr><td colspan="4" class="error">${msg}</td></tr>`;
@@ -1826,6 +1827,49 @@ heroSummaryEl?.addEventListener("click", (e) => {
     if (key) openInfoModal(key);
   }
 });
+
+// ハンドレンジ比較セクションの hero ポジション バナー
+// HU all-in 想定 = hero が最終 actor (= BB) のときのみ厳密に有効。
+// 他ポジションだと「後ろのプレイヤーが over-call しない」想定になり概算止まり。
+function updateHandPositionBanner(heroIndex: number): void {
+  const banner = document.getElementById("hand-position-banner");
+  if (!banner) return;
+  if (heroIndex < 0) {
+    banner.classList.add("hidden");
+    return;
+  }
+  const heroPos = players[heroIndex]?.position;
+  if (!heroPos) {
+    banner.classList.add("hidden");
+    return;
+  }
+  if (heroPos === "BB") {
+    banner.classList.add("hidden");
+    return;
+  }
+  // hero の後ろに残ってるプレイヤー (action order で hero より後)
+  const heroAct = actionOrderIdx(heroPos);
+  const behind = players
+    .filter((p, i) => i !== heroIndex)
+    .map((p) => ({ pos: p.position, act: actionOrderIdx(p.position), stack: p.stack }))
+    .filter((x) => x.act > heroAct && x.act >= 0)
+    .sort((a, b) => a.act - b.act);
+  banner.classList.remove("hidden");
+  if (behind.length === 0) {
+    banner.innerHTML = `
+      ℹ️ 現在 hero=<strong>${heroPos}</strong>。後ろにプレイヤーがいないので
+      HU all-in モデルは厳密に有効です。
+    `;
+  } else {
+    const list = behind.map((x) => `${x.pos} (${x.stack}BB)`).join(", ");
+    banner.innerHTML = `
+      ⚠ hero=<strong>${heroPos}</strong>。このセクションは <strong>hero=BB (最終 actor)</strong>
+      想定の HU all-in モデルです。後ろに残ってる ${behind.length} 人 (${list})
+      の <strong>over-call リスク</strong>は反映されないため、
+      ここで「call OK」と出ても実戦ではより硬い range で受けるべきです。
+    `;
+  }
+}
 
 // ポジション逆転警告 (Section 5 用)
 // この計算機は open-shove (push or fold) モデルを前提とし、
