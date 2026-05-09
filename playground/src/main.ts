@@ -2122,6 +2122,12 @@ interface PracticeProblem {
   dollarEV: number;
   bf: number;
   heroEq: number; // hero hand vs villain push range
+  // 解説用 詳細
+  equityNow: number;
+  equityWin: number;
+  equityLose: number;
+  callAmount: number;
+  potIfWin: number;
 }
 
 const POSITION_SETS_PRACTICE: Record<number, Position[]> = {
@@ -2284,6 +2290,11 @@ function generateRandomPracticeProblem(): PracticeProblem {
     dollarEV: eqRes.dollarEV,
     bf: bfResult.bf,
     heroEq,
+    equityNow: bfResult.equityNow,
+    equityWin: bfResult.equityWin,
+    equityLose: bfResult.equityLose,
+    callAmount: safeRisk,
+    potIfWin: safeRisk + dead,
   };
 }
 
@@ -2415,6 +2426,52 @@ function judgePractice(answer: "call" | "fold"): void {
     <div>$EV 必要勝率 (BF=${p.bf.toFixed(2)}): <strong>${(p.dollarEV * 100).toFixed(1)}%</strong></div>
     <div>${p.heroHand} の equity vs Top${p.villainCallRangePct}%: <strong>${(p.heroEq * 100).toFixed(1)}%</strong></div>
     <div>余裕: <strong style="color: ${margin >= 0 ? "var(--good)" : "var(--bad)"}">${margin >= 0 ? "+" : ""}${(margin * 100).toFixed(1)}%</strong></div>
+    <details class="practice-details">
+      <summary>📖 詳しい計算式 (タップで展開)</summary>
+      <div class="practice-details-body">
+        <h4>1. ポット構成 (BB ante 構造)</h4>
+        <ul>
+          <li>SB blind: <code>${p.sb}</code></li>
+          <li>BB blind: <code>${p.bb}</code></li>
+          <li>BB ante: <code>${p.totalAnte}</code> (BB が全額負担)</li>
+          <li><strong>= プレ pot 合計 ${(p.sb + p.bb + p.totalAnte).toFixed(2)} BB</strong></li>
+        </ul>
+
+        <h4>2. all-in 想定の chips</h4>
+        <ul>
+          <li>リスクチップ (有効スタック): <code>${p.callAmount.toFixed(1)}</code> BB</li>
+          <li>勝った時の純利得: <code>${p.potIfWin.toFixed(1)}</code> BB (リスク + 死に金)</li>
+        </ul>
+
+        <h4>3. ICM エクイティ ($ 単位)</h4>
+        <ul>
+          <li>現状 (call 前): <code>${p.equityNow.toFixed(3)}</code></li>
+          <li>勝った時: <code>${p.equityWin.toFixed(3)}</code> (gain ${(p.equityWin - p.equityNow).toFixed(3)})</li>
+          <li>負けた時: <code>${p.equityLose.toFixed(3)}</code> (loss ${(p.equityNow - p.equityLose).toFixed(3)})</li>
+        </ul>
+
+        <h4>4. Bubble Factor</h4>
+        <p><code>BF = (現状 - 負け) ÷ (勝ち - 現状) = ${(p.equityNow - p.equityLose).toFixed(3)} ÷ ${(p.equityWin - p.equityNow).toFixed(3)} = ${p.bf.toFixed(3)}</code></p>
+
+        <h4>5. 必要勝率</h4>
+        <ul>
+          <li>cEV: <code>${p.callAmount} ÷ (${p.callAmount} + ${p.potIfWin.toFixed(1)}) = ${(p.cEV * 100).toFixed(1)}%</code></li>
+          <li>$EV: <code>(${p.callAmount} × ${p.bf.toFixed(2)}) ÷ (${p.callAmount} × ${p.bf.toFixed(2)} + ${p.potIfWin.toFixed(1)}) = ${(p.dollarEV * 100).toFixed(1)}%</code></li>
+        </ul>
+
+        <h4>6. ハンド equity</h4>
+        <p><code>${p.heroHand}</code> vs Top ${p.villainCallRangePct}% range → <strong>${(p.heroEq * 100).toFixed(1)}%</strong></p>
+
+        <h4>7. 判定</h4>
+        <p>
+          ハンド equity <code>${(p.heroEq * 100).toFixed(1)}%</code>
+          ${p.heroEq >= p.dollarEV ? "≥" : "<"}
+          必要勝率 <code>${(p.dollarEV * 100).toFixed(1)}%</code>
+          → <strong>${p.heroEq >= p.dollarEV ? "コール (+EV)" : "フォールド (-EV)"}</strong>
+        </p>
+      </div>
+    </details>
+
     <h3 style="font-size: 13px; margin: 12px 0 4px;">🎯 自分の call レンジ 🟢 (必要勝率 ${(p.dollarEV * 100).toFixed(1)}% 超のハンド)</h3>
     <div id="practice-hero-grid" class="hand-grid"></div>
     <div class="grid-legend">

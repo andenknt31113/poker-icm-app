@@ -1431,6 +1431,47 @@ body {
   gap: 8px;
   flex-wrap: wrap;
 }
+
+.practice-details {
+  background: #0f1419;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 12px 0;
+  font-size: 12px;
+}
+.practice-details summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: bold;
+  user-select: none;
+  padding: 4px 0;
+}
+.practice-details-body {
+  padding: 8px 0 4px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.practice-details-body h4 {
+  font-size: 12px;
+  color: var(--text);
+  margin: 10px 0 4px;
+}
+.practice-details-body ul {
+  margin: 4px 0;
+  padding-left: 18px;
+}
+.practice-details-body code {
+  background: rgba(255, 255, 255, 0.06);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text);
+}
+.practice-details-body strong {
+  color: var(--text);
+}
 .practice-info {
   display: flex;
   flex-direction: column;
