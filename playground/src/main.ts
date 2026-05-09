@@ -2143,13 +2143,83 @@ function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)]!;
 }
 
+type Difficulty = "easy" | "normal" | "hard";
+const DIFF_BANDS: Record<Difficulty, number> = {
+  easy: 0.10,
+  normal: 0.05,
+  hard: 0.02,
+};
+let practiceDifficulty: Difficulty = "normal";
+try {
+  const v = localStorage.getItem("poker-icm-practice-diff") as Difficulty | null;
+  if (v && (v === "easy" || v === "normal" || v === "hard")) practiceDifficulty = v;
+} catch { /* ignore */ }
+
 function generatePracticeProblem(): PracticeProblem {
-  // 境界問題のみ (|margin| <= 5%) 出題、最大 80 試行
-  for (let attempt = 0; attempt < 80; attempt++) {
+  const band = DIFF_BANDS[practiceDifficulty];
+  for (let attempt = 0; attempt < 100; attempt++) {
     const p = generateRandomPracticeProblem();
-    if (Math.abs(p.heroEq - p.dollarEV) <= 0.05) return p;
+    if (Math.abs(p.heroEq - p.dollarEV) <= band) return p;
   }
   return generateRandomPracticeProblem();
+}
+
+// streak / accuracy / review state
+const STREAK_KEY = "poker-icm-practice-streak";
+const STATS_KEY = "poker-icm-practice-stats";
+const REVIEW_KEY = "poker-icm-practice-review";
+
+interface PracticeStats {
+  total: number;
+  correct: number;
+}
+
+function loadStreak(): number {
+  try { return Number(localStorage.getItem(STREAK_KEY)) || 0; } catch { return 0; }
+}
+function saveStreak(n: number): void {
+  try { localStorage.setItem(STREAK_KEY, String(n)); } catch { /* ignore */ }
+}
+function loadStats(): PracticeStats {
+  try {
+    const v = JSON.parse(localStorage.getItem(STATS_KEY) ?? '{"total":0,"correct":0}');
+    if (typeof v.total === "number" && typeof v.correct === "number") return v;
+  } catch { /* ignore */ }
+  return { total: 0, correct: 0 };
+}
+function saveStats(s: PracticeStats): void {
+  try { localStorage.setItem(STATS_KEY, JSON.stringify(s)); } catch { /* ignore */ }
+}
+function loadReviewList(): PracticeProblem[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(REVIEW_KEY) ?? "[]");
+    if (Array.isArray(v)) return v as PracticeProblem[];
+  } catch { /* ignore */ }
+  return [];
+}
+function saveReviewList(list: PracticeProblem[]): void {
+  try { localStorage.setItem(REVIEW_KEY, JSON.stringify(list.slice(0, 50))); } catch { /* ignore */ }
+}
+
+function updatePracticeBadges(): void {
+  const streak = loadStreak();
+  const stats = loadStats();
+  const review = loadReviewList();
+  const streakEl = document.getElementById("practice-streak");
+  const accEl = document.getElementById("practice-acc");
+  const reviewCountEl = document.getElementById("review-count");
+  if (streakEl) {
+    streakEl.textContent = `🔥 連続正解 ${streak}`;
+    streakEl.classList.toggle("active", streak >= 3);
+  }
+  if (accEl) {
+    if (stats.total > 0) {
+      accEl.textContent = `正解率 ${((stats.correct / stats.total) * 100).toFixed(0)}% (${stats.correct}/${stats.total})`;
+    } else {
+      accEl.textContent = "正解率 -";
+    }
+  }
+  if (reviewCountEl) reviewCountEl.textContent = String(review.length);
 }
 
 function generateRandomPracticeProblem(): PracticeProblem {
@@ -2321,6 +2391,24 @@ function judgePractice(answer: "call" | "fold"): void {
   const isCorrect = (correctIsCall && answer === "call") || (!correctIsCall && answer === "fold");
   const verdict = correctIsCall ? "✅ コール (+EV)" : "❌ フォールド (-EV)";
   fb.className = "practice-feedback " + (isCorrect ? "correct" : "wrong");
+
+  // streak / stats / review 更新
+  const stats = loadStats();
+  stats.total += 1;
+  if (isCorrect) stats.correct += 1;
+  saveStats(stats);
+  let streak = loadStreak();
+  if (isCorrect) streak += 1;
+  else streak = 0;
+  saveStreak(streak);
+  if (!isCorrect) {
+    const list = loadReviewList();
+    if (!list.some((x) => x.heroHand === p.heroHand && x.villainCallRangePct === p.villainCallRangePct)) {
+      list.unshift(p);
+      saveReviewList(list);
+    }
+  }
+  updatePracticeBadges();
   fb.innerHTML = `
     <div class="verdict">${isCorrect ? "🎉 正解!" : "😅 不正解"} 正答: ${verdict}</div>
     <div>cEV 必要勝率: <strong>${(p.cEV * 100).toFixed(1)}%</strong></div>
@@ -2359,6 +2447,39 @@ practiceNewBtn?.addEventListener("click", () => {
   currentProblem = generatePracticeProblem();
   renderPracticeProblem(currentProblem);
 });
+
+// 難易度切替
+document.querySelectorAll<HTMLButtonElement>(".diff-btn").forEach((btn) => {
+  if (btn.dataset.diff === practiceDifficulty) {
+    document.querySelectorAll<HTMLButtonElement>(".diff-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+  }
+  btn.addEventListener("click", () => {
+    document.querySelectorAll<HTMLButtonElement>(".diff-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    practiceDifficulty = btn.dataset.diff as Difficulty;
+    try { localStorage.setItem("poker-icm-practice-diff", practiceDifficulty); } catch { /* ignore */ }
+  });
+});
+
+// 復習ボタン: 不正解だった問題を順に出題
+document.getElementById("practice-review-btn")?.addEventListener("click", () => {
+  const list = loadReviewList();
+  if (list.length === 0) {
+    const area = document.getElementById("practice-area");
+    if (area) area.innerHTML = `<div class="practice-info">まだ復習問題はありません。不正解の問題が自動で蓄積されます (最大50問)。</div>`;
+    return;
+  }
+  // 先頭から取り出して再出題
+  const next = list.shift()!;
+  saveReviewList(list);
+  currentProblem = next;
+  renderPracticeProblem(currentProblem);
+  updatePracticeBadges();
+});
+
+// 起動時にバッジ更新
+updatePracticeBadges();
 
 document.getElementById("practice-area")?.addEventListener("click", (e) => {
   const target = e.target as HTMLElement;

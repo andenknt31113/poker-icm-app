@@ -362,9 +362,23 @@
         <h2>🎲 練習問題 — call/fold 判断</h2>
         <p class="hint">
           ランダムシナリオ + 相手 push 想定レンジ + 自分のハンド → call/fold を即判定。
-          答え合わせで equity と必要勝率を確認できる。
         </p>
-        <button id="practice-new-btn" type="button" class="solve-btn">🎲 新しい問題</button>
+        <div class="practice-controls">
+          <div class="practice-stats">
+            <span id="practice-streak" class="streak-badge">🔥 連続正解 0</span>
+            <span id="practice-acc" class="acc-badge">正解率 -</span>
+          </div>
+          <div class="practice-difficulty">
+            <span class="diff-label">難易度:</span>
+            <button type="button" class="diff-btn" data-diff="easy">Easy</button>
+            <button type="button" class="diff-btn active" data-diff="normal">Normal</button>
+            <button type="button" class="diff-btn" data-diff="hard">Hard</button>
+          </div>
+        </div>
+        <div class="practice-actions-top">
+          <button id="practice-new-btn" type="button" class="solve-btn">🎲 新しい問題</button>
+          <button id="practice-review-btn" type="button" class="solve-btn" style="background: var(--card); color: var(--text); border: 1px solid var(--border);">📚 復習 (<span id="review-count">0</span>)</button>
+        </div>
         <div id="practice-area" class="practice-area"></div>
       </section>
 
