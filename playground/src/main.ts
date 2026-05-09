@@ -689,21 +689,37 @@ function recompute(): void {
       // BB ante 構造: BB のみ ante を払う (dead money)
       const heroAnte = heroPos === "BB" ? totalAnteV : 0;
       const villainAnte = villainPos === "BB" ? totalAnteV : 0;
+      // live stack = full stack − 自分の ante 拠出
       const heroLive = heroStack - heroAnte;
       const villainLive = villainStack - villainAnte;
       const matched = Math.min(heroLive, villainLive);
+      // live commit (blind 既出、ante は dead 扱い)
       const heroLiveCommit =
         heroPos === "BB" ? bbV : heroPos === "SB" ? sbV : 0;
+      const villainLiveCommit =
+        villainPos === "BB" ? bbV : villainPos === "SB" ? sbV : 0;
       const callAmt = Math.max(0.01, matched - heroLiveCommit);
-      // dead money: SB blind (hero/villain どちらでもない時) + BB ante (常に)
-      const sbDead = heroPos === "SB" || villainPos === "SB" ? 0 : sbV;
-      const totalDead = sbDead + totalAnteV;
+      void villainLiveCommit; // 補足計算用 (今は使わないが将来用)
+      // dead money in pot at showdown:
+      //   SB blind: hero/villain どちらも SB でない場合 dead
+      //   BB blind: hero/villain どちらも BB でない場合 dead
+      //   BB ante:  常に dead (BB ante 構造)
+      const sbInAction = heroPos === "SB" || villainPos === "SB";
+      const bbInAction = heroPos === "BB" || villainPos === "BB";
+      const sbDead = sbInAction ? 0 : sbV;
+      const bbDead = bbInAction ? 0 : bbV;
+      const totalDead = sbDead + bbDead + totalAnteV;
       const potAtShow = 2 * matched + totalDead;
       const potWin = potAtShow - callAmt;
       if (matched > 0 && !callManualOverride) {
         callInput.value = callAmt.toFixed(1);
         potWinInput.value = potWin.toFixed(1);
-        autofillHint.innerHTML = `✓ 追加 call <strong>${callAmt.toFixed(1)}</strong>, 純利得 <strong>${potWin.toFixed(1)}</strong> = pot ${potAtShow.toFixed(1)} − call ${callAmt.toFixed(1)} (BB ante ${totalAnteV} は dead として扱う)`;
+        const deadParts: string[] = [];
+        if (sbDead > 0) deadParts.push(`SB ${sbDead}`);
+        if (bbDead > 0) deadParts.push(`BB ${bbDead}`);
+        if (totalAnteV > 0) deadParts.push(`ante ${totalAnteV}`);
+        const deadStr = deadParts.length > 0 ? deadParts.join("+") : "なし";
+        autofillHint.innerHTML = `✓ 追加 call <strong>${callAmt.toFixed(1)}</strong>, 純利得 <strong>${potWin.toFixed(1)}</strong> = pot ${potAtShow.toFixed(1)} − call ${callAmt.toFixed(1)} (matched ${matched}×2 + dead [${deadStr}])`;
       }
     }
     const callAmount = Number(callInput.value);
