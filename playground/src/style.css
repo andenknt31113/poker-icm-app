@@ -1365,24 +1365,59 @@ body {
   transform: translate(-50%, -50%);
   text-align: center;
   color: #ffcc66;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: bold;
   font-family: var(--mono);
-  background: rgba(0, 0, 0, 0.5);
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 204, 102, 0.3);
+  background: rgba(0, 0, 0, 0.55);
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(255, 204, 102, 0.55);
+  white-space: nowrap;
+  z-index: 2;
 }
-.round-table-pot .pot-detail {
-  font-size: 9px;
-  color: var(--muted);
+.round-table-pot small {
+  font-size: 10px;
+  margin-left: 1px;
+  opacity: 0.85;
+}
+/* 場のチップ: 席と中央ポットの中間に独立配置 (席との重なりを避ける) */
+.round-table-chip {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.55);
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: bold;
+  font-family: var(--mono);
+  color: var(--text);
+  white-space: nowrap;
+  line-height: 1.2;
+  z-index: 2;
+}
+.round-table-chip small {
+  font-size: 8px;
+  margin-left: 1px;
+  opacity: 0.7;
   font-weight: normal;
 }
-.round-table-seat .seat-commit {
-  font-size: 9px;
+.round-table-chip.hero {
+  border-color: var(--good);
+  color: var(--good);
+}
+.round-table-chip.villain {
+  border-color: var(--bad);
+  color: var(--bad);
+}
+.round-table-chip.ante {
+  border-color: rgba(255, 204, 102, 0.45);
   color: #ffcc66;
-  font-weight: bold;
-  margin-top: 2px;
+  font-size: 10px;
+  padding: 2px 6px;
+  /* Pot の左隣に並ぶよう中央から少し左にオフセット (right anchor) */
+  transform: translate(-100%, -50%);
+  margin-left: -6px;
 }
 
 /* ===== 練習問題 ===== */

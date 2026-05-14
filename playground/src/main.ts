@@ -2452,45 +2452,65 @@ function renderRoundTable(
   const n = scenarioPlayers.length;
   const heroIdx = scenarioPlayers.findIndex((p) => p.role === "hero");
   const seats: string[] = [];
+  const chips: string[] = [];
+  // 席の配置半径と「場」チップの配置半径 (席と中央ポットの中間に配置)
+  const seatR = 38;
+  const chipR = 20;
   // BB ante 構造: BB が ante 全部を負担、他はゼロ
   // hero を 6 時方向 (90度=π/2) に配置、他は時計回り
   for (let i = 0; i < n; i++) {
     const offset = heroIdx >= 0 ? (i - heroIdx + n) % n : i;
     const angle = Math.PI / 2 + (offset / n) * 2 * Math.PI;
-    const x = 50 + Math.cos(angle) * 38;
-    const y = 50 + Math.sin(angle) * 38;
+    const sx = 50 + Math.cos(angle) * seatR;
+    const sy = 50 + Math.sin(angle) * seatR;
     const p = scenarioPlayers[i]!;
     const cls =
       p.role === "hero" ? "hero" : p.role === "villain" ? "villain" : "";
     const tag = p.role === "hero" ? "🎯 " : p.role === "villain" ? "⚔️ " : "";
 
-    // BB ante 構造: 「場」表示は live commit (blind) のみ
+    // BB ante 構造: 「場」拠出は live commit (blind) のみ
     //   SB は SB blind、BB は BB blind、他は 0
-    //   BB ante は dead 扱いなので中央 pot 表示に含める (ここには出さない)
+    //   BB ante は dead 扱いなので中央 pot のチップに集約 (ここでは出さない)
     let committed = 0;
     if (p.position === "SB" && blinds) committed = blinds.sb;
     if (p.position === "BB" && blinds) committed = blinds.bb;
     const remaining = p.stack - committed;
-    const commitText = committed > 0
-      ? `<div class="seat-commit">📥 場 ${committed.toFixed(2)}</div>`
-      : "";
 
     seats.push(`
-      <div class="round-table-seat ${cls}" style="left:${x}%;top:${y}%">
+      <div class="round-table-seat ${cls}" style="left:${sx}%;top:${sy}%">
         <div class="seat-pos">${tag}${p.position || `P${i + 1}`}</div>
         <div class="seat-stack">${remaining.toFixed(remaining % 1 === 0 ? 0 : 2)}<span style="font-size:9px;color:var(--muted);">BB 残</span></div>
-        ${commitText}
       </div>
     `);
+
+    // 場のチップ: 席から中央へ向かう途中に配置
+    if (committed > 0) {
+      const cx = 50 + Math.cos(angle) * chipR;
+      const cy = 50 + Math.sin(angle) * chipR;
+      chips.push(`
+        <div class="round-table-chip ${cls}" style="left:${cx}%;top:${cy}%">
+          ${committed.toFixed(committed % 1 === 0 ? 0 : 1)}<small>bb</small>
+        </div>
+      `);
+    }
   }
   // 中央: ポット合計 (BB ante 構造: BB が ante 全部負担)
-  const potTotal = blinds ? blinds.sb + blinds.bb + blinds.totalAnte : 0;
-  const potHtml = blinds
-    ? `<div class="round-table-pot">💰 pot ${potTotal.toFixed(1)} BB<br /><span class="pot-detail">SB ${blinds.sb} + BB ${blinds.bb} + BB ante ${blinds.totalAnte}</span></div>`
-    : "";
+  let potHtml = "";
+  if (blinds) {
+    const potTotal = blinds.sb + blinds.bb + blinds.totalAnte;
+    // ante は dead money として中央 pot の脇にチップ表示 (どの席にも紐付かないため)
+    const anteChip = blinds.totalAnte > 0
+      ? `<div class="round-table-chip ante" style="left:42%;top:50%">ante ${blinds.totalAnte.toFixed(blinds.totalAnte % 1 === 0 ? 0 : 1)}<small>bb</small></div>`
+      : "";
+    potHtml = `
+      ${anteChip}
+      <div class="round-table-pot">Pot ${potTotal.toFixed(1)}<small>bb</small></div>
+    `;
+  }
   container.innerHTML = `
     <div class="round-table">
       ${potHtml}
+      ${chips.join("")}
       ${seats.join("")}
     </div>
   `;
