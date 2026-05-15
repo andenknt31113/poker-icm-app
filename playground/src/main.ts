@@ -369,6 +369,7 @@ interface Scenario {
   sb: number;
   bb: number;
   ante: number; // テーブル合計
+  anteMode?: "total" | "perPlayer"; // 省略時は "total" 扱い (組み込みプリセット)
 }
 
 const SCENARIOS: Record<string, Scenario> = {
@@ -478,7 +479,7 @@ function applyScenario(scenarioId: string): void {
   if (bbEl) bbEl.value = String(scenario.bb);
   if (anteEl) anteEl.value = String(scenario.ante);
   const radio = document.querySelector<HTMLInputElement>(
-    `input[name="ante-mode"][value="${scenario.anteMode}"]`,
+    `input[name="ante-mode"][value="${scenario.anteMode ?? "total"}"]`,
   );
   if (radio) radio.checked = true;
   // コール額/純利得を自動追従モードに戻す
@@ -610,7 +611,7 @@ document.getElementById("user-scenarios")?.addEventListener("click", (e) => {
       nashBbInput.value = String(s.bb);
       nashAnteInput.value = String(s.ante);
       const radio = document.querySelector<HTMLInputElement>(
-        `input[name="ante-mode"][value="${s.anteMode}"]`,
+        `input[name="ante-mode"][value="${s.anteMode ?? "total"}"]`,
       );
       if (radio) radio.checked = true;
       callManualOverride = false;
