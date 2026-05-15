@@ -11,9 +11,22 @@
     "build": "npm -w @poker-icm/core run build && npm -w @poker-icm/playground run build",
     "dev": "npm -w @poker-icm/playground run dev",
     "test": "npm -w @poker-icm/core run test",
-    "typecheck": "npm -w @poker-icm/core run typecheck && npm -w @poker-icm/playground exec -- tsc --noEmit"
+    "typecheck": "npm -w @poker-icm/core run typecheck && npm -w @poker-icm/playground exec -- tsc --noEmit",
+    "cap:sync": "npm run build && cap sync ios",
+    "ios:open": "cap open ios"
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/core": "^8.3.4",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/ios": "^8.3.4",
+    "@capacitor/share": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.3.4"
   }
 }
