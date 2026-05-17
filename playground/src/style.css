@@ -1488,6 +1488,79 @@ body {
   flex-wrap: wrap;
 }
 
+/* ===== 練習モード切替 ===== */
+.practice-mode {
+  display: flex;
+  gap: 2px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px;
+  margin: 8px 0;
+}
+.mode-btn {
+  flex: 1;
+  background: transparent;
+  color: var(--muted);
+  border: none;
+  padding: 8px 6px;
+  font-size: 13px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.mode-btn.active {
+  background: var(--accent);
+  color: #000;
+  font-weight: bold;
+}
+
+/* ===== RP 当てクイズ ===== */
+.rp-quiz {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  margin: 12px 0;
+}
+.rp-quiz-q {
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--text);
+  text-align: center;
+  margin-bottom: 6px;
+}
+.rp-slider-value {
+  font-size: 30px;
+  font-weight: bold;
+  font-family: var(--mono);
+  color: var(--accent);
+  text-align: center;
+  margin: 4px 0 8px;
+}
+.rp-slider {
+  width: 100%;
+  accent-color: var(--accent);
+  height: 32px;
+  margin: 0;
+}
+.rp-slider-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--muted);
+  font-family: var(--mono);
+}
+.rp-quiz-tol {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  margin: 8px 0 10px;
+}
+.rp-quiz .solve-btn {
+  width: 100%;
+}
+
 .practice-details {
   background: var(--bg);
   border: 1px solid var(--border);

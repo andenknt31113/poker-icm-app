@@ -361,10 +361,14 @@
       </section>
 
       <section class="card" data-tab="practice">
-        <h2>🎲 練習問題 — call/fold 判断</h2>
-        <p class="hint">
+        <h2>🎲 練習問題</h2>
+        <p class="hint" id="practice-hint">
           ランダムシナリオ + 相手 push 想定レンジ + 自分のハンド → call/fold を即判定。
         </p>
+        <div class="practice-mode">
+          <button type="button" class="mode-btn active" data-mode="callfold">⚖️ call/fold 判定</button>
+          <button type="button" class="mode-btn" data-mode="rp">📊 RP 当て</button>
+        </div>
         <div class="practice-controls">
           <div class="practice-stats">
             <span id="practice-streak" class="streak-badge">🔥 連続正解 0</span>

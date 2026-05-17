@@ -2301,7 +2301,35 @@ try {
   if (v && (v === "easy" || v === "normal" || v === "hard")) practiceDifficulty = v;
 } catch { /* ignore */ }
 
+// 練習モード: call/fold 判定 か RP 当て か
+type PracticeMode = "callfold" | "rp";
+// RP モードのスライダー回答の許容誤差 (±%)
+const RP_TOLERANCE: Record<Difficulty, number> = {
+  easy: 4,
+  normal: 2.5,
+  hard: 1.5,
+};
+let practiceMode: PracticeMode = "callfold";
+try {
+  const v = localStorage.getItem("poker-icm-practice-mode") as PracticeMode | null;
+  if (v === "callfold" || v === "rp") practiceMode = v;
+} catch { /* ignore */ }
+
+// RP (Risk Premium) = $EV 必要勝率 − cEV 必要勝率
+function problemRP(p: PracticeProblem): number {
+  return (p.dollarEV - p.cEV) * 100;
+}
+
 function generatePracticeProblem(): PracticeProblem {
+  if (practiceMode === "rp") {
+    // RP モードは call/fold の境界フィルタ不要。
+    // RP が極端に小さい (自明) 問題だけ避ける
+    for (let attempt = 0; attempt < 100; attempt++) {
+      const p = generateRandomPracticeProblem();
+      if (problemRP(p) >= 3) return p;
+    }
+    return generateRandomPracticeProblem();
+  }
   const band = DIFF_BANDS[practiceDifficulty];
   for (let attempt = 0; attempt < 100; attempt++) {
     const p = generateRandomPracticeProblem();
@@ -2520,6 +2548,10 @@ function renderRoundTable(
 let currentProblem: PracticeProblem | null = null;
 
 function renderPracticeProblem(p: PracticeProblem): void {
+  if (practiceMode === "rp") {
+    renderPracticeProblemRP(p);
+    return;
+  }
   const area = document.getElementById("practice-area");
   if (!area) return;
   const totalPrize = p.payouts.reduce((a, b) => a + b, 0);
@@ -2561,18 +2593,96 @@ function renderPracticeProblem(p: PracticeProblem): void {
   }
 }
 
-function judgePractice(answer: "call" | "fold"): void {
+// RP 当てモード: スライダーで Risk Premium を推定させる
+function renderPracticeProblemRP(p: PracticeProblem): void {
+  const area = document.getElementById("practice-area");
+  if (!area) return;
+  const totalPrize = p.payouts.reduce((a, b) => a + b, 0);
+  const payoutStr = p.payouts
+    .map((v) => ((v / totalPrize) * 100).toFixed(0) + "%")
+    .join(" / ");
+  const tol = RP_TOLERANCE[practiceDifficulty];
+  area.innerHTML = `
+    <div id="practice-table-wrapper"></div>
+    <div class="practice-info">
+      ペイ: <strong>${payoutStr}</strong><br />
+      ブラインド: SB ${p.sb} / BB ${p.bb} / アンティ合計 ${p.totalAnte}<br />
+      コール額 (リスク): <strong>${p.callAmount.toFixed(1)} BB</strong> ／ リターン: <strong>${p.potIfWin.toFixed(1)} BB</strong>
+    </div>
+    <div class="rp-quiz">
+      <div class="rp-quiz-q">📊 この状況の Risk Premium は？</div>
+      <div class="rp-slider-value" id="rp-slider-value">+20.0%</div>
+      <input type="range" id="rp-slider" class="rp-slider" min="0" max="50" step="0.5" value="20" />
+      <div class="rp-slider-scale"><span>0%</span><span>25%</span><span>50%</span></div>
+      <div class="rp-quiz-tol">許容誤差 ±${tol}%（難易度で変化）</div>
+      <button id="rp-answer-btn" type="button" class="solve-btn">回答する</button>
+    </div>
+    <div id="practice-feedback"></div>
+  `;
+  const tableWrap = document.getElementById("practice-table-wrapper");
+  if (tableWrap) renderRoundTable(tableWrap, p.scenarioPlayers, {
+    sb: p.sb, bb: p.bb, totalAnte: p.totalAnte,
+  });
+  const slider = document.getElementById("rp-slider") as HTMLInputElement | null;
+  const valLabel = document.getElementById("rp-slider-value");
+  if (slider && valLabel) {
+    slider.addEventListener("input", () => {
+      valLabel.textContent = "+" + Number(slider.value).toFixed(1) + "%";
+    });
+  }
+}
+
+function judgePracticeRP(guess: number): void {
   if (!currentProblem) return;
   const p = currentProblem;
   const fb = document.getElementById("practice-feedback");
   if (!fb) return;
-  const margin = p.heroEq - p.dollarEV;
-  const correctIsCall = margin >= 0;
-  const isCorrect = (correctIsCall && answer === "call") || (!correctIsCall && answer === "fold");
-  const verdict = correctIsCall ? "✅ コール (+EV)" : "❌ フォールド (-EV)";
+  const actualRP = problemRP(p);
+  const tol = RP_TOLERANCE[practiceDifficulty];
+  const diff = guess - actualRP;
+  const isCorrect = Math.abs(diff) <= tol;
   fb.className = "practice-feedback " + (isCorrect ? "correct" : "wrong");
 
-  // streak / stats / review 更新
+  recordPracticeResult(isCorrect, p);
+
+  // 同じ問題を再回答できないようスライダー/ボタンを無効化
+  const slider = document.getElementById("rp-slider") as HTMLInputElement | null;
+  const ansBtn = document.getElementById("rp-answer-btn") as HTMLButtonElement | null;
+  if (slider) slider.disabled = true;
+  if (ansBtn) ansBtn.disabled = true;
+
+  const evBF = p.callAmount * p.bf;
+  fb.innerHTML = `
+    <div class="verdict">${isCorrect ? "🎉 正解!" : "😅 不正解"}</div>
+    <div>あなたの回答: <strong>+${guess.toFixed(1)}%</strong></div>
+    <div>正解 RP: <strong style="color: var(--accent)">+${actualRP.toFixed(1)}%</strong> <span class="muted">(許容 ±${tol}%)</span></div>
+    <div>誤差: <strong style="color: ${isCorrect ? "var(--good)" : "var(--bad)"}">${diff >= 0 ? "+" : ""}${diff.toFixed(1)}%</strong></div>
+    <details class="practice-details">
+      <summary>📖 詳しい計算式 (タップで展開)</summary>
+      <div class="practice-details-body">
+        <h4>1. Bubble Factor</h4>
+        <p><code>BF = (現状 − 負け) ÷ (勝ち − 現状) = ${(p.equityNow - p.equityLose).toFixed(3)} ÷ ${(p.equityWin - p.equityNow).toFixed(3)} = ${p.bf.toFixed(3)}</code></p>
+        <h4>2. 必要勝率</h4>
+        <ul>
+          <li>cEV: <code>リスク ÷ (リスク + リターン) = ${p.callAmount} ÷ (${p.callAmount} + ${p.potIfWin.toFixed(1)}) = ${(p.cEV * 100).toFixed(1)}%</code></li>
+          <li>$EV: <code>(リスク × BF) ÷ (リスク × BF + リターン) = ${evBF.toFixed(2)} ÷ (${evBF.toFixed(2)} + ${p.potIfWin.toFixed(1)}) = ${(p.dollarEV * 100).toFixed(1)}%</code></li>
+        </ul>
+        <h4>3. Risk Premium</h4>
+        <p><code>RP = $EV − cEV = ${(p.dollarEV * 100).toFixed(1)}% − ${(p.cEV * 100).toFixed(1)}% = +${actualRP.toFixed(2)}%</code></p>
+        <p style="font-size: 11px; color: var(--muted); margin: 4px 0 0;">
+          ※ BF が大きい (バブルに近い / スタックが拮抗) ほど RP は大きくなります。
+        </p>
+      </div>
+    </details>
+    <div style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px;">
+      <button id="practice-next-btn" type="button" class="solve-btn">🎲 次の問題</button>
+      <button id="practice-apply-btn" type="button" class="solve-btn" style="background: var(--card); color: var(--text); border: 1px solid var(--border);">📥 設定に取り込む (詳細分析)</button>
+    </div>
+  `;
+}
+
+// streak / stats / review をまとめて更新 (call/fold・RP 両モード共通)
+function recordPracticeResult(isCorrect: boolean, p: PracticeProblem): void {
   const stats = loadStats();
   stats.total += 1;
   if (isCorrect) stats.correct += 1;
@@ -2589,6 +2699,20 @@ function judgePractice(answer: "call" | "fold"): void {
     }
   }
   updatePracticeBadges();
+}
+
+function judgePractice(answer: "call" | "fold"): void {
+  if (!currentProblem) return;
+  const p = currentProblem;
+  const fb = document.getElementById("practice-feedback");
+  if (!fb) return;
+  const margin = p.heroEq - p.dollarEV;
+  const correctIsCall = margin >= 0;
+  const isCorrect = (correctIsCall && answer === "call") || (!correctIsCall && answer === "fold");
+  const verdict = correctIsCall ? "✅ コール (+EV)" : "❌ フォールド (-EV)";
+  fb.className = "practice-feedback " + (isCorrect ? "correct" : "wrong");
+
+  recordPracticeResult(isCorrect, p);
   fb.innerHTML = `
     <div class="verdict">${isCorrect ? "🎉 正解!" : "😅 不正解"} 正答: ${verdict}</div>
     <div>cEV 必要勝率: <strong>${(p.cEV * 100).toFixed(1)}%</strong></div>
@@ -2707,6 +2831,35 @@ practiceNewBtn?.addEventListener("click", () => {
   renderPracticeProblem(currentProblem);
 });
 
+// モード別のヒント文を更新
+function updatePracticeHint(): void {
+  const hint = document.getElementById("practice-hint");
+  if (!hint) return;
+  hint.textContent = practiceMode === "rp"
+    ? "ランダムシナリオの Risk Premium をスライダーで推定。BF と必要勝率の感覚を養う。"
+    : "ランダムシナリオ + 相手 push 想定レンジ + 自分のハンド → call/fold を即判定。";
+}
+updatePracticeHint();
+
+// モード切替 (call/fold 判定 ⇄ RP 当て)
+document.querySelectorAll<HTMLButtonElement>(".mode-btn").forEach((btn) => {
+  if (btn.dataset.mode === practiceMode) {
+    document.querySelectorAll<HTMLButtonElement>(".mode-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+  }
+  btn.addEventListener("click", () => {
+    if (btn.dataset.mode === practiceMode) return;
+    document.querySelectorAll<HTMLButtonElement>(".mode-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    practiceMode = btn.dataset.mode as PracticeMode;
+    try { localStorage.setItem("poker-icm-practice-mode", practiceMode); } catch { /* ignore */ }
+    updatePracticeHint();
+    // モードを変えたら新しい問題を出題
+    currentProblem = generatePracticeProblem();
+    renderPracticeProblem(currentProblem);
+  });
+});
+
 // 難易度切替
 document.querySelectorAll<HTMLButtonElement>(".diff-btn").forEach((btn) => {
   if (btn.dataset.diff === practiceDifficulty) {
@@ -2747,6 +2900,12 @@ document.getElementById("practice-area")?.addEventListener("click", (e) => {
     currentProblem = generatePracticeProblem();
     renderPracticeProblem(currentProblem);
     window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+  // RP 当てモードの回答ボタン
+  if (target.closest("#rp-answer-btn")) {
+    const slider = document.getElementById("rp-slider") as HTMLInputElement | null;
+    if (slider) judgePracticeRP(Number(slider.value));
     return;
   }
   // 取り込みボタン
