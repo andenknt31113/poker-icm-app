@@ -1,0 +1,24 @@
+<!-- Stitch 生成: Result(計算結果) 画面 (Copy as Code) — デザイン参照用。そのまま使わず style.css へ反映する。 -->
+<!-- 参照ポイント: ヒートマップのセル配色(heat-green/yellow/red), ICMテーブルのHero行ハイライト,
+     必要勝率の cEV + RP → $EV 横並び結果ブロック, 下部ナビのアクティブ上部インジケータ(3pxバー)+塗りアイコン -->
+<!DOCTYPE html>
+<html class="dark" lang="ja"><head>
+<meta charset="utf-8"/>
+<title>計算結果 - Poker ICM/BF</title>
+<style>
+  .heat-green { background-color: rgba(131, 218, 133, 0.15); border: 1px solid rgba(131, 218, 133, 0.4); color: #87dd88; }
+  .heat-yellow { background-color: rgba(250, 164, 67, 0.15); border: 1px solid rgba(250, 164, 67, 0.4); color: #faa443; }
+  .heat-red { background-color: rgba(255, 180, 171, 0.15); border: 1px solid rgba(255, 180, 171, 0.4); color: #ffb4ab; }
+  .heat-empty { background-color: #0f1419; border: 1px solid #2A3038; color: #889299; }
+  .card-level-1 { background-color: #1A2027; border: 1px solid #2A3038; border-radius: 0.5rem; }
+  .input-dark { background-color: #050709; border: 1px solid #2A3038; border-radius: 0.25rem; color: #dee3ea; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); }
+</style>
+</head>
+<body>
+<!-- ICM Equity table: Hero行に左端 3px アクセントバー + bg-primary/10, $エクイティは緑, %はアクセント -->
+<!-- BF: 大きな BF 値 + "+X% RP" のサマリーカード → 下に色分けヒートマップ(上段BF/下段RP%) + 凡例 Low/Med/High -->
+<!-- 必要勝率: Call Amount / Pot(If Win) の +/- ステッパー入力 →
+     結果ブロック [cEV] + [Risk Premium] → [$EV(True Req)] を横並び、$EV は下線強調 -->
+<!-- 下部ナビ: アクティブタブに上端 3px バー + アイコン塗りつぶし + アクセント文字 -->
+<!-- 実コードは会話ログ参照(冗長なため要点のみ保存)。フルの Tailwind 出力は Setup と同一の config。 -->
+</body></html>
