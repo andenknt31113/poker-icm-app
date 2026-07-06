@@ -1078,6 +1078,8 @@ body {
   background: var(--card);
   color: var(--accent);
   font-weight: bold;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
 .hidden {
@@ -1132,9 +1134,45 @@ body {
 }
 
 .range-label input[type="range"] {
+  margin-top: 6px;
+}
+
+/* ===== レンジスライダー共通 (シアンの光るつまみ) ===== */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
   width: 100%;
-  margin-top: 4px;
-  accent-color: var(--accent);
+  height: 20px;
+  background: transparent;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+}
+input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 18px;
+  width: 18px;
+  margin-top: -7px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+input[type="range"]::-moz-range-thumb {
+  height: 18px;
+  width: 18px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent);
 }
 
 .range-grids {
@@ -1190,9 +1228,10 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 .direction-tab.active {
-  background: var(--accent);
-  color: #000;
+  background: var(--card);
+  color: var(--accent);
   font-weight: bold;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
 /* ===== ステッパー (+/- ボタン付き数値入力) ===== */

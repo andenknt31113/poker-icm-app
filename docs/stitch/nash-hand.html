@@ -1,0 +1,32 @@
+<!-- Stitch 生成: Nash / Hand 画面の要点 (Copy as Code 抜粋) — デザイン参照用。config は Setup と同一。 -->
+<!DOCTYPE html>
+<html class="dark" lang="ja"><head><meta charset="utf-8"/>
+<title>Nash / Hand 参照</title>
+<style>
+  /* --- ハンドグリッド (Nash/Hand 共通) --- */
+  .poker-grid { display: grid; grid-template-columns: repeat(13, minmax(0,1fr)); gap: 1px; background:#2A3038; padding:1px; border-radius:4px; }
+  .poker-cell { aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:8px; background:#0F1419; color:#bdc8d0; transition:all .1s; }
+  @media (min-width:768px){ .poker-cell{ font-size:10px; } }
+  .cell-suited{ background:#1a232b; } .cell-offsuit{ background:#12181f; } .cell-pair{ background:#171c21; font-weight:600; color:#dee3ea; }
+  /* 選択セル: push=赤 / call=緑、-active(薄) と -high(濃) の2段階 */
+  .push-active{ background:rgba(255,180,171,.2); border:1px solid rgba(255,180,171,.5); color:#ffb4ab; }
+  .push-high  { background:rgba(255,180,171,.4); border:1px solid rgba(255,180,171,.8); color:#fff; }
+  .call-active{ background:rgba(135,221,136,.2); border:1px solid rgba(135,221,136,.5); color:#87dd88; }
+  .call-high  { background:rgba(135,221,136,.4); border:1px solid rgba(135,221,136,.8); color:#fff; }
+
+  /* --- レンジスライダー (Hand): シアンの光るつまみ --- */
+  input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; height:16px; width:16px; border-radius:50%; background:#4fc3f7; margin-top:-6px; box-shadow:0 0 10px rgba(79,195,247,.5); }
+  input[type=range]::-webkit-slider-runnable-track{ height:4px; background:#30353b; border-radius:2px; }
+
+  /* --- glass-panel (Nash 入力セクション): フロスト背景 --- */
+  .glass-panel{ background:rgba(35,42,51,.6); backdrop-filter:blur(12px); border:1px solid rgba(62,72,79,.5);
+    box-shadow:0 4px 6px -1px rgba(0,0,0,.1), inset 0 1px 0 rgba(255,255,255,.05); }
+</style>
+</head>
+<body>
+<!-- セグメント切替 (Hand 方向/モード): 凹んだトラック bg-surface-container-highest 上に、
+     アクティブのみ bg-surface + text-primary + shadow-sm + border で「浮いた」表現 -->
+<!-- 範囲%表示: 見出し右に bg-surface-dim の丸ピルで "25.04%" / combos 表示 -->
+<!-- Expected Value ブロック: Fold EV / Call EV(Avg) を2カラム、Call EV は緑 -->
+<!-- 下部ナビ アクティブ: Material アイコン FILL=1 (塗り) + アクセント文字 + 上端インジケータ -->
+</body></html>
