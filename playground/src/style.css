@@ -1501,12 +1501,13 @@ input[type="range"]::-moz-range-thumb {
 }
 .streak-badge,
 .acc-badge {
-  background: var(--bg);
+  background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 4px 8px;
+  border-radius: 999px;
+  padding: 5px 12px;
   font-family: var(--mono);
   color: var(--muted);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 .streak-badge.active {
   background: rgba(255, 167, 38, 0.18);
@@ -1694,24 +1695,27 @@ input[type="range"]::-moz-range-thumb {
   margin: 10px 0;
 }
 .practice-btn {
-  padding: 14px;
-  border: 2px solid var(--border);
-  background: var(--bg);
-  color: var(--text);
-  border-radius: 10px;
+  padding: 16px;
+  border: none;
+  color: #fff;
+  border-radius: 12px;
   font-size: 16px;
   font-weight: bold;
   font-family: inherit;
   cursor: pointer;
+  transition: transform 0.06s ease, box-shadow 0.06s ease;
 }
 .practice-btn.call {
-  border-color: var(--good);
+  background: var(--good);
+  box-shadow: 0 6px 0 0 color-mix(in srgb, var(--good) 62%, black);
 }
 .practice-btn.fold {
-  border-color: var(--bad);
+  background: var(--bad);
+  box-shadow: 0 6px 0 0 color-mix(in srgb, var(--bad) 62%, black);
 }
 .practice-btn:active {
-  transform: translateY(1px);
+  transform: translateY(6px);
+  box-shadow: 0 0 0 0 transparent;
 }
 .practice-feedback {
   background: var(--bg);
