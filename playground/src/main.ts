@@ -2939,7 +2939,12 @@ function problemRP(p: PracticeProblem): number {
  */
 function practiceLesson(p: PracticeProblem): string {
   const payouts = p.payouts;
-  if (payouts.length > 0) {
+  // WTA (ペイ1つ) は ICM 圧ゼロ。均等ペイ判定より先に処理しないと
+  // max=min で「サテライト」に誤マッチする
+  if (payouts.length === 1) {
+    return "🏆 WTA (勝者総取り) ではチップ＝賞金がリニア。ICM 圧はゼロなので、cEV (チップの損得) どおりに判断できます。";
+  }
+  if (payouts.length >= 2) {
     const maxPayout = Math.max(...payouts);
     const minPayout = Math.min(...payouts);
     if (maxPayout > 0 && maxPayout - minPayout < maxPayout * 0.15) {
