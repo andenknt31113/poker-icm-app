@@ -801,6 +801,11 @@ function recompute(): void {
     // レンジ比較
     renderRangeComparison(eq.dollarEV);
 
+    // 🃏 ハンド別判定 (🎯自分/⚔️相手が両方指定されている時のみ有効)
+    updateHandVerdictRequiredEquity(
+      heroIndex >= 0 && villainIndex >= 0 && heroIndex !== villainIndex ? eq.dollarEV : null,
+    );
+
     // Hero サマリー
     renderHeroSummary({
       heroIndex,
@@ -826,6 +831,7 @@ function recompute(): void {
     bfResult.innerHTML = "";
     eqResult.innerHTML = "";
     heroSummaryEl.classList.remove("active");
+    updateHandVerdictRequiredEquity(null);
   }
 }
 
@@ -2438,6 +2444,7 @@ function ensureGuideModal(): HTMLDivElement {
               <li>「ICM エクイティ」表で各プレイヤーの $ 価値を確認</li>
               <li>「全員 vs 全員 BF マップ」で 🎯 vs ⚔️ のセルを確認</li>
               <li>「🎯⚔️ から自動算出」を押して必要勝率でコール判断</li>
+              <li>「🃏 ハンド別判定」で相手レンジを選び、自分のハンドをタップして個別に call/fold を確認</li>
             </ol>
           </div>
         </details>
@@ -4150,273 +4157,86 @@ document.getElementById("practice-area")?.addEventListener("click", (e) => {
   }
 });
 
-// ===== ⚡ クイック判断 =====
-// 実戦中、手番が来るまでの短時間で「このオールインをコールしていいか」を
-// 最小入力 (自分/相手スタック・残り人数・ペイ構造・相手レンジ想定) で判定する。
-// モデル: hero=BB がオールインを受ける想定。villain は "OTHER"（残り2人なら "SB"）。
-// 残り3人以上のとき「他で最短」スタックを index 2 に配置 (SB を務める想定)。
-// それ以外のその他プレイヤーは (hero+villain)/2 の平均スタックで概算する。
-// 「他で最短」は必要勝率への影響が最大の要因 (フォールドして待つ価値を左右する) なので
-// 明示入力させ、既定値は (hero+villain)/2 を 0.5 刻みに丸めた値を自動追従させる。
-(() => {
-  const QJ_PAYOUT_PRESETS: Record<string, number[]> = {
-    std: [50, 30, 20],
-    topheavy: [65, 35],
-    ft9: [40, 25, 15, 10, 5, 3, 2],
-    satellite: [33.4, 33.3, 33.3],
-  };
+// ===== 🃏 ハンド別判定 (計算結果タブ・必要勝率カード内) =====
+// クイック判断 (合成テーブルの概算) は精度と入力の手間が見合わず廃止したが、
+// 「13x13グリッドでハンドをタップ→即 GO/NO GO」というインタラクションは実データに
+// 基づく判定として価値が高いため、recompute() が出す必要勝率 ($EV) を使って移植する。
+const hvBodyEl = $<HTMLDivElement>("hv-body");
+const hvEmptyMsgEl = $<HTMLParagraphElement>("hv-empty-msg");
+const hvRangePillsEl = $<HTMLDivElement>("hv-range-pills");
+const hvBannerEl = $<HTMLDivElement>("hv-banner");
+const hvGridEl = $<HTMLDivElement>("hv-grid");
+const hvGridCountEl = $<HTMLParagraphElement>("hv-grid-count");
 
-  /** 残り人数 < ペイ数の場合、ペイ配列を残り人数分に切り詰め合計100に再正規化する。 */
-  function qjAdjustPayouts(payouts: number[], remaining: number): number[] {
-    if (remaining >= payouts.length) return payouts;
-    const truncated = payouts.slice(0, remaining);
-    const total = truncated.reduce((a, b) => a + b, 0);
-    if (total <= 0) return truncated;
-    return truncated.map((p) => (p / total) * 100);
+let hvRangePct = 30;
+let hvPickedHand: HandNotation | null = null;
+/** recompute() が出した必要勝率 ($EV, 0〜1)。🎯/⚔️ 未指定など計算不能時は null。 */
+let hvRequiredEquity: number | null = null;
+
+/** hvRequiredEquity と選択中のレンジ/ハンドを元にグリッドとバナーを再描画する。 */
+function renderHandVerdict(): void {
+  if (hvRequiredEquity === null) {
+    hvBodyEl.classList.add("hidden");
+    hvEmptyMsgEl.classList.remove("hidden");
+    return;
   }
+  hvBodyEl.classList.remove("hidden");
+  hvEmptyMsgEl.classList.add("hidden");
 
-  const qjHeroStackInput = $<HTMLInputElement>("qj-hero-stack");
-  const qjVillainStackInput = $<HTMLInputElement>("qj-villain-stack");
-  const qjRemainingSelect = $<HTMLSelectElement>("qj-remaining");
-  const qjCallDisplayEl = $<HTMLDivElement>("qj-call-display");
-  const qjShortestLabelEl = $<HTMLLabelElement>("qj-shortest-label");
-  const qjShortestStackInput = $<HTMLInputElement>("qj-shortest-stack");
-  const qjShortestAutoBtn = $<HTMLButtonElement>("qj-shortest-auto-btn");
-  const qjPayoutPillsEl = $<HTMLDivElement>("qj-payout-pills");
-  const qjRangePillsEl = $<HTMLDivElement>("qj-range-pills");
-  const qjResultEl = $<HTMLDivElement>("qj-result");
-  const qjBannerEl = $<HTMLDivElement>("qj-banner");
-  const qjGridEl = $<HTMLDivElement>("qj-grid");
-  const qjGridCountEl = $<HTMLParagraphElement>("qj-grid-count");
+  const reqEquity = hvRequiredEquity;
+  const reqPct = reqEquity * 100;
+  const villainRange = topRange(hvRangePct);
 
-  let qjPickedHand: HandNotation | null = null;
-  let qjPayoutKey = "std";
-  let qjRangePct = 30;
-  let qjDebounceTimer: number | undefined;
-  /** ユーザーが「他で最短」を手動編集したら true。false の間は自動追従する。 */
-  let qjShortestTouched = false;
+  let inRangeCount = 0;
+  renderGrid(hvGridEl, (hand) => {
+    const eq = equity(hand, villainRange);
+    const inRange = eq >= reqEquity;
+    if (inRange) inRangeCount++;
+    let cls = inRange ? "in-range-hero" : "";
+    if (hand === hvPickedHand) cls += " picked";
+    return cls;
+  });
+  const coveragePct = (inRangeCount / 169) * 100;
+  hvGridCountEl.textContent = `169中 ${inRangeCount} ハンド (${coveragePct.toFixed(0)}%)`;
 
-  /** 「他で最短」の既定値: (hero+villain)/2 を 0.5 刻みに丸める。 */
-  function qjDefaultShortest(heroStack: number, villainStack: number): number {
-    const avg = (heroStack + villainStack) / 2;
-    return Math.round(avg * 2) / 2;
+  if (hvPickedHand) {
+    const eq = equity(hvPickedHand, villainRange) * 100;
+    const isCall = eq >= reqPct;
+    const margin = eq - reqPct;
+    hvBannerEl.classList.remove("hidden");
+    hvBannerEl.classList.toggle("hv-banner-call", isCall);
+    hvBannerEl.classList.toggle("hv-banner-fold", !isCall);
+    const verdict = isCall
+      ? `✅ コール (${margin >= 0 ? "+" : ""}${margin.toFixed(1)}%)`
+      : `❌ フォールド (${margin.toFixed(1)}%)`;
+    hvBannerEl.innerHTML = `<strong>${hvPickedHand}</strong>: equity ${eq.toFixed(1)}% ${isCall ? "≥" : "<"} 必要 ${reqPct.toFixed(1)}% → ${verdict}`;
+  } else {
+    hvBannerEl.classList.add("hidden");
+    hvBannerEl.innerHTML = "";
   }
+}
 
-  /** hero/villain/残り人数の変更時、未編集なら「他で最短」の既定値を追従更新。 */
-  function qjSyncShortestDefault(): void {
-    if (qjShortestTouched) return;
-    const heroStack = Number(qjHeroStackInput.value);
-    const villainStack = Number(qjVillainStackInput.value);
-    if (!Number.isFinite(heroStack) || !Number.isFinite(villainStack)) return;
-    qjShortestStackInput.value = String(qjDefaultShortest(heroStack, villainStack));
-  }
+/** recompute() の末尾から呼ばれるフック。必要勝率 (dollarEV) か null (計算不能) を渡す。 */
+function updateHandVerdictRequiredEquity(requiredEquity: number | null): void {
+  hvRequiredEquity = requiredEquity;
+  renderHandVerdict();
+}
 
-  /** 残り人数に応じて「他で最短」入力の表示/非表示を切り替える。 */
-  function qjSyncShortestVisibility(): void {
-    const remaining = Number(qjRemainingSelect.value);
-    qjShortestLabelEl.classList.toggle("hidden", !(remaining >= 3));
-  }
+hvRangePillsEl.addEventListener("click", (e) => {
+  const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(".hv-pill");
+  if (!btn || !btn.dataset.range) return;
+  hvRangePillsEl.querySelectorAll(".hv-pill").forEach((b) => b.classList.remove("active"));
+  btn.classList.add("active");
+  hvRangePct = Number(btn.dataset.range);
+  renderHandVerdict();
+});
 
-  interface QjComputed {
-    requiredEquity: number;
-    cEV: number;
-    rp: number;
-    villainRange: Set<HandNotation>;
-    callAmount: number;
-  }
-
-  function qjCompute(): QjComputed {
-    const heroStack = Number(qjHeroStackInput.value);
-    const villainStack = Number(qjVillainStackInput.value);
-    const remaining = Number(qjRemainingSelect.value);
-
-    if (!Number.isFinite(heroStack) || heroStack < 1 || heroStack > 200) {
-      throw new Error("自分スタックは 1〜200 BB の範囲で入力してください");
-    }
-    if (!Number.isFinite(villainStack) || villainStack < 1 || villainStack > 200) {
-      throw new Error("相手スタックは 1〜200 BB の範囲で入力してください");
-    }
-    if (!Number.isInteger(remaining) || remaining < 2 || remaining > 9) {
-      throw new Error("残り人数は 2〜9 で指定してください");
-    }
-
-    // スタック配列: [hero, villain, 他で最短, その他 (残り人数-3) 人]。
-    // 「他で最短」は残り3人以上のときのみ意味を持つ (hero/villain 以外で最も短いスタック)。
-    // 残りのその他プレイヤーは (hero+villain)/2 の平均で概算。
-    const otherStack = (heroStack + villainStack) / 2;
-    const heroIndex = 0;
-    const villainIndex = 1;
-    let stacks: number[];
-    let sbPlayerIndex: number | undefined;
-    if (remaining >= 3) {
-      const shortestStack = Number(qjShortestStackInput.value);
-      if (!Number.isFinite(shortestStack) || shortestStack < 0.5 || shortestStack > 200) {
-        throw new Error("「他で最短」は 0.5〜200 BB の範囲で入力してください");
-      }
-      const fillCount = remaining - 3;
-      stacks = [heroStack, villainStack, shortestStack, ...Array(fillCount).fill(otherStack)];
-      // SB は「他で最短」(index 2) が務める想定。
-      sbPlayerIndex = 2;
-    } else {
-      stacks = [heroStack, villainStack];
-      sbPlayerIndex = undefined;
-    }
-    // 残り2人なら villain が SB を兼務。残り3人以上なら SB は「他で最短」(index 2)。
-    const villainPosition: PotOddsPosition = remaining === 2 ? "SB" : "OTHER";
-
-    const sb = DEFAULT_SB;
-    const bb = DEFAULT_BB;
-    const ante = DEFAULT_ANTE;
-
-    const podds = calculatePotOdds({
-      heroStack: stacks[heroIndex]!,
-      villainStack: stacks[villainIndex]!,
-      heroPosition: "BB",
-      villainPosition,
-      sb, bb, ante,
-    });
-
-    const callAmount = podds.callAmount;
-    const potIfWin = podds.potIfWin;
-    qjCallDisplayEl.textContent = `${(Math.round(callAmount * 100) / 100).toFixed(1)} BB`;
-
-    const rawPayouts = QJ_PAYOUT_PRESETS[qjPayoutKey]!;
-    const payouts = qjAdjustPayouts(rawPayouts, remaining);
-
-    const exact = calculateExactCallEquity({
-      stacks,
-      payouts,
-      heroIndex,
-      villainIndex,
-      heroPosition: "BB",
-      villainPosition,
-      sbPlayerIndex,
-      sb, bb, ante,
-    });
-
-    const req = calculateRequiredEquity({ callAmount, potIfWin, bubbleFactor: 1 });
-    const cEV = req.cEV;
-    const rp = exact.requiredEquity - cEV;
-    const villainRange = topRange(qjRangePct);
-
-    return {
-      requiredEquity: exact.requiredEquity,
-      cEV,
-      rp,
-      villainRange,
-      callAmount,
-    };
-  }
-
-  function qjRender(): void {
-    try {
-      const c = qjCompute();
-      const reqPct = c.requiredEquity * 100;
-      const cevPct = c.cEV * 100;
-      const rpPct = c.rp * 100;
-      qjResultEl.innerHTML = `
-        <div class="qj-required-big">${reqPct.toFixed(1)}<span class="qj-pct-sign">%</span></div>
-        <div class="qj-required-label">必要勝率 (厳密ICM)</div>
-        <div class="qj-sub-line">cEV ${cevPct.toFixed(1)}% <span class="qj-sub-sep">・</span> RP ${rpPct >= 0 ? "+" : ""}${rpPct.toFixed(1)}%</div>
-      `;
-
-      let inRangeCount = 0;
-      renderGrid(qjGridEl, (hand) => {
-        const eq = equity(hand, c.villainRange);
-        const inRange = eq >= c.requiredEquity;
-        if (inRange) inRangeCount++;
-        let cls = inRange ? "in-range-hero" : "";
-        if (hand === qjPickedHand) cls += " picked";
-        return cls;
-      });
-      const coveragePct = (inRangeCount / 169) * 100;
-      qjGridCountEl.textContent = `169中 ${inRangeCount} ハンド (${coveragePct.toFixed(0)}%)`;
-
-      if (qjPickedHand) {
-        const eq = equity(qjPickedHand, c.villainRange) * 100;
-        const isCall = eq >= reqPct;
-        const margin = eq - reqPct;
-        qjBannerEl.classList.remove("hidden");
-        qjBannerEl.classList.toggle("qj-banner-call", isCall);
-        qjBannerEl.classList.toggle("qj-banner-fold", !isCall);
-        const verdict = isCall
-          ? `✅ コール (${margin >= 0 ? "+" : ""}${margin.toFixed(1)}%)`
-          : `❌ フォールド (${margin.toFixed(1)}%)`;
-        qjBannerEl.innerHTML = `<strong>${qjPickedHand}</strong>: equity ${eq.toFixed(1)}% ${isCall ? "≥" : "<"} 必要 ${reqPct.toFixed(1)}% → ${verdict}`;
-      } else {
-        qjBannerEl.classList.add("hidden");
-        qjBannerEl.innerHTML = "";
-      }
-    } catch (err) {
-      qjResultEl.innerHTML = `<div class="qj-error-msg">⚠️ ${err instanceof Error ? err.message : "入力値を確認してください"}</div>`;
-      qjCallDisplayEl.textContent = "-- BB";
-      qjGridEl.innerHTML = "";
-      qjGridCountEl.textContent = "";
-      qjBannerEl.classList.add("hidden");
-      qjBannerEl.innerHTML = "";
-    }
-  }
-
-  function qjScheduleRender(): void {
-    if (qjDebounceTimer !== undefined) window.clearTimeout(qjDebounceTimer);
-    qjDebounceTimer = window.setTimeout(() => {
-      qjDebounceTimer = undefined;
-      qjRender();
-    }, 150);
-  }
-
-  qjHeroStackInput.addEventListener("input", () => {
-    qjSyncShortestDefault();
-    qjScheduleRender();
-  });
-  qjVillainStackInput.addEventListener("input", () => {
-    qjSyncShortestDefault();
-    qjScheduleRender();
-  });
-  qjRemainingSelect.addEventListener("change", () => {
-    qjSyncShortestVisibility();
-    qjSyncShortestDefault();
-    qjRender();
-  });
-  qjShortestStackInput.addEventListener("input", () => {
-    qjShortestTouched = true;
-    qjScheduleRender();
-  });
-  qjShortestAutoBtn.addEventListener("click", () => {
-    qjShortestTouched = false;
-    qjSyncShortestDefault();
-    qjRender();
-  });
-
-  qjPayoutPillsEl.addEventListener("click", (e) => {
-    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(".qj-pill");
-    if (!btn || !btn.dataset.payout) return;
-    qjPayoutPillsEl.querySelectorAll(".qj-pill").forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-    qjPayoutKey = btn.dataset.payout;
-    qjRender();
-  });
-
-  qjRangePillsEl.addEventListener("click", (e) => {
-    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(".qj-pill");
-    if (!btn || !btn.dataset.range) return;
-    qjRangePillsEl.querySelectorAll(".qj-pill").forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-    qjRangePct = Number(btn.dataset.range);
-    qjRender();
-  });
-
-  qjGridEl.addEventListener("click", (e) => {
-    const cell = (e.target as HTMLElement).closest<HTMLDivElement>(".hand-cell");
-    if (!cell) return;
-    qjPickedHand = cell.title;
-    qjRender();
-  });
-
-  qjSyncShortestVisibility();
-  qjSyncShortestDefault();
-  qjRender();
-})();
+hvGridEl.addEventListener("click", (e) => {
+  const cell = (e.target as HTMLElement).closest<HTMLDivElement>(".hand-cell");
+  if (!cell) return;
+  hvPickedHand = cell.title;
+  renderHandVerdict();
+});
 
 // ===== 初期描画 =====
 applyTab(activeTab);

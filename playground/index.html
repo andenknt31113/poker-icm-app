@@ -66,71 +66,6 @@
       </nav>
 
 
-      <section class="card quick-judge-card" data-tab="setup">
-        <h2>⚡ クイック判断</h2>
-        <p class="hint">① スタック・残り人数・他で最短を入力 → ② 必要勝率とコール可能レンジが出る → ③ 自分のハンドをグリッドでタップして判定</p>
-
-        <div class="qj-inputs">
-          <label>
-            自分スタック (BB)
-            <input id="qj-hero-stack" type="number" inputmode="decimal" value="15" min="1" max="200" step="1" />
-          </label>
-          <label>
-            相手スタック (BB)
-            <input id="qj-villain-stack" type="number" inputmode="decimal" value="20" min="1" max="200" step="1" />
-          </label>
-          <label>
-            残り人数
-            <select id="qj-remaining" class="qj-select">
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
-              <option value="6" selected>6</option>
-              <option value="7">7</option>
-              <option value="8">8</option>
-              <option value="9">9</option>
-            </select>
-          </label>
-          <label>
-            コール額 (自動)
-            <div id="qj-call-display" class="qj-call-readonly">-- BB</div>
-          </label>
-          <label id="qj-shortest-label" class="qj-shortest-label hidden">
-            <span class="qj-shortest-label-row">他で最短 (BB)
-              <button type="button" id="qj-shortest-auto-btn" class="qj-mini-btn" title="hero/villainの平均に戻す">自動</button>
-            </span>
-            <input id="qj-shortest-stack" type="number" inputmode="decimal" value="17.5" min="0.5" max="200" step="0.5" />
-            <span class="qj-shortest-note">バブルの判定精度を大きく左右します</span>
-          </label>
-        </div>
-
-        <div class="presets-label" style="margin-top: 10px;">ペイ構造</div>
-        <div id="qj-payout-pills" class="qj-pills">
-          <button type="button" class="qj-pill active" data-payout="std">標準 Top3 (50/30/20)</button>
-          <button type="button" class="qj-pill" data-payout="topheavy">トップヘビー (65/35)</button>
-          <button type="button" class="qj-pill" data-payout="ft9">9-max FT (40/25/15/10/5/3/2)</button>
-          <button type="button" class="qj-pill" data-payout="satellite">🛰 サテライト (33.4/33.3/33.3)</button>
-        </div>
-
-        <div class="presets-label" style="margin-top: 10px;">相手のシャブレンジ想定</div>
-        <div id="qj-range-pills" class="qj-pills">
-          <button type="button" class="qj-pill" data-range="15">タイト Top15%</button>
-          <button type="button" class="qj-pill active" data-range="30">普通 Top30%</button>
-          <button type="button" class="qj-pill" data-range="50">ルース Top50%</button>
-        </div>
-
-        <div id="qj-result" class="qj-result"></div>
-        <div id="qj-banner" class="qj-banner hidden"></div>
-
-        <div class="qj-grid-wrap">
-          <div id="qj-grid" class="hand-grid"></div>
-          <p class="hint" id="qj-grid-count"></p>
-        </div>
-
-        <p class="hint qj-footnote">※ 相手の全額オールインを受けた想定 (SB0.5/BB1/Ante1)。「他で最短」以外の他プレイヤーは hero/villain 平均の概算。オールイン以外や正確な分析は下の詳細設定で</p>
-      </section>
-
       <section class="card" data-tab="setup">
         <h2>シナリオプリセット</h2>
         <p class="hint">タップで状況一発セット。スタック・ポジション・ペイアウトを丸ごと反映。</p>
@@ -326,6 +261,25 @@
         <p class="hint" id="autofill-hint" style="margin-top: 6px;"></p>
         <div id="position-warn" class="warn-box hidden"></div>
         <div id="eq-result" class="result"></div>
+
+        <div class="hv-section">
+          <h3>🃏 ハンド別判定</h3>
+          <p class="hint">相手の想定レンジを選び、自分のハンドをタップすると個別判定</p>
+          <p id="hv-empty-msg" class="hint hidden">プレイヤーで 🎯自分 と ⚔️相手 を指定してください</p>
+          <div id="hv-body">
+            <div id="hv-range-pills" class="hv-pills">
+              <button type="button" class="hv-pill" data-range="15">タイト Top15%</button>
+              <button type="button" class="hv-pill active" data-range="30">普通 Top30%</button>
+              <button type="button" class="hv-pill" data-range="50">ルース Top50%</button>
+            </div>
+            <div id="hv-banner" class="hv-banner hidden"></div>
+            <p class="hint hv-source-note">必要勝率 = 上の $EV (True Req)</p>
+            <div class="hv-grid-wrap">
+              <div id="hv-grid" class="hand-grid"></div>
+              <p class="hint" id="hv-grid-count"></p>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section class="card" data-tab="nash">
