@@ -68,7 +68,7 @@
 
       <section class="card quick-judge-card" data-tab="setup">
         <h2>⚡ クイック判断</h2>
-        <p class="hint">オールインを受けた時の即席判定。詳細な分析は下のプリセット/プレイヤー設定へ</p>
+        <p class="hint">① スタック・残り人数・他で最短を入力 → ② 必要勝率とコール可能レンジが出る → ③ 自分のハンドをグリッドでタップして判定</p>
 
         <div class="qj-inputs">
           <label>
@@ -96,6 +96,13 @@
             コール額 (自動)
             <div id="qj-call-display" class="qj-call-readonly">-- BB</div>
           </label>
+          <label id="qj-shortest-label" class="qj-shortest-label hidden">
+            <span class="qj-shortest-label-row">他で最短 (BB)
+              <button type="button" id="qj-shortest-auto-btn" class="qj-mini-btn" title="hero/villainの平均に戻す">自動</button>
+            </span>
+            <input id="qj-shortest-stack" type="number" inputmode="decimal" value="17.5" min="0.5" max="200" step="0.5" />
+            <span class="qj-shortest-note">バブルの判定精度を大きく左右します</span>
+          </label>
         </div>
 
         <div class="presets-label" style="margin-top: 10px;">ペイ構造</div>
@@ -121,7 +128,7 @@
           <p class="hint" id="qj-grid-count"></p>
         </div>
 
-        <p class="hint qj-footnote">※ 相手の全額オールインを受けた想定 (SB0.5/BB1/Ante1)。他プレイヤーは平均スタックの概算。オールイン以外や正確な分析は下の詳細設定で</p>
+        <p class="hint qj-footnote">※ 相手の全額オールインを受けた想定 (SB0.5/BB1/Ante1)。「他で最短」以外の他プレイヤーは hero/villain 平均の概算。オールイン以外や正確な分析は下の詳細設定で</p>
       </section>
 
       <section class="card" data-tab="setup">

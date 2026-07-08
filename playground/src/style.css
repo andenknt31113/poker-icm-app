@@ -2859,6 +2859,39 @@ footer a {
   cursor: pointer;
 }
 
+.qj-shortest-label {
+  grid-column: 1 / -1;
+}
+.qj-shortest-label.hidden {
+  display: none;
+}
+.qj-shortest-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.qj-mini-btn {
+  background: var(--card);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+.qj-mini-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.qj-shortest-note {
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: normal;
+}
+
 .qj-pills {
   display: flex;
   flex-wrap: wrap;

@@ -4154,7 +4154,10 @@ document.getElementById("practice-area")?.addEventListener("click", (e) => {
 // 実戦中、手番が来るまでの短時間で「このオールインをコールしていいか」を
 // 最小入力 (自分/相手スタック・残り人数・ペイ構造・相手レンジ想定) で判定する。
 // モデル: hero=BB がオールインを受ける想定。villain は "OTHER"（残り2人なら "SB"）。
-// その他のプレイヤーは (hero+villain)/2 の平均スタックで概算し、SB は「その他」の先頭が務める。
+// 残り3人以上のとき「他で最短」スタックを index 2 に配置 (SB を務める想定)。
+// それ以外のその他プレイヤーは (hero+villain)/2 の平均スタックで概算する。
+// 「他で最短」は必要勝率への影響が最大の要因 (フォールドして待つ価値を左右する) なので
+// 明示入力させ、既定値は (hero+villain)/2 を 0.5 刻みに丸めた値を自動追従させる。
 (() => {
   const QJ_PAYOUT_PRESETS: Record<string, number[]> = {
     std: [50, 30, 20],
@@ -4176,6 +4179,9 @@ document.getElementById("practice-area")?.addEventListener("click", (e) => {
   const qjVillainStackInput = $<HTMLInputElement>("qj-villain-stack");
   const qjRemainingSelect = $<HTMLSelectElement>("qj-remaining");
   const qjCallDisplayEl = $<HTMLDivElement>("qj-call-display");
+  const qjShortestLabelEl = $<HTMLLabelElement>("qj-shortest-label");
+  const qjShortestStackInput = $<HTMLInputElement>("qj-shortest-stack");
+  const qjShortestAutoBtn = $<HTMLButtonElement>("qj-shortest-auto-btn");
   const qjPayoutPillsEl = $<HTMLDivElement>("qj-payout-pills");
   const qjRangePillsEl = $<HTMLDivElement>("qj-range-pills");
   const qjResultEl = $<HTMLDivElement>("qj-result");
@@ -4187,6 +4193,29 @@ document.getElementById("practice-area")?.addEventListener("click", (e) => {
   let qjPayoutKey = "std";
   let qjRangePct = 30;
   let qjDebounceTimer: number | undefined;
+  /** ユーザーが「他で最短」を手動編集したら true。false の間は自動追従する。 */
+  let qjShortestTouched = false;
+
+  /** 「他で最短」の既定値: (hero+villain)/2 を 0.5 刻みに丸める。 */
+  function qjDefaultShortest(heroStack: number, villainStack: number): number {
+    const avg = (heroStack + villainStack) / 2;
+    return Math.round(avg * 2) / 2;
+  }
+
+  /** hero/villain/残り人数の変更時、未編集なら「他で最短」の既定値を追従更新。 */
+  function qjSyncShortestDefault(): void {
+    if (qjShortestTouched) return;
+    const heroStack = Number(qjHeroStackInput.value);
+    const villainStack = Number(qjVillainStackInput.value);
+    if (!Number.isFinite(heroStack) || !Number.isFinite(villainStack)) return;
+    qjShortestStackInput.value = String(qjDefaultShortest(heroStack, villainStack));
+  }
+
+  /** 残り人数に応じて「他で最短」入力の表示/非表示を切り替える。 */
+  function qjSyncShortestVisibility(): void {
+    const remaining = Number(qjRemainingSelect.value);
+    qjShortestLabelEl.classList.toggle("hidden", !(remaining >= 3));
+  }
 
   interface QjComputed {
     requiredEquity: number;
@@ -4211,15 +4240,29 @@ document.getElementById("practice-area")?.addEventListener("click", (e) => {
       throw new Error("残り人数は 2〜9 で指定してください");
     }
 
-    // スタック配列: [hero, villain, その他 (残り人数-2) 人]。その他は (hero+villain)/2 の平均で概算。
-    const otherCount = remaining - 2;
+    // スタック配列: [hero, villain, 他で最短, その他 (残り人数-3) 人]。
+    // 「他で最短」は残り3人以上のときのみ意味を持つ (hero/villain 以外で最も短いスタック)。
+    // 残りのその他プレイヤーは (hero+villain)/2 の平均で概算。
     const otherStack = (heroStack + villainStack) / 2;
-    const stacks: number[] = [heroStack, villainStack, ...Array(otherCount).fill(otherStack)];
     const heroIndex = 0;
     const villainIndex = 1;
-    // 残り2人なら villain が SB を兼務。残り3人以上なら SB は「その他」の先頭 (index 2)。
+    let stacks: number[];
+    let sbPlayerIndex: number | undefined;
+    if (remaining >= 3) {
+      const shortestStack = Number(qjShortestStackInput.value);
+      if (!Number.isFinite(shortestStack) || shortestStack < 0.5 || shortestStack > 200) {
+        throw new Error("「他で最短」は 0.5〜200 BB の範囲で入力してください");
+      }
+      const fillCount = remaining - 3;
+      stacks = [heroStack, villainStack, shortestStack, ...Array(fillCount).fill(otherStack)];
+      // SB は「他で最短」(index 2) が務める想定。
+      sbPlayerIndex = 2;
+    } else {
+      stacks = [heroStack, villainStack];
+      sbPlayerIndex = undefined;
+    }
+    // 残り2人なら villain が SB を兼務。残り3人以上なら SB は「他で最短」(index 2)。
     const villainPosition: PotOddsPosition = remaining === 2 ? "SB" : "OTHER";
-    const sbPlayerIndex = remaining >= 3 ? 2 : undefined;
 
     const sb = DEFAULT_SB;
     const bb = DEFAULT_BB;
@@ -4322,9 +4365,28 @@ document.getElementById("practice-area")?.addEventListener("click", (e) => {
     }, 150);
   }
 
-  qjHeroStackInput.addEventListener("input", qjScheduleRender);
-  qjVillainStackInput.addEventListener("input", qjScheduleRender);
-  qjRemainingSelect.addEventListener("change", () => qjRender());
+  qjHeroStackInput.addEventListener("input", () => {
+    qjSyncShortestDefault();
+    qjScheduleRender();
+  });
+  qjVillainStackInput.addEventListener("input", () => {
+    qjSyncShortestDefault();
+    qjScheduleRender();
+  });
+  qjRemainingSelect.addEventListener("change", () => {
+    qjSyncShortestVisibility();
+    qjSyncShortestDefault();
+    qjRender();
+  });
+  qjShortestStackInput.addEventListener("input", () => {
+    qjShortestTouched = true;
+    qjScheduleRender();
+  });
+  qjShortestAutoBtn.addEventListener("click", () => {
+    qjShortestTouched = false;
+    qjSyncShortestDefault();
+    qjRender();
+  });
 
   qjPayoutPillsEl.addEventListener("click", (e) => {
     const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(".qj-pill");
@@ -4351,6 +4413,8 @@ document.getElementById("practice-area")?.addEventListener("click", (e) => {
     qjRender();
   });
 
+  qjSyncShortestVisibility();
+  qjSyncShortestDefault();
   qjRender();
 })();
 
