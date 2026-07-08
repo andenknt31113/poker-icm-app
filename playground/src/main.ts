@@ -2977,20 +2977,32 @@ function practiceLesson(p: PracticeProblem): string {
   return "必要勝率 = cEV + Risk Premium。ICM 下では『チップで得』でも『賞金で損』になり得ることを常に確認しましょう。";
 }
 
+/**
+ * 縮退問題の検出: 勝っても負けても $ エクイティがほぼ変わらない
+ * (例: ほぼ均等ペイのサテライトで残り人数 = 入賞数 → 全員インマネ確定)。
+ * 33.4/33.3/33.3 のような微差ペイでは差が厳密ゼロにならないため、
+ * 「賞金プールの 0.5% 未満しか懸かっていない」を縮退とみなす相対判定にする。
+ */
+function isDegenerateProblem(p: PracticeProblem): boolean {
+  const totalPayout = p.payouts.reduce((a, b) => a + b, 0);
+  return p.equityWin - p.equityLose < totalPayout * 0.005;
+}
+
 function generatePracticeProblem(): PracticeProblem {
   if (practiceMode === "rp") {
-    // RP モードは call/fold の境界フィルタ不要。
-    // RP が極端に小さい (自明) 問題だけ避ける
+    // RP モード: 縮退問題を除外し、RP が自明に小さい問題と
+    // スライダー上限 (50%) を超えて回答不能な問題も避ける
     for (let attempt = 0; attempt < 100; attempt++) {
       const p = generateRandomPracticeProblem();
-      if (problemRP(p) >= 3) return p;
+      const rp = problemRP(p);
+      if (!isDegenerateProblem(p) && rp >= 3 && rp <= 50) return p;
     }
     return generateRandomPracticeProblem();
   }
   const band = DIFF_BANDS[practiceDifficulty];
   for (let attempt = 0; attempt < 100; attempt++) {
     const p = generateRandomPracticeProblem();
-    if (Math.abs(p.heroEq - p.dollarEV) <= band) return p;
+    if (!isDegenerateProblem(p) && Math.abs(p.heroEq - p.dollarEV) <= band) return p;
   }
   return generateRandomPracticeProblem();
 }
@@ -3829,9 +3841,19 @@ document.getElementById("practice-review-btn")?.addEventListener("click", () => 
     if (area) area.innerHTML = `<div class="practice-info">まだ復習問題はありません。不正解の問題が自動で蓄積されます (最大50問)。</div>`;
     return;
   }
-  // 先頭から取り出して再出題
-  const next = list.shift()!;
+  // 先頭から取り出して再出題 (過去に保存された縮退問題はスキップして破棄)
+  let next: PracticeProblem | null = null;
+  while (list.length > 0) {
+    const candidate = ensureDerivedFields(list.shift()!);
+    if (!isDegenerateProblem(candidate)) { next = candidate; break; }
+  }
   saveReviewList(list);
+  if (!next) {
+    const area = document.getElementById("practice-area");
+    if (area) area.innerHTML = `<div class="practice-info">まだ復習問題はありません。不正解の問題が自動で蓄積されます (最大50問)。</div>`;
+    updatePracticeBadges();
+    return;
+  }
   currentProblem = next;
   renderPracticeProblem(currentProblem);
   updatePracticeBadges();
