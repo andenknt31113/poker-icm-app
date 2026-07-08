@@ -28,6 +28,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # playground は @poker-icm/core の dist を参照するため、typecheck より先に core をビルド
+      - name: Build core
+        run: npm -w @poker-icm/core run build
+
       - name: Typecheck
         run: npm run typecheck
 
