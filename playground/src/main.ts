@@ -2223,6 +2223,8 @@ function applyTheme(t: Theme): void {
   }
   const btn = document.getElementById("theme-toggle");
   if (btn) btn.textContent = t === "light" ? "☀️" : "🌙";
+  const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeColorMeta) themeColorMeta.setAttribute("content", t === "light" ? "#f5f7fa" : "#0f1419");
   try { localStorage.setItem(THEME_KEY, t); } catch { /* ignore */ }
 }
 const savedTheme = ((): Theme => {
@@ -3566,6 +3568,15 @@ function judgePracticeRP(guess: number): void {
 }
 
 // streak / stats / review をまとめて更新 (call/fold・RP 両モード共通)
+// 復習リストの重複判定用キー。ハンド・相手コールレンジに加え、スタック構成
+// (順序込み) と支払いテーブルも含めて正規化し、"似ているが別シナリオ" の問題を
+// 誤って重複扱いしないようにする。
+function practiceProblemDedupKey(p: PracticeProblemBase): string {
+  const stacks = p.scenarioPlayers.map((sp) => `${sp.role}:${sp.position}:${sp.stack}`).join(",");
+  const payouts = p.payouts.join(",");
+  return `${p.heroHand}|${p.villainCallRangePct}|${stacks}|${payouts}`;
+}
+
 function recordPracticeResult(isCorrect: boolean, p: PracticeProblem): void {
   const stats = loadStats();
   stats.total += 1;
@@ -3577,7 +3588,8 @@ function recordPracticeResult(isCorrect: boolean, p: PracticeProblem): void {
   saveStreak(streak);
   if (!isCorrect) {
     const list = loadReviewList();
-    if (!list.some((x) => x.heroHand === p.heroHand && x.villainCallRangePct === p.villainCallRangePct)) {
+    const key = practiceProblemDedupKey(p);
+    if (!list.some((x) => practiceProblemDedupKey(x) === key)) {
       list.unshift(p);
       saveReviewList(list);
     }
@@ -3793,6 +3805,13 @@ document.querySelectorAll<HTMLButtonElement>(".diff-btn").forEach((btn) => {
     btn.classList.add("active");
     practiceDifficulty = btn.dataset.diff as Difficulty;
     try { localStorage.setItem("poker-icm-practice-diff", practiceDifficulty); } catch { /* ignore */ }
+    // 難易度変更は出題中の問題の見た目 (許容誤差表示・スライダー⇄4択など) に影響するため、
+    // モード切替と同様に新しい問題を生成して再描画する (チュートリアル中は問題構成が
+    // 固定なので対象外)。
+    if (!tutorialActive) {
+      currentProblem = generatePracticeProblem();
+      renderPracticeProblem(currentProblem);
+    }
   });
 });
 
