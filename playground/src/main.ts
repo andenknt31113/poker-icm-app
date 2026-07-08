@@ -90,6 +90,19 @@ interface PersistedState {
   nash: { sb: number; bb: number; ante: number; anteMode: "total" | "perPlayer" };
 }
 
+/**
+ * 賞金配列のサニタイズ: 有限かつ非負の値のみ残す (parseList と同じ規則)。
+ * 壊れた値 (負数・NaN・Infinity 等) は行ごと捨てる。
+ * localStorage / 共有URL 経由で入り込んだ不正値がUI表示と実計算 (ICM) を
+ * 乖離させるのを防ぐ。
+ */
+function sanitizePayoutsArray(values: unknown): number[] {
+  if (!Array.isArray(values)) return [];
+  return values.filter(
+    (n): n is number => typeof n === "number" && Number.isFinite(n) && n >= 0,
+  );
+}
+
 function loadState(): PersistedState | null {
   try {
     const raw = localStorage.getItem(STATE_KEY);
@@ -98,7 +111,7 @@ function loadState(): PersistedState | null {
     if (!Array.isArray(obj.players) || !Array.isArray(obj.payouts) || !obj.nash) {
       return null;
     }
-    return obj;
+    return { ...obj, payouts: sanitizePayoutsArray(obj.payouts) };
   } catch {
     return null;
   }
@@ -669,6 +682,10 @@ function recompute(): void {
     if (heroIndex < 0 || villainIndex < 0) {
       bfResult.innerHTML = `<div class="error">🎯自分と⚔️相手を1人ずつ指定してください</div>`;
     } else if (heroIndex === villainIndex) {
+      // データモデル上到達不能: Player.role は単一の文字列 ("hero" | "villain" | "other")
+      // であり、1人が hero と villain を同時に兼ねることはできない。findIndex が
+      // 同じ index を返すのは heroIndex/villainIndex が両方 -1 の場合のみだが、
+      // それは直前の分岐で既に弾かれている。防御的に残す。
       bfResult.innerHTML = `<div class="error">🎯自分と⚔️相手は別の人にしてください</div>`;
     } else {
       const heroStack = stacks[heroIndex]!;
@@ -1376,7 +1393,8 @@ function renderPayouts(): void {
 }
 
 function setPayouts(values: number[]): void {
-  payoutsArr = values.length > 0 ? values.slice() : [100];
+  const sanitized = sanitizePayoutsArray(values);
+  payoutsArr = sanitized.length > 0 ? sanitized : [100];
   syncPayoutsInput();
   renderPayouts();
   recompute();
@@ -2071,6 +2089,9 @@ function runNash(): void {
   const heroIndex = players.findIndex((p) => p.role === "hero");
   const villainIndex = players.findIndex((p) => p.role === "villain");
 
+  // heroIndex === villainIndex はデータモデル上到達不能 (Player.role は排他的な
+  // 単一値のため)。heroIndex/villainIndex がともに -1 のケースは
+  // `heroIndex < 0 || villainIndex < 0` で既に弾かれる。防御的に残す。
   if (heroIndex < 0 || villainIndex < 0 || heroIndex === villainIndex) {
     nashStatus.innerHTML = `<span class="error">🎯自分と⚔️相手をそれぞれ1人ずつ指定してください</span>`;
     return;
@@ -2986,8 +3007,26 @@ function practiceLesson(p: PracticeProblem): string {
  * 「賞金プールの 0.5% 未満しか懸かっていない」を縮退とみなす相対判定にする。
  */
 function isDegenerateProblem(p: PracticeProblem): boolean {
-  const totalPayout = p.payouts.reduce((a, b) => a + b, 0);
+  // 実際に賞金がかかるのは先頭 min(プレイヤー数, payouts数) 件のみ (ICM の numPlaces
+  // と同じ規則)。payouts の方が要素数が多い場合 (例: 7人分ペイのテーブルを3人戦に
+  // 流用) に余剰分まで合計してしまうと totalPayout が過大になり、縮退判定の
+  // 閾値 (0.5%) が実質より緩くなってしまう。
+  const numPlaces = Math.min(p.scenarioPlayers.length, p.payouts.length);
+  const totalPayout = p.payouts.slice(0, numPlaces).reduce((a, b) => a + b, 0);
   return p.equityWin - p.equityLose < totalPayout * 0.005;
+}
+
+// generateRandomPracticeProblem() は ICM の丸め誤差等でごく稀に例外を投げ得る
+// (core 側で大部分は修正済みだが、防御的に多重で守る)。試行ループの中で1回
+// 例外が出ても、そのドローを捨てて次の乱数で再試行するだけにし、練習画面全体を
+// クラッシュさせない。
+function tryGenerateRandomPracticeProblem(): PracticeProblem | null {
+  try {
+    return generateRandomPracticeProblem();
+  } catch (err) {
+    console.warn("練習問題の生成に失敗しました。このドローを破棄します:", err);
+    return null;
+  }
 }
 
 function generatePracticeProblem(): PracticeProblem {
@@ -2995,18 +3034,28 @@ function generatePracticeProblem(): PracticeProblem {
     // RP モード: 縮退問題を除外し、RP が自明に小さい問題と
     // スライダー上限 (50%) を超えて回答不能な問題も避ける
     for (let attempt = 0; attempt < 100; attempt++) {
-      const p = generateRandomPracticeProblem();
+      const p = tryGenerateRandomPracticeProblem();
+      if (!p) continue;
       const rp = problemRP(p);
       if (!isDegenerateProblem(p) && rp >= 3 && rp <= 50) return p;
     }
-    return generateRandomPracticeProblem();
+    for (let attempt = 0; attempt < 20; attempt++) {
+      const p = tryGenerateRandomPracticeProblem();
+      if (p) return p;
+    }
+    throw new Error("練習問題の生成に失敗しました");
   }
   const band = DIFF_BANDS[practiceDifficulty];
   for (let attempt = 0; attempt < 100; attempt++) {
-    const p = generateRandomPracticeProblem();
+    const p = tryGenerateRandomPracticeProblem();
+    if (!p) continue;
     if (!isDegenerateProblem(p) && Math.abs(p.heroEq - p.dollarEV) <= band) return p;
   }
-  return generateRandomPracticeProblem();
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const p = tryGenerateRandomPracticeProblem();
+    if (p) return p;
+  }
+  throw new Error("練習問題の生成に失敗しました");
 }
 
 // streak / accuracy / review state
@@ -3589,11 +3638,14 @@ function judgePracticeRP(guess: number): void {
 // streak / stats / review をまとめて更新 (call/fold・RP 両モード共通)
 // 復習リストの重複判定用キー。ハンド・相手コールレンジに加え、スタック構成
 // (順序込み) と支払いテーブルも含めて正規化し、"似ているが別シナリオ" の問題を
-// 誤って重複扱いしないようにする。
+// 誤って重複扱いしないようにする。savedMode (出題時のモード) も含めることで、
+// 同じシナリオでも callfold と rp では別問題として扱う (旧データの undefined は
+// "callfold" として正規化し、実際に callfold で保存された問題と衝突させる)。
 function practiceProblemDedupKey(p: PracticeProblemBase): string {
   const stacks = p.scenarioPlayers.map((sp) => `${sp.role}:${sp.position}:${sp.stack}`).join(",");
   const payouts = p.payouts.join(",");
-  return `${p.heroHand}|${p.villainCallRangePct}|${stacks}|${payouts}`;
+  const mode = p.savedMode ?? "callfold";
+  return `${p.heroHand}|${p.villainCallRangePct}|${stacks}|${payouts}|${mode}`;
 }
 
 function recordPracticeResult(isCorrect: boolean, p: PracticeProblem): void {
@@ -3607,7 +3659,10 @@ function recordPracticeResult(isCorrect: boolean, p: PracticeProblem): void {
   saveStreak(streak);
   if (!isCorrect) {
     const list = loadReviewList();
-    const key = practiceProblemDedupKey(p);
+    // p.savedMode は「復習リストから再出題された場合」のみ入っているため、
+    // 新規に間違えた問題のキーは「今出題しているモード」を使って正規化する
+    // (保存時の savedMode: practiceMode と一致させる)。
+    const key = practiceProblemDedupKey({ ...p, savedMode: practiceMode });
     if (!list.some((x) => practiceProblemDedupKey(x) === key)) {
       // 出題時のモードを記録し、復習では同じモードで再出題する
       list.unshift({ ...p, savedMode: practiceMode });
