@@ -68,4 +68,18 @@ describe("calculateRequiredEquity", () => {
       calculateRequiredEquity({ callAmount: 10, potIfWin: 10, bubbleFactor: -1 }),
     ).toThrow();
   });
+
+  it("BF=0 は例外を投げず dollarEV=0 (常にコールが正しい) になる", () => {
+    // calculateBubbleFactor は「勝っても負けても $ エクイティが変わらない」
+    // 丸め誤差ケースで loss を 0 にクランプし bf=0 を返すことがある。
+    // callEffective = call * 0 = 0 なので dollarEV = 0 / (0 + potIfWin) = 0。
+    const r = calculateRequiredEquity({
+      callAmount: 10,
+      potIfWin: 20,
+      bubbleFactor: 0,
+    });
+    expect(r.dollarEV).toBe(0);
+    expect(r.cEV).toBeCloseTo(10 / 30, 6);
+    expect(Number.isFinite(r.riskPremium)).toBe(true);
+  });
 });
