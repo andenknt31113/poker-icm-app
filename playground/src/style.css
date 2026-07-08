@@ -11,7 +11,7 @@
   --bad: #ef5350;
   --hero-summary-bg: linear-gradient(135deg, #0f1d2e 0%, #1a2840 100%);
   --hero-summary-shadow: 0 2px 12px rgba(56, 168, 255, 0.25);
-  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 
 :root[data-theme="light"] {
@@ -37,7 +37,7 @@ body {
   margin: 0;
   padding: 0;
   font-family:
-    -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+    "Inter", -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN",
     "Yu Gothic", sans-serif;
   background: var(--bg);
   color: var(--text);
