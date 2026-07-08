@@ -3,6 +3,11 @@ export { calculateBubbleFactor } from "./bf.js";
 export { calculateRequiredEquity } from "./equity.js";
 export { calculatePotOdds } from "./potOdds.js";
 export type { PotOddsInput, PotOddsResult, PotOddsPosition } from "./potOdds.js";
+export { calculateExactCallEquity } from "./callDecision.js";
+export type {
+  ExactCallEquityInput,
+  ExactCallEquityResult,
+} from "./callDecision.js";
 export { solveHUNash } from "./nash.js";
 export type {
   BubbleFactorInput,
