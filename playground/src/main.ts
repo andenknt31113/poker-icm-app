@@ -3846,6 +3846,210 @@ document.getElementById("practice-area")?.addEventListener("click", (e) => {
   if (ans) judgePractice(ans);
 });
 
+// ===== ⚡ クイック判断 =====
+// 実戦中、手番が来るまでの短時間で「このオールインをコールしていいか」を
+// 最小入力 (自分/相手スタック・残り人数・ペイ構造・相手レンジ想定) で判定する。
+// モデル: hero=BB がオールインを受ける想定。villain は "OTHER"（残り2人なら "SB"）。
+// その他のプレイヤーは (hero+villain)/2 の平均スタックで概算し、SB は「その他」の先頭が務める。
+(() => {
+  const QJ_PAYOUT_PRESETS: Record<string, number[]> = {
+    std: [50, 30, 20],
+    topheavy: [65, 35],
+    ft9: [40, 25, 15, 10, 5, 3, 2],
+    satellite: [33.4, 33.3, 33.3],
+  };
+
+  /** 残り人数 < ペイ数の場合、ペイ配列を残り人数分に切り詰め合計100に再正規化する。 */
+  function qjAdjustPayouts(payouts: number[], remaining: number): number[] {
+    if (remaining >= payouts.length) return payouts;
+    const truncated = payouts.slice(0, remaining);
+    const total = truncated.reduce((a, b) => a + b, 0);
+    if (total <= 0) return truncated;
+    return truncated.map((p) => (p / total) * 100);
+  }
+
+  const qjHeroStackInput = $<HTMLInputElement>("qj-hero-stack");
+  const qjVillainStackInput = $<HTMLInputElement>("qj-villain-stack");
+  const qjRemainingSelect = $<HTMLSelectElement>("qj-remaining");
+  const qjCallDisplayEl = $<HTMLDivElement>("qj-call-display");
+  const qjPayoutPillsEl = $<HTMLDivElement>("qj-payout-pills");
+  const qjRangePillsEl = $<HTMLDivElement>("qj-range-pills");
+  const qjResultEl = $<HTMLDivElement>("qj-result");
+  const qjBannerEl = $<HTMLDivElement>("qj-banner");
+  const qjGridEl = $<HTMLDivElement>("qj-grid");
+  const qjGridCountEl = $<HTMLParagraphElement>("qj-grid-count");
+
+  let qjPickedHand: HandNotation | null = null;
+  let qjPayoutKey = "std";
+  let qjRangePct = 30;
+  let qjDebounceTimer: number | undefined;
+
+  interface QjComputed {
+    requiredEquity: number;
+    cEV: number;
+    rp: number;
+    villainRange: Set<HandNotation>;
+    callAmount: number;
+  }
+
+  function qjCompute(): QjComputed {
+    const heroStack = Number(qjHeroStackInput.value);
+    const villainStack = Number(qjVillainStackInput.value);
+    const remaining = Number(qjRemainingSelect.value);
+
+    if (!Number.isFinite(heroStack) || heroStack < 1 || heroStack > 200) {
+      throw new Error("自分スタックは 1〜200 BB の範囲で入力してください");
+    }
+    if (!Number.isFinite(villainStack) || villainStack < 1 || villainStack > 200) {
+      throw new Error("相手スタックは 1〜200 BB の範囲で入力してください");
+    }
+    if (!Number.isInteger(remaining) || remaining < 2 || remaining > 9) {
+      throw new Error("残り人数は 2〜9 で指定してください");
+    }
+
+    // スタック配列: [hero, villain, その他 (残り人数-2) 人]。その他は (hero+villain)/2 の平均で概算。
+    const otherCount = remaining - 2;
+    const otherStack = (heroStack + villainStack) / 2;
+    const stacks: number[] = [heroStack, villainStack, ...Array(otherCount).fill(otherStack)];
+    const heroIndex = 0;
+    const villainIndex = 1;
+    // 残り2人なら villain が SB を兼務。残り3人以上なら SB は「その他」の先頭 (index 2)。
+    const villainPosition: PotOddsPosition = remaining === 2 ? "SB" : "OTHER";
+    const sbPlayerIndex = remaining >= 3 ? 2 : undefined;
+
+    const sb = DEFAULT_SB;
+    const bb = DEFAULT_BB;
+    const ante = DEFAULT_ANTE;
+
+    const podds = calculatePotOdds({
+      heroStack: stacks[heroIndex]!,
+      villainStack: stacks[villainIndex]!,
+      heroPosition: "BB",
+      villainPosition,
+      sb, bb, ante,
+    });
+
+    const callAmount = podds.callAmount;
+    const potIfWin = podds.potIfWin;
+    qjCallDisplayEl.textContent = `${(Math.round(callAmount * 100) / 100).toFixed(1)} BB`;
+
+    const rawPayouts = QJ_PAYOUT_PRESETS[qjPayoutKey]!;
+    const payouts = qjAdjustPayouts(rawPayouts, remaining);
+
+    const exact = calculateExactCallEquity({
+      stacks,
+      payouts,
+      heroIndex,
+      villainIndex,
+      heroPosition: "BB",
+      villainPosition,
+      sbPlayerIndex,
+      sb, bb, ante,
+    });
+
+    const req = calculateRequiredEquity({ callAmount, potIfWin, bubbleFactor: 1 });
+    const cEV = req.cEV;
+    const rp = exact.requiredEquity - cEV;
+    const villainRange = topRange(qjRangePct);
+
+    return {
+      requiredEquity: exact.requiredEquity,
+      cEV,
+      rp,
+      villainRange,
+      callAmount,
+    };
+  }
+
+  function qjRender(): void {
+    try {
+      const c = qjCompute();
+      const reqPct = c.requiredEquity * 100;
+      const cevPct = c.cEV * 100;
+      const rpPct = c.rp * 100;
+      qjResultEl.innerHTML = `
+        <div class="qj-required-big">${reqPct.toFixed(1)}<span class="qj-pct-sign">%</span></div>
+        <div class="qj-required-label">必要勝率 (厳密ICM)</div>
+        <div class="qj-sub-line">cEV ${cevPct.toFixed(1)}% <span class="qj-sub-sep">・</span> RP ${rpPct >= 0 ? "+" : ""}${rpPct.toFixed(1)}%</div>
+      `;
+
+      let inRangeCount = 0;
+      renderGrid(qjGridEl, (hand) => {
+        const eq = equity(hand, c.villainRange);
+        const inRange = eq >= c.requiredEquity;
+        if (inRange) inRangeCount++;
+        let cls = inRange ? "in-range-hero" : "";
+        if (hand === qjPickedHand) cls += " picked";
+        return cls;
+      });
+      const coveragePct = (inRangeCount / 169) * 100;
+      qjGridCountEl.textContent = `169中 ${inRangeCount} ハンド (${coveragePct.toFixed(0)}%)`;
+
+      if (qjPickedHand) {
+        const eq = equity(qjPickedHand, c.villainRange) * 100;
+        const isCall = eq >= reqPct;
+        const margin = eq - reqPct;
+        qjBannerEl.classList.remove("hidden");
+        qjBannerEl.classList.toggle("qj-banner-call", isCall);
+        qjBannerEl.classList.toggle("qj-banner-fold", !isCall);
+        const verdict = isCall
+          ? `✅ コール (${margin >= 0 ? "+" : ""}${margin.toFixed(1)}%)`
+          : `❌ フォールド (${margin.toFixed(1)}%)`;
+        qjBannerEl.innerHTML = `<strong>${qjPickedHand}</strong>: equity ${eq.toFixed(1)}% ${isCall ? "≥" : "<"} 必要 ${reqPct.toFixed(1)}% → ${verdict}`;
+      } else {
+        qjBannerEl.classList.add("hidden");
+        qjBannerEl.innerHTML = "";
+      }
+    } catch (err) {
+      qjResultEl.innerHTML = `<div class="qj-error-msg">⚠️ ${err instanceof Error ? err.message : "入力値を確認してください"}</div>`;
+      qjCallDisplayEl.textContent = "-- BB";
+      qjGridEl.innerHTML = "";
+      qjGridCountEl.textContent = "";
+      qjBannerEl.classList.add("hidden");
+      qjBannerEl.innerHTML = "";
+    }
+  }
+
+  function qjScheduleRender(): void {
+    if (qjDebounceTimer !== undefined) window.clearTimeout(qjDebounceTimer);
+    qjDebounceTimer = window.setTimeout(() => {
+      qjDebounceTimer = undefined;
+      qjRender();
+    }, 150);
+  }
+
+  qjHeroStackInput.addEventListener("input", qjScheduleRender);
+  qjVillainStackInput.addEventListener("input", qjScheduleRender);
+  qjRemainingSelect.addEventListener("change", () => qjRender());
+
+  qjPayoutPillsEl.addEventListener("click", (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(".qj-pill");
+    if (!btn || !btn.dataset.payout) return;
+    qjPayoutPillsEl.querySelectorAll(".qj-pill").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    qjPayoutKey = btn.dataset.payout;
+    qjRender();
+  });
+
+  qjRangePillsEl.addEventListener("click", (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(".qj-pill");
+    if (!btn || !btn.dataset.range) return;
+    qjRangePillsEl.querySelectorAll(".qj-pill").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    qjRangePct = Number(btn.dataset.range);
+    qjRender();
+  });
+
+  qjGridEl.addEventListener("click", (e) => {
+    const cell = (e.target as HTMLElement).closest<HTMLDivElement>(".hand-cell");
+    if (!cell) return;
+    qjPickedHand = cell.title;
+    qjRender();
+  });
+
+  qjRender();
+})();
+
 // ===== 初期描画 =====
 applyTab(activeTab);
 renderPlayers();

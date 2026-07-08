@@ -66,6 +66,64 @@
       </nav>
 
 
+      <section class="card quick-judge-card" data-tab="setup">
+        <h2>⚡ クイック判断</h2>
+        <p class="hint">オールインを受けた時の即席判定。詳細な分析は下のプリセット/プレイヤー設定へ</p>
+
+        <div class="qj-inputs">
+          <label>
+            自分スタック (BB)
+            <input id="qj-hero-stack" type="number" inputmode="decimal" value="15" min="1" max="200" step="1" />
+          </label>
+          <label>
+            相手スタック (BB)
+            <input id="qj-villain-stack" type="number" inputmode="decimal" value="20" min="1" max="200" step="1" />
+          </label>
+          <label>
+            残り人数
+            <select id="qj-remaining" class="qj-select">
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6" selected>6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+              <option value="9">9</option>
+            </select>
+          </label>
+          <label>
+            コール額 (自動)
+            <div id="qj-call-display" class="qj-call-readonly">-- BB</div>
+          </label>
+        </div>
+
+        <div class="presets-label" style="margin-top: 10px;">ペイ構造</div>
+        <div id="qj-payout-pills" class="qj-pills">
+          <button type="button" class="qj-pill active" data-payout="std">標準 Top3 (50/30/20)</button>
+          <button type="button" class="qj-pill" data-payout="topheavy">トップヘビー (65/35)</button>
+          <button type="button" class="qj-pill" data-payout="ft9">9-max FT (40/25/15/10/5/3/2)</button>
+          <button type="button" class="qj-pill" data-payout="satellite">🛰 サテライト (33.4/33.3/33.3)</button>
+        </div>
+
+        <div class="presets-label" style="margin-top: 10px;">相手のシャブレンジ想定</div>
+        <div id="qj-range-pills" class="qj-pills">
+          <button type="button" class="qj-pill" data-range="15">タイト Top15%</button>
+          <button type="button" class="qj-pill active" data-range="30">普通 Top30%</button>
+          <button type="button" class="qj-pill" data-range="50">ルース Top50%</button>
+        </div>
+
+        <div id="qj-result" class="qj-result"></div>
+        <div id="qj-banner" class="qj-banner hidden"></div>
+
+        <div class="qj-grid-wrap">
+          <div id="qj-grid" class="hand-grid"></div>
+          <p class="hint" id="qj-grid-count"></p>
+        </div>
+
+        <p class="hint qj-footnote">※ 相手の全額オールインを受けた想定 (SB0.5/BB1/Ante1)。他プレイヤーは平均スタックの概算。オールイン以外や正確な分析は下の詳細設定で</p>
+      </section>
+
       <section class="card" data-tab="setup">
         <h2>シナリオプリセット</h2>
         <p class="hint">タップで状況一発セット。スタック・ポジション・ペイアウトを丸ごと反映。</p>
