@@ -2182,9 +2182,18 @@ function applyTab(tab: TabId): void {
   if (tab === "practice") updatePracticeProgress();
   // 練習タブを開いたとき、まだ問題が無ければ自動出題する
   // (オンボーディングの「練習を始める」CTA や、前回タブが練習で復元された場合も含む)
+  // ただし初回 (導入コース未修了・このセッションでスキップもしていない) は
+  // ランダム出題の代わりに導入コースの案内カードを出す。チュートリアル進行中に
+  // タブ移動で中断された場合は、現在のステップのナレーションからやり直す。
   if (tab === "practice" && !currentProblem) {
-    currentProblem = generatePracticeProblem();
-    renderPracticeProblem(currentProblem);
+    if (tutorialActive) {
+      renderTutorialNarrationStep();
+    } else if (!isTutorialDone() && !tutorialSkippedSession) {
+      renderTutorialIntroCard();
+    } else {
+      currentProblem = generatePracticeProblem();
+      renderPracticeProblem(currentProblem);
+    }
   }
   // ハンド or Nash タブ初表示時にスムーズトップ
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -3583,8 +3592,22 @@ function judgePractice(answer: "call" | "fold"): void {
   const verdict = correctIsCall ? "✅ コール (+EV)" : "❌ フォールド (-EV)";
   fb.className = "practice-feedback " + (isCorrect ? "correct" : "wrong");
 
-  recordPracticeResult(isCorrect, p);
+  // チュートリアル中は streak/正解率/復習リストに記録しない
+  if (!tutorialActive) {
+    recordPracticeResult(isCorrect, p);
+  }
+  const tutorialDef = tutorialActive ? TUTORIAL_PROBLEMS[tutorialStep] : undefined;
+  const tutorialBlockHtml = tutorialDef
+    ? `
+    <div class="tutorial-explain-card">
+      <div class="tutorial-explain-title">💡 教訓: ${tutorialDef.title}</div>
+      <div class="tutorial-explain-body">${tutorialDef.lesson}</div>
+      <button id="tutorial-next-btn" type="button" class="solve-btn">次の問題へ →</button>
+    </div>
+  `
+    : "";
   fb.innerHTML = `
+    ${tutorialBlockHtml}
     <div class="verdict-row">
       <div class="verdict">${isCorrect ? "🎉 正解!" : "😅 不正解"} 正答: ${verdict}</div>
       <button id="practice-next-btn-top" type="button" class="solve-btn compact">🎲 次へ</button>
@@ -3717,6 +3740,7 @@ function judgePractice(answer: "call" | "fold"): void {
 
 const practiceNewBtn = document.getElementById("practice-new-btn");
 practiceNewBtn?.addEventListener("click", () => {
+  if (tutorialActive) setTutorialActive(false); // 導入コース中に離脱したら中断扱い
   currentProblem = generatePracticeProblem();
   renderPracticeProblem(currentProblem);
 });
@@ -3744,6 +3768,7 @@ document.querySelectorAll<HTMLButtonElement>(".mode-btn").forEach((btn) => {
     practiceMode = btn.dataset.mode as PracticeMode;
     try { localStorage.setItem("poker-icm-practice-mode", practiceMode); } catch { /* ignore */ }
     updatePracticeHint();
+    if (tutorialActive) setTutorialActive(false); // 導入コース中に離脱したら中断扱い
     // モードを変えたら新しい問題を出題
     currentProblem = generatePracticeProblem();
     renderPracticeProblem(currentProblem);
@@ -3766,6 +3791,7 @@ document.querySelectorAll<HTMLButtonElement>(".diff-btn").forEach((btn) => {
 
 // 復習ボタン: 不正解だった問題を順に出題
 document.getElementById("practice-review-btn")?.addEventListener("click", () => {
+  if (tutorialActive) setTutorialActive(false); // 導入コース中に離脱したら中断扱い
   const list = loadReviewList();
   if (list.length === 0) {
     const area = document.getElementById("practice-area");
@@ -3798,8 +3824,12 @@ document.getElementById("practice-area")?.addEventListener("click", (e) => {
   const target = e.target as HTMLElement;
   // 次の問題ボタン (フィードバック内・下部 / 上部どちらも同じ挙動)
   if (target.closest("#practice-next-btn") || target.closest("#practice-next-btn-top")) {
-    currentProblem = generatePracticeProblem();
-    renderPracticeProblem(currentProblem);
+    if (tutorialActive) {
+      advanceTutorial();
+    } else {
+      currentProblem = generatePracticeProblem();
+      renderPracticeProblem(currentProblem);
+    }
     window.scrollTo({ top: 0, behavior: "smooth" });
     return;
   }
@@ -3816,8 +3846,9 @@ document.getElementById("practice-area")?.addEventListener("click", (e) => {
     judgePracticeRP(Number(choiceBtn.dataset.value));
     return;
   }
-  // 取り込みボタン
+  // 取り込みボタン (チュートリアル中は CSS で非表示だが念のためガード)
   if (target.closest("#practice-apply-btn")) {
+    if (tutorialActive) return;
     if (!currentProblem) return;
     const p = currentProblem;
     players.length = 0;
@@ -3844,6 +3875,279 @@ document.getElementById("practice-area")?.addEventListener("click", (e) => {
   if (!btn) return;
   const ans = btn.dataset.answer as "call" | "fold" | undefined;
   if (ans) judgePractice(ans);
+});
+
+// ===== 🎓 導入コース (固定5問チュートリアル) =====
+// 初心者が ICM の核心を5問で体感する固定カリキュラム。
+// スコア/streak/復習リストには一切記録しない (recordPracticeResult を呼ばない)。
+const TUTORIAL_DONE_KEY = "poker-icm-tutorial-done";
+
+interface TutorialProblemDef {
+  title: string;
+  narration: string;
+  lesson: string;
+  base: PracticeProblemBase;
+}
+
+// 各問題のパラメータは core の厳密 ICM 計算 (calculateExactCallEquity) で
+// 事前検証済み (report 参照)。以下はその検証結果:
+//   Q1: margin(heroEq-厳密必要勝率) = +16.8% (明確なコール, RP=0)
+//   Q2: RP = +2.35%, margin = +12.8% (小さい RP でも明確なコール)
+//   Q3: cEV必要勝率(44.1%) < heroEq(53.6%) < 厳密必要勝率(63.4%) ← ICMプレッシャーの核心
+//   Q4: margin = -3.2% (わずかにフォールド)
+//   Q5: margin = -12.4% (AKs でも大きくフォールド)
+const TUTORIAL_PROBLEMS: TutorialProblemDef[] = [
+  {
+    title: "チップ＝賞金の世界",
+    narration:
+      "全員が同じ賞金を狙う一発勝負 (Winner Take All)。ここではチップ＝そのまま賞金です。",
+    lesson:
+      "WTA では順位という概念がなく、勝率がそのまま賞金期待値に直結します。だから Risk Premium はゼロ。cEV（チップ的な必要勝率）だけで判断できる、ICM プレッシャーが存在しない最もシンプルなケースです。",
+    base: {
+      scenarioPlayers: [
+        { stack: 20, role: "hero", position: "BB" },
+        { stack: 15, role: "villain", position: "BTN" },
+        { stack: 25, role: "other", position: "SB" },
+      ],
+      payouts: [100],
+      sb: DEFAULT_SB,
+      bb: DEFAULT_BB,
+      totalAnte: DEFAULT_ANTE,
+      villainCallRangePct: 50,
+      heroHand: "AQo",
+    },
+  },
+  {
+    title: "相手をカバーしている",
+    narration:
+      "相手のスタックはあなたより少ない。もし負けても、あなたはまだトーナメントに残ります。",
+    lesson:
+      "自分が相手をカバーしている（負けても飛ばない）ときは、Risk Premium は小さめ。cEV に近い感覚でコールして大丈夫です。ICM プレッシャーは『自分が飛ぶリスク』があるときに強く働きます。",
+    base: {
+      scenarioPlayers: [
+        { stack: 30, role: "hero", position: "BB" },
+        { stack: 12, role: "villain", position: "BTN" },
+        { stack: 20, role: "other", position: "SB" },
+      ],
+      payouts: [50, 30, 20],
+      sb: DEFAULT_SB,
+      bb: DEFAULT_BB,
+      totalAnte: DEFAULT_ANTE,
+      villainCallRangePct: 40,
+      heroHand: "AJo",
+    },
+  },
+  {
+    title: "バブルの罠",
+    narration:
+      "あなたは4人残りの3番手。チップリーダーがオールイン。ハンドは悪くない…がこれはワナかもしれない。",
+    lesson:
+      "チップの上ではコールが得（cEV的には+EV）でも、厳密な ICM で計算すると必要勝率が跳ね上がり、フォールドが正解になることがあります。これが『ICM プレッシャー』の正体。飛べば賞金の可能性が消える一方、生き残れば上位の賞金が保証されるため、コールのリスクは額面以上に重いのです。",
+    base: {
+      scenarioPlayers: [
+        { stack: 15, role: "hero", position: "BB" },
+        { stack: 22, role: "villain", position: "BTN" },
+        { stack: 10, role: "other", position: "SB" },
+        { stack: 18, role: "other", position: "CO" },
+      ],
+      payouts: [50, 30, 20],
+      sb: DEFAULT_SB,
+      bb: DEFAULT_BB,
+      totalAnte: DEFAULT_ANTE,
+      villainCallRangePct: 40,
+      heroHand: "A9o",
+    },
+  },
+  {
+    title: "短スタックを待て",
+    narration:
+      "卓にはあなたよりずっと短いスタックの選手がいます。相手のオールインはギリギリ微妙なラインです。",
+    lesson:
+      "自分より短いスタックが残っている間は、その選手が先に飛んでくれれば自動的に順位が上がります。無理にコールしなくても得られる価値がある以上、微妙なラインはフォールド優位になりがちです。",
+    base: {
+      scenarioPlayers: [
+        { stack: 18, role: "hero", position: "BB" },
+        { stack: 20, role: "villain", position: "BTN" },
+        { stack: 7, role: "other", position: "SB" },
+        { stack: 25, role: "other", position: "CO" },
+      ],
+      payouts: [50, 30, 20],
+      sb: DEFAULT_SB,
+      bb: DEFAULT_BB,
+      totalAnte: DEFAULT_ANTE,
+      villainCallRangePct: 30,
+      heroHand: "AKo",
+    },
+  },
+  {
+    title: "サテライトの掟",
+    narration:
+      "上位がほぼ均等に賞金を得るサテライト。生き残ることそのものが目的です。AKs のような好ハンドでも、一度考え直しましょう。",
+    lesson:
+      "賞金がほぼ均等なサテライトでは、順位を1つ落とすことの価値がとても大きく、勝っても得られる価値はわずかです。そのため Risk Premium が極端に跳ね上がり、AKs や QQ 級の強いハンドでもフォールドが正解になることが多いのです。『残ること』が全てを支配します。",
+    base: {
+      scenarioPlayers: [
+        { stack: 18, role: "hero", position: "BB" },
+        { stack: 20, role: "villain", position: "BTN" },
+        { stack: 16, role: "other", position: "SB" },
+        { stack: 20, role: "other", position: "CO" },
+      ],
+      payouts: [33.4, 33.3, 33.3],
+      sb: DEFAULT_SB,
+      bb: DEFAULT_BB,
+      totalAnte: DEFAULT_ANTE,
+      villainCallRangePct: 15,
+      heroHand: "AKs",
+    },
+  },
+];
+
+let tutorialActive = false;
+let tutorialStep = 0;
+// このセッション中に「スキップ」した場合のみ true。tutorial-done は立てないので
+// 次回訪問時はまた案内カードが出る。
+let tutorialSkippedSession = false;
+
+function isTutorialDone(): boolean {
+  try {
+    return localStorage.getItem(TUTORIAL_DONE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function setTutorialActive(v: boolean): void {
+  tutorialActive = v;
+  document.body.classList.toggle("tutorial-active", v);
+}
+
+function tutorialProgressHtml(step: number): string {
+  const dots = TUTORIAL_PROBLEMS.map((_, i) => {
+    const cls = i === step ? "active" : i < step ? "done" : "";
+    return `<span class="tutorial-dot ${cls}"></span>`;
+  }).join("");
+  return `
+    <div class="tutorial-progress">
+      <span class="tutorial-progress-label">🎓 導入コース ${step + 1}/${TUTORIAL_PROBLEMS.length}</span>
+      <div class="tutorial-dots">${dots}</div>
+    </div>
+  `;
+}
+
+function renderTutorialIntroCard(): void {
+  const area = document.getElementById("practice-area");
+  if (!area) return;
+  area.innerHTML = `
+    <div class="tutorial-intro-card">
+      <div class="tutorial-intro-title">🎓 まずは導入コース (5問・3分)</div>
+      <div class="tutorial-intro-body">ICM の核心を体感しよう</div>
+      <button id="tutorial-intro-start-btn" type="button" class="solve-btn">▶ 導入コースを始める</button>
+      <button id="tutorial-intro-skip-btn" type="button" class="tutorial-skip-link">スキップして通常練習</button>
+    </div>
+  `;
+}
+
+function renderTutorialNarrationStep(): void {
+  const area = document.getElementById("practice-area");
+  if (!area) return;
+  const def = TUTORIAL_PROBLEMS[tutorialStep]!;
+  currentProblem = null;
+  area.innerHTML = `
+    ${tutorialProgressHtml(tutorialStep)}
+    <div class="tutorial-narration-card">
+      <div class="tutorial-narration-title">問題 ${tutorialStep + 1}: ${def.title}</div>
+      <div class="tutorial-narration-body">${def.narration}</div>
+      <button id="tutorial-start-problem-btn" type="button" class="solve-btn">この状況を見る →</button>
+    </div>
+  `;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function renderTutorialProblemStep(): void {
+  const def = TUTORIAL_PROBLEMS[tutorialStep]!;
+  const p: PracticeProblem = { ...def.base, ...computeDerivedFields(def.base) };
+  // チュートリアルは常に call/fold 判定 UI で出題する (RP当てモードが選択中でも固定)
+  const savedMode = practiceMode;
+  practiceMode = "callfold";
+  renderPracticeProblem(p);
+  practiceMode = savedMode;
+  const area = document.getElementById("practice-area");
+  if (area) area.insertAdjacentHTML("afterbegin", tutorialProgressHtml(tutorialStep));
+}
+
+function advanceTutorial(): void {
+  tutorialStep += 1;
+  if (tutorialStep >= TUTORIAL_PROBLEMS.length) {
+    finishTutorial();
+  } else {
+    renderTutorialNarrationStep();
+  }
+}
+
+function finishTutorial(): void {
+  try {
+    localStorage.setItem(TUTORIAL_DONE_KEY, "1");
+  } catch {
+    /* ignore */
+  }
+  setTutorialActive(false);
+  currentProblem = null;
+  const area = document.getElementById("practice-area");
+  if (!area) return;
+  area.innerHTML = `
+    <div class="tutorial-complete-card">
+      <div class="tutorial-complete-title">🎉 導入コース修了！</div>
+      <div class="tutorial-complete-sub">学んだ5つの教訓</div>
+      <ol class="tutorial-complete-list">
+        ${TUTORIAL_PROBLEMS.map(
+          (d, i) => `<li><strong>${i + 1}. ${d.title}</strong><br>${d.lesson}</li>`,
+        ).join("")}
+      </ol>
+      <button id="tutorial-goto-practice-btn" type="button" class="solve-btn">🎲 通常練習へ</button>
+    </div>
+  `;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function startTutorial(): void {
+  setTutorialActive(true);
+  tutorialStep = 0;
+  currentProblem = null;
+  renderTutorialNarrationStep();
+}
+
+document.getElementById("practice-tutorial-btn")?.addEventListener("click", () => {
+  startTutorial();
+});
+
+// チュートリアル専用の各種ボタンの委譲ハンドラ (既存の #practice-area クリックハンドラとは別に登録)
+document.getElementById("practice-area")?.addEventListener("click", (e) => {
+  const target = e.target as HTMLElement;
+  if (target.closest("#tutorial-intro-start-btn")) {
+    startTutorial();
+    return;
+  }
+  if (target.closest("#tutorial-intro-skip-btn")) {
+    tutorialSkippedSession = true;
+    currentProblem = generatePracticeProblem();
+    renderPracticeProblem(currentProblem);
+    return;
+  }
+  if (target.closest("#tutorial-start-problem-btn")) {
+    renderTutorialProblemStep();
+    return;
+  }
+  if (target.closest("#tutorial-next-btn")) {
+    advanceTutorial();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+  if (target.closest("#tutorial-goto-practice-btn")) {
+    currentProblem = generatePracticeProblem();
+    renderPracticeProblem(currentProblem);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
 });
 
 // ===== ⚡ クイック判断 =====
