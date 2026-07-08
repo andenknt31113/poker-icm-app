@@ -1692,6 +1692,135 @@ input[type="range"]::-moz-range-thumb {
 .practice-details-body strong {
   color: var(--text);
 }
+
+/* ===== 成績の推移パネル ===== */
+.practice-progress {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 0 0 10px;
+  font-size: 12px;
+}
+.practice-progress summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: bold;
+  user-select: none;
+  padding: 4px 0;
+}
+#practice-progress-body {
+  padding: 10px 0 4px;
+}
+.progress-headline {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.progress-headline-item {
+  flex: 1;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  text-align: center;
+}
+.progress-headline-label {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+.progress-headline-value {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: bold;
+  line-height: 1.2;
+}
+.progress-headline-sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.progress-block {
+  margin-bottom: 12px;
+}
+.progress-block-title {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.progress-sparkline-wrap {
+  margin-bottom: 12px;
+}
+.progress-sparkline-svg {
+  display: block;
+  width: 100%;
+  height: 60px;
+  overflow: hidden;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.progress-sparkline-empty {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 10px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+.progress-breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.progress-breakdown-grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+.progress-breakdown-cell {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 6px;
+  text-align: center;
+}
+.progress-breakdown-label {
+  font-size: 10px;
+  color: var(--muted);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.progress-breakdown-value {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: bold;
+}
+.progress-breakdown-sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+.progress-reset-btn {
+  width: 100%;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.progress-reset-btn:hover {
+  border-color: var(--bad);
+  color: var(--bad);
+}
+
 .practice-info {
   display: flex;
   flex-direction: column;
