@@ -778,10 +778,24 @@ function recompute(): void {
       bubbleFactor: bf,
     });
 
+    const rpSign = eq.riskPremium >= 0 ? "+" : "";
     eqResult.innerHTML = `
-      <div class="row"><span class="label">cEV 必要勝率</span><span class="value">${fmtPct(eq.cEV)}</span></div>
-      <div class="row"><span class="label">$EV 必要勝率</span><span class="value big">${fmtPct(eq.dollarEV)}</span></div>
-      <div class="row"><span class="label">Risk Premium</span><span class="value">${fmtPct(eq.riskPremium, 2)}</span></div>
+      <div class="eq-flow">
+        <div class="eq-flow-item eq-flow-cev">
+          <div class="eq-flow-label">cEV</div>
+          <div class="eq-flow-value">${fmtPct(eq.cEV)}</div>
+        </div>
+        <div class="eq-flow-arrow">→</div>
+        <div class="eq-flow-item eq-flow-rp">
+          <div class="eq-flow-label">+ Risk Premium</div>
+          <div class="eq-flow-value">${rpSign}${fmtPct(eq.riskPremium, 2)}</div>
+        </div>
+        <div class="eq-flow-arrow">→</div>
+        <div class="eq-flow-item eq-flow-final">
+          <div class="eq-flow-label">$EV (True Req)</div>
+          <div class="eq-flow-value">${fmtPct(eq.dollarEV)}</div>
+        </div>
+      </div>
     `;
 
     // レンジ比較
@@ -3226,6 +3240,67 @@ function renderRoundTable(
   `;
 }
 
+// 「トーナメント状態」bento カード: 左にブラインド/ペイ、右に Hero スタック。
+// extraHtml には呼び出し側で用意した下段(Villain All-in 警告 or RP用の call/return 情報)を差し込む。
+function renderScenarioBento(p: PracticeProblem, extraHtml: string): string {
+  const totalPrize = p.payouts.reduce((a, b) => a + b, 0);
+  const payoutStr = p.payouts
+    .map((v) => ((v / totalPrize) * 100).toFixed(0) + "%")
+    .join(" / ");
+  const hero = p.scenarioPlayers.find((pl) => pl.role === "hero");
+  const heroStack = hero ? hero.stack : 0;
+  return `
+    <div class="scenario-card">
+      <div class="scenario-glow scenario-glow-a"></div>
+      <div class="scenario-glow scenario-glow-b"></div>
+      <div class="scenario-main">
+        <div class="scenario-col">
+          <div class="scenario-label">TOURNAMENT STATE</div>
+          <div class="scenario-fact"><span class="scenario-fact-key">Blinds</span><span class="scenario-fact-val">SB ${p.sb} / BB ${p.bb}</span></div>
+          <div class="scenario-fact"><span class="scenario-fact-key">アンティ合計</span><span class="scenario-fact-val">${p.totalAnte}</span></div>
+          <div class="scenario-fact"><span class="scenario-fact-key">ペイ</span><span class="scenario-fact-val">${payoutStr}</span></div>
+        </div>
+        <div class="scenario-divider"></div>
+        <div class="scenario-col scenario-col-hero">
+          <div class="scenario-label">HERO STACK</div>
+          <div class="scenario-hero-stack">${heroStack}<span class="scenario-unit">BB</span></div>
+        </div>
+      </div>
+      ${extraHtml}
+    </div>
+  `;
+}
+
+// ハンド表記 (例 "AKs" / "QQ" / "T9o") をトランプ2枚の視覚表現に変換。
+// suited は ♠♠、offsuit/pair は ♠♥ (♥/♦ は赤、♠/♣ は濃色)。
+function renderHeroHandCards(hand: HandNotation): string {
+  const isPair = hand.length === 2;
+  const r1 = hand[0]!;
+  const r2 = hand[1]!;
+  const suited = !isPair && hand[2] === "s";
+  const label = (r: string) => (r === "T" ? "10" : r);
+  const suit2 = suited ? "♠" : "♥";
+  const red2 = !suited;
+  const cardHtml = (
+    rank: string,
+    suit: string,
+    red: boolean,
+    rotateCls: string,
+  ) => `
+    <div class="playing-card ${rotateCls}${red ? " pc-red" : ""}">
+      <div class="pc-corner pc-corner-tl">${label(rank)}<br />${suit}</div>
+      <div class="pc-suit-center">${suit}</div>
+      <div class="pc-corner pc-corner-br">${label(rank)}<br />${suit}</div>
+    </div>
+  `;
+  return `
+    <div class="hero-hand-cards" aria-hidden="true">
+      ${cardHtml(r1, "♠", false, "pc-rotate-l")}
+      ${cardHtml(r2, suit2, red2, "pc-rotate-r")}
+    </div>
+  `;
+}
+
 let currentProblem: PracticeProblem | null = null;
 
 function renderPracticeProblem(rawP: PracticeProblem): void {
@@ -3238,20 +3313,23 @@ function renderPracticeProblem(rawP: PracticeProblem): void {
   }
   const area = document.getElementById("practice-area");
   if (!area) return;
-  const totalPrize = p.payouts.reduce((a, b) => a + b, 0);
-  const payoutStr = p.payouts
-    .map((v) => ((v / totalPrize) * 100).toFixed(0) + "%")
-    .join(" / ");
+  const villain = p.scenarioPlayers.find((pl) => pl.role === "villain");
+  const villainWarnHtml = `
+    <div class="scenario-warn">
+      <div class="scenario-warn-head">⚠️ Villain (${villain?.position || "?"}) All-in</div>
+      <div class="scenario-warn-body">
+        <span class="scenario-warn-item">Stack <strong>${villain ? villain.stack : "?"} BB</strong></span>
+        <span class="scenario-warn-item">Est. Push Range <strong>Top ${p.villainCallRangePct}%</strong></span>
+      </div>
+    </div>
+  `;
   area.innerHTML = `
     <div id="practice-table-wrapper"></div>
-    <div class="practice-info">
-      ペイ: <strong>${payoutStr}</strong><br />
-      ブラインド: SB ${p.sb} / BB ${p.bb} / アンティ合計 ${p.totalAnte}<br />
-      <span style="color: var(--bad);">⚔️ 相手の push 想定レンジ: <strong>Top ${p.villainCallRangePct}%</strong> (下のグリッド参照)</span>
-    </div>
+    ${renderScenarioBento(p, villainWarnHtml)}
     <p class="hint">※ Top X% は本ツール定義の強度順。他ツールとは一致しない場合があります。</p>
     <h3 style="font-size: 13px; margin: 12px 0 4px;">⚔️ 相手の push レンジ 🔴</h3>
     <div id="practice-villain-grid" class="hand-grid"></div>
+    ${renderHeroHandCards(p.heroHand)}
     <div class="practice-hand">あなたのハンド: ${p.heroHand}</div>
     <div class="practice-actions">
       <button class="practice-btn call" data-answer="call">✅ コール</button>
@@ -3282,18 +3360,16 @@ function renderPracticeProblem(rawP: PracticeProblem): void {
 function renderPracticeProblemRP(p: PracticeProblem): void {
   const area = document.getElementById("practice-area");
   if (!area) return;
-  const totalPrize = p.payouts.reduce((a, b) => a + b, 0);
-  const payoutStr = p.payouts
-    .map((v) => ((v / totalPrize) * 100).toFixed(0) + "%")
-    .join(" / ");
   const tol = RP_TOLERANCE[practiceDifficulty];
+  const rpInfoHtml = `
+    <div class="scenario-rp-info">
+      <span class="scenario-warn-item">コール額 (リスク) <strong>${p.callAmount.toFixed(1)} BB</strong></span>
+      <span class="scenario-warn-item">リターン <strong>${p.potIfWin.toFixed(1)} BB</strong></span>
+    </div>
+  `;
   area.innerHTML = `
     <div id="practice-table-wrapper"></div>
-    <div class="practice-info">
-      ペイ: <strong>${payoutStr}</strong><br />
-      ブラインド: SB ${p.sb} / BB ${p.bb} / アンティ合計 ${p.totalAnte}<br />
-      コール額 (リスク): <strong>${p.callAmount.toFixed(1)} BB</strong> ／ リターン: <strong>${p.potIfWin.toFixed(1)} BB</strong>
-    </div>
+    ${renderScenarioBento(p, rpInfoHtml)}
     <div class="rp-quiz">
       <div class="rp-quiz-q">📊 この状況の Risk Premium は？</div>
       <div class="rp-slider-value" id="rp-slider-value">+20.0%</div>

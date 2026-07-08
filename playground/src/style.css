@@ -288,6 +288,61 @@ th {
   color: var(--accent);
 }
 
+/* ===== 必要勝率フロー: cEV → + Risk Premium → $EV(True Req) ===== */
+.eq-flow {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 8px 6px;
+  margin-top: 10px;
+}
+.eq-flow-item {
+  flex: 1 1 90px;
+  min-width: 84px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 8px;
+  text-align: center;
+}
+.eq-flow-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 16px;
+  flex: 0 0 auto;
+  padding: 0 2px;
+}
+.eq-flow-label {
+  font-size: 9.5px;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  line-height: 1.25;
+}
+.eq-flow-value {
+  font-family: var(--mono);
+  font-size: clamp(13px, 4vw, 16px);
+  font-weight: bold;
+  color: var(--text);
+}
+.eq-flow-rp .eq-flow-value {
+  color: var(--warn);
+}
+.eq-flow-final {
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg));
+  border-color: var(--accent);
+}
+.eq-flow-final .eq-flow-value {
+  font-size: clamp(16px, 5vw, 22px);
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  text-underline-offset: 3px;
+}
+
 .verdict {
   font-size: 14px;
   line-height: 1.7;
@@ -1837,14 +1892,196 @@ input[type="range"]::-moz-range-thumb {
 .practice-info strong {
   color: var(--text);
 }
-.practice-hand {
-  font-size: 30px;
-  font-weight: bold;
-  text-align: center;
-  letter-spacing: 0.05em;
-  margin: 12px 0;
+
+/* ===== シナリオ bento カード: Tournament State / Hero Stack ===== */
+.scenario-card {
+  position: relative;
+  overflow: hidden;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 10px;
+}
+.scenario-glow {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  filter: blur(40px);
+  pointer-events: none;
+  z-index: 0;
+}
+.scenario-glow-a {
+  top: -60px;
+  right: -40px;
+  background: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.scenario-glow-b {
+  bottom: -70px;
+  left: -50px;
+  background: color-mix(in srgb, var(--bad) 35%, transparent);
+}
+.scenario-main {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+}
+.scenario-col {
+  flex: 1;
+  min-width: 0;
+}
+.scenario-divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--border);
+}
+.scenario-col-hero {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  text-align: right;
+}
+.scenario-label {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.scenario-fact {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  padding: 2px 0;
+}
+.scenario-fact-key {
+  color: var(--muted);
+}
+.scenario-fact-val {
   font-family: var(--mono);
+  color: var(--text);
+  text-align: right;
+  white-space: nowrap;
+}
+.scenario-hero-stack {
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: bold;
   color: var(--accent);
+  line-height: 1.15;
+}
+.scenario-unit {
+  font-size: 13px;
+  font-weight: normal;
+  color: var(--muted);
+  margin-left: 3px;
+}
+.scenario-warn,
+.scenario-rp-info {
+  position: relative;
+  z-index: 1;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.scenario-warn-head {
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--bad);
+  margin-bottom: 4px;
+}
+.scenario-warn-body,
+.scenario-rp-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.scenario-warn-body strong,
+.scenario-rp-info strong {
+  font-family: var(--mono);
+  color: var(--text);
+}
+.scenario-warn-body strong {
+  color: var(--bad);
+}
+
+/* ===== Hero ハンド: トランプ2枚の視覚表現 ===== */
+.hero-hand-cards {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 16px 0 4px;
+}
+.playing-card {
+  position: relative;
+  width: 74px;
+  height: 104px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
+  color: #1a2027;
+  font-family: var(--mono);
+  transition: transform 0.15s ease;
+}
+.playing-card.pc-red {
+  color: #d32f2f;
+}
+.playing-card.pc-rotate-l {
+  transform: rotate(-6deg);
+  margin-right: -14px;
+  z-index: 1;
+}
+.playing-card.pc-rotate-r {
+  transform: rotate(6deg);
+  z-index: 2;
+}
+.hero-hand-cards:hover .playing-card.pc-rotate-l {
+  transform: rotate(-6deg) translateY(-4px);
+}
+.hero-hand-cards:hover .playing-card.pc-rotate-r {
+  transform: rotate(6deg) translateY(-4px);
+}
+.pc-corner {
+  position: absolute;
+  left: 6px;
+  top: 4px;
+  font-size: 13px;
+  font-weight: bold;
+  line-height: 1.05;
+  text-align: center;
+}
+.pc-corner-br {
+  left: auto;
+  top: auto;
+  right: 6px;
+  bottom: 4px;
+  transform: rotate(180deg);
+}
+.pc-suit-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 32px;
+}
+.practice-hand {
+  font-size: 12px;
+  font-weight: normal;
+  text-align: center;
+  letter-spacing: 0.03em;
+  margin: 2px 0 12px;
+  font-family: var(--mono);
+  color: var(--muted);
 }
 .practice-actions {
   display: grid;
