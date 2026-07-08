@@ -11,7 +11,7 @@
   --bad: #ef5350;
   --hero-summary-bg: linear-gradient(135deg, #0f1d2e 0%, #1a2840 100%);
   --hero-summary-shadow: 0 2px 12px rgba(56, 168, 255, 0.25);
-  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 
 :root[data-theme="light"] {
@@ -22,6 +22,7 @@
   --text: #1a2027;
   --muted: #6b7280;
   --accent: #0288d1;
+  --heading: #01579b;
   --good: #2e7d32;
   --warn: #ef6c00;
   --bad: #c62828;
@@ -37,7 +38,7 @@ body {
   margin: 0;
   padding: 0;
   font-family:
-    -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+    "Inter", -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN",
     "Yu Gothic", sans-serif;
   background: var(--bg);
   color: var(--text);
@@ -77,7 +78,7 @@ h1 {
 .card h2 {
   font-size: 16px;
   margin: 0 0 8px;
-  color: var(--accent);
+  color: var(--heading, var(--accent));
 }
 
 .hint {
@@ -89,18 +90,22 @@ h1 {
 input[type="text"],
 input[type="number"] {
   width: 100%;
-  background: var(--bg);
+  background: var(--bg-deep);
   border: 1px solid var(--border);
   border-radius: 6px;
   color: var(--text);
   padding: 8px 10px;
   font-family: var(--mono);
   font-size: 14px;
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.4);
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 input:focus {
   outline: none;
   border-color: var(--accent);
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.4),
+    0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 .grid {
@@ -240,6 +245,39 @@ th {
   font-size: 12px;
 }
 
+/* ICM 表: 320px 幅などの狭い画面でヘッダー文言 (例: "$ エクイティ") が
+   単語途中で折り返されるのを防ぐ。表自体は #icm-table { width: 100% } の
+   ままカード内に収まるよう、狭幅では見出しフォントもわずかに縮める。 */
+#icm-table th {
+  white-space: nowrap;
+}
+@media (max-width: 360px) {
+  #icm-table th {
+    font-size: 10.5px;
+    padding: 6px 4px;
+  }
+  #icm-table td {
+    padding: 6px 4px;
+  }
+}
+
+/* Hero 行のアクセント（左端バー + ごく薄い背景） */
+#icm-rows tr.hero-row {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+#icm-rows tr.hero-row td:first-child {
+  position: relative;
+}
+#icm-rows tr.hero-row td:first-child::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--accent);
+}
+
 .result {
   font-family: var(--mono);
   font-size: 14px;
@@ -265,6 +303,61 @@ th {
 .value.big {
   font-size: 20px;
   color: var(--accent);
+}
+
+/* ===== 必要勝率フロー: cEV → + Risk Premium → $EV(True Req) ===== */
+.eq-flow {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 8px 6px;
+  margin-top: 10px;
+}
+.eq-flow-item {
+  flex: 1 1 90px;
+  min-width: 84px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 8px;
+  text-align: center;
+}
+.eq-flow-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 16px;
+  flex: 0 0 auto;
+  padding: 0 2px;
+}
+.eq-flow-label {
+  font-size: 9.5px;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  line-height: 1.25;
+}
+.eq-flow-value {
+  font-family: var(--mono);
+  font-size: clamp(13px, 4vw, 16px);
+  font-weight: bold;
+  color: var(--text);
+}
+.eq-flow-rp .eq-flow-value {
+  color: var(--warn);
+}
+.eq-flow-final {
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg));
+  border-color: var(--accent);
+}
+.eq-flow-final .eq-flow-value {
+  font-size: clamp(16px, 5vw, 22px);
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  text-underline-offset: 3px;
 }
 
 .verdict {
@@ -451,26 +544,58 @@ body {
 }
 .tab-btn {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
   background: transparent;
   border: none;
-  color: var(--muted);
-  padding: 10px 4px;
+  /* タブバー背景は両テーマとも暗色固定 (rgba(15,20,25,0.95)) のため、
+     文字色もテーマの --muted に依らず暗背景向けの固定色にする。
+     ライトテーマの --muted (#6b7280) だとコントラスト不足になる。 */
+  color: #9aa3ad;
+  padding: 8px 2px;
   font-size: 11px;
   font-weight: 500;
   cursor: pointer;
   border-radius: 8px;
-  transition: all 0.15s;
+  transition: color 0.15s, transform 0.1s;
   font-family: inherit;
   white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
 }
+.tab-icon {
+  font-size: 20px;
+  line-height: 1;
+  filter: grayscale(0.4) opacity(0.75);
+  transition: filter 0.15s;
+}
+.tab-label {
+  font-size: 10px;
+  letter-spacing: -0.02em;
+}
 .tab-btn.active {
-  background: var(--accent);
-  color: #000;
+  color: var(--accent);
   font-weight: bold;
+  position: relative;
+}
+.tab-btn.active::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--accent);
+}
+.tab-btn.active .tab-icon {
+  filter: none;
 }
 .tab-btn:not(.active):active {
-  background: rgba(56, 168, 255, 0.15);
+  transform: scale(0.94);
 }
 
 /* タブで非表示にするセクション */
@@ -640,18 +765,19 @@ body {
   background: rgba(239, 83, 80, 0.1);
 }
 .scenario-btn {
-  background: var(--bg);
+  background: var(--card);
   color: var(--text);
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 8px 12px;
+  border-radius: 999px;
+  padding: 8px 14px;
   font-size: 12px;
   cursor: pointer;
   font-family: inherit;
+  transition: border-color 0.15s, background 0.15s;
 }
 .scenario-btn:hover {
   border-color: var(--accent);
-  background: var(--card);
+  background: var(--bg);
 }
 .scenario-btn:active {
   background: var(--accent);
@@ -1056,6 +1182,8 @@ body {
   background: var(--card);
   color: var(--accent);
   font-weight: bold;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
 .hidden {
@@ -1110,9 +1238,45 @@ body {
 }
 
 .range-label input[type="range"] {
+  margin-top: 6px;
+}
+
+/* ===== レンジスライダー共通 (シアンの光るつまみ) ===== */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
   width: 100%;
-  margin-top: 4px;
-  accent-color: var(--accent);
+  height: 20px;
+  background: transparent;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+}
+input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 18px;
+  width: 18px;
+  margin-top: -7px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+input[type="range"]::-moz-range-thumb {
+  height: 18px;
+  width: 18px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent);
 }
 
 .range-grids {
@@ -1130,7 +1294,7 @@ body {
 
 .hand-grid {
   display: grid;
-  grid-template-columns: repeat(13, 1fr);
+  grid-template-columns: repeat(13, minmax(0, 1fr));
   gap: 1px;
   font-family: var(--mono);
   font-size: 9px;
@@ -1156,6 +1320,10 @@ body {
 }
 .direction-tab {
   flex: 1;
+  /* flex item のデフォルト min-width:auto + white-space:nowrap のままだと、
+     320px 幅で文言 (例:「自分の call レンジを求める」) がボタン/カード幅を
+     超えてカード自体が横スクロールする。shrink 可能にした上で折り返す。 */
+  min-width: 0;
   background: transparent;
   border: none;
   color: var(--muted);
@@ -1164,13 +1332,15 @@ body {
   font-family: inherit;
   border-radius: 6px;
   cursor: pointer;
-  white-space: nowrap;
+  white-space: normal;
+  line-height: 1.3;
   -webkit-tap-highlight-color: transparent;
 }
 .direction-tab.active {
-  background: var(--accent);
-  color: #000;
+  background: var(--card);
+  color: var(--accent);
   font-weight: bold;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
 /* ===== ステッパー (+/- ボタン付き数値入力) ===== */
@@ -1322,6 +1492,8 @@ body {
   border-radius: 10px;
   padding: 4px 6px;
   min-width: 52px;
+  /* 幅を抑えて中央のチップ/Pot表示との重なりを防ぐ (スタック数値+単位は改行) */
+  max-width: 60px;
   font-size: 10px;
   font-family: var(--mono);
   transform: translate(-50%, -50%);
@@ -1349,6 +1521,12 @@ body {
   font-weight: bold;
   color: var(--text);
 }
+.round-table-seat .seat-stack-unit {
+  display: block;
+  font-size: 9px;
+  font-weight: normal;
+  color: var(--muted);
+}
 .round-table-center {
   position: absolute;
   top: 50%;
@@ -1365,18 +1543,18 @@ body {
   transform: translate(-50%, -50%);
   text-align: center;
   color: #ffcc66;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: bold;
   font-family: var(--mono);
   background: rgba(0, 0, 0, 0.55);
-  padding: 5px 10px;
+  padding: 4px 7px;
   border-radius: 999px;
   border: 1.5px solid rgba(255, 204, 102, 0.55);
   white-space: nowrap;
   z-index: 2;
 }
 .round-table-pot small {
-  font-size: 10px;
+  font-size: 9px;
   margin-left: 1px;
   opacity: 0.85;
 }
@@ -1387,8 +1565,8 @@ body {
   background: rgba(0, 0, 0, 0.55);
   border: 1.5px solid var(--border);
   border-radius: 999px;
-  padding: 2px 7px;
-  font-size: 11px;
+  padding: 2px 5px;
+  font-size: 10px;
   font-weight: bold;
   font-family: var(--mono);
   color: var(--text);
@@ -1440,12 +1618,13 @@ body {
 }
 .streak-badge,
 .acc-badge {
-  background: var(--bg);
+  background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 4px 8px;
+  border-radius: 999px;
+  padding: 5px 12px;
   font-family: var(--mono);
   color: var(--muted);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 .streak-badge.active {
   background: rgba(255, 167, 38, 0.18);
@@ -1488,6 +1667,121 @@ body {
   flex-wrap: wrap;
 }
 
+/* ===== 練習モード切替 ===== */
+.practice-mode {
+  display: flex;
+  gap: 2px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px;
+  margin: 8px 0;
+}
+.mode-btn {
+  flex: 1;
+  background: transparent;
+  color: var(--muted);
+  border: none;
+  padding: 8px 6px;
+  font-size: 13px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.mode-btn.active {
+  background: var(--accent);
+  color: #000;
+  font-weight: bold;
+}
+
+/* ===== RP 当てクイズ ===== */
+.rp-quiz {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  margin: 12px 0;
+}
+.rp-quiz-q {
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--text);
+  text-align: center;
+  margin-bottom: 6px;
+}
+.rp-slider-value {
+  font-size: 30px;
+  font-weight: bold;
+  font-family: var(--mono);
+  color: var(--accent);
+  text-align: center;
+  margin: 4px 0 8px;
+}
+.rp-slider {
+  width: 100%;
+  accent-color: var(--accent);
+  height: 32px;
+  margin: 0;
+}
+.rp-slider-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--muted);
+  font-family: var(--mono);
+}
+.rp-quiz-tol {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  margin: 8px 0 10px;
+}
+.rp-quiz .solve-btn {
+  width: 100%;
+}
+
+/* Easy モード: RP 当ての4択ピル */
+.rp-choices {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin: 6px 0 8px;
+}
+.rp-choice-btn {
+  background: var(--card);
+  color: var(--text);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 8px;
+  font-size: 16px;
+  font-weight: bold;
+  font-family: var(--mono);
+  cursor: pointer;
+  transition: border-color 0.1s ease, transform 0.06s ease, background 0.1s ease;
+}
+.rp-choice-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+.rp-choice-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.rp-choice-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.rp-choice-btn.correct-choice {
+  border-color: var(--good);
+  background: rgba(102, 187, 106, 0.18);
+  color: var(--good);
+  opacity: 1;
+}
+.rp-choice-btn.wrong-choice {
+  border-color: var(--bad);
+  background: rgba(239, 83, 80, 0.18);
+  color: var(--bad);
+  opacity: 1;
+}
+
 .practice-details {
   background: var(--bg);
   border: 1px solid var(--border);
@@ -1528,6 +1822,135 @@ body {
 .practice-details-body strong {
   color: var(--text);
 }
+
+/* ===== 成績の推移パネル ===== */
+.practice-progress {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 0 0 10px;
+  font-size: 12px;
+}
+.practice-progress summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: bold;
+  user-select: none;
+  padding: 4px 0;
+}
+#practice-progress-body {
+  padding: 10px 0 4px;
+}
+.progress-headline {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.progress-headline-item {
+  flex: 1;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  text-align: center;
+}
+.progress-headline-label {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+.progress-headline-value {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: bold;
+  line-height: 1.2;
+}
+.progress-headline-sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.progress-block {
+  margin-bottom: 12px;
+}
+.progress-block-title {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.progress-sparkline-wrap {
+  margin-bottom: 12px;
+}
+.progress-sparkline-svg {
+  display: block;
+  width: 100%;
+  height: 60px;
+  overflow: hidden;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.progress-sparkline-empty {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 10px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+.progress-breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.progress-breakdown-grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+.progress-breakdown-cell {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 6px;
+  text-align: center;
+}
+.progress-breakdown-label {
+  font-size: 10px;
+  color: var(--muted);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.progress-breakdown-value {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: bold;
+}
+.progress-breakdown-sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+.progress-reset-btn {
+  width: 100%;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.progress-reset-btn:hover {
+  border-color: var(--bad);
+  color: var(--bad);
+}
+
 .practice-info {
   display: flex;
   flex-direction: column;
@@ -1544,14 +1967,196 @@ body {
 .practice-info strong {
   color: var(--text);
 }
-.practice-hand {
-  font-size: 30px;
-  font-weight: bold;
-  text-align: center;
-  letter-spacing: 0.05em;
-  margin: 12px 0;
+
+/* ===== シナリオ bento カード: Tournament State / Hero Stack ===== */
+.scenario-card {
+  position: relative;
+  overflow: hidden;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 10px;
+}
+.scenario-glow {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  filter: blur(40px);
+  pointer-events: none;
+  z-index: 0;
+}
+.scenario-glow-a {
+  top: -60px;
+  right: -40px;
+  background: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.scenario-glow-b {
+  bottom: -70px;
+  left: -50px;
+  background: color-mix(in srgb, var(--bad) 35%, transparent);
+}
+.scenario-main {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+}
+.scenario-col {
+  flex: 1;
+  min-width: 0;
+}
+.scenario-divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--border);
+}
+.scenario-col-hero {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  text-align: right;
+}
+.scenario-label {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.scenario-fact {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  padding: 2px 0;
+}
+.scenario-fact-key {
+  color: var(--muted);
+}
+.scenario-fact-val {
   font-family: var(--mono);
+  color: var(--text);
+  text-align: right;
+  white-space: nowrap;
+}
+.scenario-hero-stack {
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: bold;
   color: var(--accent);
+  line-height: 1.15;
+}
+.scenario-unit {
+  font-size: 13px;
+  font-weight: normal;
+  color: var(--muted);
+  margin-left: 3px;
+}
+.scenario-warn,
+.scenario-rp-info {
+  position: relative;
+  z-index: 1;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.scenario-warn-head {
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--bad);
+  margin-bottom: 4px;
+}
+.scenario-warn-body,
+.scenario-rp-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.scenario-warn-body strong,
+.scenario-rp-info strong {
+  font-family: var(--mono);
+  color: var(--text);
+}
+.scenario-warn-body strong {
+  color: var(--bad);
+}
+
+/* ===== Hero ハンド: トランプ2枚の視覚表現 ===== */
+.hero-hand-cards {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 16px 0 4px;
+}
+.playing-card {
+  position: relative;
+  width: 74px;
+  height: 104px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
+  color: #1a2027;
+  font-family: var(--mono);
+  transition: transform 0.15s ease;
+}
+.playing-card.pc-red {
+  color: #d32f2f;
+}
+.playing-card.pc-rotate-l {
+  transform: rotate(-6deg);
+  margin-right: -14px;
+  z-index: 1;
+}
+.playing-card.pc-rotate-r {
+  transform: rotate(6deg);
+  z-index: 2;
+}
+.hero-hand-cards:hover .playing-card.pc-rotate-l {
+  transform: rotate(-6deg) translateY(-4px);
+}
+.hero-hand-cards:hover .playing-card.pc-rotate-r {
+  transform: rotate(6deg) translateY(-4px);
+}
+.pc-corner {
+  position: absolute;
+  left: 6px;
+  top: 4px;
+  font-size: 13px;
+  font-weight: bold;
+  line-height: 1.05;
+  text-align: center;
+}
+.pc-corner-br {
+  left: auto;
+  top: auto;
+  right: 6px;
+  bottom: 4px;
+  transform: rotate(180deg);
+}
+.pc-suit-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 32px;
+}
+.practice-hand {
+  font-size: 12px;
+  font-weight: normal;
+  text-align: center;
+  letter-spacing: 0.03em;
+  margin: 2px 0 12px;
+  font-family: var(--mono);
+  color: var(--muted);
 }
 .practice-actions {
   display: grid;
@@ -1560,24 +2165,27 @@ body {
   margin: 10px 0;
 }
 .practice-btn {
-  padding: 14px;
-  border: 2px solid var(--border);
-  background: var(--bg);
-  color: var(--text);
-  border-radius: 10px;
+  padding: 16px;
+  border: none;
+  color: #fff;
+  border-radius: 12px;
   font-size: 16px;
   font-weight: bold;
   font-family: inherit;
   cursor: pointer;
+  transition: transform 0.06s ease, box-shadow 0.06s ease;
 }
 .practice-btn.call {
-  border-color: var(--good);
+  background: var(--good);
+  box-shadow: 0 6px 0 0 color-mix(in srgb, var(--good) 62%, black);
 }
 .practice-btn.fold {
-  border-color: var(--bad);
+  background: var(--bad);
+  box-shadow: 0 6px 0 0 color-mix(in srgb, var(--bad) 62%, black);
 }
 .practice-btn:active {
-  transform: translateY(1px);
+  transform: translateY(6px);
+  box-shadow: 0 0 0 0 transparent;
 }
 .practice-feedback {
   background: var(--bg);
@@ -1600,6 +2208,186 @@ body {
   font-size: 18px;
   font-weight: bold;
   margin-bottom: 6px;
+}
+
+/* 判定直後: verdict + 「次へ」ボタンを横並びに (フィードバックが画面外にあっても
+   すぐ次の問題へ進めるように、下部の次へボタンと同じ挙動のボタンを上にも配置) */
+.verdict-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.verdict-row .verdict {
+  margin-bottom: 0;
+  flex: 1;
+}
+.solve-btn.compact {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  margin: 0;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* 教訓 (💡) 一行 */
+.practice-lesson {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+/* ===== 🎓 導入コース (固定5問チュートリアル) ===== */
+.tutorial-cta-btn {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, transparent), color-mix(in srgb, var(--warn) 70%, var(--accent)));
+  color: #051018;
+}
+/* チュートリアル中は設定に取り込むボタンを隠す (call/fold 判定に集中させる) */
+body.tutorial-active #practice-apply-btn {
+  display: none;
+}
+
+.tutorial-progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.tutorial-progress-label {
+  font-weight: bold;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.tutorial-dots {
+  display: flex;
+  gap: 6px;
+}
+.tutorial-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--border);
+  display: inline-block;
+}
+.tutorial-dot.done {
+  background: var(--good);
+}
+.tutorial-dot.active {
+  background: var(--accent);
+  transform: scale(1.3);
+}
+
+.tutorial-intro-card,
+.tutorial-narration-card,
+.tutorial-complete-card {
+  background: var(--card);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
+  border-radius: 14px;
+  padding: 20px 16px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+.tutorial-intro-title,
+.tutorial-narration-title,
+.tutorial-complete-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.tutorial-intro-body,
+.tutorial-narration-body {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+.tutorial-narration-body {
+  color: var(--text);
+}
+.tutorial-intro-card .solve-btn,
+.tutorial-narration-card .solve-btn,
+.tutorial-complete-card .solve-btn {
+  width: 100%;
+}
+.tutorial-skip-link {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: inherit;
+  margin-top: 10px;
+  padding: 4px;
+}
+.tutorial-skip-link:hover {
+  color: var(--text);
+}
+
+.tutorial-explain-card {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+.tutorial-explain-title {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.tutorial-explain-body {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.tutorial-explain-card .solve-btn {
+  width: 100%;
+  margin: 0;
+}
+
+.tutorial-complete-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.tutorial-complete-list {
+  text-align: left;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tutorial-complete-list li {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.tutorial-complete-list li strong {
+  display: block;
+  color: var(--text);
+  font-size: 13px;
+  margin-bottom: 4px;
 }
 
 /* 注意/警告ボックス */
@@ -1697,16 +2485,18 @@ body {
   background: var(--accent);
   color: #051018;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 10px 20px;
   font-size: 14px;
   font-weight: bold;
   cursor: pointer;
   margin: 8px 0;
-  transition: filter 0.15s ease, transform 0.05s ease;
+  box-shadow: 0 4px 14px 0 color-mix(in srgb, var(--accent) 38%, transparent);
+  transition: filter 0.15s ease, transform 0.05s ease, box-shadow 0.15s ease;
 }
 .solve-btn:hover:not(:disabled) {
   filter: brightness(1.1);
+  box-shadow: 0 6px 18px 0 color-mix(in srgb, var(--accent) 46%, transparent);
 }
 .solve-btn:active:not(:disabled) {
   transform: translateY(1px);
@@ -1715,6 +2505,7 @@ body {
   background: var(--border);
   color: var(--muted);
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 @media (max-width: 600px) {
@@ -1800,4 +2591,321 @@ footer a {
 }
 .autofill-table td:first-child { text-align: left; color: var(--muted); }
 .autofill-table .good { color: var(--good); }
+
+/* ===== PWA: iOS ホーム画面追加ヒントバナー ===== */
+.ios-install-banner {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(72px + env(safe-area-inset-bottom, 0) + 10px);
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  font-size: 12px;
+  color: var(--text);
+  animation: ios-banner-in 0.2s ease-out;
+}
+.ios-install-banner span {
+  flex: 1;
+  line-height: 1.5;
+}
+.ios-install-banner-close {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-family: inherit;
+}
+.ios-install-banner-close:active {
+  background: var(--border);
+}
+@keyframes ios-banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== オフライン状態インジケータ ===== */
+.offline-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--warn) 45%, transparent);
+  color: var(--warn);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+}
 .autofill-table .bad { color: var(--bad); }
+
+/* ===== オンボーディング（初回ガイド）/ 使い方ガイド モーダル ===== */
+.onboarding-modal,
+.guide-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.onboarding-modal.hidden,
+.guide-modal.hidden {
+  display: none;
+}
+.onboarding-modal-content,
+.guide-modal-content {
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  max-width: 720px;
+  max-height: 85vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.onboarding-modal-header,
+.guide-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.onboarding-modal-header h3,
+.guide-modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--accent);
+}
+.onboarding-skip {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 4px 2px;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+.guide-modal-close {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.onboarding-modal-body,
+.guide-modal-body {
+  padding: 14px;
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.65;
+}
+.onboarding-modal-body strong,
+.guide-modal-body strong {
+  color: var(--accent);
+}
+.onboarding-modal-body ol,
+.onboarding-modal-body ul {
+  margin: 6px 0;
+  padding-left: 22px;
+}
+.onboarding-modal-body li {
+  margin: 3px 0;
+}
+.onboarding-tab-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.onboarding-tab-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  margin: 0;
+}
+.onboarding-tab-icon {
+  font-size: 16px;
+}
+.onboarding-modal-footer {
+  padding: 10px 14px 14px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.onboarding-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+.onboarding-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border);
+}
+.onboarding-dot.active {
+  background: var(--accent);
+}
+.onboarding-next-btn {
+  width: 100%;
+  margin: 0;
+  text-align: center;
+}
+.onboarding-cta-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.onboarding-cta-row .solve-btn {
+  width: 100%;
+  margin: 0;
+}
+.guide-modal-body .howto {
+  margin: 0 0 10px;
+}
+.guide-reopen-btn {
+  margin-top: 4px;
+  width: 100%;
+}
+
+/* ===== 初回ヒントバー (セットアップタブ最上部) ===== */
+.first-hint-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: color-mix(in srgb, var(--accent) 10%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text);
+}
+.first-hint-bar span {
+  flex: 1;
+}
+.first-hint-bar-close {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-family: inherit;
+}
+.first-hint-bar-close:active {
+  background: var(--border);
+}
+
+/* ===== 🃏 ハンド別判定 (計算結果タブ・必要勝率カード内) ===== */
+.hv-section {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.hv-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 4px;
+}
+
+.hv-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 4px;
+}
+.hv-pill {
+  background: var(--card);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.hv-pill:hover {
+  border-color: var(--accent);
+}
+.hv-pill.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: bold;
+  background: color-mix(in srgb, var(--accent) 12%, var(--card));
+}
+
+.hv-banner {
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 8px 0;
+  border: 1px solid var(--border);
+  background: var(--bg-deep);
+}
+.hv-banner.hidden {
+  display: none;
+}
+.hv-banner-call {
+  border-color: color-mix(in srgb, var(--good) 60%, var(--border));
+  color: var(--good);
+}
+.hv-banner-fold {
+  border-color: color-mix(in srgb, var(--bad) 60%, var(--border));
+  color: var(--bad);
+}
+
+.hv-source-note {
+  margin-top: 0;
+  margin-bottom: 6px;
+}
+
+.hv-grid-wrap {
+  margin-top: 6px;
+}

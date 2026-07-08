@@ -1,5 +1,14 @@
+import "@fontsource/inter/latin-400.css";
+import "@fontsource/inter/latin-500.css";
+import "@fontsource/inter/latin-600.css";
+import "@fontsource/inter/latin-700.css";
+import "@fontsource/jetbrains-mono/latin-400.css";
+import "@fontsource/jetbrains-mono/latin-500.css";
+import "@fontsource/jetbrains-mono/latin-600.css";
+import "@fontsource/jetbrains-mono/latin-700.css";
 import {
   calculateBubbleFactor,
+  calculateExactCallEquity,
   calculateICM,
   calculatePotOdds,
   calculateRequiredEquity,
@@ -645,7 +654,8 @@ function recompute(): void {
         const role = players[i]?.role;
         const tag =
           role === "hero" ? " 🎯" : role === "villain" ? " ⚔️" : "";
-        return `<tr>
+        const rowClass = role === "hero" ? ' class="hero-row"' : "";
+        return `<tr${rowClass}>
           <td>${i + 1}${tag}</td>
           <td>${stack}</td>
           <td>${fmt(eq, 3)}</td>
@@ -768,14 +778,33 @@ function recompute(): void {
       bubbleFactor: bf,
     });
 
+    const rpSign = eq.riskPremium >= 0 ? "+" : "";
     eqResult.innerHTML = `
-      <div class="row"><span class="label">cEV 必要勝率</span><span class="value">${fmtPct(eq.cEV)}</span></div>
-      <div class="row"><span class="label">$EV 必要勝率</span><span class="value big">${fmtPct(eq.dollarEV)}</span></div>
-      <div class="row"><span class="label">Risk Premium</span><span class="value">${fmtPct(eq.riskPremium, 2)}</span></div>
+      <div class="eq-flow">
+        <div class="eq-flow-item eq-flow-cev">
+          <div class="eq-flow-label">cEV</div>
+          <div class="eq-flow-value">${fmtPct(eq.cEV)}</div>
+        </div>
+        <div class="eq-flow-arrow">→</div>
+        <div class="eq-flow-item eq-flow-rp">
+          <div class="eq-flow-label">+ Risk Premium</div>
+          <div class="eq-flow-value">${rpSign}${fmtPct(eq.riskPremium, 2)}</div>
+        </div>
+        <div class="eq-flow-arrow">→</div>
+        <div class="eq-flow-item eq-flow-final">
+          <div class="eq-flow-label">$EV (True Req)</div>
+          <div class="eq-flow-value">${fmtPct(eq.dollarEV)}</div>
+        </div>
+      </div>
     `;
 
     // レンジ比較
     renderRangeComparison(eq.dollarEV);
+
+    // 🃏 ハンド別判定 (🎯自分/⚔️相手が両方指定されている時のみ有効)
+    updateHandVerdictRequiredEquity(
+      heroIndex >= 0 && villainIndex >= 0 && heroIndex !== villainIndex ? eq.dollarEV : null,
+    );
 
     // Hero サマリー
     renderHeroSummary({
@@ -802,6 +831,7 @@ function recompute(): void {
     bfResult.innerHTML = "";
     eqResult.innerHTML = "";
     heroSummaryEl.classList.remove("active");
+    updateHandVerdictRequiredEquity(null);
   }
 }
 
@@ -2154,6 +2184,23 @@ function applyTab(tab: TabId): void {
       heroSum.style.display = ""; // CSS の .active 制御に戻す
     }
   }
+  // 練習タブ表示時に成績の推移パネルを更新
+  if (tab === "practice") updatePracticeProgress();
+  // 練習タブを開いたとき、まだ問題が無ければ自動出題する
+  // (オンボーディングの「練習を始める」CTA や、前回タブが練習で復元された場合も含む)
+  // ただし初回 (導入コース未修了・このセッションでスキップもしていない) は
+  // ランダム出題の代わりに導入コースの案内カードを出す。チュートリアル進行中に
+  // タブ移動で中断された場合は、現在のステップのナレーションからやり直す。
+  if (tab === "practice" && !currentProblem) {
+    if (tutorialActive) {
+      renderTutorialNarrationStep();
+    } else if (!isTutorialDone() && !tutorialSkippedSession) {
+      renderTutorialIntroCard();
+    } else {
+      currentProblem = generatePracticeProblem();
+      renderPracticeProblem(currentProblem);
+    }
+  }
   // ハンド or Nash タブ初表示時にスムーズトップ
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -2176,6 +2223,8 @@ function applyTheme(t: Theme): void {
   }
   const btn = document.getElementById("theme-toggle");
   if (btn) btn.textContent = t === "light" ? "☀️" : "🌙";
+  const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeColorMeta) themeColorMeta.setAttribute("content", t === "light" ? "#f5f7fa" : "#0f1419");
   try { localStorage.setItem(THEME_KEY, t); } catch { /* ignore */ }
 }
 const savedTheme = ((): Theme => {
@@ -2192,6 +2241,345 @@ document.getElementById("theme-toggle")?.addEventListener("click", () => {
   const cur = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
   applyTheme(cur === "dark" ? "light" : "dark");
 });
+
+// ===== オンボーディング（初回ガイド）& 使い方ガイド =====
+const ONBOARDING_DONE_KEY = "poker-icm-onboarding-done";
+const FIRST_HINT_DISMISSED_KEY = "poker-icm-first-hint-dismissed";
+
+function isOnboardingDone(): boolean {
+  try {
+    return localStorage.getItem(ONBOARDING_DONE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+function markOnboardingDone(): void {
+  try {
+    localStorage.setItem(ONBOARDING_DONE_KEY, "1");
+  } catch {
+    /* ignore */
+  }
+}
+function isFirstHintDismissed(): boolean {
+  try {
+    return localStorage.getItem(FIRST_HINT_DISMISSED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+function markFirstHintDismissed(): void {
+  try {
+    localStorage.setItem(FIRST_HINT_DISMISSED_KEY, "1");
+  } catch {
+    /* ignore */
+  }
+}
+
+// 初回ヒントバーを出すかどうかは起動時点で確定させる。
+// オンボーディング未完了 (= まだ一度も閉じていない) の間はずっと true になり、
+// 完了直後の同一セッションでも引き続き表示される。次回起動時は done フラグにより非表示。
+const shouldShowFirstHint = !isOnboardingDone() && !isFirstHintDismissed();
+
+const ONBOARDING_STEPS: { title: string; body: string }[] = [
+  {
+    title: "🎰 これは何？",
+    body: `
+      <p>
+        トーナメントの「チップ枚数」と「賞金への価値」は同じではありません。
+        本ツールはこの <strong>ICM プレッシャー</strong>を、数字で『計算』しながら
+        クイズで『練習』もできる無料アプリです。
+      </p>
+      <ul class="onboarding-tab-list">
+        <li><span class="onboarding-tab-icon">⚙️</span> 状況入力（スタック・ペイアウトなど）</li>
+        <li><span class="onboarding-tab-icon">📊</span> 計算結果（ICM・BF・必要勝率）</li>
+        <li><span class="onboarding-tab-icon">🃏</span> レンジ比較</li>
+        <li><span class="onboarding-tab-icon">🎯</span> Nash 均衡（push/fold の最適解）</li>
+        <li><span class="onboarding-tab-icon">🎲</span> 練習（クイズで実戦感覚）</li>
+      </ul>
+    `,
+  },
+  {
+    title: "⚡ まず触ってみる",
+    body: `
+      <p>おすすめの入り口は2つあります。</p>
+      <ol>
+        <li>
+          <strong>⚙️ セットアップ</strong>で<strong>シナリオプリセット</strong>をタップ →
+          <strong>📊 計算結果</strong>で ICM / BF をすぐ確認する
+        </li>
+        <li>
+          <strong>🎲 練習</strong>タブでクイズに答えながら感覚を掴む
+        </li>
+      </ol>
+      <p class="hint">どちらから始めても OK。行き来しながら覚えられます。</p>
+    `,
+  },
+  {
+    title: "📖 困ったら",
+    body: `
+      <p>
+        ヘッダー右上の <strong>❓</strong> ボタンから、いつでもこの使い方ガイドと
+        ICM / Bubble Factor などの用語解説を開けます。
+      </p>
+      <p class="hint">さっそく始めましょう。</p>
+    `,
+  },
+];
+
+let onboardingStep = 0;
+let onboardingModalEl: HTMLDivElement | null = null;
+
+function ensureOnboardingModal(): HTMLDivElement {
+  if (onboardingModalEl) return onboardingModalEl;
+  const modal = document.createElement("div");
+  modal.id = "onboarding-modal";
+  modal.className = "onboarding-modal hidden";
+  modal.innerHTML = `
+    <div class="onboarding-modal-content">
+      <div class="onboarding-modal-header">
+        <h3 id="onboarding-title"></h3>
+        <button type="button" class="onboarding-skip" id="onboarding-skip">スキップ</button>
+      </div>
+      <div class="onboarding-modal-body" id="onboarding-body"></div>
+      <div class="onboarding-modal-footer">
+        <div class="onboarding-dots" id="onboarding-dots"></div>
+        <div id="onboarding-footer-actions"></div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) closeOnboardingModal();
+  });
+  modal.querySelector("#onboarding-skip")?.addEventListener("click", () => {
+    closeOnboardingModal();
+  });
+  onboardingModalEl = modal;
+  return modal;
+}
+
+function renderOnboardingStep(): void {
+  const modal = ensureOnboardingModal();
+  const step = ONBOARDING_STEPS[onboardingStep];
+  if (!step) return;
+  const title = modal.querySelector("#onboarding-title");
+  const body = modal.querySelector("#onboarding-body");
+  const dots = modal.querySelector("#onboarding-dots");
+  const footerActions = modal.querySelector("#onboarding-footer-actions");
+  if (title) title.textContent = step.title;
+  if (body) body.innerHTML = step.body;
+  if (dots) {
+    dots.innerHTML = ONBOARDING_STEPS.map(
+      (_, i) => `<span class="onboarding-dot${i === onboardingStep ? " active" : ""}"></span>`,
+    ).join("");
+  }
+  if (footerActions) {
+    if (onboardingStep < ONBOARDING_STEPS.length - 1) {
+      footerActions.innerHTML = `<button type="button" class="solve-btn onboarding-next-btn" id="onboarding-next-btn">次へ →</button>`;
+      footerActions.querySelector("#onboarding-next-btn")?.addEventListener("click", () => {
+        onboardingStep++;
+        renderOnboardingStep();
+      });
+    } else {
+      footerActions.innerHTML = `
+        <div class="onboarding-cta-row">
+          <button type="button" class="solve-btn" id="onboarding-cta-practice">🎲 練習を始める</button>
+          <button type="button" class="solve-btn" id="onboarding-cta-setup" style="background: var(--card); color: var(--text); border: 1px solid var(--border);">⚙️ 自分で設定する</button>
+        </div>
+      `;
+      footerActions.querySelector("#onboarding-cta-practice")?.addEventListener("click", () => {
+        closeOnboardingModal();
+        applyTab("practice");
+      });
+      footerActions.querySelector("#onboarding-cta-setup")?.addEventListener("click", () => {
+        closeOnboardingModal();
+      });
+    }
+  }
+}
+
+function openOnboardingModal(): void {
+  onboardingStep = 0;
+  const modal = ensureOnboardingModal();
+  renderOnboardingStep();
+  modal.classList.remove("hidden");
+}
+
+function closeOnboardingModal(): void {
+  onboardingModalEl?.classList.add("hidden");
+  markOnboardingDone();
+}
+
+// ===== 使い方ガイド（❓ ボタン、常設） =====
+let guideModalEl: HTMLDivElement | null = null;
+
+function ensureGuideModal(): HTMLDivElement {
+  if (guideModalEl) return guideModalEl;
+  const modal = document.createElement("div");
+  modal.id = "guide-modal";
+  modal.className = "guide-modal hidden";
+  modal.innerHTML = `
+    <div class="guide-modal-content">
+      <div class="guide-modal-header">
+        <h3>📖 使い方ガイド</h3>
+        <button type="button" class="guide-modal-close" id="guide-modal-close" aria-label="閉じる">✕</button>
+      </div>
+      <div class="guide-modal-body">
+        <details class="howto">
+          <summary>⚙️ セットアップ — できること・使い方</summary>
+          <div class="howto-body">
+            <p>プレイヤーのスタック、ペイ構造、🎯自分/⚔️相手を設定してシナリオを作る画面。</p>
+            <ol>
+              <li>「シナリオプリセット」をタップして状況を一発セット</li>
+              <li>「プレイヤー」でスタックを調整（足りなければ + プレイヤー追加）</li>
+              <li>🎯自分 / ⚔️相手 をタップで指定</li>
+              <li>必要なら📝メモに気付きを残す</li>
+            </ol>
+          </div>
+        </details>
+        <details class="howto">
+          <summary>📊 計算結果 — できること・使い方</summary>
+          <div class="howto-body">
+            <p>ICM エクイティ、Bubble Factor、必要勝率 (cEV / $EV / RP) を自動計算する画面。</p>
+            <ol>
+              <li>⚙️で状況を入力（プリセットでも OK）</li>
+              <li>「ICM エクイティ」表で各プレイヤーの $ 価値を確認</li>
+              <li>「全員 vs 全員 BF マップ」で 🎯 vs ⚔️ のセルを確認</li>
+              <li>「🎯⚔️ から自動算出」を押して必要勝率でコール判断</li>
+              <li>「🃏 ハンド別判定」で相手レンジを選び、自分のハンドをタップして個別に call/fold を確認</li>
+            </ol>
+          </div>
+        </details>
+        <details class="howto">
+          <summary>🃏 ハンド比較 — できること・使い方</summary>
+          <div class="howto-body">
+            <p>相手の push/call レンジと自分のレンジを Top X% やカスタム編集で比較する画面。</p>
+            <ol>
+              <li>「自分の call を逆算」か「自分の push を逆算」を選ぶ</li>
+              <li>プリセットならスライダーで Top X% を調整、カスタムならグリッドのセルをタップして選択</li>
+              <li>グリッドの色分けで自分がコール/プッシュすべきハンドを確認</li>
+            </ol>
+          </div>
+        </details>
+        <details class="howto">
+          <summary>🎯 ナッシュ均衡 — できること・使い方</summary>
+          <div class="howto-body">
+            <p>HU push/fold の Nash 均衡（ICM 反映済み）を計算する画面。</p>
+            <ol>
+              <li>⚙️で 🎯自分 (pusher) と ⚔️相手 (caller) を指定</li>
+              <li>SB / BB / アンティ合計を設定</li>
+              <li>「Nash 計算」を押す</li>
+              <li>push レンジと call レンジのグリッドを見比べる</li>
+            </ol>
+          </div>
+        </details>
+        <details class="howto">
+          <summary>🎲 練習 — できること・使い方</summary>
+          <div class="howto-body">
+            <p>ランダムなシナリオでコール/フォールド判断や Risk Premium 当てを練習できる画面。</p>
+            <ol>
+              <li>難易度を選んで「🎲 新しい問題」を押す</li>
+              <li>相手の push 想定レンジと自分のハンドを見て ✅コール / ❌フォールドを判断（RP 当てモードはスライダーで数値回答）</li>
+              <li>正誤と計算式を確認し、間違えたら 📚復習 リストで解き直す</li>
+            </ol>
+          </div>
+        </details>
+        <details class="howto">
+          <summary>📚 用語ミニ解説</summary>
+          <div class="howto-body">
+            <h4>ICM (Independent Chip Model)</h4>
+            <p>
+              トナメのチップは賞金と1:1では換算できません（<strong>チップ ≠ 賞金価値</strong>）。
+              ICM はチップ構成を「今すぐ$に換金したらいくら？」に変換する定義です。
+              例: ICM% が 25% なら、平均して総賞金の 1/4 を持っていける期待値ということ。
+            </p>
+            <h4>Bubble Factor (BF)</h4>
+            <p>
+              <strong>負けた時の痛み ÷ 勝った時の嬉しさ</strong>を表す係数。
+              BF = 1.3 なら、cEV（チップ基準）より <strong>30% 余分にタイト</strong>に打つべきという意味です。
+            </p>
+            <h4>Risk Premium (RP)</h4>
+            <p>
+              cEV（チップだけで見た必要勝率）より<strong>何%余分に勝率が必要か</strong>を表す差分。
+              ICM プレッシャーが強い場面ほど RP は大きくなります。
+            </p>
+            <h4>Nash 均衡</h4>
+            <p>
+              🎯push 側も ⚔️call 側も、片方だけ戦略を変えても得をしない
+              「お互いに搾取されない」push/fold 戦略の組み合わせのことです。
+            </p>
+          </div>
+        </details>
+        <details class="howto">
+          <summary>❓ 「Top X%」とは</summary>
+          <div class="howto-body">
+            <p>
+              「Top X%」は本ツール独自のハンド強度ランキングに基づく上位 X% の簡易レンジです。
+              Sklansky-Chubukov など他ツールのランキングとは前提（サンプル数・想定シナリオなど）が異なるため、
+              <strong>同じ X% でも具体的なハンドの構成や数字が一致しない場合があります</strong>。
+              あくまで傾向を掴むための目安としてご利用ください。
+            </p>
+          </div>
+        </details>
+        <button type="button" class="solve-btn guide-reopen-btn" id="guide-reopen-onboarding-btn">🔄 もう一度はじめのガイドを見る</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.querySelector("#guide-modal-close")?.addEventListener("click", closeGuideModal);
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) closeGuideModal();
+  });
+  modal.querySelector("#guide-reopen-onboarding-btn")?.addEventListener("click", () => {
+    closeGuideModal();
+    openOnboardingModal();
+  });
+  guideModalEl = modal;
+  return modal;
+}
+
+function openGuideModal(): void {
+  ensureGuideModal().classList.remove("hidden");
+}
+function closeGuideModal(): void {
+  guideModalEl?.classList.add("hidden");
+}
+
+document.getElementById("help-btn")?.addEventListener("click", openGuideModal);
+
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  if (onboardingModalEl && !onboardingModalEl.classList.contains("hidden")) closeOnboardingModal();
+  if (guideModalEl && !guideModalEl.classList.contains("hidden")) closeGuideModal();
+});
+
+// ===== 初回ヒントバー（セットアップタブ最上部、シナリオプリセットの上） =====
+function insertFirstHintBar(): void {
+  if (!shouldShowFirstHint) return;
+  const firstSetupCard = document.querySelector('section.card[data-tab="setup"]');
+  if (!firstSetupCard || !firstSetupCard.parentElement) return;
+  const bar = document.createElement("div");
+  bar.id = "first-hint-bar";
+  bar.className = "first-hint-bar";
+  bar.dataset.tab = "setup";
+  bar.classList.toggle("hidden-tab", activeTab !== "setup");
+  const text = document.createElement("span");
+  text.innerHTML =
+    "👋 はじめてなら: <strong>プリセット</strong>をタップ → <strong>📊</strong>で結果を見る、か <strong>🎲</strong>で練習";
+  const closeBtn = document.createElement("button");
+  closeBtn.type = "button";
+  closeBtn.className = "first-hint-bar-close";
+  closeBtn.setAttribute("aria-label", "閉じる");
+  closeBtn.textContent = "✕";
+  closeBtn.addEventListener("click", () => {
+    bar.remove();
+    markFirstHintDismissed();
+  });
+  bar.appendChild(text);
+  bar.appendChild(closeBtn);
+  firstSetupCard.parentElement.insertBefore(bar, firstSetupCard);
+}
+insertFirstHintBar();
 
 // ===== タブ切替のスワイプ ジェスチャー =====
 (() => {
@@ -2248,8 +2636,121 @@ if ("serviceWorker" in navigator && location.protocol !== "file:") {
   });
 }
 
+// ===== PWA インストール導線 =====
+interface BeforeInstallPromptEvent extends Event {
+  readonly userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+  prompt(): Promise<void>;
+}
+
+function isStandaloneDisplay(): boolean {
+  const standaloneNav = (navigator as Navigator & { standalone?: boolean }).standalone;
+  return (
+    window.matchMedia?.("(display-mode: standalone)").matches === true ||
+    standaloneNav === true
+  );
+}
+
+if (!isStandaloneDisplay()) {
+  let deferredInstallPrompt: BeforeInstallPromptEvent | null = null;
+
+  const showInstallButton = (): void => {
+    if (document.getElementById("install-btn")) return;
+    const actions = document.querySelector(".header-actions");
+    if (!actions) return;
+    const btn = document.createElement("button");
+    btn.id = "install-btn";
+    btn.className = "header-btn";
+    btn.type = "button";
+    btn.title = "ホーム画面に追加";
+    btn.setAttribute("aria-label", "インストール");
+    btn.textContent = "📲";
+    btn.addEventListener("click", () => {
+      const prompt = deferredInstallPrompt;
+      if (!prompt) return;
+      prompt.prompt();
+      prompt.userChoice
+        .catch(() => {
+          /* 選択取得失敗は無視 */
+        })
+        .finally(() => {
+          deferredInstallPrompt = null;
+          btn.remove();
+        });
+    });
+    actions.appendChild(btn);
+  };
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e as BeforeInstallPromptEvent;
+    showInstallButton();
+  });
+
+  window.addEventListener("appinstalled", () => {
+    deferredInstallPrompt = null;
+    document.getElementById("install-btn")?.remove();
+  });
+
+  // iOS Safari は beforeinstallprompt 非対応 → 初回訪問時のみ案内バナーを表示
+  const IOS_INSTALL_HINT_KEY = "poker-icm-ios-install-hint";
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  if (isIOS) {
+    let alreadyShown = false;
+    try {
+      alreadyShown = localStorage.getItem(IOS_INSTALL_HINT_KEY) === "1";
+    } catch {
+      /* ignore */
+    }
+    if (!alreadyShown) {
+      const banner = document.createElement("div");
+      banner.className = "ios-install-banner";
+      const text = document.createElement("span");
+      text.textContent = "ホーム画面に追加でアプリとして使えます: 共有ボタン → ホーム画面に追加";
+      const closeBtn = document.createElement("button");
+      closeBtn.type = "button";
+      closeBtn.className = "ios-install-banner-close";
+      closeBtn.setAttribute("aria-label", "閉じる");
+      closeBtn.textContent = "✕";
+      const dismiss = (): void => {
+        banner.remove();
+        try {
+          localStorage.setItem(IOS_INSTALL_HINT_KEY, "1");
+        } catch {
+          /* ignore */
+        }
+      };
+      closeBtn.addEventListener("click", dismiss);
+      banner.appendChild(text);
+      banner.appendChild(closeBtn);
+      document.body.appendChild(banner);
+    }
+  }
+}
+
+// ===== オフライン状態インジケータ =====
+function updateOfflineBanner(): void {
+  const existing = document.getElementById("offline-banner");
+  if (navigator.onLine) {
+    existing?.remove();
+    return;
+  }
+  if (existing) return;
+  const header = document.querySelector("header");
+  if (!header) return;
+  const banner = document.createElement("div");
+  banner.id = "offline-banner";
+  banner.className = "offline-banner";
+  banner.textContent = "📡 オフライン — 計算はすべて端末内で動作します";
+  header.insertAdjacentElement("afterend", banner);
+}
+window.addEventListener("online", updateOfflineBanner);
+window.addEventListener("offline", updateOfflineBanner);
+updateOfflineBanner();
+
 // ===== 練習問題モード =====
-interface PracticeProblem {
+// PracticeProblem のうち「問題そのもの」を定義する部分。
+// localStorage の復習リストにもこの形のまま保存される (スキーマ不変)。
+interface PracticeProblemBase {
   scenarioPlayers: { stack: number; role: Role; position: Position }[];
   payouts: number[];
   sb: number;
@@ -2257,17 +2758,125 @@ interface PracticeProblem {
   totalAnte: number;
   villainCallRangePct: number;
   heroHand: HandNotation;
-  // 計算結果
+}
+
+// PracticeProblemBase から一意に計算できる派生値。
+// 既存の復習リスト (旧スキーマ) にはこれらの値が古い形式で入っている、
+// または一部が欠けているため、使用前に必ず computeDerivedFields() で
+// base フィールドから再計算し直す (ensureDerivedFields 参照)。
+interface PracticeProblemDerived {
+  // 判定用: cEV は近似/厳密で共通、dollarEV は厳密 ICM 必要勝率 (call/fold の正解基準)
   cEV: number;
   dollarEV: number;
-  bf: number;
   heroEq: number; // hero hand vs villain push range
-  // 解説用 詳細
-  equityNow: number;
+  // 参考値: BF 線形化近似 (旧ロジック)。教育目的で「詳しい計算式」に表示する。
+  bf: number;
+  dollarEVApprox: number;
+  bfEquityNow: number;
+  bfEquityWin: number;
+  bfEquityLose: number;
+  // 厳密 ICM の3終端 (fold / call-win / call-lose) の hero エクイティ + 全員スタック
+  equityFold: number;
   equityWin: number;
   equityLose: number;
+  stacksFold: number[];
+  stacksWin: number[];
+  stacksLose: number[];
   callAmount: number;
   potIfWin: number;
+}
+
+type PracticeProblem = PracticeProblemBase & PracticeProblemDerived;
+
+/**
+ * PracticeProblemBase から判定/表示に必要な派生値をすべて計算する。
+ * generateRandomPracticeProblem() の本体でもあり、
+ * 復習リストなど旧スキーマの問題を読み込んだ際の再計算にも使う
+ * (ensureDerivedFields 参照)。
+ */
+function computeDerivedFields(base: PracticeProblemBase): PracticeProblemDerived {
+  const { scenarioPlayers, payouts, sb, bb, totalAnte, villainCallRangePct, heroHand } = base;
+  const heroIdx = scenarioPlayers.findIndex((p) => p.role === "hero");
+  const villainIdx = scenarioPlayers.findIndex((p) => p.role === "villain");
+  const sbIdx = scenarioPlayers.findIndex((p) => p.position === "SB");
+  const stacks = scenarioPlayers.map((p) => p.stack);
+  const villainPos = scenarioPlayers[villainIdx]!.position;
+
+  // BF 近似 (参考値: 実効スタックの対称フリップ → 線形化)
+  const safeRisk = Math.min(stacks[heroIdx]!, stacks[villainIdx]!);
+  const bfResult = calculateBubbleFactor({
+    stacks,
+    payouts,
+    heroIndex: heroIdx,
+    villainIndex: villainIdx,
+    riskChips: safeRisk,
+  });
+  const podds = calculatePotOdds({
+    heroStack: stacks[heroIdx]!,
+    villainStack: stacks[villainIdx]!,
+    heroPosition: "BB", // 練習問題では hero は常に BB
+    villainPosition: posToPotOddsPos(villainPos),
+    sb, bb, ante: totalAnte,
+  });
+  const callAmount = podds.callAmount;
+  const potIfWin = podds.potIfWin;
+  const approxEq = calculateRequiredEquity({
+    callAmount,
+    potIfWin,
+    bubbleFactor: bfResult.bf,
+  });
+
+  // 厳密 ICM (fold / call-win / call-lose の3終端を直接解く)
+  const exact = calculateExactCallEquity({
+    stacks,
+    payouts,
+    heroIndex: heroIdx,
+    villainIndex: villainIdx,
+    heroPosition: "BB",
+    villainPosition: posToPotOddsPos(villainPos),
+    sbPlayerIndex: sbIdx >= 0 ? sbIdx : undefined,
+    sb, bb, ante: totalAnte,
+  });
+
+  // hero hand equity vs villain push range (Top X%)
+  const villainRange = topRange(villainCallRangePct);
+  const heroEq = equity(heroHand, villainRange);
+
+  return {
+    cEV: approxEq.cEV,
+    dollarEV: exact.requiredEquity,
+    heroEq,
+    bf: bfResult.bf,
+    dollarEVApprox: approxEq.dollarEV,
+    bfEquityNow: bfResult.equityNow,
+    bfEquityWin: bfResult.equityWin,
+    bfEquityLose: bfResult.equityLose,
+    equityFold: exact.equityFold,
+    equityWin: exact.equityWin,
+    equityLose: exact.equityLose,
+    stacksFold: exact.stacksFold.slice(),
+    stacksWin: exact.stacksWin.slice(),
+    stacksLose: exact.stacksLose.slice(),
+    callAmount,
+    potIfWin,
+  };
+}
+
+/**
+ * 復習リストなど旧スキーマ (厳密 ICM 導入前) の PracticeProblem を読み込んだ場合、
+ * 新フィールド (equityFold 等) が欠けているため base フィールドから再計算して補う。
+ * 新スキーマの問題はそのまま返す (無駄な再計算をしない)。
+ */
+function ensureDerivedFields(p: PracticeProblem): PracticeProblem {
+  if (
+    p.equityFold !== undefined &&
+    p.dollarEVApprox !== undefined &&
+    p.bfEquityNow !== undefined &&
+    p.stacksFold !== undefined
+  ) {
+    return p;
+  }
+  return { ...p, ...computeDerivedFields(p) };
 }
 
 const POSITION_SETS_PRACTICE: Record<number, Position[]> = {
@@ -2301,7 +2910,78 @@ try {
   if (v && (v === "easy" || v === "normal" || v === "hard")) practiceDifficulty = v;
 } catch { /* ignore */ }
 
+// 練習モード: call/fold 判定 か RP 当て か
+type PracticeMode = "callfold" | "rp";
+// RP モードのスライダー回答の許容誤差 (±%)
+const RP_TOLERANCE: Record<Difficulty, number> = {
+  easy: 4,
+  normal: 2.5,
+  hard: 1.5,
+};
+let practiceMode: PracticeMode = "callfold";
+try {
+  const v = localStorage.getItem("poker-icm-practice-mode") as PracticeMode | null;
+  if (v === "callfold" || v === "rp") practiceMode = v;
+} catch { /* ignore */ }
+
+// RP (Risk Premium) = $EV 必要勝率 − cEV 必要勝率
+function problemRP(p: PracticeProblem): number {
+  return (p.dollarEV - p.cEV) * 100;
+}
+
+/**
+ * 判定結果に添える「教訓」一行。優先順位で最初にマッチしたものだけを返す。
+ * 1. ペイアウトがほぼ均等 (サテライト型)
+ * 2. villain がカバーしている (villainStack >= heroStack) かつ RP が高い
+ * 3. hero がカバーしている (villainStack < heroStack) かつ RP が低い
+ * 4. hero より短いスタックの other プレイヤーがいる
+ * 5. それ以外の一般則
+ */
+function practiceLesson(p: PracticeProblem): string {
+  const payouts = p.payouts;
+  if (payouts.length > 0) {
+    const maxPayout = Math.max(...payouts);
+    const minPayout = Math.min(...payouts);
+    if (maxPayout > 0 && maxPayout - minPayout < maxPayout * 0.15) {
+      return "🛰 サテライトでは『残ること』が全て。どんな強いハンドでも RP が極端に上がり、ほぼ全てのコールが正当化されません。";
+    }
+  }
+
+  const hero = p.scenarioPlayers.find((pl) => pl.role === "hero");
+  const villain = p.scenarioPlayers.find((pl) => pl.role === "villain");
+  const rp = problemRP(p);
+
+  if (hero && villain) {
+    if (villain.stack >= hero.stack && rp >= 5) {
+      return "⚠️ カバーされている相手へのコールは、負け＝敗退。トーナメント生命を賭けるため Risk Premium が跳ね上がります。";
+    }
+    if (villain.stack < hero.stack && rp < 5) {
+      return "自分が相手をカバーしている時は、負けても飛ばないため RP は小さめ。cEV に近い感覚でコールできます。";
+    }
+  }
+
+  if (hero) {
+    const hasShorterOther = p.scenarioPlayers.some(
+      (pl) => pl.role === "other" && pl.stack < hero.stack,
+    );
+    if (hasShorterOther) {
+      return "自分より短いスタックが残っている間は、無理に勝負しなくても順位が上がる可能性があります。それが RP の源泉です。";
+    }
+  }
+
+  return "必要勝率 = cEV + Risk Premium。ICM 下では『チップで得』でも『賞金で損』になり得ることを常に確認しましょう。";
+}
+
 function generatePracticeProblem(): PracticeProblem {
+  if (practiceMode === "rp") {
+    // RP モードは call/fold の境界フィルタ不要。
+    // RP が極端に小さい (自明) 問題だけ避ける
+    for (let attempt = 0; attempt < 100; attempt++) {
+      const p = generateRandomPracticeProblem();
+      if (problemRP(p) >= 3) return p;
+    }
+    return generateRandomPracticeProblem();
+  }
   const band = DIFF_BANDS[practiceDifficulty];
   for (let attempt = 0; attempt < 100; attempt++) {
     const p = generateRandomPracticeProblem();
@@ -2347,6 +3027,36 @@ function saveReviewList(list: PracticeProblem[]): void {
   try { localStorage.setItem(REVIEW_KEY, JSON.stringify(list.slice(0, 50))); } catch { /* ignore */ }
 }
 
+// ===== 練習履歴 (成績の推移パネル用) =====
+const HISTORY_KEY = "poker-icm-practice-history";
+const HISTORY_MAX = 500;
+
+interface PracticeHistoryEntry {
+  t: number; // epoch ms
+  mode: PracticeMode;
+  diff: Difficulty;
+  ok: boolean;
+}
+
+function loadHistory(): PracticeHistoryEntry[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]");
+    if (Array.isArray(v)) return v as PracticeHistoryEntry[];
+  } catch { /* ignore */ }
+  return [];
+}
+function saveHistory(list: PracticeHistoryEntry[]): void {
+  try {
+    // 上限を超えたら古いものから捨てる (末尾が最新)
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(-HISTORY_MAX)));
+  } catch { /* ignore */ }
+}
+function appendHistory(entry: PracticeHistoryEntry): void {
+  const list = loadHistory();
+  list.push(entry);
+  saveHistory(list);
+}
+
 function updatePracticeBadges(): void {
   const streak = loadStreak();
   const stats = loadStats();
@@ -2366,6 +3076,124 @@ function updatePracticeBadges(): void {
     }
   }
   if (reviewCountEl) reviewCountEl.textContent = String(review.length);
+}
+
+// ===== 成績の推移パネル =====
+
+// 正解率に応じた色分け: 70%以上=good, 50-70%=warn, 未満=bad
+function progressAccColor(acc: number | null): string {
+  if (acc === null) return "var(--muted)";
+  if (acc >= 0.7) return "var(--good)";
+  if (acc >= 0.5) return "var(--warn)";
+  return "var(--bad)";
+}
+function progressFmtPct(acc: number | null): string {
+  return acc === null ? "-" : `${(acc * 100).toFixed(0)}%`;
+}
+
+// 直近100問を10問ごとの正解率にまとめて折れ線 SVG (文字列) を生成
+function buildPracticeSparklineSVG(history: PracticeHistoryEntry[]): string {
+  const recent = history.slice(-100);
+  const groups: PracticeHistoryEntry[][] = [];
+  for (let i = 0; i < recent.length; i += 10) groups.push(recent.slice(i, i + 10));
+  if (groups.length < 4) {
+    return `<div class="progress-sparkline-empty">まだデータが足りません (${recent.length}問)</div>`;
+  }
+  const accs = groups.map((g) => g.filter((e) => e.ok).length / g.length);
+  const W = 300;
+  const H = 60;
+  const padX = 4;
+  const padTop = 6;
+  const padBottom = 6;
+  const plotW = W - padX * 2;
+  const plotH = H - padTop - padBottom;
+  const pts = accs.map((a, i) => {
+    const x = groups.length > 1 ? padX + (i / (groups.length - 1)) * plotW : W / 2;
+    const y = padTop + (1 - a) * plotH;
+    return [x, y] as const;
+  });
+  const lineStr = pts.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+  const firstX = pts[0]![0].toFixed(1);
+  const lastX = pts[pts.length - 1]![0].toFixed(1);
+  const areaStr = `${firstX},${(H - padBottom).toFixed(1)} ${lineStr} ${lastX},${(H - padBottom).toFixed(1)}`;
+  return `
+    <svg class="progress-sparkline-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" width="100%" height="60" role="img" aria-label="直近の正解率推移">
+      <polygon points="${areaStr}" style="fill: color-mix(in srgb, var(--accent) 22%, transparent); stroke: none;"></polygon>
+      <polyline points="${lineStr}" style="fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round;"></polyline>
+    </svg>
+  `;
+}
+
+function updatePracticeProgress(): void {
+  const body = document.getElementById("practice-progress-body");
+  if (!body) return;
+  const history = loadHistory();
+  const stats = loadStats();
+  const overallAcc = stats.total > 0 ? stats.correct / stats.total : null;
+
+  const last20 = history.slice(-20);
+  const last20Correct = last20.filter((e) => e.ok).length;
+  const last20Acc = last20.length > 0 ? last20Correct / last20.length : null;
+
+  const diffRows = (["easy", "normal", "hard"] as Difficulty[]).map((d) => {
+    const items = history.filter((e) => e.diff === d);
+    const c = items.filter((e) => e.ok).length;
+    const t = items.length;
+    const label = d === "easy" ? "Easy" : d === "normal" ? "Normal" : "Hard";
+    return { label, c, t, acc: t > 0 ? c / t : null };
+  });
+
+  const modeRows = (["callfold", "rp"] as PracticeMode[]).map((m) => {
+    const items = history.filter((e) => e.mode === m);
+    const c = items.filter((e) => e.ok).length;
+    const t = items.length;
+    const label = m === "callfold" ? "コール/フォールド判定" : "RP 当て";
+    return { label, c, t, acc: t > 0 ? c / t : null };
+  });
+
+  body.innerHTML = `
+    <div class="progress-headline">
+      <div class="progress-headline-item">
+        <div class="progress-headline-label">直近20問</div>
+        <div class="progress-headline-value" style="color: ${progressAccColor(last20Acc)}">${progressFmtPct(last20Acc)}</div>
+        <div class="progress-headline-sub">${last20Correct}/${last20.length}問</div>
+      </div>
+      <div class="progress-headline-item">
+        <div class="progress-headline-label">全期間</div>
+        <div class="progress-headline-value" style="color: ${progressAccColor(overallAcc)}">${progressFmtPct(overallAcc)}</div>
+        <div class="progress-headline-sub">${stats.correct}/${stats.total}問</div>
+      </div>
+    </div>
+    <div class="progress-sparkline-wrap">
+      <div class="progress-block-title">推移 (直近100問・10問ごとの正解率)</div>
+      ${buildPracticeSparklineSVG(history)}
+    </div>
+    <div class="progress-block">
+      <div class="progress-block-title">難易度別</div>
+      <div class="progress-breakdown-grid">
+        ${diffRows.map((r) => `
+          <div class="progress-breakdown-cell">
+            <div class="progress-breakdown-label">${r.label}</div>
+            <div class="progress-breakdown-value" style="color: ${progressAccColor(r.acc)}">${progressFmtPct(r.acc)}</div>
+            <div class="progress-breakdown-sub">${r.c}/${r.t}</div>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+    <div class="progress-block">
+      <div class="progress-block-title">モード別</div>
+      <div class="progress-breakdown-grid progress-breakdown-grid-2">
+        ${modeRows.map((r) => `
+          <div class="progress-breakdown-cell">
+            <div class="progress-breakdown-label">${r.label}</div>
+            <div class="progress-breakdown-value" style="color: ${progressAccColor(r.acc)}">${progressFmtPct(r.acc)}</div>
+            <div class="progress-breakdown-sub">${r.c}/${r.t}</div>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+    <button id="practice-history-reset-btn" type="button" class="progress-reset-btn">🗑️ 履歴をリセット</button>
+  `;
 }
 
 function generateRandomPracticeProblem(): PracticeProblem {
@@ -2397,52 +3225,14 @@ function generateRandomPracticeProblem(): PracticeProblem {
   // 自分のハンド
   const heroHand = ALL_169_HANDS[Math.floor(Math.random() * ALL_169_HANDS.length)]!;
 
-  // BF / 必要勝率 / equity 計算
-  const stacks = scenarioPlayers.map((p) => p.stack);
-  const safeRisk = Math.min(stacks[heroIdx]!, stacks[villainIdx]!);
-  const bfResult = calculateBubbleFactor({
-    stacks,
-    payouts,
-    heroIndex: heroIdx,
-    villainIndex: villainIdx,
-    riskChips: safeRisk,
-  });
-  const villainPos = scenarioPlayers[villainIdx]!.position;
-  const podds = calculatePotOdds({
-    heroStack: stacks[heroIdx]!,
-    villainStack: stacks[villainIdx]!,
-    heroPosition: "BB", // 練習問題では hero は常に BB
-    villainPosition: posToPotOddsPos(villainPos),
-    sb, bb, ante: totalAnte,
-  });
-  const callAmount = podds.callAmount;
-  const potIfWin = podds.potIfWin;
-  const eqRes = calculateRequiredEquity({
-    callAmount,
-    potIfWin,
-    bubbleFactor: bfResult.bf,
-  });
-
-  // hero hand equity vs villain push range (Top X%)
-  const villainRange = topRange(villainCallRangePct);
-  const heroEq = equity(heroHand, villainRange);
-
-  return {
+  const base: PracticeProblemBase = {
     scenarioPlayers,
     payouts,
     sb, bb, totalAnte,
     villainCallRangePct,
     heroHand,
-    cEV: eqRes.cEV,
-    dollarEV: eqRes.dollarEV,
-    bf: bfResult.bf,
-    heroEq,
-    equityNow: bfResult.equityNow,
-    equityWin: bfResult.equityWin,
-    equityLose: bfResult.equityLose,
-    callAmount,
-    potIfWin,
   };
+  return { ...base, ...computeDerivedFields(base) };
 }
 
 function renderRoundTable(
@@ -2455,8 +3245,8 @@ function renderRoundTable(
   const seats: string[] = [];
   const chips: string[] = [];
   // 席の配置半径と「場」チップの配置半径 (席と中央ポットの中間に配置)
-  const seatR = 38;
-  const chipR = 20;
+  const seatR = 46;
+  const chipR = 23;
   // BB ante 構造: BB が ante 全部を負担、他はゼロ
   // hero を 6 時方向 (90度=π/2) に配置、他は時計回り
   for (let i = 0; i < n; i++) {
@@ -2480,7 +3270,7 @@ function renderRoundTable(
     seats.push(`
       <div class="round-table-seat ${cls}" style="left:${sx}%;top:${sy}%">
         <div class="seat-pos">${tag}${p.position || `P${i + 1}`}</div>
-        <div class="seat-stack">${remaining.toFixed(remaining % 1 === 0 ? 0 : 2)}<span style="font-size:9px;color:var(--muted);">BB 残</span></div>
+        <div class="seat-stack">${remaining.toFixed(remaining % 1 === 0 ? 0 : 2)}<span class="seat-stack-unit">BB 残</span></div>
       </div>
     `);
 
@@ -2517,24 +3307,96 @@ function renderRoundTable(
   `;
 }
 
-let currentProblem: PracticeProblem | null = null;
-
-function renderPracticeProblem(p: PracticeProblem): void {
-  const area = document.getElementById("practice-area");
-  if (!area) return;
+// 「トーナメント状態」bento カード: 左にブラインド/ペイ、右に Hero スタック。
+// extraHtml には呼び出し側で用意した下段(Villain All-in 警告 or RP用の call/return 情報)を差し込む。
+function renderScenarioBento(p: PracticeProblem, extraHtml: string): string {
   const totalPrize = p.payouts.reduce((a, b) => a + b, 0);
   const payoutStr = p.payouts
     .map((v) => ((v / totalPrize) * 100).toFixed(0) + "%")
     .join(" / ");
+  const hero = p.scenarioPlayers.find((pl) => pl.role === "hero");
+  const heroStack = hero ? hero.stack : 0;
+  return `
+    <div class="scenario-card">
+      <div class="scenario-glow scenario-glow-a"></div>
+      <div class="scenario-glow scenario-glow-b"></div>
+      <div class="scenario-main">
+        <div class="scenario-col">
+          <div class="scenario-label">TOURNAMENT STATE</div>
+          <div class="scenario-fact"><span class="scenario-fact-key">Blinds</span><span class="scenario-fact-val">SB ${p.sb} / BB ${p.bb}</span></div>
+          <div class="scenario-fact"><span class="scenario-fact-key">アンティ合計</span><span class="scenario-fact-val">${p.totalAnte}</span></div>
+          <div class="scenario-fact"><span class="scenario-fact-key">ペイ</span><span class="scenario-fact-val">${payoutStr}</span></div>
+        </div>
+        <div class="scenario-divider"></div>
+        <div class="scenario-col scenario-col-hero">
+          <div class="scenario-label">HERO STACK</div>
+          <div class="scenario-hero-stack">${heroStack}<span class="scenario-unit">BB</span></div>
+        </div>
+      </div>
+      ${extraHtml}
+    </div>
+  `;
+}
+
+// ハンド表記 (例 "AKs" / "QQ" / "T9o") をトランプ2枚の視覚表現に変換。
+// suited は ♠♠、offsuit/pair は ♠♥ (♥/♦ は赤、♠/♣ は濃色)。
+function renderHeroHandCards(hand: HandNotation): string {
+  const isPair = hand.length === 2;
+  const r1 = hand[0]!;
+  const r2 = hand[1]!;
+  const suited = !isPair && hand[2] === "s";
+  const label = (r: string) => (r === "T" ? "10" : r);
+  const suit2 = suited ? "♠" : "♥";
+  const red2 = !suited;
+  const cardHtml = (
+    rank: string,
+    suit: string,
+    red: boolean,
+    rotateCls: string,
+  ) => `
+    <div class="playing-card ${rotateCls}${red ? " pc-red" : ""}">
+      <div class="pc-corner pc-corner-tl">${label(rank)}<br />${suit}</div>
+      <div class="pc-suit-center">${suit}</div>
+      <div class="pc-corner pc-corner-br">${label(rank)}<br />${suit}</div>
+    </div>
+  `;
+  return `
+    <div class="hero-hand-cards" aria-hidden="true">
+      ${cardHtml(r1, "♠", false, "pc-rotate-l")}
+      ${cardHtml(r2, suit2, red2, "pc-rotate-r")}
+    </div>
+  `;
+}
+
+let currentProblem: PracticeProblem | null = null;
+
+function renderPracticeProblem(rawP: PracticeProblem): void {
+  // 復習リストなど旧スキーマの問題は派生値を再計算してから使う
+  const p = ensureDerivedFields(rawP);
+  currentProblem = p;
+  if (practiceMode === "rp") {
+    renderPracticeProblemRP(p);
+    return;
+  }
+  const area = document.getElementById("practice-area");
+  if (!area) return;
+  const villain = p.scenarioPlayers.find((pl) => pl.role === "villain");
+  const villainWarnHtml = `
+    <div class="scenario-warn">
+      <div class="scenario-warn-head">⚠️ Villain (${villain?.position || "?"}) All-in</div>
+      <div class="scenario-warn-body">
+        <span class="scenario-warn-item">Stack <strong>${villain ? villain.stack : "?"} BB</strong></span>
+        <span class="scenario-warn-item">Est. Push Range <strong>Top ${p.villainCallRangePct}%</strong></span>
+      </div>
+    </div>
+  `;
   area.innerHTML = `
     <div id="practice-table-wrapper"></div>
-    <div class="practice-info">
-      ペイ: <strong>${payoutStr}</strong><br />
-      ブラインド: SB ${p.sb} / BB ${p.bb} / アンティ合計 ${p.totalAnte}<br />
-      <span style="color: var(--bad);">⚔️ 相手の push 想定レンジ: <strong>Top ${p.villainCallRangePct}%</strong> (下のグリッド参照)</span>
-    </div>
+    ${renderScenarioBento(p, villainWarnHtml)}
+    <p class="hint">※ Top X% は本ツール定義の強度順。他ツールとは一致しない場合があります。</p>
     <h3 style="font-size: 13px; margin: 12px 0 4px;">⚔️ 相手の push レンジ 🔴</h3>
     <div id="practice-villain-grid" class="hand-grid"></div>
+    ${renderHeroHandCards(p.heroHand)}
     <div class="practice-hand">あなたのハンド: ${p.heroHand}</div>
     <div class="practice-actions">
       <button class="practice-btn call" data-answer="call">✅ コール</button>
@@ -2561,18 +3423,161 @@ function renderPracticeProblem(p: PracticeProblem): void {
   }
 }
 
-function judgePractice(answer: "call" | "fold"): void {
+// Easy モード用: 正解 RP (0.5%単位に丸め) から重複なし・非負の4択を作りシャッフルする。
+// 既定オフセットは 0 / +5 / -5 / +10。-5 が負になる場合は 0 / +5 / +10 / +15 に切り替える。
+function buildEasyRPChoices(correctRounded: number): number[] {
+  const wouldGoNegative = correctRounded - 5 < 0;
+  const offsets = wouldGoNegative ? [0, 5, 10, 15] : [0, 5, -5, 10];
+  const values = offsets.map((o) => correctRounded + o);
+  // Fisher-Yates シャッフル
+  for (let i = values.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [values[i], values[j]] = [values[j]!, values[i]!];
+  }
+  return values;
+}
+
+// RP 当てモード: Normal/Hard はスライダー、Easy は4択ボタンで Risk Premium を推定させる
+function renderPracticeProblemRP(p: PracticeProblem): void {
+  const area = document.getElementById("practice-area");
+  if (!area) return;
+  const tol = RP_TOLERANCE[practiceDifficulty];
+  const rpInfoHtml = `
+    <div class="scenario-rp-info">
+      <span class="scenario-warn-item">コール額 (リスク) <strong>${p.callAmount.toFixed(1)} BB</strong></span>
+      <span class="scenario-warn-item">リターン <strong>${p.potIfWin.toFixed(1)} BB</strong></span>
+    </div>
+  `;
+  const isEasy = practiceDifficulty === "easy";
+  const quizBodyHtml = isEasy
+    ? (() => {
+        const correctRounded = Math.round(problemRP(p) * 2) / 2;
+        const choices = buildEasyRPChoices(correctRounded);
+        return `
+          <div class="rp-choices" id="rp-choices">
+            ${choices
+              .map(
+                (v) =>
+                  `<button type="button" class="rp-choice-btn" data-value="${v}">+${v.toFixed(1)}%</button>`,
+              )
+              .join("")}
+          </div>
+          <div class="rp-quiz-tol">4択から選んでタップ (Easy)</div>
+        `;
+      })()
+    : `
+      <div class="rp-slider-value" id="rp-slider-value">+20.0%</div>
+      <input type="range" id="rp-slider" class="rp-slider" min="0" max="50" step="0.5" value="20" />
+      <div class="rp-slider-scale"><span>0%</span><span>25%</span><span>50%</span></div>
+      <div class="rp-quiz-tol">許容誤差 ±${tol}%（難易度で変化）</div>
+      <button id="rp-answer-btn" type="button" class="solve-btn">回答する</button>
+    `;
+  area.innerHTML = `
+    <div id="practice-table-wrapper"></div>
+    ${renderScenarioBento(p, rpInfoHtml)}
+    <div class="rp-quiz">
+      <div class="rp-quiz-q">📊 この状況の Risk Premium は？</div>
+      ${quizBodyHtml}
+    </div>
+    <div id="practice-feedback"></div>
+  `;
+  const tableWrap = document.getElementById("practice-table-wrapper");
+  if (tableWrap) renderRoundTable(tableWrap, p.scenarioPlayers, {
+    sb: p.sb, bb: p.bb, totalAnte: p.totalAnte,
+  });
+  const slider = document.getElementById("rp-slider") as HTMLInputElement | null;
+  const valLabel = document.getElementById("rp-slider-value");
+  if (slider && valLabel) {
+    slider.addEventListener("input", () => {
+      valLabel.textContent = "+" + Number(slider.value).toFixed(1) + "%";
+    });
+  }
+}
+
+function judgePracticeRP(guess: number): void {
   if (!currentProblem) return;
-  const p = currentProblem;
+  const p = ensureDerivedFields(currentProblem);
+  currentProblem = p;
   const fb = document.getElementById("practice-feedback");
   if (!fb) return;
-  const margin = p.heroEq - p.dollarEV;
-  const correctIsCall = margin >= 0;
-  const isCorrect = (correctIsCall && answer === "call") || (!correctIsCall && answer === "fold");
-  const verdict = correctIsCall ? "✅ コール (+EV)" : "❌ フォールド (-EV)";
+  // RP = 厳密必要勝率 (p.dollarEV) − cEV に統一
+  const actualRP = problemRP(p);
+  const actualRPApprox = (p.dollarEVApprox - p.cEV) * 100;
+  const tol = RP_TOLERANCE[practiceDifficulty];
+  const diff = guess - actualRP;
+  const isCorrect = Math.abs(diff) <= tol;
   fb.className = "practice-feedback " + (isCorrect ? "correct" : "wrong");
 
-  // streak / stats / review 更新
+  recordPracticeResult(isCorrect, p);
+
+  // 同じ問題を再回答できないようスライダー/ボタンを無効化
+  const slider = document.getElementById("rp-slider") as HTMLInputElement | null;
+  const ansBtn = document.getElementById("rp-answer-btn") as HTMLButtonElement | null;
+  if (slider) slider.disabled = true;
+  if (ansBtn) ansBtn.disabled = true;
+
+  // Easy モードの4択: 全て無効化し、正解をハイライト
+  const choiceWrap = document.getElementById("rp-choices");
+  if (choiceWrap) {
+    const correctRounded = Math.round(actualRP * 2) / 2;
+    choiceWrap.querySelectorAll<HTMLButtonElement>(".rp-choice-btn").forEach((b) => {
+      b.disabled = true;
+      const v = Number(b.dataset.value);
+      if (v === correctRounded) b.classList.add("correct-choice");
+      else if (v === guess) b.classList.add("wrong-choice");
+    });
+  }
+
+  const evBF = p.callAmount * p.bf;
+  fb.innerHTML = `
+    <div class="verdict-row">
+      <div class="verdict">${isCorrect ? "🎉 正解!" : "😅 不正解"}</div>
+      <button id="practice-next-btn-top" type="button" class="solve-btn compact">🎲 次へ</button>
+    </div>
+    <div class="practice-lesson">💡 ${practiceLesson(p)}</div>
+    <div>あなたの回答: <strong>+${guess.toFixed(1)}%</strong></div>
+    <div>正解 RP (厳密 ICM): <strong style="color: var(--accent)">+${actualRP.toFixed(1)}%</strong> <span class="muted">(許容 ±${tol}%)</span></div>
+    <div>誤差: <strong style="color: ${isCorrect ? "var(--good)" : "var(--bad)"}">${diff >= 0 ? "+" : ""}${diff.toFixed(1)}%</strong></div>
+    <details class="practice-details">
+      <summary>📖 詳しい計算式 (タップで展開)</summary>
+      <div class="practice-details-body">
+        <h4>1. Bubble Factor (参考値: 対称フリップ近似)</h4>
+        <p><code>BF = (現状 − 負け) ÷ (勝ち − 現状) = ${(p.bfEquityNow - p.bfEquityLose).toFixed(3)} ÷ ${(p.bfEquityWin - p.bfEquityNow).toFixed(3)} = ${p.bf.toFixed(3)}</code></p>
+        <h4>2. 必要勝率</h4>
+        <ul>
+          <li>cEV: <code>リスク ÷ (リスク + リターン) = ${p.callAmount} ÷ (${p.callAmount} + ${p.potIfWin.toFixed(1)}) = ${(p.cEV * 100).toFixed(1)}%</code></li>
+          <li>$EV (BF 近似): <code>(リスク × BF) ÷ (リスク × BF + リターン) = ${evBF.toFixed(2)} ÷ (${evBF.toFixed(2)} + ${p.potIfWin.toFixed(1)}) = ${(p.dollarEVApprox * 100).toFixed(1)}%</code></li>
+          <li>$EV (厳密 ICM): <code>(Efold − Elose) ÷ (Ewin − Elose) = ${(p.equityFold - p.equityLose).toFixed(3)} ÷ ${(p.equityWin - p.equityLose).toFixed(3)} = ${(p.dollarEV * 100).toFixed(1)}%</code></li>
+        </ul>
+        <h4>3. Risk Premium</h4>
+        <p><code>RP = 厳密$EV − cEV = ${(p.dollarEV * 100).toFixed(1)}% − ${(p.cEV * 100).toFixed(1)}% = +${actualRP.toFixed(2)}%</code></p>
+        <p style="font-size: 11px; color: var(--muted); margin: 4px 0 0;">
+          BF 近似: <strong>+${actualRPApprox.toFixed(2)}%</strong> / 厳密 ICM: <strong style="color: var(--accent);">+${actualRP.toFixed(2)}%</strong>（判定はこちら）
+        </p>
+        <p style="font-size: 11px; color: var(--muted); margin: 4px 0 0;">
+          ※ BF が大きい (バブルに近い / スタックが拮抗) ほど RP は大きくなります。BF 近似は境界付近で厳密値と数%ずれることがあります。
+        </p>
+      </div>
+    </details>
+    <div style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px;">
+      <button id="practice-next-btn" type="button" class="solve-btn">🎲 次の問題</button>
+      <button id="practice-apply-btn" type="button" class="solve-btn" style="background: var(--card); color: var(--text); border: 1px solid var(--border);">📥 設定に取り込む (詳細分析)</button>
+    </div>
+  `;
+  fb.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// streak / stats / review をまとめて更新 (call/fold・RP 両モード共通)
+// 復習リストの重複判定用キー。ハンド・相手コールレンジに加え、スタック構成
+// (順序込み) と支払いテーブルも含めて正規化し、"似ているが別シナリオ" の問題を
+// 誤って重複扱いしないようにする。
+function practiceProblemDedupKey(p: PracticeProblemBase): string {
+  const stacks = p.scenarioPlayers.map((sp) => `${sp.role}:${sp.position}:${sp.stack}`).join(",");
+  const payouts = p.payouts.join(",");
+  return `${p.heroHand}|${p.villainCallRangePct}|${stacks}|${payouts}`;
+}
+
+function recordPracticeResult(isCorrect: boolean, p: PracticeProblem): void {
   const stats = loadStats();
   stats.total += 1;
   if (isCorrect) stats.correct += 1;
@@ -2583,34 +3588,74 @@ function judgePractice(answer: "call" | "fold"): void {
   saveStreak(streak);
   if (!isCorrect) {
     const list = loadReviewList();
-    if (!list.some((x) => x.heroHand === p.heroHand && x.villainCallRangePct === p.villainCallRangePct)) {
+    const key = practiceProblemDedupKey(p);
+    if (!list.some((x) => practiceProblemDedupKey(x) === key)) {
       list.unshift(p);
       saveReviewList(list);
     }
   }
+  appendHistory({ t: Date.now(), mode: practiceMode, diff: practiceDifficulty, ok: isCorrect });
   updatePracticeBadges();
+  updatePracticeProgress();
+}
+
+function judgePractice(answer: "call" | "fold"): void {
+  if (!currentProblem) return;
+  const p = ensureDerivedFields(currentProblem);
+  currentProblem = p;
+  const fb = document.getElementById("practice-feedback");
+  if (!fb) return;
+  const margin = p.heroEq - p.dollarEV;
+  const correctIsCall = margin >= 0;
+  const isCorrect = (correctIsCall && answer === "call") || (!correctIsCall && answer === "fold");
+  const verdict = correctIsCall ? "✅ コール (+EV)" : "❌ フォールド (-EV)";
+  fb.className = "practice-feedback " + (isCorrect ? "correct" : "wrong");
+
+  // チュートリアル中は streak/正解率/復習リストに記録しない
+  if (!tutorialActive) {
+    recordPracticeResult(isCorrect, p);
+  }
+  const tutorialDef = tutorialActive ? TUTORIAL_PROBLEMS[tutorialStep] : undefined;
+  const tutorialBlockHtml = tutorialDef
+    ? `
+    <div class="tutorial-explain-card">
+      <div class="tutorial-explain-title">💡 教訓: ${tutorialDef.title}</div>
+      <div class="tutorial-explain-body">${tutorialDef.lesson}</div>
+      <button id="tutorial-next-btn" type="button" class="solve-btn">次の問題へ →</button>
+    </div>
+  `
+    : "";
   fb.innerHTML = `
-    <div class="verdict">${isCorrect ? "🎉 正解!" : "😅 不正解"} 正答: ${verdict}</div>
+    ${tutorialBlockHtml}
+    <div class="verdict-row">
+      <div class="verdict">${isCorrect ? "🎉 正解!" : "😅 不正解"} 正答: ${verdict}</div>
+      <button id="practice-next-btn-top" type="button" class="solve-btn compact">🎲 次へ</button>
+    </div>
+    <div class="practice-lesson">💡 ${practiceLesson(p)}</div>
     <div>cEV 必要勝率: <strong>${(p.cEV * 100).toFixed(1)}%</strong></div>
-    <div>$EV 必要勝率 (BF=${p.bf.toFixed(2)}): <strong>${(p.dollarEV * 100).toFixed(1)}%</strong></div>
+    <div>必要勝率 (厳密 ICM): <strong>${(p.dollarEV * 100).toFixed(1)}%</strong> <span class="muted">(参考: BF近似 ${(p.dollarEVApprox * 100).toFixed(1)}%)</span></div>
     <div>${p.heroHand} の equity vs Top${p.villainCallRangePct}%: <strong>${(p.heroEq * 100).toFixed(1)}%</strong></div>
     <div>余裕: <strong style="color: ${margin >= 0 ? "var(--good)" : "var(--bad)"}">${margin >= 0 ? "+" : ""}${(margin * 100).toFixed(1)}%</strong></div>
     <details class="practice-details">
       <summary>📖 詳しい計算式 (タップで展開)</summary>
       <div class="practice-details-body">
         ${(() => {
-          const heroPlayer = p.scenarioPlayers.find((x) => x.role === "hero")!;
-          const villainPlayer = p.scenarioPlayers.find((x) => x.role === "villain")!;
+          const heroIdx = p.scenarioPlayers.findIndex((x) => x.role === "hero");
+          const villainIdx = p.scenarioPlayers.findIndex((x) => x.role === "villain");
+          const heroPlayer = p.scenarioPlayers[heroIdx]!;
+          const villainPlayer = p.scenarioPlayers[villainIdx]!;
           const heroStack = heroPlayer.stack;
           const villainStack = villainPlayer.stack;
           const villainPos = villainPlayer.position;
           const sbDead = villainPos === "SB" ? 0 : p.sb;
           const villainMatch = p.callAmount + p.bb;
           const pot = p.potIfWin + p.callAmount;
-          const heroLive = heroStack - p.totalAnte - p.bb;
-          const stackIfFold = heroLive;
-          const stackIfLose = heroLive - p.callAmount;
-          const stackIfWin = stackIfLose + pot;
+          // 終端スタック (厳密 ICM = calculateExactCallEquity と全く同じ計算から取得)
+          const stackIfFold = p.stacksFold[heroIdx]!;
+          const stackIfWin = p.stacksWin[heroIdx]!;
+          const stackIfLose = p.stacksLose[heroIdx]!;
+          const winVsFold = stackIfWin - stackIfFold;
+          const loseVsFold = stackIfLose - stackIfFold;
           const netWinFromStart = stackIfWin - heroStack;
           const netLoseFromStart = stackIfLose - heroStack;
           const netFoldFromStart = stackIfFold - heroStack;
@@ -2625,40 +3670,50 @@ function judgePractice(answer: "call" | "fold"): void {
           <li><strong>合計 pot (showdown 時): ${pot.toFixed(1)} BB</strong></li>
         </ul>
 
-        <h4>2. 判断 (call vs fold 比較)</h4>
+        <h4>2. 判断 (call vs fold 比較・終端スタック)</h4>
         <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
           <tr><th style="text-align:left; padding: 4px;">選択</th><th style="text-align:right; padding: 4px;">最終スタック</th><th style="text-align:right; padding: 4px;">vs fold</th><th style="text-align:right; padding: 4px;">起点比</th></tr>
           <tr><td style="padding: 4px;">フォールド</td><td style="text-align:right; padding: 4px;"><code>${stackIfFold.toFixed(1)}</code></td><td style="text-align:right; padding: 4px;"><code>±0</code></td><td style="text-align:right; padding: 4px; color: ${netFoldFromStart >= 0 ? 'var(--good)' : 'var(--bad)'};"><code>${netFoldFromStart >= 0 ? '+' : ''}${netFoldFromStart.toFixed(1)}</code></td></tr>
-          <tr><td style="padding: 4px;">コール+勝ち</td><td style="text-align:right; padding: 4px;"><code>${stackIfWin.toFixed(1)}</code></td><td style="text-align:right; padding: 4px; color: var(--good);"><code>+${p.potIfWin.toFixed(1)}</code></td><td style="text-align:right; padding: 4px; color: ${netWinFromStart >= 0 ? 'var(--good)' : 'var(--bad)'};"><code>${netWinFromStart >= 0 ? '+' : ''}${netWinFromStart.toFixed(1)}</code></td></tr>
-          <tr><td style="padding: 4px;">コール+負け</td><td style="text-align:right; padding: 4px;"><code>${stackIfLose.toFixed(1)}</code></td><td style="text-align:right; padding: 4px; color: var(--bad);"><code>-${p.callAmount.toFixed(1)}</code></td><td style="text-align:right; padding: 4px; color: var(--bad);"><code>${netLoseFromStart.toFixed(1)}</code></td></tr>
+          <tr><td style="padding: 4px;">コール+勝ち</td><td style="text-align:right; padding: 4px;"><code>${stackIfWin.toFixed(1)}</code></td><td style="text-align:right; padding: 4px; color: var(--good);"><code>${winVsFold >= 0 ? '+' : ''}${winVsFold.toFixed(1)}</code></td><td style="text-align:right; padding: 4px; color: ${netWinFromStart >= 0 ? 'var(--good)' : 'var(--bad)'};"><code>${netWinFromStart >= 0 ? '+' : ''}${netWinFromStart.toFixed(1)}</code></td></tr>
+          <tr><td style="padding: 4px;">コール+負け</td><td style="text-align:right; padding: 4px;"><code>${stackIfLose.toFixed(1)}</code></td><td style="text-align:right; padding: 4px; color: var(--bad);"><code>${loseVsFold.toFixed(1)}</code></td><td style="text-align:right; padding: 4px; color: var(--bad);"><code>${netLoseFromStart.toFixed(1)}</code></td></tr>
         </table>
         <p style="font-size: 11px; color: var(--muted); margin: 6px 0 0;">
-          📌 cEV は call vs fold 比較を使うため「リターン ${p.potIfWin.toFixed(1)}」には自分の blind+ante (${(p.bb + p.totalAnte).toFixed(1)} BB) が含まれます。<br>
-          これは fold しても sunk として戻らないので、call 側で「取り戻す」金額として加算されます。<br>
+          📌 この3つの終端スタック (fold / コール+勝ち / コール+負け) が、下の「3. ICM エクイティ」の計算にそのまま使われます。<br>
           「起点 (hand 開始) からの純利益」は <strong>${netWinFromStart >= 0 ? '+' : ''}${netWinFromStart.toFixed(1)} BB</strong> (= 最終 ${stackIfWin.toFixed(1)} − 起点 ${heroStack})。
         </p>
           `;
         })()}
 
-        <h4>3. ICM エクイティ ($ 単位)</h4>
+        <h4>3. ICM エクイティ ($ 単位・厳密計算)</h4>
         <ul>
-          <li>現状 (call 前): <code>${p.equityNow.toFixed(3)}</code></li>
-          <li>勝った時: <code>${p.equityWin.toFixed(3)}</code> (gain ${(p.equityWin - p.equityNow).toFixed(3)})</li>
-          <li>負けた時: <code>${p.equityLose.toFixed(3)}</code> (loss ${(p.equityNow - p.equityLose).toFixed(3)})</li>
+          <li>フォールド時: <code>${p.equityFold.toFixed(3)}</code></li>
+          <li>コール+勝った時: <code>${p.equityWin.toFixed(3)}</code> (fold比 ${p.equityWin - p.equityFold >= 0 ? "+" : ""}${(p.equityWin - p.equityFold).toFixed(3)})</li>
+          <li>コール+負けた時: <code>${p.equityLose.toFixed(3)}</code> (fold比 ${(p.equityLose - p.equityFold).toFixed(3)})</li>
         </ul>
+        <p style="font-size: 11px; color: var(--muted); margin: 4px 0 0;">
+          ※ 上の「2. 判断」の終端スタックそれぞれを ICM (Malmuth-Harville) に通した $ エクイティです。近似 (BF) を経由しない厳密値です。
+        </p>
 
-        <h4>4. Bubble Factor</h4>
-        <p><code>BF = (現状 - 負け) ÷ (勝ち - 現状) = ${(p.equityNow - p.equityLose).toFixed(3)} ÷ ${(p.equityWin - p.equityNow).toFixed(3)} = ${p.bf.toFixed(3)}</code></p>
+        <h4>4. 参考: Bubble Factor 近似 (実効スタックの対称フリップ)</h4>
+        <p><code>BF = (現状 − 負け) ÷ (勝ち − 現状) = ${(p.bfEquityNow - p.bfEquityLose).toFixed(3)} ÷ ${(p.bfEquityWin - p.bfEquityNow).toFixed(3)} = ${p.bf.toFixed(3)}</code></p>
+        <p style="font-size: 11px; color: var(--muted); margin: 4px 0 0;">
+          ※ BF は「実効スタック同士の対称フリップ」という汎用シナリオで測った指標で、実際のコールの fold/win/lose 終端 (上のセクション2・3) とは別の計算です。参考値として掲載しています。
+        </p>
 
         <h4>5. 必要勝率 + Risk Premium</h4>
         <ul>
           <li>cEV: <code>リスク ÷ (リスク + リターン) = ${p.callAmount} ÷ (${p.callAmount} + ${p.potIfWin.toFixed(1)}) = ${(p.cEV * 100).toFixed(1)}%</code></li>
-          <li>$EV: <code>(リスク × BF) ÷ (リスク × BF + リターン) = (${p.callAmount} × ${p.bf.toFixed(2)}) ÷ (${p.callAmount} × ${p.bf.toFixed(2)} + ${p.potIfWin.toFixed(1)}) = ${(p.dollarEV * 100).toFixed(1)}%</code></li>
-          <li><strong>RP (実 pot odds)</strong>: <code>$EV − cEV = ${(p.dollarEV * 100).toFixed(1)}% − ${(p.cEV * 100).toFixed(1)}% = ${((p.dollarEV - p.cEV) * 100 >= 0 ? "+" : "")}${((p.dollarEV - p.cEV) * 100).toFixed(2)}%</code></li>
-          <li><strong>RP (1:1 オッズ時)</strong>: <code>BF ÷ (BF+1) − 50% = ${p.bf.toFixed(2)}÷${(p.bf + 1).toFixed(2)} − 50% = ${(p.bf / (p.bf + 1) * 100).toFixed(1)}% − 50% = ${(((p.bf / (p.bf + 1)) - 0.5) * 100 >= 0 ? "+" : "")}${(((p.bf / (p.bf + 1)) - 0.5) * 100).toFixed(2)}%</code></li>
+          <li>$EV (BF 近似・線形化): <code>(リスク × BF) ÷ (リスク × BF + リターン) = (${p.callAmount} × ${p.bf.toFixed(2)}) ÷ (${p.callAmount} × ${p.bf.toFixed(2)} + ${p.potIfWin.toFixed(1)}) = ${(p.dollarEVApprox * 100).toFixed(1)}%</code></li>
+          <li>$EV (厳密 ICM): <code>(Efold − Elose) ÷ (Ewin − Elose) = ${(p.equityFold - p.equityLose).toFixed(3)} ÷ ${(p.equityWin - p.equityLose).toFixed(3)} = ${(p.dollarEV * 100).toFixed(1)}%</code></li>
+        </ul>
+        <p style="font-size: 12px; margin: 6px 0;">
+          <strong>BF 近似: ${(p.dollarEVApprox * 100).toFixed(1)}% / 厳密 ICM: <span style="color: var(--accent);">${(p.dollarEV * 100).toFixed(1)}%</span>（判定はこちら）</strong>
+        </p>
+        <ul>
+          <li><strong>RP (厳密 ICM)</strong>: <code>厳密$EV − cEV = ${(p.dollarEV * 100).toFixed(1)}% − ${(p.cEV * 100).toFixed(1)}% = ${((p.dollarEV - p.cEV) * 100 >= 0 ? "+" : "")}${((p.dollarEV - p.cEV) * 100).toFixed(2)}%</code></li>
         </ul>
         <p style="font-size: 11px; color: var(--muted); margin: 4px 0 0;">
-          ※ RP の値は pot odds で変動。1:1 オッズ時は <code>BF/(BF+1)−50%</code> がシンプル指標、それ以外は <code>$EV−cEV</code> が実際の上乗せ分。
+          ※ BF 近似は線形化のため境界付近で厳密値と 1〜2% ずれることがあります。call/fold の判定は必ず厳密 ICM 側 (${(p.dollarEV * 100).toFixed(1)}%) を使用しています。
         </p>
 
         <h4>6. ハンド equity</h4>
@@ -2668,7 +3723,7 @@ function judgePractice(answer: "call" | "fold"): void {
         <p>
           ハンド equity <code>${(p.heroEq * 100).toFixed(1)}%</code>
           ${p.heroEq >= p.dollarEV ? "≥" : "<"}
-          必要勝率 <code>${(p.dollarEV * 100).toFixed(1)}%</code>
+          必要勝率 (厳密 ICM) <code>${(p.dollarEV * 100).toFixed(1)}%</code>
           → <strong>${p.heroEq >= p.dollarEV ? "コール (+EV)" : "フォールド (-EV)"}</strong>
         </p>
       </div>
@@ -2699,12 +3754,44 @@ function judgePractice(answer: "call" | "fold"): void {
       return cls;
     });
   }
+  fb.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 const practiceNewBtn = document.getElementById("practice-new-btn");
 practiceNewBtn?.addEventListener("click", () => {
+  if (tutorialActive) setTutorialActive(false); // 導入コース中に離脱したら中断扱い
   currentProblem = generatePracticeProblem();
   renderPracticeProblem(currentProblem);
+});
+
+// モード別のヒント文を更新
+function updatePracticeHint(): void {
+  const hint = document.getElementById("practice-hint");
+  if (!hint) return;
+  hint.textContent = practiceMode === "rp"
+    ? "ランダムシナリオの Risk Premium をスライダーで推定。BF と必要勝率の感覚を養う。"
+    : "ランダムシナリオ + 相手 push 想定レンジ + 自分のハンド → call/fold を即判定。";
+}
+updatePracticeHint();
+
+// モード切替 (call/fold 判定 ⇄ RP 当て)
+document.querySelectorAll<HTMLButtonElement>(".mode-btn").forEach((btn) => {
+  if (btn.dataset.mode === practiceMode) {
+    document.querySelectorAll<HTMLButtonElement>(".mode-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+  }
+  btn.addEventListener("click", () => {
+    if (btn.dataset.mode === practiceMode) return;
+    document.querySelectorAll<HTMLButtonElement>(".mode-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    practiceMode = btn.dataset.mode as PracticeMode;
+    try { localStorage.setItem("poker-icm-practice-mode", practiceMode); } catch { /* ignore */ }
+    updatePracticeHint();
+    if (tutorialActive) setTutorialActive(false); // 導入コース中に離脱したら中断扱い
+    // モードを変えたら新しい問題を出題
+    currentProblem = generatePracticeProblem();
+    renderPracticeProblem(currentProblem);
+  });
 });
 
 // 難易度切替
@@ -2718,11 +3805,19 @@ document.querySelectorAll<HTMLButtonElement>(".diff-btn").forEach((btn) => {
     btn.classList.add("active");
     practiceDifficulty = btn.dataset.diff as Difficulty;
     try { localStorage.setItem("poker-icm-practice-diff", practiceDifficulty); } catch { /* ignore */ }
+    // 難易度変更は出題中の問題の見た目 (許容誤差表示・スライダー⇄4択など) に影響するため、
+    // モード切替と同様に新しい問題を生成して再描画する (チュートリアル中は問題構成が
+    // 固定なので対象外)。
+    if (!tutorialActive) {
+      currentProblem = generatePracticeProblem();
+      renderPracticeProblem(currentProblem);
+    }
   });
 });
 
 // 復習ボタン: 不正解だった問題を順に出題
 document.getElementById("practice-review-btn")?.addEventListener("click", () => {
+  if (tutorialActive) setTutorialActive(false); // 導入コース中に離脱したら中断扱い
   const list = loadReviewList();
   if (list.length === 0) {
     const area = document.getElementById("practice-area");
@@ -2737,20 +3832,49 @@ document.getElementById("practice-review-btn")?.addEventListener("click", () => 
   updatePracticeBadges();
 });
 
+// 成績の推移パネル: 履歴リセットボタン (パネルは innerHTML で再生成されるため親要素に委譲)
+document.getElementById("practice-progress")?.addEventListener("click", (e) => {
+  const target = e.target as HTMLElement;
+  if (!target.closest("#practice-history-reset-btn")) return;
+  if (confirm("練習履歴（成績の推移データ）をリセットしますか？\n※連続正解数・累計正解率・復習リストは変更されません。")) {
+    try { localStorage.removeItem(HISTORY_KEY); } catch { /* ignore */ }
+    updatePracticeProgress();
+  }
+});
+
 // 起動時にバッジ更新
 updatePracticeBadges();
+updatePracticeProgress();
 
 document.getElementById("practice-area")?.addEventListener("click", (e) => {
   const target = e.target as HTMLElement;
-  // 次の問題ボタン (フィードバック内)
-  if (target.closest("#practice-next-btn")) {
-    currentProblem = generatePracticeProblem();
-    renderPracticeProblem(currentProblem);
+  // 次の問題ボタン (フィードバック内・下部 / 上部どちらも同じ挙動)
+  if (target.closest("#practice-next-btn") || target.closest("#practice-next-btn-top")) {
+    if (tutorialActive) {
+      advanceTutorial();
+    } else {
+      currentProblem = generatePracticeProblem();
+      renderPracticeProblem(currentProblem);
+    }
     window.scrollTo({ top: 0, behavior: "smooth" });
     return;
   }
-  // 取り込みボタン
+  // RP 当てモードの回答ボタン (Normal/Hard: スライダー)
+  if (target.closest("#rp-answer-btn")) {
+    const slider = document.getElementById("rp-slider") as HTMLInputElement | null;
+    if (slider) judgePracticeRP(Number(slider.value));
+    return;
+  }
+  // RP 当てモードの4択ボタン (Easy)
+  const choiceBtn = target.closest<HTMLButtonElement>(".rp-choice-btn");
+  if (choiceBtn) {
+    if (choiceBtn.disabled) return;
+    judgePracticeRP(Number(choiceBtn.dataset.value));
+    return;
+  }
+  // 取り込みボタン (チュートリアル中は CSS で非表示だが念のためガード)
   if (target.closest("#practice-apply-btn")) {
+    if (tutorialActive) return;
     if (!currentProblem) return;
     const p = currentProblem;
     players.length = 0;
@@ -2779,7 +3903,366 @@ document.getElementById("practice-area")?.addEventListener("click", (e) => {
   if (ans) judgePractice(ans);
 });
 
+// ===== 🎓 導入コース (固定5問チュートリアル) =====
+// 初心者が ICM の核心を5問で体感する固定カリキュラム。
+// スコア/streak/復習リストには一切記録しない (recordPracticeResult を呼ばない)。
+const TUTORIAL_DONE_KEY = "poker-icm-tutorial-done";
+
+interface TutorialProblemDef {
+  title: string;
+  narration: string;
+  lesson: string;
+  base: PracticeProblemBase;
+}
+
+// 各問題のパラメータは core の厳密 ICM 計算 (calculateExactCallEquity) で
+// 事前検証済み (report 参照)。以下はその検証結果:
+//   Q1: margin(heroEq-厳密必要勝率) = +16.8% (明確なコール, RP=0)
+//   Q2: RP = +2.35%, margin = +12.8% (小さい RP でも明確なコール)
+//   Q3: cEV必要勝率(44.1%) < heroEq(53.6%) < 厳密必要勝率(63.4%) ← ICMプレッシャーの核心
+//   Q4: margin = -3.2% (わずかにフォールド)
+//   Q5: margin = -12.4% (AKs でも大きくフォールド)
+const TUTORIAL_PROBLEMS: TutorialProblemDef[] = [
+  {
+    title: "チップ＝賞金の世界",
+    narration:
+      "全員が同じ賞金を狙う一発勝負 (Winner Take All)。ここではチップ＝そのまま賞金です。",
+    lesson:
+      "WTA では順位という概念がなく、勝率がそのまま賞金期待値に直結します。だから Risk Premium はゼロ。cEV（チップ的な必要勝率）だけで判断できる、ICM プレッシャーが存在しない最もシンプルなケースです。",
+    base: {
+      scenarioPlayers: [
+        { stack: 20, role: "hero", position: "BB" },
+        { stack: 15, role: "villain", position: "BTN" },
+        { stack: 25, role: "other", position: "SB" },
+      ],
+      payouts: [100],
+      sb: DEFAULT_SB,
+      bb: DEFAULT_BB,
+      totalAnte: DEFAULT_ANTE,
+      villainCallRangePct: 50,
+      heroHand: "AQo",
+    },
+  },
+  {
+    title: "相手をカバーしている",
+    narration:
+      "相手のスタックはあなたより少ない。もし負けても、あなたはまだトーナメントに残ります。",
+    lesson:
+      "自分が相手をカバーしている（負けても飛ばない）ときは、Risk Premium は小さめ。cEV に近い感覚でコールして大丈夫です。ICM プレッシャーは『自分が飛ぶリスク』があるときに強く働きます。",
+    base: {
+      scenarioPlayers: [
+        { stack: 30, role: "hero", position: "BB" },
+        { stack: 12, role: "villain", position: "BTN" },
+        { stack: 20, role: "other", position: "SB" },
+      ],
+      payouts: [50, 30, 20],
+      sb: DEFAULT_SB,
+      bb: DEFAULT_BB,
+      totalAnte: DEFAULT_ANTE,
+      villainCallRangePct: 40,
+      heroHand: "AJo",
+    },
+  },
+  {
+    title: "バブルの罠",
+    narration:
+      "あなたは4人残りの3番手。チップリーダーがオールイン。ハンドは悪くない…がこれはワナかもしれない。",
+    lesson:
+      "チップの上ではコールが得（cEV的には+EV）でも、厳密な ICM で計算すると必要勝率が跳ね上がり、フォールドが正解になることがあります。これが『ICM プレッシャー』の正体。飛べば賞金の可能性が消える一方、生き残れば上位の賞金が保証されるため、コールのリスクは額面以上に重いのです。",
+    base: {
+      scenarioPlayers: [
+        { stack: 15, role: "hero", position: "BB" },
+        { stack: 22, role: "villain", position: "BTN" },
+        { stack: 10, role: "other", position: "SB" },
+        { stack: 18, role: "other", position: "CO" },
+      ],
+      payouts: [50, 30, 20],
+      sb: DEFAULT_SB,
+      bb: DEFAULT_BB,
+      totalAnte: DEFAULT_ANTE,
+      villainCallRangePct: 40,
+      heroHand: "A9o",
+    },
+  },
+  {
+    title: "短スタックを待て",
+    narration:
+      "卓にはあなたよりずっと短いスタックの選手がいます。相手のオールインはギリギリ微妙なラインです。",
+    lesson:
+      "自分より短いスタックが残っている間は、その選手が先に飛んでくれれば自動的に順位が上がります。無理にコールしなくても得られる価値がある以上、微妙なラインはフォールド優位になりがちです。",
+    base: {
+      scenarioPlayers: [
+        { stack: 18, role: "hero", position: "BB" },
+        { stack: 20, role: "villain", position: "BTN" },
+        { stack: 7, role: "other", position: "SB" },
+        { stack: 25, role: "other", position: "CO" },
+      ],
+      payouts: [50, 30, 20],
+      sb: DEFAULT_SB,
+      bb: DEFAULT_BB,
+      totalAnte: DEFAULT_ANTE,
+      villainCallRangePct: 30,
+      heroHand: "AKo",
+    },
+  },
+  {
+    title: "サテライトの掟",
+    narration:
+      "上位がほぼ均等に賞金を得るサテライト。生き残ることそのものが目的です。AKs のような好ハンドでも、一度考え直しましょう。",
+    lesson:
+      "賞金がほぼ均等なサテライトでは、順位を1つ落とすことの価値がとても大きく、勝っても得られる価値はわずかです。そのため Risk Premium が極端に跳ね上がり、AKs や QQ 級の強いハンドでもフォールドが正解になることが多いのです。『残ること』が全てを支配します。",
+    base: {
+      scenarioPlayers: [
+        { stack: 18, role: "hero", position: "BB" },
+        { stack: 20, role: "villain", position: "BTN" },
+        { stack: 16, role: "other", position: "SB" },
+        { stack: 20, role: "other", position: "CO" },
+      ],
+      payouts: [33.4, 33.3, 33.3],
+      sb: DEFAULT_SB,
+      bb: DEFAULT_BB,
+      totalAnte: DEFAULT_ANTE,
+      villainCallRangePct: 15,
+      heroHand: "AKs",
+    },
+  },
+];
+
+let tutorialActive = false;
+let tutorialStep = 0;
+// このセッション中に「スキップ」した場合のみ true。tutorial-done は立てないので
+// 次回訪問時はまた案内カードが出る。
+let tutorialSkippedSession = false;
+
+function isTutorialDone(): boolean {
+  try {
+    return localStorage.getItem(TUTORIAL_DONE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function setTutorialActive(v: boolean): void {
+  tutorialActive = v;
+  document.body.classList.toggle("tutorial-active", v);
+}
+
+function tutorialProgressHtml(step: number): string {
+  const dots = TUTORIAL_PROBLEMS.map((_, i) => {
+    const cls = i === step ? "active" : i < step ? "done" : "";
+    return `<span class="tutorial-dot ${cls}"></span>`;
+  }).join("");
+  return `
+    <div class="tutorial-progress">
+      <span class="tutorial-progress-label">🎓 導入コース ${step + 1}/${TUTORIAL_PROBLEMS.length}</span>
+      <div class="tutorial-dots">${dots}</div>
+    </div>
+  `;
+}
+
+function renderTutorialIntroCard(): void {
+  const area = document.getElementById("practice-area");
+  if (!area) return;
+  area.innerHTML = `
+    <div class="tutorial-intro-card">
+      <div class="tutorial-intro-title">🎓 まずは導入コース (5問・3分)</div>
+      <div class="tutorial-intro-body">ICM の核心を体感しよう</div>
+      <button id="tutorial-intro-start-btn" type="button" class="solve-btn">▶ 導入コースを始める</button>
+      <button id="tutorial-intro-skip-btn" type="button" class="tutorial-skip-link">スキップして通常練習</button>
+    </div>
+  `;
+}
+
+function renderTutorialNarrationStep(): void {
+  const area = document.getElementById("practice-area");
+  if (!area) return;
+  const def = TUTORIAL_PROBLEMS[tutorialStep]!;
+  currentProblem = null;
+  area.innerHTML = `
+    ${tutorialProgressHtml(tutorialStep)}
+    <div class="tutorial-narration-card">
+      <div class="tutorial-narration-title">問題 ${tutorialStep + 1}: ${def.title}</div>
+      <div class="tutorial-narration-body">${def.narration}</div>
+      <button id="tutorial-start-problem-btn" type="button" class="solve-btn">この状況を見る →</button>
+    </div>
+  `;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function renderTutorialProblemStep(): void {
+  const def = TUTORIAL_PROBLEMS[tutorialStep]!;
+  const p: PracticeProblem = { ...def.base, ...computeDerivedFields(def.base) };
+  // チュートリアルは常に call/fold 判定 UI で出題する (RP当てモードが選択中でも固定)
+  const savedMode = practiceMode;
+  practiceMode = "callfold";
+  renderPracticeProblem(p);
+  practiceMode = savedMode;
+  const area = document.getElementById("practice-area");
+  if (area) area.insertAdjacentHTML("afterbegin", tutorialProgressHtml(tutorialStep));
+}
+
+function advanceTutorial(): void {
+  tutorialStep += 1;
+  if (tutorialStep >= TUTORIAL_PROBLEMS.length) {
+    finishTutorial();
+  } else {
+    renderTutorialNarrationStep();
+  }
+}
+
+function finishTutorial(): void {
+  try {
+    localStorage.setItem(TUTORIAL_DONE_KEY, "1");
+  } catch {
+    /* ignore */
+  }
+  setTutorialActive(false);
+  currentProblem = null;
+  const area = document.getElementById("practice-area");
+  if (!area) return;
+  area.innerHTML = `
+    <div class="tutorial-complete-card">
+      <div class="tutorial-complete-title">🎉 導入コース修了！</div>
+      <div class="tutorial-complete-sub">学んだ5つの教訓</div>
+      <ol class="tutorial-complete-list">
+        ${TUTORIAL_PROBLEMS.map(
+          (d, i) => `<li><strong>${i + 1}. ${d.title}</strong><br>${d.lesson}</li>`,
+        ).join("")}
+      </ol>
+      <button id="tutorial-goto-practice-btn" type="button" class="solve-btn">🎲 通常練習へ</button>
+    </div>
+  `;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function startTutorial(): void {
+  setTutorialActive(true);
+  tutorialStep = 0;
+  currentProblem = null;
+  renderTutorialNarrationStep();
+}
+
+document.getElementById("practice-tutorial-btn")?.addEventListener("click", () => {
+  startTutorial();
+});
+
+// チュートリアル専用の各種ボタンの委譲ハンドラ (既存の #practice-area クリックハンドラとは別に登録)
+document.getElementById("practice-area")?.addEventListener("click", (e) => {
+  const target = e.target as HTMLElement;
+  if (target.closest("#tutorial-intro-start-btn")) {
+    startTutorial();
+    return;
+  }
+  if (target.closest("#tutorial-intro-skip-btn")) {
+    tutorialSkippedSession = true;
+    currentProblem = generatePracticeProblem();
+    renderPracticeProblem(currentProblem);
+    return;
+  }
+  if (target.closest("#tutorial-start-problem-btn")) {
+    renderTutorialProblemStep();
+    return;
+  }
+  if (target.closest("#tutorial-next-btn")) {
+    advanceTutorial();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+  if (target.closest("#tutorial-goto-practice-btn")) {
+    currentProblem = generatePracticeProblem();
+    renderPracticeProblem(currentProblem);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+});
+
+// ===== 🃏 ハンド別判定 (計算結果タブ・必要勝率カード内) =====
+// クイック判断 (合成テーブルの概算) は精度と入力の手間が見合わず廃止したが、
+// 「13x13グリッドでハンドをタップ→即 GO/NO GO」というインタラクションは実データに
+// 基づく判定として価値が高いため、recompute() が出す必要勝率 ($EV) を使って移植する。
+const hvBodyEl = $<HTMLDivElement>("hv-body");
+const hvEmptyMsgEl = $<HTMLParagraphElement>("hv-empty-msg");
+const hvRangePillsEl = $<HTMLDivElement>("hv-range-pills");
+const hvBannerEl = $<HTMLDivElement>("hv-banner");
+const hvGridEl = $<HTMLDivElement>("hv-grid");
+const hvGridCountEl = $<HTMLParagraphElement>("hv-grid-count");
+
+let hvRangePct = 30;
+let hvPickedHand: HandNotation | null = null;
+/** recompute() が出した必要勝率 ($EV, 0〜1)。🎯/⚔️ 未指定など計算不能時は null。 */
+let hvRequiredEquity: number | null = null;
+
+/** hvRequiredEquity と選択中のレンジ/ハンドを元にグリッドとバナーを再描画する。 */
+function renderHandVerdict(): void {
+  if (hvRequiredEquity === null) {
+    hvBodyEl.classList.add("hidden");
+    hvEmptyMsgEl.classList.remove("hidden");
+    return;
+  }
+  hvBodyEl.classList.remove("hidden");
+  hvEmptyMsgEl.classList.add("hidden");
+
+  const reqEquity = hvRequiredEquity;
+  const reqPct = reqEquity * 100;
+  const villainRange = topRange(hvRangePct);
+
+  let inRangeCount = 0;
+  renderGrid(hvGridEl, (hand) => {
+    const eq = equity(hand, villainRange);
+    const inRange = eq >= reqEquity;
+    if (inRange) inRangeCount++;
+    let cls = inRange ? "in-range-hero" : "";
+    if (hand === hvPickedHand) cls += " picked";
+    return cls;
+  });
+  const coveragePct = (inRangeCount / 169) * 100;
+  hvGridCountEl.textContent = `169中 ${inRangeCount} ハンド (${coveragePct.toFixed(0)}%)`;
+
+  if (hvPickedHand) {
+    const eq = equity(hvPickedHand, villainRange) * 100;
+    const isCall = eq >= reqPct;
+    const margin = eq - reqPct;
+    hvBannerEl.classList.remove("hidden");
+    hvBannerEl.classList.toggle("hv-banner-call", isCall);
+    hvBannerEl.classList.toggle("hv-banner-fold", !isCall);
+    const verdict = isCall
+      ? `✅ コール (${margin >= 0 ? "+" : ""}${margin.toFixed(1)}%)`
+      : `❌ フォールド (${margin.toFixed(1)}%)`;
+    hvBannerEl.innerHTML = `<strong>${hvPickedHand}</strong>: equity ${eq.toFixed(1)}% ${isCall ? "≥" : "<"} 必要 ${reqPct.toFixed(1)}% → ${verdict}`;
+  } else {
+    hvBannerEl.classList.add("hidden");
+    hvBannerEl.innerHTML = "";
+  }
+}
+
+/** recompute() の末尾から呼ばれるフック。必要勝率 (dollarEV) か null (計算不能) を渡す。 */
+function updateHandVerdictRequiredEquity(requiredEquity: number | null): void {
+  hvRequiredEquity = requiredEquity;
+  renderHandVerdict();
+}
+
+hvRangePillsEl.addEventListener("click", (e) => {
+  const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(".hv-pill");
+  if (!btn || !btn.dataset.range) return;
+  hvRangePillsEl.querySelectorAll(".hv-pill").forEach((b) => b.classList.remove("active"));
+  btn.classList.add("active");
+  hvRangePct = Number(btn.dataset.range);
+  renderHandVerdict();
+});
+
+hvGridEl.addEventListener("click", (e) => {
+  const cell = (e.target as HTMLElement).closest<HTMLDivElement>(".hand-cell");
+  if (!cell) return;
+  hvPickedHand = cell.title;
+  renderHandVerdict();
+});
+
 // ===== 初期描画 =====
 applyTab(activeTab);
 renderPlayers();
 recompute();
+
+// 初回訪問時のみオンボーディングを表示（2回目以降は poker-icm-onboarding-done により出さない）
+if (!isOnboardingDone()) {
+  openOnboardingModal();
+}

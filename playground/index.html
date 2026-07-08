@@ -13,6 +13,21 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Poker ICM" />
+
+    <!-- OGP / SEO -->
+    <meta name="description" content="ICMエクイティ・バブルファクター・ナッシュ均衡をリアルタイムに計算できるポーカートーナメント向けの無料ツール。プッシュ/フォールドの練習問題で実戦感覚も鍛えられます。" />
+    <link rel="canonical" href="https://poker-icm-app.andenknt31113.workers.dev/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://poker-icm-app.andenknt31113.workers.dev/" />
+    <meta property="og:site_name" content="Poker ICM/BF Playground" />
+    <meta property="og:title" content="🎰 Poker ICM/BF Playground" />
+    <meta property="og:description" content="ICMエクイティ・バブルファクター・ナッシュ均衡をリアルタイムに計算できるポーカートーナメント向けの無料ツール。プッシュ/フォールドの練習問題で実戦感覚も鍛えられます。" />
+    <meta property="og:image" content="https://poker-icm-app.andenknt31113.workers.dev/icon-512.png" />
+    <meta property="og:locale" content="ja_JP" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="🎰 Poker ICM/BF Playground" />
+    <meta name="twitter:description" content="ICMエクイティ・バブルファクター・ナッシュ均衡をリアルタイムに計算できるポーカートーナメント向けの無料ツール。プッシュ/フォールドの練習問題で実戦感覚も鍛えられます。" />
+    <meta name="twitter:image" content="https://poker-icm-app.andenknt31113.workers.dev/icon-512.png" />
   </head>
   <body>
     <main class="container">
@@ -20,6 +35,7 @@
         <div class="header-row">
           <h1>🎰 Poker ICM/BF</h1>
           <div class="header-actions">
+            <button id="help-btn" class="header-btn" type="button" title="使い方ガイド" aria-label="ヘルプ">❓</button>
             <button id="share-url-btn-top" class="header-btn" type="button" title="シナリオを URL で共有" aria-label="共有">🔗</button>
             <button id="theme-toggle" class="header-btn" type="button" title="テーマ切替" aria-label="テーマ切替">🌙</button>
           </div>
@@ -42,11 +58,11 @@
       </div>
 
       <nav class="tab-bar" role="tablist" aria-label="セクション">
-        <button type="button" class="tab-btn active" data-tab="setup">⚙️</button>
-        <button type="button" class="tab-btn" data-tab="result">📊</button>
-        <button type="button" class="tab-btn" data-tab="hand">🃏</button>
-        <button type="button" class="tab-btn" data-tab="nash">🎯</button>
-        <button type="button" class="tab-btn" data-tab="practice">🎲</button>
+        <button type="button" class="tab-btn active" data-tab="setup"><span class="tab-icon">⚙️</span><span class="tab-label">セットアップ</span></button>
+        <button type="button" class="tab-btn" data-tab="result"><span class="tab-icon">📊</span><span class="tab-label">計算結果</span></button>
+        <button type="button" class="tab-btn" data-tab="hand"><span class="tab-icon">🃏</span><span class="tab-label">ハンド比較</span></button>
+        <button type="button" class="tab-btn" data-tab="nash"><span class="tab-icon">🎯</span><span class="tab-label">ナッシュ均衡</span></button>
+        <button type="button" class="tab-btn" data-tab="practice"><span class="tab-icon">🎲</span><span class="tab-label">練習</span></button>
       </nav>
 
 
@@ -245,6 +261,25 @@
         <p class="hint" id="autofill-hint" style="margin-top: 6px;"></p>
         <div id="position-warn" class="warn-box hidden"></div>
         <div id="eq-result" class="result"></div>
+
+        <div class="hv-section">
+          <h3>🃏 ハンド別判定</h3>
+          <p class="hint">相手の想定レンジを選び、自分のハンドをタップすると個別判定</p>
+          <p id="hv-empty-msg" class="hint hidden">プレイヤーで 🎯自分 と ⚔️相手 を指定してください</p>
+          <div id="hv-body">
+            <div id="hv-range-pills" class="hv-pills">
+              <button type="button" class="hv-pill" data-range="15">タイト Top15%</button>
+              <button type="button" class="hv-pill active" data-range="30">普通 Top30%</button>
+              <button type="button" class="hv-pill" data-range="50">ルース Top50%</button>
+            </div>
+            <div id="hv-banner" class="hv-banner hidden"></div>
+            <p class="hint hv-source-note">必要勝率 = 上の $EV (True Req)</p>
+            <div class="hv-grid-wrap">
+              <div id="hv-grid" class="hand-grid"></div>
+              <p class="hint" id="hv-grid-count"></p>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section class="card" data-tab="nash">
@@ -300,10 +335,10 @@
 
         <div class="direction-tabs" role="tablist">
           <button type="button" class="direction-tab active" data-direction="callBack">
-            自分の call を逆算
+            自分の call レンジを求める
           </button>
           <button type="button" class="direction-tab" data-direction="pushBack">
-            自分の push を逆算
+            自分の push レンジを求める
           </button>
         </div>
 
@@ -332,6 +367,7 @@
               step="1"
             />
           </label>
+          <p class="hint">※ Top X% は本ツール定義の強度順。他ツールとは一致しない場合があります。</p>
         </div>
         <div id="custom-controls" class="hidden">
           <p class="hint">
@@ -361,10 +397,14 @@
       </section>
 
       <section class="card" data-tab="practice">
-        <h2>🎲 練習問題 — call/fold 判断</h2>
-        <p class="hint">
+        <h2>🎲 練習問題</h2>
+        <p class="hint" id="practice-hint">
           ランダムシナリオ + 相手 push 想定レンジ + 自分のハンド → call/fold を即判定。
         </p>
+        <div class="practice-mode">
+          <button type="button" class="mode-btn active" data-mode="callfold">⚖️ call/fold 判定</button>
+          <button type="button" class="mode-btn" data-mode="rp">📊 RP 当て</button>
+        </div>
         <div class="practice-controls">
           <div class="practice-stats">
             <span id="practice-streak" class="streak-badge">🔥 連続正解 0</span>
@@ -377,9 +417,14 @@
             <button type="button" class="diff-btn" data-diff="hard">Hard</button>
           </div>
         </div>
+        <details id="practice-progress" class="practice-progress">
+          <summary>📈 成績の推移</summary>
+          <div id="practice-progress-body"></div>
+        </details>
         <div class="practice-actions-top">
           <button id="practice-new-btn" type="button" class="solve-btn">🎲 新しい問題</button>
           <button id="practice-review-btn" type="button" class="solve-btn" style="background: var(--card); color: var(--text); border: 1px solid var(--border);">📚 復習 (<span id="review-count">0</span>)</button>
+          <button id="practice-tutorial-btn" type="button" class="solve-btn tutorial-cta-btn">🎓 導入コース</button>
         </div>
         <div id="practice-area" class="practice-area"></div>
       </section>
