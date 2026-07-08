@@ -2758,6 +2758,8 @@ interface PracticeProblemBase {
   totalAnte: number;
   villainCallRangePct: number;
   heroHand: HandNotation;
+  /** 不正解時にどのモードで出題されたか (復習の再出題で使用)。旧データは undefined = callfold 扱い。 */
+  savedMode?: PracticeMode;
 }
 
 // PracticeProblemBase から一意に計算できる派生値。
@@ -3607,7 +3609,8 @@ function recordPracticeResult(isCorrect: boolean, p: PracticeProblem): void {
     const list = loadReviewList();
     const key = practiceProblemDedupKey(p);
     if (!list.some((x) => practiceProblemDedupKey(x) === key)) {
-      list.unshift(p);
+      // 出題時のモードを記録し、復習では同じモードで再出題する
+      list.unshift({ ...p, savedMode: practiceMode });
       saveReviewList(list);
     }
   }
@@ -3853,6 +3856,17 @@ document.getElementById("practice-review-btn")?.addEventListener("click", () => 
     if (area) area.innerHTML = `<div class="practice-info">まだ復習問題はありません。不正解の問題が自動で蓄積されます (最大50問)。</div>`;
     updatePracticeBadges();
     return;
+  }
+  // 保存時のモードで再出題する (callfold で保存した問題が RP クイズとして
+  // 出てしまうと、RP 用の出題フィルタを素通りした問題になるため)
+  const targetMode: PracticeMode = next.savedMode ?? "callfold";
+  if (practiceMode !== targetMode) {
+    practiceMode = targetMode;
+    try { localStorage.setItem("poker-icm-practice-mode", practiceMode); } catch { /* ignore */ }
+    document.querySelectorAll<HTMLButtonElement>(".mode-btn").forEach((b) =>
+      b.classList.toggle("active", b.dataset.mode === practiceMode),
+    );
+    updatePracticeHint();
   }
   currentProblem = next;
   renderPracticeProblem(currentProblem);
