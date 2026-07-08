@@ -1467,6 +1467,8 @@ input[type="range"]::-moz-range-thumb {
   border-radius: 10px;
   padding: 4px 6px;
   min-width: 52px;
+  /* 幅を抑えて中央のチップ/Pot表示との重なりを防ぐ (スタック数値+単位は改行) */
+  max-width: 60px;
   font-size: 10px;
   font-family: var(--mono);
   transform: translate(-50%, -50%);
@@ -1494,6 +1496,12 @@ input[type="range"]::-moz-range-thumb {
   font-weight: bold;
   color: var(--text);
 }
+.round-table-seat .seat-stack-unit {
+  display: block;
+  font-size: 9px;
+  font-weight: normal;
+  color: var(--muted);
+}
 .round-table-center {
   position: absolute;
   top: 50%;
@@ -1510,18 +1518,18 @@ input[type="range"]::-moz-range-thumb {
   transform: translate(-50%, -50%);
   text-align: center;
   color: #ffcc66;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: bold;
   font-family: var(--mono);
   background: rgba(0, 0, 0, 0.55);
-  padding: 5px 10px;
+  padding: 4px 7px;
   border-radius: 999px;
   border: 1.5px solid rgba(255, 204, 102, 0.55);
   white-space: nowrap;
   z-index: 2;
 }
 .round-table-pot small {
-  font-size: 10px;
+  font-size: 9px;
   margin-left: 1px;
   opacity: 0.85;
 }
@@ -1532,8 +1540,8 @@ input[type="range"]::-moz-range-thumb {
   background: rgba(0, 0, 0, 0.55);
   border: 1.5px solid var(--border);
   border-radius: 999px;
-  padding: 2px 7px;
-  font-size: 11px;
+  padding: 2px 5px;
+  font-size: 10px;
   font-weight: bold;
   font-family: var(--mono);
   color: var(--text);
@@ -1705,6 +1713,48 @@ input[type="range"]::-moz-range-thumb {
 }
 .rp-quiz .solve-btn {
   width: 100%;
+}
+
+/* Easy モード: RP 当ての4択ピル */
+.rp-choices {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin: 6px 0 8px;
+}
+.rp-choice-btn {
+  background: var(--card);
+  color: var(--text);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 8px;
+  font-size: 16px;
+  font-weight: bold;
+  font-family: var(--mono);
+  cursor: pointer;
+  transition: border-color 0.1s ease, transform 0.06s ease, background 0.1s ease;
+}
+.rp-choice-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+.rp-choice-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.rp-choice-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.rp-choice-btn.correct-choice {
+  border-color: var(--good);
+  background: rgba(102, 187, 106, 0.18);
+  color: var(--good);
+  opacity: 1;
+}
+.rp-choice-btn.wrong-choice {
+  border-color: var(--bad);
+  background: rgba(239, 83, 80, 0.18);
+  color: var(--bad);
+  opacity: 1;
 }
 
 .practice-details {
@@ -2133,6 +2183,39 @@ input[type="range"]::-moz-range-thumb {
   font-size: 18px;
   font-weight: bold;
   margin-bottom: 6px;
+}
+
+/* 判定直後: verdict + 「次へ」ボタンを横並びに (フィードバックが画面外にあっても
+   すぐ次の問題へ進めるように、下部の次へボタンと同じ挙動のボタンを上にも配置) */
+.verdict-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.verdict-row .verdict {
+  margin-bottom: 0;
+  flex: 1;
+}
+.solve-btn.compact {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  margin: 0;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* 教訓 (💡) 一行 */
+.practice-lesson {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text);
 }
 
 /* 注意/警告ボックス */

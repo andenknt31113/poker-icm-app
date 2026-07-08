@@ -2180,6 +2180,12 @@ function applyTab(tab: TabId): void {
   }
   // 練習タブ表示時に成績の推移パネルを更新
   if (tab === "practice") updatePracticeProgress();
+  // 練習タブを開いたとき、まだ問題が無ければ自動出題する
+  // (オンボーディングの「練習を始める」CTA や、前回タブが練習で復元された場合も含む)
+  if (tab === "practice" && !currentProblem) {
+    currentProblem = generatePracticeProblem();
+    renderPracticeProblem(currentProblem);
+  }
   // ハンド or Nash タブ初表示時にスムーズトップ
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -2905,6 +2911,49 @@ function problemRP(p: PracticeProblem): number {
   return (p.dollarEV - p.cEV) * 100;
 }
 
+/**
+ * 判定結果に添える「教訓」一行。優先順位で最初にマッチしたものだけを返す。
+ * 1. ペイアウトがほぼ均等 (サテライト型)
+ * 2. villain がカバーしている (villainStack >= heroStack) かつ RP が高い
+ * 3. hero がカバーしている (villainStack < heroStack) かつ RP が低い
+ * 4. hero より短いスタックの other プレイヤーがいる
+ * 5. それ以外の一般則
+ */
+function practiceLesson(p: PracticeProblem): string {
+  const payouts = p.payouts;
+  if (payouts.length > 0) {
+    const maxPayout = Math.max(...payouts);
+    const minPayout = Math.min(...payouts);
+    if (maxPayout > 0 && maxPayout - minPayout < maxPayout * 0.15) {
+      return "🛰 サテライトでは『残ること』が全て。どんな強いハンドでも RP が極端に上がり、ほぼ全てのコールが正当化されません。";
+    }
+  }
+
+  const hero = p.scenarioPlayers.find((pl) => pl.role === "hero");
+  const villain = p.scenarioPlayers.find((pl) => pl.role === "villain");
+  const rp = problemRP(p);
+
+  if (hero && villain) {
+    if (villain.stack >= hero.stack && rp >= 5) {
+      return "⚠️ カバーされている相手へのコールは、負け＝敗退。トーナメント生命を賭けるため Risk Premium が跳ね上がります。";
+    }
+    if (villain.stack < hero.stack && rp < 5) {
+      return "自分が相手をカバーしている時は、負けても飛ばないため RP は小さめ。cEV に近い感覚でコールできます。";
+    }
+  }
+
+  if (hero) {
+    const hasShorterOther = p.scenarioPlayers.some(
+      (pl) => pl.role === "other" && pl.stack < hero.stack,
+    );
+    if (hasShorterOther) {
+      return "自分より短いスタックが残っている間は、無理に勝負しなくても順位が上がる可能性があります。それが RP の源泉です。";
+    }
+  }
+
+  return "必要勝率 = cEV + Risk Premium。ICM 下では『チップで得』でも『賞金で損』になり得ることを常に確認しましょう。";
+}
+
 function generatePracticeProblem(): PracticeProblem {
   if (practiceMode === "rp") {
     // RP モードは call/fold の境界フィルタ不要。
@@ -3178,8 +3227,8 @@ function renderRoundTable(
   const seats: string[] = [];
   const chips: string[] = [];
   // 席の配置半径と「場」チップの配置半径 (席と中央ポットの中間に配置)
-  const seatR = 38;
-  const chipR = 20;
+  const seatR = 46;
+  const chipR = 23;
   // BB ante 構造: BB が ante 全部を負担、他はゼロ
   // hero を 6 時方向 (90度=π/2) に配置、他は時計回り
   for (let i = 0; i < n; i++) {
@@ -3203,7 +3252,7 @@ function renderRoundTable(
     seats.push(`
       <div class="round-table-seat ${cls}" style="left:${sx}%;top:${sy}%">
         <div class="seat-pos">${tag}${p.position || `P${i + 1}`}</div>
-        <div class="seat-stack">${remaining.toFixed(remaining % 1 === 0 ? 0 : 2)}<span style="font-size:9px;color:var(--muted);">BB 残</span></div>
+        <div class="seat-stack">${remaining.toFixed(remaining % 1 === 0 ? 0 : 2)}<span class="seat-stack-unit">BB 残</span></div>
       </div>
     `);
 
@@ -3356,7 +3405,21 @@ function renderPracticeProblem(rawP: PracticeProblem): void {
   }
 }
 
-// RP 当てモード: スライダーで Risk Premium を推定させる
+// Easy モード用: 正解 RP (0.5%単位に丸め) から重複なし・非負の4択を作りシャッフルする。
+// 既定オフセットは 0 / +5 / -5 / +10。-5 が負になる場合は 0 / +5 / +10 / +15 に切り替える。
+function buildEasyRPChoices(correctRounded: number): number[] {
+  const wouldGoNegative = correctRounded - 5 < 0;
+  const offsets = wouldGoNegative ? [0, 5, 10, 15] : [0, 5, -5, 10];
+  const values = offsets.map((o) => correctRounded + o);
+  // Fisher-Yates シャッフル
+  for (let i = values.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [values[i], values[j]] = [values[j]!, values[i]!];
+  }
+  return values;
+}
+
+// RP 当てモード: Normal/Hard はスライダー、Easy は4択ボタンで Risk Premium を推定させる
 function renderPracticeProblemRP(p: PracticeProblem): void {
   const area = document.getElementById("practice-area");
   if (!area) return;
@@ -3367,16 +3430,36 @@ function renderPracticeProblemRP(p: PracticeProblem): void {
       <span class="scenario-warn-item">リターン <strong>${p.potIfWin.toFixed(1)} BB</strong></span>
     </div>
   `;
-  area.innerHTML = `
-    <div id="practice-table-wrapper"></div>
-    ${renderScenarioBento(p, rpInfoHtml)}
-    <div class="rp-quiz">
-      <div class="rp-quiz-q">📊 この状況の Risk Premium は？</div>
+  const isEasy = practiceDifficulty === "easy";
+  const quizBodyHtml = isEasy
+    ? (() => {
+        const correctRounded = Math.round(problemRP(p) * 2) / 2;
+        const choices = buildEasyRPChoices(correctRounded);
+        return `
+          <div class="rp-choices" id="rp-choices">
+            ${choices
+              .map(
+                (v) =>
+                  `<button type="button" class="rp-choice-btn" data-value="${v}">+${v.toFixed(1)}%</button>`,
+              )
+              .join("")}
+          </div>
+          <div class="rp-quiz-tol">4択から選んでタップ (Easy)</div>
+        `;
+      })()
+    : `
       <div class="rp-slider-value" id="rp-slider-value">+20.0%</div>
       <input type="range" id="rp-slider" class="rp-slider" min="0" max="50" step="0.5" value="20" />
       <div class="rp-slider-scale"><span>0%</span><span>25%</span><span>50%</span></div>
       <div class="rp-quiz-tol">許容誤差 ±${tol}%（難易度で変化）</div>
       <button id="rp-answer-btn" type="button" class="solve-btn">回答する</button>
+    `;
+  area.innerHTML = `
+    <div id="practice-table-wrapper"></div>
+    ${renderScenarioBento(p, rpInfoHtml)}
+    <div class="rp-quiz">
+      <div class="rp-quiz-q">📊 この状況の Risk Premium は？</div>
+      ${quizBodyHtml}
     </div>
     <div id="practice-feedback"></div>
   `;
@@ -3415,9 +3498,25 @@ function judgePracticeRP(guess: number): void {
   if (slider) slider.disabled = true;
   if (ansBtn) ansBtn.disabled = true;
 
+  // Easy モードの4択: 全て無効化し、正解をハイライト
+  const choiceWrap = document.getElementById("rp-choices");
+  if (choiceWrap) {
+    const correctRounded = Math.round(actualRP * 2) / 2;
+    choiceWrap.querySelectorAll<HTMLButtonElement>(".rp-choice-btn").forEach((b) => {
+      b.disabled = true;
+      const v = Number(b.dataset.value);
+      if (v === correctRounded) b.classList.add("correct-choice");
+      else if (v === guess) b.classList.add("wrong-choice");
+    });
+  }
+
   const evBF = p.callAmount * p.bf;
   fb.innerHTML = `
-    <div class="verdict">${isCorrect ? "🎉 正解!" : "😅 不正解"}</div>
+    <div class="verdict-row">
+      <div class="verdict">${isCorrect ? "🎉 正解!" : "😅 不正解"}</div>
+      <button id="practice-next-btn-top" type="button" class="solve-btn compact">🎲 次へ</button>
+    </div>
+    <div class="practice-lesson">💡 ${practiceLesson(p)}</div>
     <div>あなたの回答: <strong>+${guess.toFixed(1)}%</strong></div>
     <div>正解 RP (厳密 ICM): <strong style="color: var(--accent)">+${actualRP.toFixed(1)}%</strong> <span class="muted">(許容 ±${tol}%)</span></div>
     <div>誤差: <strong style="color: ${isCorrect ? "var(--good)" : "var(--bad)"}">${diff >= 0 ? "+" : ""}${diff.toFixed(1)}%</strong></div>
@@ -3447,6 +3546,7 @@ function judgePracticeRP(guess: number): void {
       <button id="practice-apply-btn" type="button" class="solve-btn" style="background: var(--card); color: var(--text); border: 1px solid var(--border);">📥 設定に取り込む (詳細分析)</button>
     </div>
   `;
+  fb.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 // streak / stats / review をまとめて更新 (call/fold・RP 両モード共通)
@@ -3485,7 +3585,11 @@ function judgePractice(answer: "call" | "fold"): void {
 
   recordPracticeResult(isCorrect, p);
   fb.innerHTML = `
-    <div class="verdict">${isCorrect ? "🎉 正解!" : "😅 不正解"} 正答: ${verdict}</div>
+    <div class="verdict-row">
+      <div class="verdict">${isCorrect ? "🎉 正解!" : "😅 不正解"} 正答: ${verdict}</div>
+      <button id="practice-next-btn-top" type="button" class="solve-btn compact">🎲 次へ</button>
+    </div>
+    <div class="practice-lesson">💡 ${practiceLesson(p)}</div>
     <div>cEV 必要勝率: <strong>${(p.cEV * 100).toFixed(1)}%</strong></div>
     <div>必要勝率 (厳密 ICM): <strong>${(p.dollarEV * 100).toFixed(1)}%</strong> <span class="muted">(参考: BF近似 ${(p.dollarEVApprox * 100).toFixed(1)}%)</span></div>
     <div>${p.heroHand} の equity vs Top${p.villainCallRangePct}%: <strong>${(p.heroEq * 100).toFixed(1)}%</strong></div>
@@ -3608,6 +3712,7 @@ function judgePractice(answer: "call" | "fold"): void {
       return cls;
     });
   }
+  fb.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 const practiceNewBtn = document.getElementById("practice-new-btn");
@@ -3691,17 +3796,24 @@ updatePracticeProgress();
 
 document.getElementById("practice-area")?.addEventListener("click", (e) => {
   const target = e.target as HTMLElement;
-  // 次の問題ボタン (フィードバック内)
-  if (target.closest("#practice-next-btn")) {
+  // 次の問題ボタン (フィードバック内・下部 / 上部どちらも同じ挙動)
+  if (target.closest("#practice-next-btn") || target.closest("#practice-next-btn-top")) {
     currentProblem = generatePracticeProblem();
     renderPracticeProblem(currentProblem);
     window.scrollTo({ top: 0, behavior: "smooth" });
     return;
   }
-  // RP 当てモードの回答ボタン
+  // RP 当てモードの回答ボタン (Normal/Hard: スライダー)
   if (target.closest("#rp-answer-btn")) {
     const slider = document.getElementById("rp-slider") as HTMLInputElement | null;
     if (slider) judgePracticeRP(Number(slider.value));
+    return;
+  }
+  // RP 当てモードの4択ボタン (Easy)
+  const choiceBtn = target.closest<HTMLButtonElement>(".rp-choice-btn");
+  if (choiceBtn) {
+    if (choiceBtn.disabled) return;
+    judgePracticeRP(Number(choiceBtn.dataset.value));
     return;
   }
   // 取り込みボタン
