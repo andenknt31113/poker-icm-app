@@ -10,7 +10,7 @@
   "scripts": {
     "build": "npm -w @poker-icm/core run build && npm -w @poker-icm/playground run build",
     "dev": "npm -w @poker-icm/playground run dev",
-    "test": "npm -w @poker-icm/core run test",
+    "test": "npm -w @poker-icm/core run test && npm -w @poker-icm/playground run test",
     "typecheck": "npm -w @poker-icm/core run typecheck && npm -w @poker-icm/playground exec -- tsc --noEmit",
     "cap:sync": "npm run build && cap sync ios",
     "ios:open": "cap open ios"
