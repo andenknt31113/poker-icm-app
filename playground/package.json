@@ -16,6 +16,7 @@
     "@poker-icm/core": "file:../core"
   },
   "devDependencies": {
+    "jsdom": "^25.0.1",
     "pokersolver": "^2.1.4",
     "tsx": "^4.21.0",
     "typescript": "^5.6.3",

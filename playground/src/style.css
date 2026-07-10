@@ -2629,6 +2629,18 @@ footer a {
   text-decoration: none;
 }
 
+.footer-legal-link {
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  text-decoration: underline;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 4px 2px;
+  margin-top: 2px;
+}
+
 /* ===== autofill ヒント (Section 5) ===== */
 .autofill-details {
   background: var(--card);
@@ -2691,13 +2703,27 @@ footer a {
 .autofill-table td:first-child { text-align: left; color: var(--muted); }
 .autofill-table .good { color: var(--good); }
 
-/* ===== PWA: iOS ホーム画面追加ヒントバナー ===== */
-.ios-install-banner {
+/* ===== PWA: 画面下部トーストの共有スタック =====
+   iOS インストール案内 / SW 更新通知など、タブバー上に浮かぶ固定トーストを
+   同じアンカー位置に積み上げるコンテナ。コンテナ自体は fixed で位置決めし、
+   個々のトーストは通常フローの子要素として積み重なる (重なり防止)。 */
+.pwa-toast-stack {
   position: fixed;
   left: 12px;
   right: 12px;
   bottom: calc(72px + env(safe-area-inset-bottom, 0) + 10px);
   z-index: 90;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.pwa-toast-stack > * {
+  pointer-events: auto;
+}
+
+/* ===== PWA: iOS ホーム画面追加ヒントバナー ===== */
+.ios-install-banner {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -2737,6 +2763,43 @@ footer a {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* ===== PWA: Service Worker 更新通知トースト ===== */
+.sw-update-toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  font-size: 12px;
+  color: var(--text);
+  cursor: pointer;
+  animation: ios-banner-in 0.2s ease-out;
+}
+.sw-update-toast:active {
+  background: var(--border);
+}
+.sw-update-toast span {
+  flex: 1;
+  line-height: 1.5;
+}
+.sw-update-toast-close {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-family: inherit;
+}
+.sw-update-toast-close:active {
+  background: var(--border);
 }
 
 /* ===== オフライン状態インジケータ ===== */
@@ -2901,9 +2964,45 @@ footer a {
 .guide-modal-body .howto {
   margin: 0 0 10px;
 }
+.guide-intro {
+  color: var(--muted);
+  font-size: 12.5px;
+  margin: 0 0 12px;
+}
 .guide-reopen-btn {
   margin-top: 4px;
   width: 100%;
+}
+.guide-legal-link {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 12.5px;
+  text-decoration: underline;
+  padding: 8px 10px;
+  cursor: pointer;
+  text-align: center;
+}
+.legal-modal-body h4 {
+  color: var(--accent);
+  font-size: 14px;
+  margin: 16px 0 8px;
+}
+.legal-modal-body h4:first-of-type {
+  margin-top: 4px;
+}
+.legal-meta {
+  color: var(--muted);
+  font-size: 12px;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
 }
 
 /* ===== 初回ヒントバー (セットアップタブ最上部) ===== */

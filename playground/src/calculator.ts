@@ -245,6 +245,7 @@ export function recompute(): void {
     saveState();
     updateNashOvercallWarn();
     updatePositionWarn(heroIndex, villainIndex);
+    updateDepthWarn(heroIndex, villainIndex, stacks);
     updateHandPositionBanner(heroIndex);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -253,6 +254,7 @@ export function recompute(): void {
     eqResult.innerHTML = "";
     heroSummaryEl.classList.remove("active");
     updateHandVerdictRequiredEquity(null);
+    updateDepthWarn(-1, -1, []);
   }
 }
 
@@ -587,6 +589,55 @@ function updatePositionWarn(heroIndex: number, villainIndex: number): void {
     `;
   } else {
     warnEl.classList.add("hidden");
+  }
+}
+
+// 深さ警告 (必要勝率カード・🃏ハンド別判定セクション用)
+// 本計算機は push/fold (オールイン) を前提としており、実効スタックが深い場面
+// (20bb 超) では実戦上は小さいオープンやコールなど他の選択肢が現実的になる。
+// 練習 (5-30bb で出題) 側は「オールイン前提」が自明なため警告は出さない。
+const DEPTH_WARN_THRESHOLD_BB = 20;
+
+function depthWarnHtml(effStack: number): string {
+  return `
+    ⚠️ 実効 ${fmt(effStack, 1)}bb: この深さでは push/fold 以外の選択肢
+    (小さいオープンやコール) が現実的です。本ツールの計算はオールイン前提です。
+  `;
+}
+
+function updateDepthWarn(heroIndex: number, villainIndex: number, stacks: number[]): void {
+  const eqWarnEl = document.getElementById("depth-warn-eq");
+  const hvWarnEl = document.getElementById("depth-warn-hv");
+  if (!eqWarnEl && !hvWarnEl) return;
+
+  const hide = (): void => {
+    eqWarnEl?.classList.add("hidden");
+    hvWarnEl?.classList.add("hidden");
+  };
+
+  if (heroIndex < 0 || villainIndex < 0 || heroIndex === villainIndex) {
+    hide();
+    return;
+  }
+  const heroStack = stacks[heroIndex];
+  const villainStack = stacks[villainIndex];
+  if (heroStack === undefined || villainStack === undefined) {
+    hide();
+    return;
+  }
+  const effStack = Math.min(heroStack, villainStack);
+  if (!(effStack > DEPTH_WARN_THRESHOLD_BB)) {
+    hide();
+    return;
+  }
+  const html = depthWarnHtml(effStack);
+  if (eqWarnEl) {
+    eqWarnEl.innerHTML = html;
+    eqWarnEl.classList.remove("hidden");
+  }
+  if (hvWarnEl) {
+    hvWarnEl.innerHTML = html;
+    hvWarnEl.classList.remove("hidden");
   }
 }
 
