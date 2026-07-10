@@ -134,8 +134,21 @@ describe("SW 更新通知トースト", () => {
     expect(worker.postMessage).not.toHaveBeenCalled();
   });
 
-  it("controllerchange で 1 度だけ location.reload する (多重リロードガード)", async () => {
+  it("ユーザーが更新を要求していない controllerchange ではリロードしない (初回訪問の claim 対策)", async () => {
     await triggerUpdateInstalled();
+
+    // トーストをタップしていない状態 (= 初回訪問時の clients.claim() 相当)
+    swContainer.dispatchEvent(new Event("controllerchange"));
+    swContainer.dispatchEvent(new Event("controllerchange"));
+
+    expect(reloadMock).not.toHaveBeenCalled();
+  });
+
+  it("トーストのタップ後は controllerchange で 1 度だけ location.reload する (多重リロードガード)", async () => {
+    await triggerUpdateInstalled();
+
+    const toast = document.getElementById("sw-update-toast")!;
+    toast.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
     swContainer.dispatchEvent(new Event("controllerchange"));
     swContainer.dispatchEvent(new Event("controllerchange"));
