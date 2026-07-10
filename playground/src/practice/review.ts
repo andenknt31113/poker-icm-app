@@ -1,6 +1,13 @@
 import type { PracticeProblem, PracticeMode } from "./types.js";
 import { loadReviewList, saveReviewList } from "./store.js";
-import { ensureDerivedFields, isDegenerateProblem, getPracticeMode, setPracticeMode } from "./generate.js";
+import {
+  ensureDerivedFields,
+  isDegenerateProblem,
+  isDegeneratePushProblem,
+  isPushProblem,
+  getPracticeMode,
+  setPracticeMode,
+} from "./generate.js";
 import { renderPracticeProblem, setCurrentProblem, updatePracticeHint } from "./render.js";
 import { updatePracticeBadges } from "./judge.js";
 import { isTutorialActive, setTutorialActive } from "./tutorialState.js";
@@ -15,11 +22,19 @@ export function initReview(): void {
       if (area) area.innerHTML = `<div class="practice-info">まだ復習問題はありません。不正解の問題が自動で蓄積されます (最大50問)。</div>`;
       return;
     }
-    // 先頭から取り出して再出題 (過去に保存された縮退問題はスキップして破棄)
+    // 先頭から取り出して再出題 (過去に保存された縮退問題はスキップして破棄)。
+    // push 判定モードの問題は callfold/rp とは派生フィールドの意味が異なるため
+    // (hero=SB, equityWin/equityLose は使わない placeholder 0)、専用の縮退判定
+    // (isDegeneratePushProblem) を使う。ここを間違えると push の復習問題が
+    // 「equityWin===equityLose===0 (未使用フィールド)」を縮退と誤検知し、
+    // 復習リストから問題自体が失われてしまう。
     let next: PracticeProblem | null = null;
     while (list.length > 0) {
       const candidate = ensureDerivedFields(list.shift()!);
-      if (!isDegenerateProblem(candidate)) { next = candidate; break; }
+      const degenerate = isPushProblem(candidate)
+        ? isDegeneratePushProblem(candidate)
+        : isDegenerateProblem(candidate);
+      if (!degenerate) { next = candidate; break; }
     }
     saveReviewList(list);
     if (!next) {

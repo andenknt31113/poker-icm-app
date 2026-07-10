@@ -1667,7 +1667,7 @@ input[type="range"]::-moz-range-thumb {
   flex-wrap: wrap;
 }
 
-/* ===== 練習モード切替 ===== */
+/* ===== 練習モード切替 (3分割: call/fold・RP・push) ===== */
 .practice-mode {
   display: flex;
   gap: 2px;
@@ -1679,19 +1679,31 @@ input[type="range"]::-moz-range-thumb {
 }
 .mode-btn {
   flex: 1;
+  min-width: 0; /* flex アイテムがテキストで潰れず縮まないようにする既定挙動を上書き */
   background: transparent;
   color: var(--muted);
   border: none;
-  padding: 8px 6px;
-  font-size: 13px;
+  padding: 8px 4px;
+  font-size: 12px;
+  line-height: 1.25;
   border-radius: 4px;
   cursor: pointer;
   font-family: inherit;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 .mode-btn.active {
   background: var(--accent);
   color: #000;
   font-weight: bold;
+}
+/* 3分割だと横幅が特に厳しい極小画面 (~360px以下) はさらに詰める */
+@media (max-width: 380px) {
+  .mode-btn {
+    font-size: 10.5px;
+    padding: 7px 2px;
+  }
 }
 
 /* ===== RP 当てクイズ ===== */
@@ -2182,6 +2194,12 @@ input[type="range"]::-moz-range-thumb {
 .practice-btn.fold {
   background: var(--bad);
   box-shadow: 0 6px 0 0 color-mix(in srgb, var(--bad) 62%, black);
+}
+/* push 判定モードの「オールイン」ボタン: アクセント色で call とは視覚的に区別 */
+.practice-btn.push {
+  background: var(--accent);
+  color: #051018;
+  box-shadow: 0 6px 0 0 color-mix(in srgb, var(--accent) 62%, black);
 }
 .practice-btn:active {
   transform: translateY(6px);

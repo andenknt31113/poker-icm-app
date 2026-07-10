@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { practiceLesson } from "../src/practice/judge.js";
+import { practiceLesson, practicePushLesson } from "../src/practice/judge.js";
 import { makeProblem } from "./fixtures.js";
 
 describe("practiceLesson", () => {
@@ -74,5 +74,53 @@ describe("practiceLesson", () => {
       dollarEV: 0.31, // rp = 1 < 5, villain.stack(20) >= hero.stack(20) だが rp<5 → 分岐2不成立、分岐3(villain<hero)も不成立
     });
     expect(practiceLesson(p)).toMatch(/必要勝率 = cEV \+ Risk Premium/);
+  });
+});
+
+describe("practicePushLesson", () => {
+  it("payouts が1つ (WTA) なら ICM 圧ゼロのメッセージを返す", () => {
+    const p = makeProblem({ payouts: [100] });
+    expect(practicePushLesson(p)).toMatch(/WTA/);
+  });
+
+  it("WTA 判定は均等ペイ判定より優先される (payouts=[100] は max=min でサテライトに誤マッチしない)", () => {
+    const p = makeProblem({ payouts: [100] });
+    expect(practicePushLesson(p)).toMatch(/WTA/);
+    expect(practicePushLesson(p)).not.toMatch(/サテライト/);
+  });
+
+  it("ペイアウトがほぼ均等 (サテライト型) なら push もタイト化のメッセージを返す", () => {
+    const p = makeProblem({ payouts: [33.4, 33.3, 33.3] });
+    expect(practicePushLesson(p)).toMatch(/サテライト/);
+  });
+
+  it("villain がカバーしていてマージンが小さいならカバー警告を返す", () => {
+    const p = makeProblem({
+      payouts: [50, 30, 20],
+      scenarioPlayers: [
+        { stack: 15, role: "hero", position: "SB" },
+        { stack: 25, role: "villain", position: "BB" }, // villain.stack(25) >= hero.stack(15)
+      ],
+      pushMarginNorm: 0.01, // < 0.03
+      pushPCall: 0.5,
+    });
+    expect(practicePushLesson(p)).toMatch(/カバーされている相手/);
+  });
+
+  it("villain のコール率が低い (スチール成功率が高い) なら広く push できるというメッセージを返す", () => {
+    const p = makeProblem({
+      payouts: [50, 30, 20],
+      // デフォルトの scenarioPlayers は villain.stack(15) < hero.stack(20) なのでカバー分岐は不成立
+      pushPCall: 0.1,
+    });
+    expect(practicePushLesson(p)).toMatch(/スチール成功率/);
+  });
+
+  it("どの特別条件にも当てはまらない場合は push の $EV の一般則メッセージを返す", () => {
+    const p = makeProblem({
+      payouts: [50, 30, 20],
+      pushPCall: 0.3, // >= 0.15 なのでスチール分岐も不成立
+    });
+    expect(practicePushLesson(p)).toMatch(/push の \$EV/);
   });
 });

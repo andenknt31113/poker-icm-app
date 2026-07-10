@@ -5,8 +5,8 @@ import type { HandNotation } from "../handRanking.js";
 // PracticeProblem のうち「問題そのもの」を定義する部分。
 // localStorage の復習リストにもこの形のまま保存される (スキーマ不変)。
 
-/** 練習モード: call/fold 判定 か RP 当て か */
-export type PracticeMode = "callfold" | "rp";
+/** 練習モード: call/fold 判定 か RP 当て か push 判定 か */
+export type PracticeMode = "callfold" | "rp" | "push";
 export type Difficulty = "easy" | "normal" | "hard";
 
 export interface PracticeProblemBase {
@@ -45,6 +45,37 @@ export interface PracticeProblemDerived {
   stacksLose: number[];
   callAmount: number;
   potIfWin: number;
+
+  // ===== push 判定モード専用の派生値 =====
+  // hero=SB が villain=BB に対し push するかどうかの厳密 ICM 判定
+  // (core/src/pushDecision.ts の evaluatePushDecision に対応)。
+  // callfold/rp モードの問題には存在しない (undefined のまま)。上の
+  // 汎用フィールド (cEV/dollarEV/heroEq 等) は push モードでは意味を持たない
+  // プレースホルダ値 (0) が入るだけで、判定/表示には使わない。
+  /** push した場合の hero $EV (ICM)。 */
+  pushEvPush?: number;
+  /** push せず fold した場合の hero $EV (ICM)。 */
+  pushEvFold?: number;
+  pushEquityFold?: number;
+  pushEquitySteal?: number;
+  pushEquityWin?: number;
+  pushEquityLose?: number;
+  pushStacksFold?: number[];
+  pushStacksSteal?: number[];
+  pushStacksWin?: number[];
+  pushStacksLose?: number[];
+  /** 正解 (push すべきか)。 */
+  pushShouldPush?: boolean;
+  /** villain がコールしてくる確率 (0..1, コンボ重み比)。 */
+  pushPCall?: number;
+  /** villain のコールレンジに対する hero equity (0..1)。 */
+  pushEqVsCallRange?: number;
+  /** (evPush − evFold) を賞金プール総額で正規化したマージン (難易度バンド判定用)。 */
+  pushMarginNorm?: number;
+  /** push→call 時の matched chips (BB 単位、表示用)。 */
+  pushMatched?: number;
+  /** push→call 時の showdown pot (BB 単位、表示用)。 */
+  pushPot?: number;
 }
 
 export type PracticeProblem = PracticeProblemBase & PracticeProblemDerived;

@@ -7,7 +7,7 @@ import {
   setPracticeDifficulty,
 } from "./generate.js";
 import { renderPracticeProblem, getCurrentProblem, setCurrentProblem, updatePracticeHint } from "./render.js";
-import { judgePractice, judgePracticeRP, updatePracticeBadges } from "./judge.js";
+import { judgePractice, judgePracticeRP, judgePracticePush, updatePracticeBadges } from "./judge.js";
 import { updatePracticeProgress } from "./progress.js";
 import {
   isTutorialActive,
@@ -129,11 +129,16 @@ export function initPracticeInteractions(): void {
       applyTab("setup");
       return;
     }
-    // call / fold ボタン
+    // call / fold ボタン (push 判定モードでは push / fold ボタン)
     const btn = target.closest<HTMLButtonElement>(".practice-btn");
     if (!btn) return;
-    const ans = btn.dataset.answer as "call" | "fold" | undefined;
-    if (ans) judgePractice(ans);
+    const ans = btn.dataset.answer as "call" | "fold" | "push" | undefined;
+    if (!ans) return;
+    if (getPracticeMode() === "push") {
+      judgePracticePush(ans as "push" | "fold");
+    } else {
+      judgePractice(ans as "call" | "fold");
+    }
   });
 
   document.getElementById("practice-tutorial-btn")?.addEventListener("click", () => {

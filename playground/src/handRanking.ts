@@ -104,3 +104,9 @@ export function topRange(percent: number): Set<HandNotation> {
 }
 
 export const ALL_169_HANDS = ALL_HANDS;
+
+/** ハンド表記1つが表す実際のコンボ数 (ペア=6, スーテッド=4, オフスート=12)。 */
+export function comboCount(hand: HandNotation): number {
+  if (hand.length === 2) return 6;
+  return hand[2] === "s" ? 4 : 12;
+}
