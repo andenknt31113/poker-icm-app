@@ -9,6 +9,7 @@ import { equity } from "./equity.js";
 import { renderRangeComparison, updateHandPositionBanner } from "./handRange.js";
 import { renderGrid } from "./grid.js";
 import { updateNashOvercallWarn } from "./nashUI.js";
+import { isOnboardingDone } from "./guide.js";
 import { $ } from "./dom.js";
 import {
   players,
@@ -258,6 +259,22 @@ export function recompute(): void {
 // ===== Hero サマリーカード =====
 const heroSummaryEl = $<HTMLDivElement>("hero-summary");
 
+const HERO_SUMMARY_COLLAPSED_KEY = "poker-icm-hero-summary-collapsed";
+function isHeroSummaryCollapsed(): boolean {
+  try {
+    return localStorage.getItem(HERO_SUMMARY_COLLAPSED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+function setHeroSummaryCollapsed(v: boolean): void {
+  try {
+    localStorage.setItem(HERO_SUMMARY_COLLAPSED_KEY, v ? "1" : "0");
+  } catch {
+    /* ignore */
+  }
+}
+
 interface HeroSummaryArg {
   heroIndex: number;
   villainIndex: number;
@@ -317,28 +334,42 @@ function renderHeroSummary(a: HeroSummaryArg): void {
     </div>
   `;
 
+  // 初回 (オンボーディング未完了) はダミーの6人シナリオが説明なく表示されるため、
+  // 「これはまだ自分で入力していないサンプルです」と分かるバッジを添える。
+  // オンボーディングを閉じると次回の recompute から自然に消える。
+  const sampleBadge = !isOnboardingDone()
+    ? `<span class="hero-summary-sample-badge">サンプル</span>`
+    : "";
+  const collapsed = isHeroSummaryCollapsed();
+
   heroSummaryEl.innerHTML = `
-    <div class="hero-summary-title">状況サマリー (タップ＝用語解説)</div>
-    ${contextLine}
-    <div class="hero-summary-row hero">
-      <div class="hero-summary-row-label">🎯 自分</div>
-      <div class="hero-summary-row-stat">${heroStack}<span class="unit">BB</span></div>
-      <div class="hero-summary-row-stat">${heroPos}</div>
-      <div class="hero-summary-row-stat accent tappable" data-info="ICM">${heroEqPct.toFixed(1)}<span class="unit">%</span></div>
+    <div class="hero-summary-title-row">
+      <span class="hero-summary-title">状況サマリー (タップ＝用語解説)</span>
+      ${sampleBadge}
+      <button type="button" id="hero-summary-collapse-btn" class="hero-summary-collapse-btn" aria-label="${collapsed ? "展開" : "折りたたみ"}" title="折りたたみ切替">${collapsed ? "▲" : "▼"}</button>
     </div>
-    ${villainRow}
-    <div class="hero-summary-grid">
-      <div class="hero-summary-item" data-info="BF">
-        <div class="hero-summary-label tappable">BF ⓘ</div>
-        <div class="hero-summary-value ${bfClass}">${a.bf.toFixed(2)}</div>
+    <div class="hero-summary-body${collapsed ? " collapsed" : ""}">
+      ${contextLine}
+      <div class="hero-summary-row hero">
+        <div class="hero-summary-row-label">🎯 自分</div>
+        <div class="hero-summary-row-stat">${heroStack}<span class="unit">BB</span></div>
+        <div class="hero-summary-row-stat">${heroPos}</div>
+        <div class="hero-summary-row-stat accent tappable" data-info="ICM">${heroEqPct.toFixed(1)}<span class="unit">%</span></div>
       </div>
-      <div class="hero-summary-item" data-info="必要勝率">
-        <div class="hero-summary-label tappable">必要勝率 ⓘ</div>
-        <div class="hero-summary-value">${(a.requiredEq * 100).toFixed(1)}<span class="unit">%</span></div>
-      </div>
-      <div class="hero-summary-item" data-info="RP">
-        <div class="hero-summary-label tappable">RP ⓘ</div>
-        <div class="hero-summary-value warn">+${(a.rp * 100).toFixed(1)}<span class="unit">%</span></div>
+      ${villainRow}
+      <div class="hero-summary-grid">
+        <div class="hero-summary-item" data-info="BF">
+          <div class="hero-summary-label tappable">BF ⓘ</div>
+          <div class="hero-summary-value ${bfClass}">${a.bf.toFixed(2)}</div>
+        </div>
+        <div class="hero-summary-item" data-info="必要勝率">
+          <div class="hero-summary-label tappable">必要勝率 ⓘ</div>
+          <div class="hero-summary-value">${(a.requiredEq * 100).toFixed(1)}<span class="unit">%</span></div>
+        </div>
+        <div class="hero-summary-item" data-info="RP">
+          <div class="hero-summary-label tappable">RP ⓘ</div>
+          <div class="hero-summary-value warn">+${(a.rp * 100).toFixed(1)}<span class="unit">%</span></div>
+        </div>
       </div>
     </div>
   `;
@@ -367,10 +398,24 @@ function bfRiskPremiumPct(bf: number): number {
   return (bf / (bf + 1) - 0.5) * 100;
 }
 
+/**
+ * 横スクロール可能 (scrollWidth > clientWidth) な時だけ、右端フェード表示と
+ * 「→ 横にスクロール」ヒントを出す。9人時など右列が画面外に隠れて気づけない問題への対処。
+ */
+function updateBFMatrixScrollState(): void {
+  const outer = document.getElementById("bf-matrix-outer");
+  const hint = document.getElementById("bf-matrix-scroll-hint");
+  if (!outer) return;
+  const scrollable = bfMatrix.scrollWidth > bfMatrix.clientWidth + 1;
+  outer.classList.toggle("scrollable", scrollable);
+  hint?.classList.toggle("hidden", !scrollable);
+}
+
 function renderBFMatrix(stacks: number[], payouts: number[]): void {
   const n = stacks.length;
   if (n < 2) {
     bfMatrix.innerHTML = "";
+    updateBFMatrixScrollState();
     return;
   }
 
@@ -432,6 +477,7 @@ function renderBFMatrix(stacks: number[], payouts: number[]): void {
   }
 
   bfMatrix.innerHTML = cells.join("");
+  updateBFMatrixScrollState();
 }
 
 // ===== 用語解説モーダル =====
@@ -610,7 +656,32 @@ function updateHandVerdictRequiredEquity(requiredEquity: number | null): void {
 }
 
 /** 計算結果タブの初期化・イベント配線。main.ts から一度だけ呼ぶ。 */
+const BF_HOWTO_SEEN_KEY = "poker-icm-bf-howto-seen";
+/** 「表の見方」details を初回表示時のみ自動で開く。以降は閉じたまま (通常の details 挙動)。 */
+function initBFHowto(): void {
+  const details = document.getElementById("bf-howto") as HTMLDetailsElement | null;
+  if (!details) return;
+  try {
+    if (localStorage.getItem(BF_HOWTO_SEEN_KEY) !== "1") {
+      details.open = true;
+      localStorage.setItem(BF_HOWTO_SEEN_KEY, "1");
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
 export function initCalculator(): void {
+  initBFHowto();
+
+  // BF マトリクスは計算結果タブが非表示 (display:none) の間は幅が0になり、
+  // renderBFMatrix() 内の scrollWidth/clientWidth 判定が不正確になる。
+  // ResizeObserver ならタブ切替で表示され実サイズが確定した瞬間にも発火するため、
+  // タブ管理モジュール (tabs.ts) 側に手を入れずに正しく再判定できる。
+  if (typeof ResizeObserver !== "undefined") {
+    new ResizeObserver(() => updateBFMatrixScrollState()).observe(bfMatrix);
+  }
+
   [callInput, potWinInput].forEach((el) => {
     el.addEventListener("input", recompute);
   });
@@ -685,9 +756,21 @@ export function initCalculator(): void {
     if (e.key === "Escape") closeInfoModal();
   });
 
-  // hero-summary 内の解説可能ラベルにクリック listener を delegate
+  // hero-summary 内の解説可能ラベル・折りたたみボタンにクリック listener を delegate
   heroSummaryEl?.addEventListener("click", (e) => {
-    const t = (e.target as HTMLElement).closest<HTMLElement>("[data-info]");
+    const target = e.target as HTMLElement;
+    // タイトル行右端の専用ボタン: 折りたたみ⇄展開 (ⓘ の用語解説タップとは別の判定にして競合を避ける)
+    const collapseBtn = target.closest<HTMLButtonElement>("#hero-summary-collapse-btn");
+    if (collapseBtn) {
+      const nextCollapsed = !isHeroSummaryCollapsed();
+      setHeroSummaryCollapsed(nextCollapsed);
+      const body = heroSummaryEl.querySelector<HTMLElement>(".hero-summary-body");
+      body?.classList.toggle("collapsed", nextCollapsed);
+      collapseBtn.textContent = nextCollapsed ? "▲" : "▼";
+      collapseBtn.setAttribute("aria-label", nextCollapsed ? "展開" : "折りたたみ");
+      return;
+    }
+    const t = target.closest<HTMLElement>("[data-info]");
     if (t) {
       const key = t.dataset.info;
       if (key) openInfoModal(key);

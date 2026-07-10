@@ -522,6 +522,20 @@ th {
 .share-toast.hidden {
   display: none;
 }
+.share-toast-msg {
+  margin-bottom: 6px;
+}
+.share-toast-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  background: rgba(255, 255, 255, 0.85);
+  color: #000;
+  font-family: var(--mono);
+  font-size: 12px;
+}
 
 /* ===== ボトムタブナビ ===== */
 body {
@@ -623,8 +637,43 @@ body {
 .hero-summary-title {
   font-size: 11px;
   color: var(--muted);
-  margin-bottom: 6px;
   letter-spacing: 0.05em;
+}
+.hero-summary-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.hero-summary-title-row .hero-summary-title {
+  margin-bottom: 0;
+}
+.hero-summary-sample-badge {
+  font-size: 10px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 1px 8px;
+  letter-spacing: 0.02em;
+}
+.hero-summary-collapse-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1;
+  padding: 4px 6px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.hero-summary-collapse-btn:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
+}
+.hero-summary-body.collapsed {
+  display: none;
 }
 .hero-summary-context {
   display: flex;
@@ -1072,6 +1121,32 @@ body {
 
 .bf-matrix-wrapper {
   overflow-x: auto;
+}
+
+.bf-matrix-outer {
+  position: relative;
+}
+
+.bf-matrix-fade {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 28px;
+  background: linear-gradient(to right, transparent, var(--card) 85%);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+.bf-matrix-outer.scrollable .bf-matrix-fade {
+  opacity: 1;
+}
+
+.bf-matrix-scroll-hint {
+  text-align: right;
+  margin-top: 4px;
+  color: var(--accent);
 }
 
 .bf-matrix .bf-hdr-corner {
@@ -2204,6 +2279,12 @@ input[type="range"]::-moz-range-thumb {
 .practice-btn:active {
   transform: translateY(6px);
   box-shadow: 0 0 0 0 transparent;
+}
+.practice-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 .practice-feedback {
   background: var(--bg);

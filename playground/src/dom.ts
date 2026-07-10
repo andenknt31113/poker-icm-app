@@ -4,3 +4,20 @@ export const $ = <T extends HTMLElement>(id: string): T => {
   if (!el) throw new Error(`#${id} が見つかりません`);
   return el as T;
 };
+
+/**
+ * すべての number input (スタック・ペイアウト・Nash SB/BB/アンテ・コール額など) について、
+ * フォーカス時に既存値を全選択する。モバイルで「消してから打ち直す」手間を省くための共通挙動。
+ * 個別の input に実装せず、document レベルの focusin 委譲リスナー1つでまとめて対応する。
+ * main.ts から一度だけ呼ぶ。
+ */
+export function initNumberInputAutoSelect(): void {
+  document.addEventListener("focusin", (e) => {
+    const target = e.target;
+    if (target instanceof HTMLInputElement && target.type === "number") {
+      // フォーカス直後は一部モバイルブラウザでカーソル位置確定前に select() が
+      // 効かないことがあるため、次フレームまで遅延させる。
+      requestAnimationFrame(() => target.select());
+    }
+  });
+}

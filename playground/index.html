@@ -167,7 +167,7 @@
           縦軸 = Hero（自分）、横軸 = Villain（相手）。
           上段=1:1ポット時のRisk Premium、下段=BF値。
         </p>
-        <details class="howto">
+        <details class="howto" id="bf-howto">
           <summary>📖 表の見方（クリックで展開）</summary>
           <div class="howto-body">
             <h4>1. 各セルの数字</h4>
@@ -229,9 +229,13 @@
             </p>
           </div>
         </details>
-        <div class="bf-matrix-wrapper">
-          <div id="bf-matrix" class="bf-matrix"></div>
+        <div class="bf-matrix-outer" id="bf-matrix-outer">
+          <div class="bf-matrix-wrapper" id="bf-matrix-wrapper">
+            <div id="bf-matrix" class="bf-matrix"></div>
+          </div>
+          <div class="bf-matrix-fade" aria-hidden="true"></div>
         </div>
+        <p class="hint bf-matrix-scroll-hint hidden" id="bf-matrix-scroll-hint">→ 横にスクロール</p>
       </section>
 
       <section class="card" data-tab="result">
@@ -257,10 +261,10 @@
             </div>
           </label>
         </div>
-        <button id="autofill-call" type="button" class="solve-btn" style="margin-top: 10px; width: auto;">
-          🎯⚔️ から自動算出
-        </button>
         <p class="hint" id="autofill-hint" style="margin-top: 6px;"></p>
+        <button id="autofill-call" type="button" class="solve-btn" style="margin-top: 10px; width: auto;">
+          🔄 自動算出に戻す
+        </button>
         <div id="position-warn" class="warn-box hidden"></div>
         <div id="eq-result" class="result"></div>
 

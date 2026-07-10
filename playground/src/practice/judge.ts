@@ -229,6 +229,13 @@ export function judgePractice(answer: "call" | "fold"): void {
   if (!isTutorialActive()) {
     recordPracticeResult(isCorrect, p);
   }
+
+  // 同じ問題に再回答して成績が変動しないよう、call/fold ボタンを無効化する
+  // (RP 当てモードのスライダー/4択と同じパターン)
+  document.querySelectorAll<HTMLButtonElement>(".practice-actions .practice-btn").forEach((b) => {
+    b.disabled = true;
+  });
+
   const tutorialDef = isTutorialActive() ? TUTORIAL_PROBLEMS[getTutorialStep()] : undefined;
   const tutorialBlockHtml = tutorialDef
     ? `
@@ -374,6 +381,11 @@ export function judgePracticePush(answer: "push" | "fold"): void {
   if (!isTutorialActive()) {
     recordPracticeResult(isCorrect, p);
   }
+
+  // 同じ問題に再回答して成績が変動しないよう、push/fold ボタンを無効化する
+  document.querySelectorAll<HTMLButtonElement>(".practice-actions .practice-btn").forEach((b) => {
+    b.disabled = true;
+  });
 
   const heroIdx = p.scenarioPlayers.findIndex((x) => x.role === "hero");
   const villainIdx = p.scenarioPlayers.findIndex((x) => x.role === "villain");
