@@ -47,6 +47,10 @@ function getBottomToastStack(): HTMLElement {
 }
 
 // ===== Service Worker 更新通知トースト =====
+// ユーザーがトーストをタップして更新を明示的に要求したか。
+// 初回訪問時の clients.claim() による controllerchange と区別するために必要。
+let swUpdateRequested = false;
+
 function showSwUpdateToast(waitingWorker: ServiceWorker): void {
   if (document.getElementById("sw-update-toast")) return;
 
@@ -67,6 +71,7 @@ function showSwUpdateToast(waitingWorker: ServiceWorker): void {
   closeBtn.textContent = "✕";
 
   const applyUpdate = (): void => {
+    swUpdateRequested = true;
     waitingWorker.postMessage({ type: "SKIP_WAITING" });
   };
 
@@ -93,6 +98,8 @@ function showSwUpdateToast(waitingWorker: ServiceWorker): void {
 
 // ===== Service Worker 登録 (PWA) =====
 function initServiceWorker(): void {
+  // ページ初期化時点では更新は未要求 (テストの分離にも必要)
+  swUpdateRequested = false;
   if ("serviceWorker" in navigator && location.protocol !== "file:") {
     // load は 1 ページにつき一度しか発火しないため { once: true } で確実に自己解除する
     window.addEventListener(
@@ -116,10 +123,14 @@ function initServiceWorker(): void {
             /* SW 登録失敗は無視 */
           });
 
-        // 新しい SW が有効化されたら一度だけリロードして新版を反映する
+        // ユーザーがトーストをタップして更新を要求した場合のみ、一度だけ
+        // リロードして新版を反映する。
+        // 注意: 初回訪問時も clients.claim() により controllerchange が発火する
+        // ため、無条件にリロードすると「初回訪問者のページが勝手にリロードされる」
+        // バグになる (E2E スイートが検出)。swUpdateRequested ガードが必須。
         let reloadedAfterUpdate = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
-          if (reloadedAfterUpdate) return;
+          if (!swUpdateRequested || reloadedAfterUpdate) return;
           reloadedAfterUpdate = true;
           location.reload();
         });
