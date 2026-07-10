@@ -49,7 +49,7 @@ export function renderPlayers(): void {
       <div class="player-roles" data-id="${p.id}">
         <button type="button" class="role-btn ${p.role === "hero" ? "active hero" : ""}" data-role="hero" title="自分">🎯</button>
         <button type="button" class="role-btn ${p.role === "villain" ? "active villain" : ""}" data-role="villain" title="相手">⚔️</button>
-        <button type="button" class="role-btn ${p.role === "other" ? "active" : ""}" data-role="other" title="その他">·</button>
+        <button type="button" class="role-btn ${p.role === "other" ? "active" : ""}" data-role="other" title="その他">他</button>
       </div>
       <button type="button" class="player-remove" data-id="${p.id}" title="削除" ${players.length <= 2 ? "disabled" : ""}>✕</button>
     `;
@@ -534,10 +534,19 @@ async function doShareScenario(): Promise<void> {
       setTimeout(() => toast.classList.add("hidden"), 2500);
     }
   } catch {
-    if (hint) hint.textContent = url;
+    // クリップボード API が使えない環境向けフォールバック。
+    // トーストに生 URL を全文表示するのではなく、選択しやすい readonly input を出して
+    // 「長押しでコピー」を案内する (モバイルでの長押し選択がしやすい)。
+    if (hint) hint.textContent = "⚠ 自動コピーに失敗しました。下の欄を長押ししてコピーしてください";
     if (toast) {
-      toast.textContent = url;
+      toast.innerHTML = `
+        <div class="share-toast-msg">⚠ 自動コピーに失敗しました。長押しでコピーしてください</div>
+        <input type="text" class="share-toast-input" id="share-toast-url-input" readonly value="${url}" />
+      `;
       toast.classList.remove("hidden");
+      const urlInput = toast.querySelector<HTMLInputElement>("#share-toast-url-input");
+      urlInput?.addEventListener("focus", () => urlInput.select());
+      urlInput?.addEventListener("click", () => urlInput.select());
     }
   }
 }
