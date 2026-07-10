@@ -266,6 +266,7 @@
           🔄 自動算出に戻す
         </button>
         <div id="position-warn" class="warn-box hidden"></div>
+        <div id="depth-warn-eq" class="warn-box hidden"></div>
         <div id="eq-result" class="result"></div>
 
         <div class="hv-section">
@@ -273,6 +274,7 @@
           <p class="hint">相手の想定レンジを選び、自分のハンドをタップすると個別判定</p>
           <p id="hv-empty-msg" class="hint hidden">プレイヤーで 🎯自分 と ⚔️相手 を指定してください</p>
           <div id="hv-body">
+            <div id="depth-warn-hv" class="warn-box hidden"></div>
             <div id="hv-range-pills" class="hv-pills">
               <button type="button" class="hv-pill" data-range="15">タイト Top15%</button>
               <button type="button" class="hv-pill active" data-range="30">普通 Top30%</button>
@@ -438,6 +440,11 @@
 
       <footer>
         <p>Phase 0 動作確認 · @poker-icm/core</p>
+        <p>
+          <button type="button" id="footer-legal-link" class="footer-legal-link">
+            📄 利用規約・プライバシーポリシー
+          </button>
+        </p>
       </footer>
     </main>
 

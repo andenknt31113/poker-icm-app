@@ -1,4 +1,5 @@
 import { applyTab, getActiveTab } from "./tabs.js";
+import { LEGAL_CONTENT_HTML, LEGAL_CONTENT_TITLE } from "./legalContent.js";
 
 // ===== オンボーディング（初回ガイド）& 使い方ガイド =====
 const ONBOARDING_DONE_KEY = "poker-icm-onboarding-done";
@@ -183,6 +184,9 @@ function ensureGuideModal(): HTMLDivElement {
         <button type="button" class="guide-modal-close" id="guide-modal-close" aria-label="閉じる">✕</button>
       </div>
       <div class="guide-modal-body">
+        <p class="guide-intro">
+          このツールはショートスタック（〜20bb）のオールイン局面に特化しています。
+        </p>
         <details class="howto">
           <summary>⚙️ セットアップ — できること・使い方</summary>
           <div class="howto-body">
@@ -280,6 +284,7 @@ function ensureGuideModal(): HTMLDivElement {
           </div>
         </details>
         <button type="button" class="solve-btn guide-reopen-btn" id="guide-reopen-onboarding-btn">🔄 もう一度はじめのガイドを見る</button>
+        <button type="button" class="guide-legal-link" id="guide-legal-link">📄 利用規約・プライバシーポリシー</button>
       </div>
     </div>
   `;
@@ -292,6 +297,9 @@ function ensureGuideModal(): HTMLDivElement {
     closeGuideModal();
     openOnboardingModal();
   });
+  modal.querySelector("#guide-legal-link")?.addEventListener("click", () => {
+    openLegalModal();
+  });
   guideModalEl = modal;
   return modal;
 }
@@ -301,6 +309,41 @@ function openGuideModal(): void {
 }
 function closeGuideModal(): void {
   guideModalEl?.classList.add("hidden");
+}
+
+// ===== 利用規約・プライバシーポリシー（❓ガイド最下部・footer から開く） =====
+let legalModalEl: HTMLDivElement | null = null;
+
+function ensureLegalModal(): HTMLDivElement {
+  if (legalModalEl) return legalModalEl;
+  const modal = document.createElement("div");
+  modal.id = "legal-modal";
+  modal.className = "guide-modal hidden";
+  modal.innerHTML = `
+    <div class="guide-modal-content">
+      <div class="guide-modal-header">
+        <h3>${LEGAL_CONTENT_TITLE}</h3>
+        <button type="button" class="guide-modal-close" id="legal-modal-close" aria-label="閉じる">✕</button>
+      </div>
+      <div class="guide-modal-body legal-modal-body">
+        ${LEGAL_CONTENT_HTML}
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.querySelector("#legal-modal-close")?.addEventListener("click", closeLegalModal);
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) closeLegalModal();
+  });
+  legalModalEl = modal;
+  return modal;
+}
+
+export function openLegalModal(): void {
+  ensureLegalModal().classList.remove("hidden");
+}
+function closeLegalModal(): void {
+  legalModalEl?.classList.add("hidden");
 }
 
 // ===== 初回ヒントバー（セットアップタブ最上部、シナリオプリセットの上） =====
@@ -333,11 +376,15 @@ function insertFirstHintBar(): void {
 /** ガイド関連 (❓ボタン・初回ヒントバー・Escape キー) の配線。main.ts から一度だけ呼ぶ。 */
 export function initGuide(): void {
   document.getElementById("help-btn")?.addEventListener("click", openGuideModal);
+  document.getElementById("footer-legal-link")?.addEventListener("click", () => {
+    openLegalModal();
+  });
 
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
     if (onboardingModalEl && !onboardingModalEl.classList.contains("hidden")) closeOnboardingModal();
     if (guideModalEl && !guideModalEl.classList.contains("hidden")) closeGuideModal();
+    if (legalModalEl && !legalModalEl.classList.contains("hidden")) closeLegalModal();
   });
 
   insertFirstHintBar();
