@@ -31,14 +31,101 @@ function initTheme(): void {
   });
 }
 
+// ===== 画面下部トースト共通スタック =====
+// タブバーの上に浮かぶ固定トースト (iOS インストール案内 / SW 更新通知) を
+// 同じ場所に積み上げるための共有コンテナ。オフラインバナーは header 直後に
+// インライン表示されるため対象外 (重なりは発生しない)。
+function getBottomToastStack(): HTMLElement {
+  let stack = document.getElementById("pwa-toast-stack");
+  if (!stack) {
+    stack = document.createElement("div");
+    stack.id = "pwa-toast-stack";
+    stack.className = "pwa-toast-stack";
+    document.body.appendChild(stack);
+  }
+  return stack;
+}
+
+// ===== Service Worker 更新通知トースト =====
+function showSwUpdateToast(waitingWorker: ServiceWorker): void {
+  if (document.getElementById("sw-update-toast")) return;
+
+  const toast = document.createElement("div");
+  toast.id = "sw-update-toast";
+  toast.className = "sw-update-toast";
+  toast.setAttribute("role", "button");
+  toast.tabIndex = 0;
+  toast.setAttribute("aria-label", "新しいバージョンがあります。タップで更新");
+
+  const text = document.createElement("span");
+  text.textContent = "🔄 新しいバージョンがあります — タップで更新";
+
+  const closeBtn = document.createElement("button");
+  closeBtn.type = "button";
+  closeBtn.className = "sw-update-toast-close";
+  closeBtn.setAttribute("aria-label", "閉じる");
+  closeBtn.textContent = "✕";
+
+  const applyUpdate = (): void => {
+    waitingWorker.postMessage({ type: "SKIP_WAITING" });
+  };
+
+  toast.addEventListener("click", (e) => {
+    if (e.target === closeBtn) return;
+    applyUpdate();
+  });
+  toast.addEventListener("keydown", (e) => {
+    if (e.target === closeBtn) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      applyUpdate();
+    }
+  });
+  closeBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toast.remove();
+  });
+
+  toast.appendChild(text);
+  toast.appendChild(closeBtn);
+  getBottomToastStack().appendChild(toast);
+}
+
 // ===== Service Worker 登録 (PWA) =====
 function initServiceWorker(): void {
   if ("serviceWorker" in navigator && location.protocol !== "file:") {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("/sw.js").catch(() => {
-        /* SW 登録失敗は無視 */
-      });
-    });
+    // load は 1 ページにつき一度しか発火しないため { once: true } で確実に自己解除する
+    window.addEventListener(
+      "load",
+      () => {
+        navigator.serviceWorker
+          .register("/sw.js")
+          .then((registration) => {
+            registration.onupdatefound = () => {
+              const newWorker = registration.installing;
+              if (!newWorker) return;
+              newWorker.addEventListener("statechange", () => {
+                if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+                  // controller が既に存在する = 新規インストールではなく更新
+                  showSwUpdateToast(newWorker);
+                }
+              });
+            };
+          })
+          .catch(() => {
+            /* SW 登録失敗は無視 */
+          });
+
+        // 新しい SW が有効化されたら一度だけリロードして新版を反映する
+        let reloadedAfterUpdate = false;
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+          if (reloadedAfterUpdate) return;
+          reloadedAfterUpdate = true;
+          location.reload();
+        });
+      },
+      { once: true },
+    );
   }
 }
 
@@ -130,7 +217,7 @@ function initInstallPrompt(): void {
       closeBtn.addEventListener("click", dismiss);
       banner.appendChild(text);
       banner.appendChild(closeBtn);
-      document.body.appendChild(banner);
+      getBottomToastStack().appendChild(banner);
     }
   }
 }
