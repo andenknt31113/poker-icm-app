@@ -17,7 +17,11 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE).then((c) => c.addAll(PRECACHE_URLS)).catch(() => {}),
   );
-  self.skipWaiting();
+  // 注意: ここで self.skipWaiting() は呼ばない。
+  // 初回インストール時 (既存 SW が無い) はブラウザが即 activate してくれるが、
+  // 既に別バージョンが稼働中に新 SW が installed になった場合はここで
+  // waiting のまま留まらせ、更新通知トースト (pwa.ts) がクライアントから
+  // postMessage({type:"SKIP_WAITING"}) を送るまでアクティブ化を待つ。
 });
 
 self.addEventListener("activate", (event) => {
@@ -27,6 +31,14 @@ self.addEventListener("activate", (event) => {
     ),
   );
   self.clients.claim();
+});
+
+// 更新通知トーストがタップされたときに pwa.ts から送られるメッセージ。
+// waiting 中の新 SW を即座にアクティブ化し、controllerchange → reload に繋げる。
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 function isHashedAsset(url) {
