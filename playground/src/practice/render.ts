@@ -155,6 +155,10 @@ export function renderPracticeProblem(rawP: PracticeProblem): void {
     renderPracticeProblemRP(p);
     return;
   }
+  if (getPracticeMode() === "push") {
+    renderPracticeProblemPush(p);
+    return;
+  }
   const area = document.getElementById("practice-area");
   if (!area) return;
   const villain = p.scenarioPlayers.find((pl) => pl.role === "villain");
@@ -177,6 +181,53 @@ export function renderPracticeProblem(rawP: PracticeProblem): void {
     <div class="practice-hand">あなたのハンド: ${p.heroHand}</div>
     <div class="practice-actions">
       <button class="practice-btn call" data-answer="call">✅ コール</button>
+      <button class="practice-btn fold" data-answer="fold">❌ フォールド</button>
+    </div>
+    <div id="practice-feedback"></div>
+  `;
+  const tableWrap = document.getElementById("practice-table-wrapper");
+  if (tableWrap) renderRoundTable(tableWrap, p.scenarioPlayers, {
+    sb: p.sb, bb: p.bb, totalAnte: p.totalAnte,
+  });
+  const villainGridEl = document.getElementById(
+    "practice-villain-grid",
+  ) as HTMLDivElement | null;
+  if (villainGridEl) {
+    const range = topRange(p.villainCallRangePct);
+    renderGrid(villainGridEl, (h) => {
+      const isPicked = h === p.heroHand;
+      const inRange = range.has(h);
+      if (isPicked && inRange) return "in-range-villain picked";
+      if (isPicked) return "picked";
+      return inRange ? "in-range-villain" : "";
+    });
+  }
+}
+
+// push 判定モード: hero=SB (pusher) が villain=BB (caller) に all-in するか fold するか
+export function renderPracticeProblemPush(p: PracticeProblem): void {
+  const area = document.getElementById("practice-area");
+  if (!area) return;
+  const villain = p.scenarioPlayers.find((pl) => pl.role === "villain");
+  const villainCallInfoHtml = `
+    <div class="scenario-warn">
+      <div class="scenario-warn-head">⚔️ Villain (BB) の想定コールレンジ</div>
+      <div class="scenario-warn-body">
+        <span class="scenario-warn-item">Stack <strong>${villain ? villain.stack : "?"} BB</strong></span>
+        <span class="scenario-warn-item">Est. Call Range <strong>Top ${p.villainCallRangePct}%</strong></span>
+      </div>
+    </div>
+  `;
+  area.innerHTML = `
+    <div id="practice-table-wrapper"></div>
+    ${renderScenarioBento(p, villainCallInfoHtml)}
+    <p class="hint">※ Top X% は本ツール定義の強度順。他ツールとは一致しない場合があります。</p>
+    <h3 style="font-size: 13px; margin: 12px 0 4px;">⚔️ 相手の call レンジ 🔴</h3>
+    <div id="practice-villain-grid" class="hand-grid"></div>
+    ${renderHeroHandCards(p.heroHand)}
+    <div class="practice-hand">あなたのハンド (SB): ${p.heroHand}</div>
+    <div class="practice-actions">
+      <button class="practice-btn push" data-answer="push">🚀 オールイン</button>
       <button class="practice-btn fold" data-answer="fold">❌ フォールド</button>
     </div>
     <div id="practice-feedback"></div>
@@ -275,11 +326,41 @@ export function renderJudgeHeroGrid(p: PracticeProblem): void {
   }
 }
 
+// judgePracticePush (judge.ts) から呼ばれる、push 判定後の「自分の push レンジ」グリッド描画。
+// callfold の renderJudgeHeroGrid と違い、単一の必要勝率しきい値ではなく
+// (1-pCall)×steal + pCall×(eq×win+(1-eq)×lose) というアフィン式を各ハンドの
+// eq (vs villain call レンジ) で評価し、fold の $EV と比較する。
+export function renderJudgeHeroGridPush(p: PracticeProblem): void {
+  const heroGridEl = document.getElementById(
+    "practice-hero-grid",
+  ) as HTMLDivElement | null;
+  if (!heroGridEl) return;
+  const villainRange = topRange(p.villainCallRangePct);
+  const pCall = p.pushPCall ?? 0;
+  const equitySteal = p.pushEquitySteal ?? 0;
+  const equityWin = p.pushEquityWin ?? 0;
+  const equityLose = p.pushEquityLose ?? 0;
+  const evFold = p.pushEvFold ?? 0;
+  renderGrid(heroGridEl, (h) => {
+    const eq = equity(h, villainRange);
+    const evPushH = (1 - pCall) * equitySteal + pCall * (eq * equityWin + (1 - eq) * equityLose);
+    const isPicked = h === p.heroHand;
+    let cls = evPushH >= evFold ? "in-range-hero" : "";
+    if (isPicked) cls += " picked";
+    return cls;
+  });
+}
+
 // モード別のヒント文を更新
 export function updatePracticeHint(): void {
   const hint = document.getElementById("practice-hint");
   if (!hint) return;
-  hint.textContent = getPracticeMode() === "rp"
-    ? "ランダムシナリオの Risk Premium をスライダーで推定。BF と必要勝率の感覚を養う。"
-    : "ランダムシナリオ + 相手 push 想定レンジ + 自分のハンド → call/fold を即判定。";
+  const mode = getPracticeMode();
+  if (mode === "rp") {
+    hint.textContent = "ランダムシナリオの Risk Premium をスライダーで推定。BF と必要勝率の感覚を養う。";
+  } else if (mode === "push") {
+    hint.textContent = "ランダムシナリオ + 相手 BB 想定コールレンジ + 自分のハンド (SB) → 自分から push するか fold するかを即判定。";
+  } else {
+    hint.textContent = "ランダムシナリオ + 相手 push 想定レンジ + 自分のハンド → call/fold を即判定。";
+  }
 }

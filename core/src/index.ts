@@ -8,6 +8,11 @@ export type {
   ExactCallEquityInput,
   ExactCallEquityResult,
 } from "./callDecision.js";
+export { evaluatePushDecision } from "./pushDecision.js";
+export type {
+  PushDecisionInput,
+  PushDecisionResult,
+} from "./pushDecision.js";
 export { solveHUNash } from "./nash.js";
 export type {
   BubbleFactorInput,

@@ -234,10 +234,10 @@ function ensureGuideModal(): HTMLDivElement {
         <details class="howto">
           <summary>🎲 練習 — できること・使い方</summary>
           <div class="howto-body">
-            <p>ランダムなシナリオでコール/フォールド判断や Risk Premium 当てを練習できる画面。</p>
+            <p>ランダムなシナリオでコール/フォールド判断や Risk Premium 当て、push 判定を練習できる画面。</p>
             <ol>
               <li>難易度を選んで「🎲 新しい問題」を押す</li>
-              <li>相手の push 想定レンジと自分のハンドを見て ✅コール / ❌フォールドを判断（RP 当てモードはスライダーで数値回答）</li>
+              <li>相手の push 想定レンジと自分のハンドを見て ✅コール / ❌フォールドを判断（RP 当てモードはスライダーで数値回答、🚀push 判定モードでは自分 (SB) が 🚀オールイン / ❌フォールドかを判断）</li>
               <li>正誤と計算式を確認し、間違えたら 📚復習 リストで解き直す</li>
             </ol>
           </div>

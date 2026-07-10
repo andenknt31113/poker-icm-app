@@ -1,6 +1,6 @@
 import type { PracticeProblem } from "./types.js";
 import { ensureDerivedFields, problemRP, getPracticeDifficulty, getPracticeMode, RP_TOLERANCE, practiceProblemDedupKey } from "./generate.js";
-import { getCurrentProblem, setCurrentProblem, renderJudgeHeroGrid } from "./render.js";
+import { getCurrentProblem, setCurrentProblem, renderJudgeHeroGrid, renderJudgeHeroGridPush } from "./render.js";
 import { isTutorialActive, getTutorialStep, TUTORIAL_PROBLEMS } from "./tutorialState.js";
 import { loadStreak, saveStreak, loadStats, saveStats, loadReviewList, saveReviewList, appendHistory } from "./store.js";
 import { updatePracticeProgress } from "./progress.js";
@@ -72,6 +72,44 @@ export function practiceLesson(p: PracticeProblem): string {
   }
 
   return "必要勝率 = cEV + Risk Premium。ICM 下では『チップで得』でも『賞金で損』になり得ることを常に確認しましょう。";
+}
+
+/**
+ * push 判定モード専用の「教訓」一行。practiceLesson と同様、優先順位で
+ * 最初にマッチしたものだけを返す。
+ * 1. WTA (ICM 圧ゼロ)
+ * 2. サテライト型 (均等ペイ) → push もタイトに
+ * 3. villain がカバーしている (villainStack >= heroStack) かつ push が厳しい
+ * 4. スチール成功率が高い (villain のコール率が低い) → 広く push できる
+ * 5. それ以外の一般則 (push $EV の式)
+ */
+export function practicePushLesson(p: PracticeProblem): string {
+  const payouts = p.payouts;
+  if (payouts.length === 1) {
+    return "🏆 WTA (勝者総取り) では ICM 圧はゼロ。push もチップ EV (cEV) どおりに判断できます。";
+  }
+  if (payouts.length >= 2) {
+    const maxPayout = Math.max(...payouts);
+    const minPayout = Math.min(...payouts);
+    if (maxPayout > 0 && maxPayout - minPayout < maxPayout * 0.15) {
+      return "🛰 サテライトでは『残ること』が全て。push 側も極端にタイトになり、スチールが見込めても大半のハンドは fold が正解になります。";
+    }
+  }
+
+  const hero = p.scenarioPlayers.find((pl) => pl.role === "hero");
+  const villain = p.scenarioPlayers.find((pl) => pl.role === "villain");
+  const marginNorm = p.pushMarginNorm ?? 0;
+
+  if (hero && villain && villain.stack >= hero.stack && marginNorm < 0.03) {
+    return "⚠️ カバーされている相手への push は、コールされて負ければ即敗退。トーナメント生命を賭けるため、通常よりタイトな range で push すべきです。";
+  }
+
+  const pCall = p.pushPCall ?? 0;
+  if (pCall < 0.15) {
+    return "💨 相手のコール率 (=スチール成功率の裏返し) が低いほど、ハンドが弱くても push を広げられます。fold されて pot を丸取りできる期待が大きいためです。";
+  }
+
+  return "push の $EV = (1−コール率)×スチール成功時 + コール率×(勝率×勝ち時 + (1−勝率)×負け時)。fold の $EV と比較し、必ず ICM 込みで判断しましょう。";
 }
 
 function recordPracticeResult(isCorrect: boolean, p: PracticeProblem): void {
@@ -317,5 +355,126 @@ export function judgePractice(answer: "call" | "fold"): void {
     </div>
   `;
   renderJudgeHeroGrid(p);
+  fb.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+export function judgePracticePush(answer: "push" | "fold"): void {
+  const raw = getCurrentProblem();
+  if (!raw) return;
+  const p = ensureDerivedFields(raw);
+  setCurrentProblem(p);
+  const fb = document.getElementById("practice-feedback");
+  if (!fb) return;
+
+  const shouldPush = p.pushShouldPush ?? false;
+  const isCorrect = (shouldPush && answer === "push") || (!shouldPush && answer === "fold");
+  const verdict = shouldPush ? "🚀 オールイン (+EV)" : "❌ フォールド (-EV)";
+  fb.className = "practice-feedback " + (isCorrect ? "correct" : "wrong");
+
+  if (!isTutorialActive()) {
+    recordPracticeResult(isCorrect, p);
+  }
+
+  const heroIdx = p.scenarioPlayers.findIndex((x) => x.role === "hero");
+  const villainIdx = p.scenarioPlayers.findIndex((x) => x.role === "villain");
+  const heroStack = p.scenarioPlayers[heroIdx]!.stack;
+
+  const evPush = p.pushEvPush ?? 0;
+  const evFold = p.pushEvFold ?? 0;
+  const equityFold = p.pushEquityFold ?? 0;
+  const equitySteal = p.pushEquitySteal ?? 0;
+  const equityWin = p.pushEquityWin ?? 0;
+  const equityLose = p.pushEquityLose ?? 0;
+  const stacksFold = p.pushStacksFold ?? [];
+  const stacksSteal = p.pushStacksSteal ?? [];
+  const stacksWin = p.pushStacksWin ?? [];
+  const stacksLose = p.pushStacksLose ?? [];
+  const pCall = p.pushPCall ?? 0;
+  const eqVsCallRange = p.pushEqVsCallRange ?? 0;
+  const matched = p.pushMatched ?? 0;
+  const pot = p.pushPot ?? 0;
+
+  const marginDollar = evPush - evFold;
+  const numPlaces = Math.min(p.scenarioPlayers.length, p.payouts.length);
+  const totalPayout = p.payouts.slice(0, numPlaces).reduce((a, b) => a + b, 0);
+  const marginPct = totalPayout > 0 ? (marginDollar / totalPayout) * 100 : 0;
+
+  const stackFold = stacksFold[heroIdx] ?? 0;
+  const stackSteal = stacksSteal[heroIdx] ?? 0;
+  const stackWin = stacksWin[heroIdx] ?? 0;
+  const stackLose = stacksLose[heroIdx] ?? 0;
+
+  fb.innerHTML = `
+    <div class="verdict-row">
+      <div class="verdict">${isCorrect ? "🎉 正解!" : "😅 不正解"} 正答: ${verdict}</div>
+      <button id="practice-next-btn-top" type="button" class="solve-btn compact">🎲 次へ</button>
+    </div>
+    <div class="practice-lesson">💡 ${practicePushLesson(p)}</div>
+    <div>fold $EV: <strong>${evFold.toFixed(3)}</strong></div>
+    <div>push $EV: <strong>${evPush.toFixed(3)}</strong> <span class="muted">(villain call率 ${(pCall * 100).toFixed(0)}% / call された時の hero equity ${(eqVsCallRange * 100).toFixed(1)}%)</span></div>
+    <div>余裕: <strong style="color: ${marginDollar >= 0 ? "var(--good)" : "var(--bad)"}">${marginDollar >= 0 ? "+" : ""}${marginDollar.toFixed(3)}</strong> <span class="muted">(プール比 ${marginPct >= 0 ? "+" : ""}${marginPct.toFixed(2)}%)</span></div>
+    <details class="practice-details">
+      <summary>📖 詳しい計算式 (タップで展開)</summary>
+      <div class="practice-details-body">
+        <h4>1. ポット構成 (push→call 時, BB ante 構造)</h4>
+        <ul style="font-size: 12px; line-height: 1.5;">
+          <li>自分(SB) push (全 stack): <code>${heroStack.toFixed(1)}</code> BB</li>
+          <li>相手(BB) ante: <code>${p.totalAnte.toFixed(1)}</code> BB <span style="color: var(--muted);">(BB が全額負担, dead)</span></li>
+          <li>matched (少ない方に揃える): <code>${matched.toFixed(1)}</code> BB</li>
+          <li><strong>合計 pot (showdown 時): ${pot.toFixed(1)} BB</strong></li>
+        </ul>
+
+        <h4>2. 終端スタック (push 判定 4 終端)</h4>
+        <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
+          <tr><th style="text-align:left; padding: 4px;">終端</th><th style="text-align:right; padding: 4px;">最終スタック</th><th style="text-align:right; padding: 4px;">起点比</th></tr>
+          <tr><td style="padding: 4px;">フォールド (push しない)</td><td style="text-align:right; padding: 4px;"><code>${stackFold.toFixed(1)}</code></td><td style="text-align:right; padding: 4px; color: ${stackFold - heroStack >= 0 ? "var(--good)" : "var(--bad)"};"><code>${stackFold - heroStack >= 0 ? "+" : ""}${(stackFold - heroStack).toFixed(1)}</code></td></tr>
+          <tr><td style="padding: 4px;">push → villain fold (スチール)</td><td style="text-align:right; padding: 4px;"><code>${stackSteal.toFixed(1)}</code></td><td style="text-align:right; padding: 4px; color: ${stackSteal - heroStack >= 0 ? "var(--good)" : "var(--bad)"};"><code>${stackSteal - heroStack >= 0 ? "+" : ""}${(stackSteal - heroStack).toFixed(1)}</code></td></tr>
+          <tr><td style="padding: 4px;">push → call → 勝ち</td><td style="text-align:right; padding: 4px;"><code>${stackWin.toFixed(1)}</code></td><td style="text-align:right; padding: 4px; color: var(--good);"><code>${stackWin - heroStack >= 0 ? "+" : ""}${(stackWin - heroStack).toFixed(1)}</code></td></tr>
+          <tr><td style="padding: 4px;">push → call → 負け</td><td style="text-align:right; padding: 4px;"><code>${stackLose.toFixed(1)}</code></td><td style="text-align:right; padding: 4px; color: var(--bad);"><code>${(stackLose - heroStack).toFixed(1)}</code></td></tr>
+        </table>
+
+        <h4>3. ICM エクイティ ($ 単位・厳密計算)</h4>
+        <ul>
+          <li>フォールド時: <code>${equityFold.toFixed(3)}</code></li>
+          <li>push → villain fold (スチール成功): <code>${equitySteal.toFixed(3)}</code></li>
+          <li>push → call → 勝った時: <code>${equityWin.toFixed(3)}</code></li>
+          <li>push → call → 負けた時: <code>${equityLose.toFixed(3)}</code></li>
+        </ul>
+
+        <h4>4. villain のコール率・equity 内訳</h4>
+        <ul>
+          <li>villain (BB) 想定コールレンジ: <code>Top ${p.villainCallRangePct}%</code></li>
+          <li>コール率 (コンボ重み比) pCall: <code>${(pCall * 100).toFixed(1)}%</code> <span style="color: var(--muted);">(スチール成功率 = 1 − pCall = ${((1 - pCall) * 100).toFixed(1)}%)</span></li>
+          <li>${p.heroHand} vs コールレンジ equity: <code>${(eqVsCallRange * 100).toFixed(1)}%</code></li>
+        </ul>
+
+        <h4>5. push の $EV</h4>
+        <p><code>evPush = (1−pCall)×Esteal + pCall×(eq×Ewin + (1−eq)×Elose)<br />
+        = ${(1 - pCall).toFixed(3)}×${equitySteal.toFixed(3)} + ${pCall.toFixed(3)}×(${eqVsCallRange.toFixed(3)}×${equityWin.toFixed(3)} + ${(1 - eqVsCallRange).toFixed(3)}×${equityLose.toFixed(3)})<br />
+        = ${evPush.toFixed(3)}</code></p>
+        <p><code>evFold = ${evFold.toFixed(3)}</code></p>
+
+        <h4>6. 判定</h4>
+        <p>
+          push $EV <code>${evPush.toFixed(3)}</code>
+          ${evPush >= evFold ? "≥" : "<"}
+          fold $EV <code>${evFold.toFixed(3)}</code>
+          → <strong>${evPush >= evFold ? "オールイン (+EV)" : "フォールド (-EV)"}</strong>
+        </p>
+      </div>
+    </details>
+
+    <h3 style="font-size: 13px; margin: 12px 0 4px;">🚀 自分の push レンジ 🟢 (push +EV のハンド)</h3>
+    <div id="practice-hero-grid" class="hand-grid"></div>
+    <div class="grid-legend">
+      <span><span class="legend-box in-range-hero"></span>push (+EV)</span>
+      <span><span class="legend-box"></span>fold (-EV)</span>
+    </div>
+    <div style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px;">
+      <button id="practice-next-btn" type="button" class="solve-btn">🎲 次の問題</button>
+      <button id="practice-apply-btn" type="button" class="solve-btn" style="background: var(--card); color: var(--text); border: 1px solid var(--border);">📥 設定に取り込む (詳細分析)</button>
+    </div>
+  `;
+  renderJudgeHeroGridPush(p);
   fb.scrollIntoView({ behavior: "smooth", block: "start" });
 }

@@ -3,8 +3,9 @@ import {
   calculatePotOdds,
   calculateExactCallEquity,
   calculateRequiredEquity,
+  evaluatePushDecision,
 } from "@poker-icm/core";
-import { ALL_169_HANDS, topRange, type HandNotation } from "../handRanking.js";
+import { ALL_169_HANDS, topRange, comboCount, type HandNotation } from "../handRanking.js";
 import { equity } from "../equity.js";
 import {
   type Role,
@@ -96,12 +97,142 @@ export function computeDerivedFields(base: PracticeProblemBase): PracticeProblem
   };
 }
 
+// push 判定モード専用の派生値のうち、実際に判定/表示に使うキーだけを抜き出した型。
+type PushDerivedFields = Required<
+  Pick<
+    PracticeProblemDerived,
+    | "pushEvPush"
+    | "pushEvFold"
+    | "pushEquityFold"
+    | "pushEquitySteal"
+    | "pushEquityWin"
+    | "pushEquityLose"
+    | "pushStacksFold"
+    | "pushStacksSteal"
+    | "pushStacksWin"
+    | "pushStacksLose"
+    | "pushShouldPush"
+    | "pushPCall"
+    | "pushEqVsCallRange"
+    | "pushMarginNorm"
+    | "pushMatched"
+    | "pushPot"
+  >
+>;
+
+// callfold/rp モードの汎用派生値は push 問題には意味を持たない (hero が SB のため
+// hero=BB 前提の call/fold 計算をそのまま適用できない)。型を満たすためだけの
+// プレースホルダとして 0 埋めする。judge/render の push 用コードはこれらを
+// 参照しない。
+const LEGACY_DERIVED_PLACEHOLDER: PracticeProblemDerived = {
+  cEV: 0,
+  dollarEV: 0,
+  heroEq: 0,
+  bf: 0,
+  dollarEVApprox: 0,
+  bfEquityNow: 0,
+  bfEquityWin: 0,
+  bfEquityLose: 0,
+  equityFold: 0,
+  equityWin: 0,
+  equityLose: 0,
+  stacksFold: [],
+  stacksWin: [],
+  stacksLose: [],
+  callAmount: 0,
+  potIfWin: 0,
+};
+
+/**
+ * push 判定モード用の派生値をすべて計算する。hero=SB (pusher) / villain=BB (caller)
+ * 固定のシナリオを前提とする (computeDerivedFields の hero=BB 前提とは逆)。
+ */
+export function computePushDerivedFields(
+  base: PracticeProblemBase,
+): PushDerivedFields {
+  const { scenarioPlayers, payouts, sb, bb, totalAnte, villainCallRangePct, heroHand } = base;
+  const heroIdx = scenarioPlayers.findIndex((p) => p.role === "hero");
+  const villainIdx = scenarioPlayers.findIndex((p) => p.role === "villain");
+  const stacks = scenarioPlayers.map((p) => p.stack);
+
+  // villain の call レンジ (コンボ重み比 = pCall、hero equity = eqVsCallRange)
+  const villainCallRange = topRange(villainCallRangePct);
+  let totalCombos = 0;
+  let callCombos = 0;
+  for (const h of ALL_169_HANDS) {
+    const c = comboCount(h);
+    totalCombos += c;
+    if (villainCallRange.has(h)) callCombos += c;
+  }
+  const pCall = totalCombos > 0 ? callCombos / totalCombos : 0;
+  const eqVsCallRange = equity(heroHand, villainCallRange);
+
+  const result = evaluatePushDecision({
+    stacks,
+    payouts,
+    heroIndex: heroIdx,
+    villainIndex: villainIdx,
+    sb,
+    bb,
+    ante: totalAnte,
+    pCall,
+    eqVsCallRange,
+  });
+
+  // 表示用: push→call 時の matched / pot (BB 単位)
+  const heroStack = stacks[heroIdx]!;
+  const villainStack = stacks[villainIdx]!;
+  const heroLive = heroStack;
+  const villainLive = villainStack - totalAnte;
+  const matched = Math.min(heroLive, villainLive);
+  const pot = 2 * matched + totalAnte;
+
+  const numPlaces = Math.min(scenarioPlayers.length, payouts.length);
+  const totalPayout = payouts.slice(0, numPlaces).reduce((a, b) => a + b, 0);
+  const marginNorm =
+    totalPayout > 0
+      ? (result.evPush - result.evFold) / totalPayout
+      : result.evPush - result.evFold;
+
+  return {
+    pushEvPush: result.evPush,
+    pushEvFold: result.evFold,
+    pushEquityFold: result.equityFold,
+    pushEquitySteal: result.equitySteal,
+    pushEquityWin: result.equityWin,
+    pushEquityLose: result.equityLose,
+    pushStacksFold: result.stacksFold.slice(),
+    pushStacksSteal: result.stacksSteal.slice(),
+    pushStacksWin: result.stacksWin.slice(),
+    pushStacksLose: result.stacksLose.slice(),
+    pushShouldPush: result.shouldPush,
+    pushPCall: pCall,
+    pushEqVsCallRange: eqVsCallRange,
+    pushMarginNorm: marginNorm,
+    pushMatched: matched,
+    pushPot: pot,
+  };
+}
+
+/** push 判定モードの問題かどうか (hero のポジションが SB であるかで判定する、
+ * globalな practiceMode 状態に依存しない自己完結な判定)。 */
+export function isPushProblem(p: PracticeProblemBase): boolean {
+  return p.scenarioPlayers.find((pl) => pl.role === "hero")?.position === "SB";
+}
+
 /**
  * 復習リストなど旧スキーマ (厳密 ICM 導入前) の PracticeProblem を読み込んだ場合、
  * 新フィールド (equityFold 等) が欠けているため base フィールドから再計算して補う。
  * 新スキーマの問題はそのまま返す (無駄な再計算をしない)。
+ * push 判定モードの問題 (hero=SB) は push 専用フィールドで判定・再計算する。
  */
 export function ensureDerivedFields(p: PracticeProblem): PracticeProblem {
+  if (isPushProblem(p)) {
+    if (p.pushEvPush !== undefined && p.pushStacksFold !== undefined) {
+      return p;
+    }
+    return { ...p, ...LEGACY_DERIVED_PLACEHOLDER, ...computePushDerivedFields(p) };
+  }
   if (
     p.equityFold !== undefined &&
     p.dollarEVApprox !== undefined &&
@@ -160,7 +291,7 @@ export const RP_TOLERANCE: Record<Difficulty, number> = {
 let practiceMode: PracticeMode = "callfold";
 try {
   const v = localStorage.getItem("poker-icm-practice-mode") as PracticeMode | null;
-  if (v === "callfold" || v === "rp") practiceMode = v;
+  if (v === "callfold" || v === "rp" || v === "push") practiceMode = v;
 } catch { /* ignore */ }
 
 export function getPracticeMode(): PracticeMode {
@@ -196,6 +327,19 @@ export function isDegenerateProblem(p: PracticeProblem): boolean {
   return p.equityWin - p.equityLose < totalPayout * 0.005;
 }
 
+/**
+ * push 判定モード用の縮退問題検出: win/lose どちらでも $ エクイティがほぼ
+ * 変わらない (勝敗の結果が賞金にほぼ影響しない) 問題を除外する。
+ * isDegenerateProblem と同じ「プール 0.5%」基準。
+ */
+export function isDegeneratePushProblem(p: PracticeProblem): boolean {
+  const numPlaces = Math.min(p.scenarioPlayers.length, p.payouts.length);
+  const totalPayout = p.payouts.slice(0, numPlaces).reduce((a, b) => a + b, 0);
+  const win = p.pushEquityWin ?? 0;
+  const lose = p.pushEquityLose ?? 0;
+  return win - lose < totalPayout * 0.005;
+}
+
 // generateRandomPracticeProblem() は ICM の丸め誤差等でごく稀に例外を投げ得る
 // (core 側で大部分は修正済みだが、防御的に多重で守る)。試行ループの中で1回
 // 例外が出ても、そのドローを捨てて次の乱数で再試行するだけにし、練習画面全体を
@@ -205,6 +349,17 @@ function tryGenerateRandomPracticeProblem(): PracticeProblem | null {
     return generateRandomPracticeProblem();
   } catch (err) {
     console.warn("練習問題の生成に失敗しました。このドローを破棄します:", err);
+    return null;
+  }
+}
+
+// generateRandomPushPracticeProblem() も同じ理由 (ICM 丸め誤差等) で稀に例外を
+// 投げ得るため、callfold/rp と同様に多重防御でラップする。
+function tryGenerateRandomPushPracticeProblem(): PracticeProblem | null {
+  try {
+    return generateRandomPushPracticeProblem();
+  } catch (err) {
+    console.warn("push 判定問題の生成に失敗しました。このドローを破棄します:", err);
     return null;
   }
 }
@@ -224,6 +379,21 @@ export function generatePracticeProblem(): PracticeProblem {
       if (p) return p;
     }
     throw new Error("練習問題の生成に失敗しました");
+  }
+  if (practiceMode === "push") {
+    // push 判定モード: 縮退問題を除外し、evPush-evFold の正規化マージンを
+    // 難易度バンドに合わせて絞り込む (callfold と同じスケール感で調整)
+    const band = DIFF_BANDS[practiceDifficulty];
+    for (let attempt = 0; attempt < 100; attempt++) {
+      const p = tryGenerateRandomPushPracticeProblem();
+      if (!p) continue;
+      if (!isDegeneratePushProblem(p) && Math.abs(p.pushMarginNorm ?? 0) <= band) return p;
+    }
+    for (let attempt = 0; attempt < 20; attempt++) {
+      const p = tryGenerateRandomPushPracticeProblem();
+      if (p) return p;
+    }
+    throw new Error("push 判定問題の生成に失敗しました");
   }
   const band = DIFF_BANDS[practiceDifficulty];
   for (let attempt = 0; attempt < 100; attempt++) {
@@ -275,6 +445,52 @@ export function generateRandomPracticeProblem(): PracticeProblem {
     heroHand,
   };
   return { ...base, ...computeDerivedFields(base) };
+}
+
+/**
+ * push 判定モード用のランダムシナリオ生成。hero は常に SB (pusher)、
+ * villain は常に BB (caller) 固定。それ以外 (人数・スタック・ペイアウト・
+ * ハンド) は generateRandomPracticeProblem と同じ乱数レンジを使う。
+ */
+export function generateRandomPushPracticeProblem(): PracticeProblem {
+  const n = 3 + Math.floor(Math.random() * 4); // 3-6
+  const positions = POSITION_SETS_PRACTICE[n]!;
+  const scenarioPlayers: { stack: number; role: Role; position: Position }[] = [];
+  for (let i = 0; i < n; i++) {
+    scenarioPlayers.push({
+      stack: 5 + Math.floor(Math.random() * 25), // 5-30 BB
+      role: "other",
+      position: positions[i] ?? "",
+    });
+  }
+  // hero は常に SB (push 側)、villain は常に BB (call 側)
+  const heroIdx = positions.indexOf("SB");
+  const villainIdx = positions.indexOf("BB");
+  scenarioPlayers[heroIdx]!.role = "hero";
+  scenarioPlayers[villainIdx]!.role = "villain";
+
+  const payouts = pickRandom(PAYOUT_TEMPLATES);
+  const sb = DEFAULT_SB;
+  const bb = DEFAULT_BB;
+  const totalAnte = DEFAULT_ANTE;
+  // villain の call レンジは push レンジより狭いのが自然 (5-40%程度)
+  const villainCallRangePct = 5 + Math.floor(Math.random() * 36); // 5-40%
+
+  // 自分のハンド
+  const heroHand = ALL_169_HANDS[Math.floor(Math.random() * ALL_169_HANDS.length)]!;
+
+  const base: PracticeProblemBase = {
+    scenarioPlayers,
+    payouts,
+    sb, bb, totalAnte,
+    villainCallRangePct,
+    heroHand,
+  };
+  return {
+    ...base,
+    ...LEGACY_DERIVED_PLACEHOLDER,
+    ...computePushDerivedFields(base),
+  };
 }
 
 // Easy モード用: 正解 RP (0.5%単位に丸め) から重複なし・非負の4択を作りシャッフルする。

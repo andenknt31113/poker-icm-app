@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { isDegenerateProblem, buildEasyRPChoices, practiceProblemDedupKey } from "../src/practice/generate.js";
+import {
+  isDegenerateProblem,
+  isDegeneratePushProblem,
+  isPushProblem,
+  buildEasyRPChoices,
+  practiceProblemDedupKey,
+} from "../src/practice/generate.js";
 import { makeProblem } from "./fixtures.js";
 
 describe("isDegenerateProblem", () => {
@@ -54,6 +60,50 @@ describe("isDegenerateProblem", () => {
       equityLose: 10.0, // 差 0.45: 3人分閾値0.4 なら非縮退、7人分閾値0.5 なら縮退
     });
     expect(isDegenerateProblem(p)).toBe(false);
+  });
+});
+
+describe("isDegeneratePushProblem", () => {
+  it("push→call の勝敗で $ エクイティがほぼ変わらない (ほぼ均等ペイのサテライト) は縮退と判定する", () => {
+    const p = makeProblem({
+      payouts: [33.4, 33.3, 33.3],
+      pushEquityWin: 33.35,
+      pushEquityLose: 33.3, // 差 0.05 は総賞金 100 の 0.05% < 0.5% 閾値
+    });
+    expect(isDegeneratePushProblem(p)).toBe(true);
+  });
+
+  it("push→call の勝敗で十分な差がある通常の問題は縮退ではない", () => {
+    const p = makeProblem({
+      payouts: [50, 30, 20],
+      pushEquityWin: 40,
+      pushEquityLose: 10, // 差 30 は総賞金 100 の 30% >> 0.5%
+    });
+    expect(isDegeneratePushProblem(p)).toBe(false);
+  });
+
+  it("push 派生値が未設定 (undefined) でもクラッシュせず縮退扱いになる", () => {
+    // 旧スキーマの問題や生成失敗直後など、pushEquityWin/Lose が
+    // まだ計算されていないケースを 0-0=0 として安全に扱う
+    const p = makeProblem({ payouts: [50, 30, 20] });
+    expect(() => isDegeneratePushProblem(p)).not.toThrow();
+  });
+});
+
+describe("isPushProblem", () => {
+  it("hero のポジションが SB なら push 問題と判定する", () => {
+    const p = makeProblem({
+      scenarioPlayers: [
+        { stack: 20, role: "hero", position: "SB" },
+        { stack: 15, role: "villain", position: "BB" },
+      ],
+    });
+    expect(isPushProblem(p)).toBe(true);
+  });
+
+  it("hero のポジションが BB (callfold/rp モード) なら push 問題ではない", () => {
+    const p = makeProblem(); // デフォルトは hero=BB
+    expect(isPushProblem(p)).toBe(false);
   });
 });
 
@@ -118,6 +168,14 @@ describe("practiceProblemDedupKey", () => {
     const callfold = makeProblem({ savedMode: "callfold" });
     const rp = makeProblem({ savedMode: "rp" });
     expect(practiceProblemDedupKey(callfold)).not.toBe(practiceProblemDedupKey(rp));
+  });
+
+  it("savedMode が push なら callfold/rp と別キーになる", () => {
+    const push = makeProblem({ savedMode: "push" });
+    const callfold = makeProblem({ savedMode: "callfold" });
+    const rp = makeProblem({ savedMode: "rp" });
+    expect(practiceProblemDedupKey(push)).not.toBe(practiceProblemDedupKey(callfold));
+    expect(practiceProblemDedupKey(push)).not.toBe(practiceProblemDedupKey(rp));
   });
 
   it("スタック構成の順序が違えば別キーになる", () => {

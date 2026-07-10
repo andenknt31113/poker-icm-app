@@ -66,11 +66,11 @@ export function updatePracticeProgress(): void {
     return { label, c, t, acc: t > 0 ? c / t : null };
   });
 
-  const modeRows = (["callfold", "rp"] as PracticeMode[]).map((m) => {
+  const modeRows = (["callfold", "rp", "push"] as PracticeMode[]).map((m) => {
     const items = history.filter((e) => e.mode === m);
     const c = items.filter((e) => e.ok).length;
     const t = items.length;
-    const label = m === "callfold" ? "コール/フォールド判定" : "RP 当て";
+    const label = m === "callfold" ? "コール/フォールド判定" : m === "rp" ? "RP 当て" : "push 判定";
     return { label, c, t, acc: t > 0 ? c / t : null };
   });
 
@@ -105,7 +105,7 @@ export function updatePracticeProgress(): void {
     </div>
     <div class="progress-block">
       <div class="progress-block-title">モード別</div>
-      <div class="progress-breakdown-grid progress-breakdown-grid-2">
+      <div class="progress-breakdown-grid">
         ${modeRows.map((r) => `
           <div class="progress-breakdown-cell">
             <div class="progress-breakdown-label">${r.label}</div>
