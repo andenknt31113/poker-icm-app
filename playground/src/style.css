@@ -2629,6 +2629,18 @@ footer a {
   text-decoration: none;
 }
 
+.footer-legal-link {
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  text-decoration: underline;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 4px 2px;
+  margin-top: 2px;
+}
+
 /* ===== autofill ヒント (Section 5) ===== */
 .autofill-details {
   background: var(--card);
@@ -2901,9 +2913,45 @@ footer a {
 .guide-modal-body .howto {
   margin: 0 0 10px;
 }
+.guide-intro {
+  color: var(--muted);
+  font-size: 12.5px;
+  margin: 0 0 12px;
+}
 .guide-reopen-btn {
   margin-top: 4px;
   width: 100%;
+}
+.guide-legal-link {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 12.5px;
+  text-decoration: underline;
+  padding: 8px 10px;
+  cursor: pointer;
+  text-align: center;
+}
+.legal-modal-body h4 {
+  color: var(--accent);
+  font-size: 14px;
+  margin: 16px 0 8px;
+}
+.legal-modal-body h4:first-of-type {
+  margin-top: 4px;
+}
+.legal-meta {
+  color: var(--muted);
+  font-size: 12px;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
 }
 
 /* ===== 初回ヒントバー (セットアップタブ最上部) ===== */
