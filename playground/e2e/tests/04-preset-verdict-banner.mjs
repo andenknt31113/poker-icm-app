@@ -16,7 +16,7 @@ export default async function testPresetVerdictBanner({ baseURL, createContext }
     await page.click('.tab-btn[data-tab="result"]');
 
     await page.waitForSelector("#hv-grid .hand-cell", { state: "visible" });
-    // ftBubble は hero=BTN(4bb) / villain=SB(18bb) 固定なので equity 差が明確な AKs で判定させる
+    // ftBubble は hero=BB(4bb) / villain=SB(18bb) 固定なので equity 差が明確な AKs で判定させる
     await page.click('#hv-grid .hand-cell[title="AKs"]');
 
     await page.waitForSelector("#hv-banner:not(.hidden)", { state: "visible" });

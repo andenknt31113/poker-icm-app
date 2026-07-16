@@ -1,6 +1,6 @@
 import type { PracticeProblem } from "./types.js";
 import { computeDerivedFields, getPracticeMode, setPracticeModeSilent } from "./generate.js";
-import { renderPracticeProblem, setCurrentProblem } from "./render.js";
+import { renderPracticeProblem, setCurrentProblem, setPracticeActionsTopVisible } from "./render.js";
 import {
   TUTORIAL_PROBLEMS,
   setTutorialActive,
@@ -25,6 +25,9 @@ function tutorialProgressHtml(step: number): string {
 export function renderTutorialIntroCard(): void {
   const area = document.getElementById("practice-area");
   if (!area) return;
+  // 案内カード表示中は上のアクション列 (新しい問題/復習/導入コース) を隠し、
+  // 行動を「始める」/「スキップ」の2択に絞る (CTA一本化)
+  setPracticeActionsTopVisible(false);
   area.innerHTML = `
     <div class="tutorial-intro-card">
       <div class="tutorial-intro-title">🎓 まずは導入コース (5問・3分)</div>
@@ -38,6 +41,8 @@ export function renderTutorialIntroCard(): void {
 export function renderTutorialNarrationStep(): void {
   const area = document.getElementById("practice-area");
   if (!area) return;
+  // 案内カードから抜けた (導入コースを始めた) ので、アクション列を戻す
+  setPracticeActionsTopVisible(true);
   const def = TUTORIAL_PROBLEMS[getTutorialStep()]!;
   setCurrentProblem(null);
   area.innerHTML = `
@@ -76,6 +81,7 @@ export function finishTutorial(): void {
   markTutorialDone();
   setTutorialActive(false);
   setCurrentProblem(null);
+  setPracticeActionsTopVisible(true);
   const area = document.getElementById("practice-area");
   if (!area) return;
   area.innerHTML = `

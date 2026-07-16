@@ -14,6 +14,16 @@ export function setCurrentProblem(p: PracticeProblem | null): void {
   currentProblem = p;
 }
 
+/**
+ * 上部の練習アクション列 (🎲新しい問題 / 📚復習 / 🎓導入コース) の表示切替。
+ * 導入コース案内カード表示中は CTA を「始める/スキップ」の2択に絞るため隠し、
+ * それ以外 (通常出題・チュートリアル進行中・スキップ後・修了後) は表示する。
+ */
+export function setPracticeActionsTopVisible(visible: boolean): void {
+  const el = document.getElementById("practice-actions-top");
+  if (el) el.classList.toggle("hidden", !visible);
+}
+
 function renderRoundTable(
   container: HTMLElement,
   scenarioPlayers: { stack: number; role: Role; position: Position }[],
@@ -148,6 +158,9 @@ function renderHeroHandCards(hand: HandNotation): string {
 }
 
 export function renderPracticeProblem(rawP: PracticeProblem): void {
+  // 通常の問題出題 (チュートリアル中の問題ステップも含む) では
+  // 導入コース案内カード用に隠していたアクション列を必ず戻す
+  setPracticeActionsTopVisible(true);
   // 復習リストなど旧スキーマの問題は派生値を再計算してから使う
   const p = ensureDerivedFields(rawP);
   currentProblem = p;
@@ -357,10 +370,10 @@ export function updatePracticeHint(): void {
   if (!hint) return;
   const mode = getPracticeMode();
   if (mode === "rp") {
-    hint.textContent = "ランダムシナリオの Risk Premium をスライダーで推定。BF と必要勝率の感覚を養う。";
+    hint.textContent = "状況の Risk Premium を当てて ICM 感覚を鍛えます。";
   } else if (mode === "push") {
-    hint.textContent = "ランダムシナリオ + 相手 BB 想定コールレンジ + 自分のハンド (SB) → 自分から push するか fold するかを即判定。";
+    hint.textContent = "自分がオールインすべきかを鍛えます。";
   } else {
-    hint.textContent = "ランダムシナリオ + 相手 push 想定レンジ + 自分のハンド → call/fold を即判定。";
+    hint.textContent = "実戦形式のクイズで call/fold 判断を鍛えます。";
   }
 }
