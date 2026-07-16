@@ -458,8 +458,29 @@ function renderSavedPayouts(): void {
     .join("");
 }
 
-// ===== メモ機能 (localStorage 永続化) =====
-const MEMO_KEY = "poker-icm-scenario-memo";
+// ===== メモ機能は UI から削除済み (オーナーフィードバック対応) =====
+// 「📝 メモ」カードと入力 UI は削除したが、localStorage の既存データ
+// ("poker-icm-scenario-memo") は消さずに残してある。将来 UI を復活させた際に
+// 過去のメモを引き継げるようにするための措置。読み書きするコードはもう無い。
+
+// ===== 折りたたみセクションの開閉状態を localStorage に永続化 =====
+function initCollapsibleSection(detailsId: string, storageKey: string): void {
+  const details = document.getElementById(detailsId) as HTMLDetailsElement | null;
+  if (!details) return;
+  try {
+    // キー未設定 (初回起動) はデフォルトで開いた状態にする
+    details.open = localStorage.getItem(storageKey) !== "closed";
+  } catch {
+    /* localStorage が使えない環境ではデフォルト (開) のまま */
+  }
+  details.addEventListener("toggle", () => {
+    try {
+      localStorage.setItem(storageKey, details.open ? "open" : "closed");
+    } catch {
+      /* quota error 等は無視 */
+    }
+  });
+}
 
 // ===== シナリオ URL 共有 =====
 function encodeStateToHash(): string {
@@ -555,7 +576,7 @@ async function doShareScenario(): Promise<void> {
   }
 }
 
-/** セットアップタブ全体 (プレイヤー・シナリオ・ペイ構造・メモ・URL共有) の初期化。main.ts から一度だけ呼ぶ。 */
+/** セットアップタブ全体 (プレイヤー・シナリオ・ペイ構造・URL共有) の初期化。main.ts から一度だけ呼ぶ。 */
 export function initSetup(): void {
   // イベントデリゲーション
   playersList.addEventListener("click", (e) => {
@@ -727,21 +748,8 @@ export function initSetup(): void {
 
   payoutsInput.addEventListener("input", recompute);
 
-  const memoEl = document.getElementById("scenario-memo") as HTMLTextAreaElement | null;
-  if (memoEl) {
-    try {
-      memoEl.value = localStorage.getItem(MEMO_KEY) ?? "";
-    } catch {
-      /* ignore */
-    }
-    memoEl.addEventListener("input", () => {
-      try {
-        localStorage.setItem(MEMO_KEY, memoEl.value);
-      } catch {
-        /* ignore */
-      }
-    });
-  }
+  initCollapsibleSection("scenario-presets-toggle", "poker-icm-collapse-scenario-presets");
+  initCollapsibleSection("payout-presets-toggle", "poker-icm-collapse-payout-presets");
 
   document.getElementById("share-url-btn")?.addEventListener("click", doShareScenario);
   document.getElementById("share-url-btn-top")?.addEventListener("click", doShareScenario);
