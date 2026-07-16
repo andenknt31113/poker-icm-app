@@ -1099,6 +1099,54 @@ body {
   border-radius: 4px;
 }
 
+/* ===== 折りたたみ可能なプリセット群 (シナリオ/ペイ構造カード) ===== */
+.section-toggle {
+  margin: 0;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.section-toggle > summary {
+  cursor: pointer;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--accent);
+  list-style: none;
+  user-select: none;
+}
+
+.section-toggle > summary::-webkit-details-marker {
+  display: none;
+}
+
+.section-toggle > summary::before {
+  content: "▶ ";
+  display: inline-block;
+  margin-right: 4px;
+  transition: transform 0.15s ease;
+}
+
+.section-toggle[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.section-toggle > summary:hover {
+  background: rgba(79, 195, 247, 0.05);
+}
+
+.section-toggle-body {
+  padding: 4px 14px 14px;
+  border-top: 1px solid var(--border);
+}
+
+.section-toggle-body .scenario-presets {
+  margin-top: 8px;
+}
+
 /* ===== BF マトリックス ===== */
 .bf-matrix-title {
   font-size: 14px;
@@ -1441,22 +1489,7 @@ input[type="range"]::-moz-range-thumb {
   color: #000;
 }
 
-/* ===== メモ + 共有 ===== */
-#scenario-memo {
-  width: 100%;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 10px;
-  color: var(--text);
-  font-family: inherit;
-  font-size: 13px;
-  resize: vertical;
-}
-#scenario-memo:focus {
-  outline: none;
-  border-color: var(--accent);
-}
+/* ===== 共有 ===== */
 .share-row {
   display: flex;
   flex-wrap: wrap;

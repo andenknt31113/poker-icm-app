@@ -67,22 +67,27 @@
 
       <section class="card" data-tab="setup">
         <h2>シナリオプリセット</h2>
-        <p class="hint">タップで状況一発セット。スタック・ポジション・ペイアウトを丸ごと反映。</p>
-        <div class="scenario-presets">
-          <button type="button" data-scenario="ft9" class="scenario-btn">9-max FT 開幕</button>
-          <button type="button" data-scenario="ftBubble" class="scenario-btn">FT バブル (短/普通×3)</button>
-          <button type="button" data-scenario="ft6" class="scenario-btn">6 残り</button>
-          <button type="button" data-scenario="ft4" class="scenario-btn">4 残り</button>
-          <button type="button" data-scenario="ft3" class="scenario-btn">3-handed</button>
-          <button type="button" data-scenario="hu" class="scenario-btn">HU 10/10</button>
-          <button type="button" data-scenario="huShort" class="scenario-btn">HU 短/長</button>
-          <button type="button" data-scenario="satellite3" class="scenario-btn">🛰 サテライト (3人入賞)</button>
-        </div>
-        <div class="presets-label" style="margin-top: 10px;">
-          自分のシナリオ
-          <button id="save-scenario-btn" type="button" class="save-btn">＋ 現在の状況を保存</button>
-        </div>
-        <div id="user-scenarios" class="scenario-presets user"></div>
+        <details class="section-toggle" id="scenario-presets-toggle">
+          <summary>プリセット一覧（タップで開閉）</summary>
+          <div class="section-toggle-body">
+            <p class="hint">タップで状況一発セット。スタック・ポジション・ペイアウトを丸ごと反映。</p>
+            <div class="scenario-presets">
+              <button type="button" data-scenario="ft9" class="scenario-btn">9-max FT 開幕</button>
+              <button type="button" data-scenario="ftBubble" class="scenario-btn">FT バブル (短/普通×3)</button>
+              <button type="button" data-scenario="ft6" class="scenario-btn">6 残り</button>
+              <button type="button" data-scenario="ft4" class="scenario-btn">4 残り</button>
+              <button type="button" data-scenario="ft3" class="scenario-btn">3-handed</button>
+              <button type="button" data-scenario="hu" class="scenario-btn">HU 10/10</button>
+              <button type="button" data-scenario="huShort" class="scenario-btn">HU 短/長</button>
+              <button type="button" data-scenario="satellite3" class="scenario-btn">🛰 サテライト (3人入賞)</button>
+            </div>
+            <div class="presets-label" style="margin-top: 10px;">
+              自分のシナリオ
+              <button id="save-scenario-btn" type="button" class="save-btn">＋ 現在の状況を保存</button>
+            </div>
+            <div id="user-scenarios" class="scenario-presets user"></div>
+          </div>
+        </details>
       </section>
 
       <section class="card" data-tab="setup">
@@ -110,27 +115,29 @@
           + 順位追加
         </button>
         <input id="payouts" type="hidden" value="50, 30, 20" />
-        <div class="presets-label">プリセット</div>
-        <div class="presets">
-          <button data-preset="50,30,20" type="button">Top3 (50/30/20)</button>
-          <button data-preset="65,35" type="button">Top2 (65/35)</button>
-          <button data-preset="100" type="button">WTA</button>
-          <button data-preset="40,25,15,10,5,3,2" type="button">9-max FT</button>
-          <button data-preset="33,33,33" type="button">🛰 サテライト Top3</button>
-        </div>
-        <div class="presets-label">
-          保存済み
-          <button id="save-payout" type="button" class="save-btn">
-            ＋ 現在の値を保存
-          </button>
-        </div>
-        <div id="saved-payouts" class="presets saved"></div>
+        <details class="section-toggle" id="payout-presets-toggle">
+          <summary>プリセット・保存済み（タップで開閉）</summary>
+          <div class="section-toggle-body">
+            <div class="presets-label">プリセット</div>
+            <div class="presets">
+              <button data-preset="50,30,20" type="button">Top3 (50/30/20)</button>
+              <button data-preset="65,35" type="button">Top2 (65/35)</button>
+              <button data-preset="100" type="button">WTA</button>
+              <button data-preset="40,25,15,10,5,3,2" type="button">9-max FT</button>
+              <button data-preset="33,33,33" type="button">🛰 サテライト Top3</button>
+            </div>
+            <div class="presets-label">
+              保存済み
+              <button id="save-payout" type="button" class="save-btn">
+                ＋ 現在の値を保存
+              </button>
+            </div>
+            <div id="saved-payouts" class="presets saved"></div>
+          </div>
+        </details>
       </section>
 
       <section class="card" data-tab="setup">
-        <h2>📝 メモ</h2>
-        <p class="hint">このシナリオに関する気付きや復習用メモ。次回起動時にも残ります。</p>
-        <textarea id="scenario-memo" rows="3" placeholder="例: JOPT Day2 FT バブル。相手 X さん。AKo で push した時の判断..."></textarea>
         <div class="share-row">
           <button id="share-url-btn" type="button" class="solve-btn share-btn">🔗 シナリオを URL で共有</button>
           <span id="share-url-hint" class="hint"></span>
