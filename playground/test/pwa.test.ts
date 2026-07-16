@@ -34,6 +34,7 @@ function setupDom(): void {
   document.body.innerHTML = `
     <header><div class="header-actions"></div></header>
     <div class="tab-bar"></div>
+    <footer><p id="footer-version">Poker ICM/BF</p></footer>
   `;
 }
 
@@ -192,5 +193,30 @@ describe("SW 更新通知トースト", () => {
     // 2 つのバナーが共存し、DOM 上は別要素として重ならず積み上がっている
     expect(stack?.children.length).toBe(2);
     expect(worker).toBeTruthy();
+  });
+});
+
+describe("フッターのビルドバージョン表示", () => {
+  beforeEach(() => {
+    setupDom();
+    stubMatchMedia();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+    document.body.innerHTML = "";
+  });
+
+  it("#footer-version に '· build <__APP_VERSION__>' が追記される", () => {
+    initPwa();
+    const el = document.getElementById("footer-version");
+    // vitest.config.ts の define で __APP_VERSION__ = \"test\" に固定している
+    expect(el?.textContent).toBe("Poker ICM/BF · build test");
+  });
+
+  it("#footer-version が存在しない場合でも例外にならない", () => {
+    document.querySelector("footer")?.remove();
+    expect(() => initPwa()).not.toThrow();
   });
 });
