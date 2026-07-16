@@ -12,6 +12,7 @@ export function updatePracticeBadges(): void {
   const streakEl = document.getElementById("practice-streak");
   const accEl = document.getElementById("practice-acc");
   const reviewCountEl = document.getElementById("review-count");
+  const reviewBtnEl = document.getElementById("practice-review-btn");
   if (streakEl) {
     streakEl.textContent = `🔥 連続正解 ${streak}`;
     streakEl.classList.toggle("active", streak >= 3);
@@ -24,6 +25,8 @@ export function updatePracticeBadges(): void {
     }
   }
   if (reviewCountEl) reviewCountEl.textContent = String(review.length);
+  // 復習 0 件のときは常にボタン自体を隠す (雑音になるだけで押しても意味が無いため)
+  if (reviewBtnEl) reviewBtnEl.classList.toggle("hidden", review.length === 0);
 }
 
 /**

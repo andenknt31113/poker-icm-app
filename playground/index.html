@@ -42,9 +42,6 @@
             <button id="theme-toggle" class="header-btn" type="button" title="テーマ切替" aria-label="テーマ切替">🌙</button>
           </div>
         </div>
-        <p class="subtitle">
-          値を変えるとリアルタイムに再計算されます。
-        </p>
         <p id="share-url-toast" class="share-toast hidden"></p>
       </header>
 
@@ -141,6 +138,58 @@
       </section>
 
       <section class="card" data-tab="result">
+        <h2>必要勝率 (cEV / $EV / RP)</h2>
+        <p class="hint">
+          🎯と⚔️のオールイン想定で自動計算。手動入力したい場合は数値を上書きしてください。
+        </p>
+        <div class="grid">
+          <label>
+            コール額
+            <div class="num-stepper">
+              <button type="button" class="num-step-btn" data-target="call" data-delta="-1">−1</button>
+              <input id="call" type="number" inputmode="decimal" placeholder="例: 8.0" min="0.1" step="0.1" />
+              <button type="button" class="num-step-btn" data-target="call" data-delta="1">+1</button>
+            </div>
+          </label>
+          <label>
+            勝った時の純利得
+            <div class="num-stepper">
+              <button type="button" class="num-step-btn" data-target="potwin" data-delta="-1">−1</button>
+              <input id="potwin" type="number" inputmode="decimal" placeholder="例: 10.5" min="0.1" step="0.1" />
+              <button type="button" class="num-step-btn" data-target="potwin" data-delta="1">+1</button>
+            </div>
+          </label>
+        </div>
+        <p class="hint" id="autofill-hint" style="margin-top: 6px;"></p>
+        <button id="autofill-call" type="button" class="save-btn" style="margin-top: 10px;">
+          🔄 自動算出に戻す
+        </button>
+        <div id="position-warn" class="warn-box hidden"></div>
+        <div id="depth-warn-eq" class="warn-box hidden"></div>
+        <div id="eq-result" class="result"></div>
+
+        <div class="hv-section">
+          <h3>🃏 ハンド別判定</h3>
+          <p class="hint">相手の想定レンジを選び、自分のハンドをタップすると個別判定</p>
+          <p id="hv-empty-msg" class="hint hidden">プレイヤーで 🎯自分 と ⚔️相手 を指定してください</p>
+          <div id="hv-body">
+            <div id="depth-warn-hv" class="warn-box hidden"></div>
+            <div id="hv-range-pills" class="hv-pills">
+              <button type="button" class="hv-pill" data-range="15">タイト Top15%</button>
+              <button type="button" class="hv-pill active" data-range="30">普通 Top30%</button>
+              <button type="button" class="hv-pill" data-range="50">ルース Top50%</button>
+            </div>
+            <div id="hv-banner" class="hv-banner hidden"></div>
+            <p class="hint hv-source-note">必要勝率 = 上の $EV (True Req)</p>
+            <div class="hv-grid-wrap">
+              <div id="hv-grid" class="hand-grid"></div>
+              <p class="hint" id="hv-grid-count"></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" data-tab="result">
         <h2>ICM エクイティ</h2>
         <table id="icm-table">
           <thead>
@@ -156,7 +205,7 @@
       </section>
 
       <section class="card" data-tab="result">
-        <h2>Bubble Factor (BF)</h2>
+        <h2>BF マップ</h2>
         <p class="hint">
           🎯自分と⚔️相手のオールイン想定。リスクするチップは小さい方のスタックに自動調整されます。
         </p>
@@ -236,58 +285,6 @@
           <div class="bf-matrix-fade" aria-hidden="true"></div>
         </div>
         <p class="hint bf-matrix-scroll-hint hidden" id="bf-matrix-scroll-hint">→ 横にスクロール</p>
-      </section>
-
-      <section class="card" data-tab="result">
-        <h2>必要勝率 (cEV / $EV / RP)</h2>
-        <p class="hint">
-          🎯と⚔️のオールイン想定で自動計算。手動入力したい場合は数値を上書きしてください。
-        </p>
-        <div class="grid">
-          <label>
-            コール額
-            <div class="num-stepper">
-              <button type="button" class="num-step-btn" data-target="call" data-delta="-1">−1</button>
-              <input id="call" type="number" inputmode="decimal" placeholder="例: 8.0" min="0.1" step="0.1" />
-              <button type="button" class="num-step-btn" data-target="call" data-delta="1">+1</button>
-            </div>
-          </label>
-          <label>
-            勝った時の純利得
-            <div class="num-stepper">
-              <button type="button" class="num-step-btn" data-target="potwin" data-delta="-1">−1</button>
-              <input id="potwin" type="number" inputmode="decimal" placeholder="例: 10.5" min="0.1" step="0.1" />
-              <button type="button" class="num-step-btn" data-target="potwin" data-delta="1">+1</button>
-            </div>
-          </label>
-        </div>
-        <p class="hint" id="autofill-hint" style="margin-top: 6px;"></p>
-        <button id="autofill-call" type="button" class="solve-btn" style="margin-top: 10px; width: auto;">
-          🔄 自動算出に戻す
-        </button>
-        <div id="position-warn" class="warn-box hidden"></div>
-        <div id="depth-warn-eq" class="warn-box hidden"></div>
-        <div id="eq-result" class="result"></div>
-
-        <div class="hv-section">
-          <h3>🃏 ハンド別判定</h3>
-          <p class="hint">相手の想定レンジを選び、自分のハンドをタップすると個別判定</p>
-          <p id="hv-empty-msg" class="hint hidden">プレイヤーで 🎯自分 と ⚔️相手 を指定してください</p>
-          <div id="hv-body">
-            <div id="depth-warn-hv" class="warn-box hidden"></div>
-            <div id="hv-range-pills" class="hv-pills">
-              <button type="button" class="hv-pill" data-range="15">タイト Top15%</button>
-              <button type="button" class="hv-pill active" data-range="30">普通 Top30%</button>
-              <button type="button" class="hv-pill" data-range="50">ルース Top50%</button>
-            </div>
-            <div id="hv-banner" class="hv-banner hidden"></div>
-            <p class="hint hv-source-note">必要勝率 = 上の $EV (True Req)</p>
-            <div class="hv-grid-wrap">
-              <div id="hv-grid" class="hand-grid"></div>
-              <p class="hint" id="hv-grid-count"></p>
-            </div>
-          </div>
-        </div>
       </section>
 
       <section class="card" data-tab="nash">
@@ -407,7 +404,7 @@
       <section class="card" data-tab="practice">
         <h2>🎲 練習問題</h2>
         <p class="hint" id="practice-hint">
-          ランダムシナリオ + 相手 push 想定レンジ + 自分のハンド → call/fold を即判定。
+          実戦形式のクイズで call/fold 判断を鍛えます。
         </p>
         <div class="practice-mode">
           <button type="button" class="mode-btn active" data-mode="callfold">⚖️ call/fold 判定</button>
@@ -430,7 +427,7 @@
           <summary>📈 成績の推移</summary>
           <div id="practice-progress-body"></div>
         </details>
-        <div class="practice-actions-top">
+        <div id="practice-actions-top" class="practice-actions-top">
           <button id="practice-new-btn" type="button" class="solve-btn">🎲 新しい問題</button>
           <button id="practice-review-btn" type="button" class="solve-btn" style="background: var(--card); color: var(--text); border: 1px solid var(--border);">📚 復習 (<span id="review-count">0</span>)</button>
           <button id="practice-tutorial-btn" type="button" class="solve-btn tutorial-cta-btn">🎓 導入コース</button>
@@ -439,7 +436,7 @@
       </section>
 
       <footer>
-        <p>Phase 0 動作確認 · @poker-icm/core</p>
+        <p id="footer-version">Poker ICM/BF</p>
         <p>
           <button type="button" id="footer-legal-link" class="footer-legal-link">
             📄 利用規約・プライバシーポリシー

@@ -106,11 +106,11 @@ export function recompute(): void {
           riskChips: safeRisk,
         });
         bf = r.bf;
+        // 生の $ エクイティ数値 (equityNow/equityWin/equityLose) は単位が伝わりにくく
+        // 状況サマリー (#hero-summary) や BF マップと重複するため非表示。
+        // BF 値自体とリスクチップのみ、hero vs villain の一行サマリーとして残す。
         bfResult.innerHTML = `
-          <div class="row"><span class="label">BF</span><span class="value big">${fmt(r.bf, 3)}</span></div>
-          <div class="row"><span class="label">現在の $ エクイティ</span><span class="value">${fmt(r.equityNow, 3)}</span></div>
-          <div class="row"><span class="label">勝ち時 $ エクイティ</span><span class="value">${fmt(r.equityWin, 3)}</span></div>
-          <div class="row"><span class="label">負け時 $ エクイティ</span><span class="value">${fmt(r.equityLose, 3)}</span></div>
+          <div class="row"><span class="label">🎯 vs ⚔️ の BF</span><span class="value big">${fmt(r.bf, 3)}</span></div>
           <div class="row"><span class="label">リスクチップ</span><span class="value">${safeRisk}</span></div>
         `;
       }
@@ -160,8 +160,9 @@ export function recompute(): void {
             ? `相手(${villainPos})`
             : null; // どちらも BB じゃない (前任 BB folded)
         autofillHint.innerHTML = `
-          <details class="autofill-details" open>
-            <summary>✓ 追加 call <strong>${r.callAmount.toFixed(1)}</strong> / 純利得 <strong>${r.potIfWin.toFixed(1)}</strong> BB <span style="color: var(--muted); font-size: 11px;">(タップで内訳)</span></summary>
+          <div class="autofill-summary-line">✓ 追加 call <strong>${r.callAmount.toFixed(1)}</strong> / 純利得 <strong>${r.potIfWin.toFixed(1)}</strong> BB</div>
+          <details class="autofill-details">
+            <summary>▸ 計算の内訳</summary>
             <div class="autofill-body">
               <div class="autofill-section">
                 <div class="autofill-h">📊 ポット構成</div>
@@ -707,24 +708,9 @@ function updateHandVerdictRequiredEquity(requiredEquity: number | null): void {
 }
 
 /** 計算結果タブの初期化・イベント配線。main.ts から一度だけ呼ぶ。 */
-const BF_HOWTO_SEEN_KEY = "poker-icm-bf-howto-seen";
-/** 「表の見方」details を初回表示時のみ自動で開く。以降は閉じたまま (通常の details 挙動)。 */
-function initBFHowto(): void {
-  const details = document.getElementById("bf-howto") as HTMLDetailsElement | null;
-  if (!details) return;
-  try {
-    if (localStorage.getItem(BF_HOWTO_SEEN_KEY) !== "1") {
-      details.open = true;
-      localStorage.setItem(BF_HOWTO_SEEN_KEY, "1");
-    }
-  } catch {
-    /* ignore */
-  }
-}
+// 「表の見方」details は常に閉じた状態で開始する (通常の details 挙動のまま、開閉は手動で可能)。
 
 export function initCalculator(): void {
-  initBFHowto();
-
   // BF マトリクスは計算結果タブが非表示 (display:none) の間は幅が0になり、
   // renderBFMatrix() 内の scrollWidth/clientWidth 判定が不正確になる。
   // ResizeObserver ならタブ切替で表示され実サイズが確定した瞬間にも発火するため、

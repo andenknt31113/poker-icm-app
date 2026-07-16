@@ -256,10 +256,23 @@ function initOfflineBanner(): void {
   updateOfflineBanner();
 }
 
-/** テーマ・PWA インストール導線・オフラインバナーの初期化。main.ts から一度だけ呼ぶ。 */
+// ===== フッター: ビルドバージョン表示 =====
+// vite.config.ts の define で埋め込まれた __APP_VERSION__ (ビルド時点の
+// git commit SHA 短縮形、git が使えない環境では "dev") を footer に追記する。
+// デプロイ後、本番に表示される build SHA と main ブランチの最新 SHA を照合すれば
+// 「意図した commit が確実にデプロイされているか」を検証できる、という
+// デプロイ後検証の布石。
+function initFooterVersion(): void {
+  const el = document.getElementById("footer-version");
+  if (!el) return;
+  el.textContent = `${el.textContent} · build ${__APP_VERSION__}`;
+}
+
+/** テーマ・PWA インストール導線・オフラインバナー・フッターバージョンの初期化。main.ts から一度だけ呼ぶ。 */
 export function initPwa(): void {
   initTheme();
   initServiceWorker();
   initInstallPrompt();
   initOfflineBanner();
+  initFooterVersion();
 }

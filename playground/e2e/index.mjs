@@ -19,6 +19,9 @@ import testPracticeModes from "./tests/02-practice-modes.mjs";
 import testTutorialIntro from "./tests/03-tutorial-intro.mjs";
 import testPresetVerdictBanner from "./tests/04-preset-verdict-banner.mjs";
 import testShareUrl from "./tests/05-share-url.mjs";
+import testFooterVersion from "./tests/06-footer-version.mjs";
+import testPositionWarnZero from "./tests/06-position-warn-zero.mjs";
+import testPracticeCtaConsolidation from "./tests/07-practice-cta-consolidation.mjs";
 
 async function main() {
   const t0 = Date.now();
@@ -52,6 +55,18 @@ async function main() {
     {
       name: "URL共有: hash生成 → 新コンテキストで復元",
       run: () => testShareUrl({ baseURL, createContext }),
+    },
+    {
+      name: "全8プリセット+デフォルト → 計算結果タブ → position-warn ゼロ",
+      run: () => testPositionWarnZero({ baseURL, createContext }),
+    },
+    {
+      name: "練習タブ CTA 一本化 (初見2択 → スキップ → 復習0→1)",
+      run: () => testPracticeCtaConsolidation({ baseURL, createContext }),
+    },
+    {
+      name: "フッターのビルドバージョン表示 + ヘッダーレイアウト崩れなし (dark/light)",
+      run: () => testFooterVersion({ baseURL, createContext }),
     },
   ];
 
