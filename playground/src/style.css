@@ -61,12 +61,6 @@ h1 {
   margin: 0 0 8px;
 }
 
-.subtitle {
-  color: var(--muted);
-  font-size: 13px;
-  margin: 0;
-}
-
 .card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -481,6 +475,8 @@ th {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  /* .subtitle 削除に伴い、以前あった文言分の余白を維持するための調整 */
+  margin-bottom: 12px;
 }
 .header-row h1 {
   margin: 0;
