@@ -195,7 +195,7 @@ function ensureGuideModal(): HTMLDivElement {
               <li>「シナリオプリセット」をタップして状況を一発セット</li>
               <li>「プレイヤー」でスタックを調整（足りなければ + プレイヤー追加）</li>
               <li>🎯自分 / ⚔️相手 をタップで指定</li>
-              <li>必要なら📝メモに気付きを残す</li>
+              <li>🔗 で今のシナリオを URL 共有</li>
             </ol>
           </div>
         </details>
