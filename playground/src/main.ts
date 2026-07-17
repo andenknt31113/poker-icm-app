@@ -10,6 +10,7 @@ import "@fontsource/jetbrains-mono/latin-700.css";
 // ===== 共有状態・基盤 (import するだけで players / payouts / DOM 参照が初期化される) =====
 import "./appState.js";
 import "./domRefs.js";
+import { applyStaticTranslations } from "./i18n.js";
 import { initNumberInputAutoSelect } from "./dom.js";
 
 // ===== 各機能モジュール =====
@@ -25,6 +26,10 @@ import { initReview } from "./practice/review.js";
 import { initProgress } from "./practice/progress.js";
 
 // ===== 初期化 (元 main.ts の実行順を踏襲) =====
+// 静的 DOM の文言を辞書から適用する。各 init より前に実行することで、
+// footer のビルドSHA追記 (initPwa) など JS 側の後処理がその上に乗る。
+applyStaticTranslations();
+
 initNumberInputAutoSelect();
 initSetup();
 initCalculator();

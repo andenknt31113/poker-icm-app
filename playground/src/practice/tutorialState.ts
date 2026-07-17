@@ -1,4 +1,5 @@
 import { DEFAULT_SB, DEFAULT_BB, DEFAULT_ANTE } from "../appState.js";
+import { t } from "../i18n.js";
 import type { PracticeProblemBase } from "./types.js";
 
 // ===== 🎓 導入コース (固定5問チュートリアル) =====
@@ -22,11 +23,9 @@ export interface TutorialProblemDef {
 //   Q5: margin = -12.4% (AKs でも大きくフォールド)
 export const TUTORIAL_PROBLEMS: TutorialProblemDef[] = [
   {
-    title: "チップ＝賞金の世界",
-    narration:
-      "全員が同じ賞金を狙う一発勝負 (Winner Take All)。ここではチップ＝そのまま賞金です。",
-    lesson:
-      "WTA では順位という概念がなく、勝率がそのまま賞金期待値に直結します。だから Risk Premium はゼロ。cEV（チップ的な必要勝率）だけで判断できる、ICM プレッシャーが存在しない最もシンプルなケースです。",
+    title: t("practice.tutorial.q1.title"),
+    narration: t("practice.tutorial.q1.narration"),
+    lesson: t("practice.tutorial.q1.lesson"),
     base: {
       scenarioPlayers: [
         { stack: 20, role: "hero", position: "BB" },
@@ -42,11 +41,9 @@ export const TUTORIAL_PROBLEMS: TutorialProblemDef[] = [
     },
   },
   {
-    title: "相手をカバーしている",
-    narration:
-      "相手のスタックはあなたより少ない。もし負けても、あなたはまだトーナメントに残ります。",
-    lesson:
-      "自分が相手をカバーしている（負けても飛ばない）ときは、Risk Premium は小さめ。cEV に近い感覚でコールして大丈夫です。ICM プレッシャーは『自分が飛ぶリスク』があるときに強く働きます。",
+    title: t("practice.tutorial.q2.title"),
+    narration: t("practice.tutorial.q2.narration"),
+    lesson: t("practice.tutorial.q2.lesson"),
     base: {
       scenarioPlayers: [
         { stack: 30, role: "hero", position: "BB" },
@@ -62,11 +59,9 @@ export const TUTORIAL_PROBLEMS: TutorialProblemDef[] = [
     },
   },
   {
-    title: "バブルの罠",
-    narration:
-      "あなたは4人残りの3番手。チップリーダーがオールイン。ハンドは悪くない…がこれはワナかもしれない。",
-    lesson:
-      "チップの上ではコールが得（cEV的には+EV）でも、厳密な ICM で計算すると必要勝率が跳ね上がり、フォールドが正解になることがあります。これが『ICM プレッシャー』の正体。飛べば賞金の可能性が消える一方、生き残れば上位の賞金が保証されるため、コールのリスクは額面以上に重いのです。",
+    title: t("practice.tutorial.q3.title"),
+    narration: t("practice.tutorial.q3.narration"),
+    lesson: t("practice.tutorial.q3.lesson"),
     base: {
       scenarioPlayers: [
         { stack: 15, role: "hero", position: "BB" },
@@ -83,11 +78,9 @@ export const TUTORIAL_PROBLEMS: TutorialProblemDef[] = [
     },
   },
   {
-    title: "短スタックを待て",
-    narration:
-      "卓にはあなたよりずっと短いスタックの選手がいます。相手のオールインはギリギリ微妙なラインです。",
-    lesson:
-      "自分より短いスタックが残っている間は、その選手が先に飛んでくれれば自動的に順位が上がります。無理にコールしなくても得られる価値がある以上、微妙なラインはフォールド優位になりがちです。",
+    title: t("practice.tutorial.q4.title"),
+    narration: t("practice.tutorial.q4.narration"),
+    lesson: t("practice.tutorial.q4.lesson"),
     base: {
       scenarioPlayers: [
         { stack: 18, role: "hero", position: "BB" },
@@ -104,11 +97,9 @@ export const TUTORIAL_PROBLEMS: TutorialProblemDef[] = [
     },
   },
   {
-    title: "サテライトの掟",
-    narration:
-      "上位がほぼ均等に賞金を得るサテライト。生き残ることそのものが目的です。AKs のような好ハンドでも、一度考え直しましょう。",
-    lesson:
-      "賞金がほぼ均等なサテライトでは、順位を1つ落とすことの価値がとても大きく、勝っても得られる価値はわずかです。そのため Risk Premium が極端に跳ね上がり、AKs や QQ 級の強いハンドでもフォールドが正解になることが多いのです。『残ること』が全てを支配します。",
+    title: t("practice.tutorial.q5.title"),
+    narration: t("practice.tutorial.q5.narration"),
+    lesson: t("practice.tutorial.q5.lesson"),
     base: {
       scenarioPlayers: [
         { stack: 18, role: "hero", position: "BB" },

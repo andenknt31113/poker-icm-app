@@ -1,3 +1,5 @@
+import { t } from "./i18n.js";
+
 // ===== テーマ切替 (dark/light) =====
 const THEME_KEY = "poker-icm-theme";
 type Theme = "dark" | "light";
@@ -59,15 +61,15 @@ function showSwUpdateToast(waitingWorker: ServiceWorker): void {
   toast.className = "sw-update-toast";
   toast.setAttribute("role", "button");
   toast.tabIndex = 0;
-  toast.setAttribute("aria-label", "新しいバージョンがあります。タップで更新");
+  toast.setAttribute("aria-label", t("pwa.swUpdate.aria"));
 
   const text = document.createElement("span");
-  text.textContent = "🔄 新しいバージョンがあります — タップで更新";
+  text.textContent = t("pwa.swUpdate.text");
 
   const closeBtn = document.createElement("button");
   closeBtn.type = "button";
   closeBtn.className = "sw-update-toast-close";
-  closeBtn.setAttribute("aria-label", "閉じる");
+  closeBtn.setAttribute("aria-label", t("pwa.close.aria"));
   closeBtn.textContent = "✕";
 
   const applyUpdate = (): void => {
@@ -167,8 +169,8 @@ function initInstallPrompt(): void {
     btn.id = "install-btn";
     btn.className = "header-btn";
     btn.type = "button";
-    btn.title = "ホーム画面に追加";
-    btn.setAttribute("aria-label", "インストール");
+    btn.title = t("pwa.install.title");
+    btn.setAttribute("aria-label", t("pwa.install.aria"));
     btn.textContent = "📲";
     btn.addEventListener("click", () => {
       const prompt = deferredInstallPrompt;
@@ -211,11 +213,11 @@ function initInstallPrompt(): void {
       const banner = document.createElement("div");
       banner.className = "ios-install-banner";
       const text = document.createElement("span");
-      text.textContent = "ホーム画面に追加でアプリとして使えます: 共有ボタン → ホーム画面に追加";
+      text.textContent = t("pwa.iosBanner.text");
       const closeBtn = document.createElement("button");
       closeBtn.type = "button";
       closeBtn.className = "ios-install-banner-close";
-      closeBtn.setAttribute("aria-label", "閉じる");
+      closeBtn.setAttribute("aria-label", t("pwa.close.aria"));
       closeBtn.textContent = "✕";
       const dismiss = (): void => {
         banner.remove();
@@ -246,7 +248,7 @@ function updateOfflineBanner(): void {
   const banner = document.createElement("div");
   banner.id = "offline-banner";
   banner.className = "offline-banner";
-  banner.textContent = "📡 オフライン — 計算はすべて端末内で動作します";
+  banner.textContent = t("pwa.offline.text");
   header.insertAdjacentElement("afterend", banner);
 }
 
