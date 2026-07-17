@@ -22,6 +22,7 @@ import testShareUrl from "./tests/05-share-url.mjs";
 import testFooterVersion from "./tests/06-footer-version.mjs";
 import testPositionWarnZero from "./tests/06-position-warn-zero.mjs";
 import testPracticeCtaConsolidation from "./tests/07-practice-cta-consolidation.mjs";
+import testLangSwitch from "./tests/08-lang-switch.mjs";
 
 async function main() {
   const t0 = Date.now();
@@ -67,6 +68,10 @@ async function main() {
     {
       name: "フッターのビルドバージョン表示 + ヘッダーレイアウト崩れなし (dark/light)",
       run: () => testFooterVersion({ baseURL, createContext }),
+    },
+    {
+      name: "言語切替: 既定ja → EN(代表文言4箇所) → ja復帰 + <html lang>追従",
+      run: () => testLangSwitch({ baseURL, createContext }),
     },
   ];
 

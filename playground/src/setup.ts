@@ -1,4 +1,5 @@
 import { MAX_PLAYERS } from "@poker-icm/core";
+import { t as tr } from "./i18n.js";
 import { $ } from "./dom.js";
 import { recompute, setCallManualOverride } from "./calculator.js";
 import {
@@ -45,13 +46,13 @@ export function renderPlayers(): void {
       <span class="player-num">#${i + 1}</span>
       <input type="number" inputmode="decimal" class="player-stack" min="0" step="1" value="${p.stack}" data-id="${p.id}" />
       <span class="player-unit">BB</span>
-      <select class="player-pos" data-id="${p.id}" title="ポジション">${posOptions}</select>
+      <select class="player-pos" data-id="${p.id}" title="${tr("setup.player.pos.title")}">${posOptions}</select>
       <div class="player-roles" data-id="${p.id}">
-        <button type="button" class="role-btn ${p.role === "hero" ? "active hero" : ""}" data-role="hero" title="自分">🎯</button>
-        <button type="button" class="role-btn ${p.role === "villain" ? "active villain" : ""}" data-role="villain" title="相手">⚔️</button>
-        <button type="button" class="role-btn ${p.role === "other" ? "active" : ""}" data-role="other" title="その他">他</button>
+        <button type="button" class="role-btn ${p.role === "hero" ? "active hero" : ""}" data-role="hero" title="${tr("setup.player.role.hero")}">🎯</button>
+        <button type="button" class="role-btn ${p.role === "villain" ? "active villain" : ""}" data-role="villain" title="${tr("setup.player.role.villain")}">⚔️</button>
+        <button type="button" class="role-btn ${p.role === "other" ? "active" : ""}" data-role="other" title="${tr("setup.player.role.other")}">${tr("setup.player.role.otherText")}</button>
       </div>
-      <button type="button" class="player-remove" data-id="${p.id}" title="削除" ${players.length <= 2 ? "disabled" : ""}>✕</button>
+      <button type="button" class="player-remove" data-id="${p.id}" title="${tr("setup.common.delete")}" ${players.length <= 2 ? "disabled" : ""}>✕</button>
     `;
     playersList.appendChild(row);
   });
@@ -59,8 +60,8 @@ export function renderPlayers(): void {
   addPlayerBtn.disabled = players.length >= MAX_PLAYERS;
   addPlayerBtn.textContent =
     players.length >= MAX_PLAYERS
-      ? `(最大 ${MAX_PLAYERS} 人)`
-      : "+ プレイヤー追加";
+      ? tr("setup.players.addMax", { n: MAX_PLAYERS })
+      : tr("setup.players.add");
 }
 
 function setRole(playerId: number, role: Role): void {
@@ -351,7 +352,7 @@ function renderUserScenarios(): void {
   if (!container) return;
   const list = loadUserScenarios();
   if (list.length === 0) {
-    container.innerHTML = `<span class="hint" style="font-size:11px;color:var(--muted);">まだ保存なし。「＋ 現在の状況を保存」を押すと追加</span>`;
+    container.innerHTML = `<span class="hint" style="font-size:11px;color:var(--muted);">${tr("setup.userScenarios.empty")}</span>`;
     return;
   }
   container.innerHTML = list
@@ -359,7 +360,7 @@ function renderUserScenarios(): void {
       (s, i) => `
       <span class="user-scenario-item" data-i="${i}">
         <button type="button" class="scenario-btn user-load">${escapeAttr(s.name)}</button>
-        <button type="button" class="user-del" title="削除">✕</button>
+        <button type="button" class="user-del" title="${tr("setup.common.delete")}">✕</button>
       </span>
     `,
     )
@@ -382,9 +383,9 @@ function renderPayouts(): void {
     const row = document.createElement("div");
     row.className = "payout-row";
     row.innerHTML = `
-      <span class="payout-num">${i + 1}位</span>
+      <span class="payout-num">${tr("setup.payout.rank", { n: i + 1 })}</span>
       <input type="number" inputmode="decimal" class="payout-amount" min="0" step="0.5" value="${amt}" data-i="${i}" />
-      <button type="button" class="payout-remove" data-i="${i}" title="削除" ${payoutsArr.length <= 1 ? "disabled" : ""}>✕</button>
+      <button type="button" class="payout-remove" data-i="${i}" title="${tr("setup.common.delete")}" ${payoutsArr.length <= 1 ? "disabled" : ""}>✕</button>
     `;
     payoutsList.appendChild(row);
   });
@@ -451,7 +452,7 @@ function renderSavedPayouts(): void {
       (p, i) => `
       <span class="saved-preset" data-i="${i}">
         <button type="button" class="load" data-value="${escapeHtml(p.value)}">${escapeHtml(p.name)}: ${escapeHtml(p.value)}</button>
-        <button type="button" class="del" title="削除">✕</button>
+        <button type="button" class="del" title="${tr("setup.common.delete")}">✕</button>
       </span>
     `,
     )
@@ -552,9 +553,9 @@ async function doShareScenario(): Promise<void> {
   const toast = document.getElementById("share-url-toast");
   try {
     await navigator.clipboard.writeText(url);
-    if (hint) hint.textContent = "✓ URL をクリップボードにコピー！";
+    if (hint) hint.textContent = tr("setup.share.copiedHint");
     if (toast) {
-      toast.textContent = "✓ URL をクリップボードにコピーしました";
+      toast.textContent = tr("setup.share.copiedToast");
       toast.classList.remove("hidden");
       setTimeout(() => toast.classList.add("hidden"), 2500);
     }
@@ -562,10 +563,10 @@ async function doShareScenario(): Promise<void> {
     // クリップボード API が使えない環境向けフォールバック。
     // トーストに生 URL を全文表示するのではなく、選択しやすい readonly input を出して
     // 「長押しでコピー」を案内する (モバイルでの長押し選択がしやすい)。
-    if (hint) hint.textContent = "⚠ 自動コピーに失敗しました。下の欄を長押ししてコピーしてください";
+    if (hint) hint.textContent = tr("setup.share.failHint");
     if (toast) {
       toast.innerHTML = `
-        <div class="share-toast-msg">⚠ 自動コピーに失敗しました。長押しでコピーしてください</div>
+        <div class="share-toast-msg">${tr("setup.share.failToastMsg")}</div>
         <input type="text" class="share-toast-input" id="share-toast-url-input" readonly value="${url}" />
       `;
       toast.classList.remove("hidden");
@@ -622,7 +623,7 @@ export function initSetup(): void {
 
   const saveScenarioBtn = document.getElementById("save-scenario-btn") as HTMLButtonElement | null;
   saveScenarioBtn?.addEventListener("click", () => {
-    const name = window.prompt("シナリオ名を入力", "");
+    const name = window.prompt(tr("setup.prompt.scenarioName"), "");
     if (!name) return;
     const list = loadUserScenarios();
     list.push({ name: name.slice(0, 30), s: captureCurrentScenario() });
@@ -637,7 +638,7 @@ export function initSetup(): void {
     const idx = Number(wrap.dataset.i);
     const list = loadUserScenarios();
     if (t.classList.contains("user-del")) {
-      if (window.confirm("このシナリオを削除しますか？")) {
+      if (window.confirm(tr("setup.confirm.deleteScenario"))) {
         list.splice(idx, 1);
         saveUserScenarios(list);
         renderUserScenarios();
@@ -734,7 +735,7 @@ export function initSetup(): void {
     const value = payoutsInput.value.trim();
     if (!value) return;
     const name = window.prompt(
-      "名前を付けて保存（例: JOPT / APT / マイHU）",
+      tr("setup.prompt.savePayout"),
       "",
     );
     if (!name) return;

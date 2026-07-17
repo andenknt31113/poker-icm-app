@@ -1,4 +1,5 @@
 import type { PracticeProblem, PracticeMode } from "./types.js";
+import { t } from "../i18n.js";
 import { loadReviewList, saveReviewList } from "./store.js";
 import {
   ensureDerivedFields,
@@ -19,7 +20,7 @@ export function initReview(): void {
     const list = loadReviewList();
     if (list.length === 0) {
       const area = document.getElementById("practice-area");
-      if (area) area.innerHTML = `<div class="practice-info">まだ復習問題はありません。不正解の問題が自動で蓄積されます (最大50問)。</div>`;
+      if (area) area.innerHTML = `<div class="practice-info">${t("practice.review.empty")}</div>`;
       return;
     }
     // 先頭から取り出して再出題 (過去に保存された縮退問題はスキップして破棄)。
@@ -39,7 +40,7 @@ export function initReview(): void {
     saveReviewList(list);
     if (!next) {
       const area = document.getElementById("practice-area");
-      if (area) area.innerHTML = `<div class="practice-info">まだ復習問題はありません。不正解の問題が自動で蓄積されます (最大50問)。</div>`;
+      if (area) area.innerHTML = `<div class="practice-info">${t("practice.review.empty")}</div>`;
       updatePracticeBadges();
       return;
     }

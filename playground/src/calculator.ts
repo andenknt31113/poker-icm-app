@@ -10,6 +10,7 @@ import { renderRangeComparison, updateHandPositionBanner } from "./handRange.js"
 import { renderGrid } from "./grid.js";
 import { updateNashOvercallWarn } from "./nashUI.js";
 import { isOnboardingDone } from "./guide.js";
+import { t } from "./i18n.js";
 import { $ } from "./dom.js";
 import {
   players,
@@ -55,8 +56,8 @@ export function recompute(): void {
     const stacks = players.map((p) => p.stack);
     const payouts = parseList(payoutsInput.value);
 
-    if (stacks.length === 0) throw new Error("プレイヤーを1人以上入れてください");
-    if (payouts.length === 0) throw new Error("賞金を1つ以上入れてください");
+    if (stacks.length === 0) throw new Error(t("calc.err.needPlayer"));
+    if (payouts.length === 0) throw new Error(t("calc.err.needPayout"));
 
     const heroIndex = players.findIndex((p) => p.role === "hero");
     const villainIndex = players.findIndex((p) => p.role === "villain");
@@ -84,19 +85,19 @@ export function recompute(): void {
     // BF
     let bf = 1.0;
     if (heroIndex < 0 || villainIndex < 0) {
-      bfResult.innerHTML = `<div class="error">🎯自分と⚔️相手を1人ずつ指定してください</div>`;
+      bfResult.innerHTML = `<div class="error">${t("calc.bf.err.needHV")}</div>`;
     } else if (heroIndex === villainIndex) {
       // データモデル上到達不能: Player.role は単一の文字列 ("hero" | "villain" | "other")
       // であり、1人が hero と villain を同時に兼ねることはできない。findIndex が
       // 同じ index を返すのは heroIndex/villainIndex が両方 -1 の場合のみだが、
       // それは直前の分岐で既に弾かれている。防御的に残す。
-      bfResult.innerHTML = `<div class="error">🎯自分と⚔️相手は別の人にしてください</div>`;
+      bfResult.innerHTML = `<div class="error">${t("calc.bf.err.sameHV")}</div>`;
     } else {
       const heroStack = stacks[heroIndex]!;
       const villainStack = stacks[villainIndex]!;
       const safeRisk = Math.min(heroStack, villainStack);
       if (safeRisk <= 0) {
-        bfResult.innerHTML = `<div class="error">スタックが0なのでBF計算不可</div>`;
+        bfResult.innerHTML = `<div class="error">${t("calc.bf.err.zeroStack")}</div>`;
       } else {
         const r = calculateBubbleFactor({
           stacks,
@@ -110,8 +111,8 @@ export function recompute(): void {
         // 状況サマリー (#hero-summary) や BF マップと重複するため非表示。
         // BF 値自体とリスクチップのみ、hero vs villain の一行サマリーとして残す。
         bfResult.innerHTML = `
-          <div class="row"><span class="label">🎯 vs ⚔️ の BF</span><span class="value big">${fmt(r.bf, 3)}</span></div>
-          <div class="row"><span class="label">リスクチップ</span><span class="value">${safeRisk}</span></div>
+          <div class="row"><span class="label">${t("calc.bf.label.bf")}</span><span class="value big">${fmt(r.bf, 3)}</span></div>
+          <div class="row"><span class="label">${t("calc.bf.label.risk")}</span><span class="value">${safeRisk}</span></div>
         `;
       }
     }
@@ -160,28 +161,28 @@ export function recompute(): void {
             ? `相手(${villainPos})`
             : null; // どちらも BB じゃない (前任 BB folded)
         autofillHint.innerHTML = `
-          <div class="autofill-summary-line">✓ 追加 call <strong>${r.callAmount.toFixed(1)}</strong> / 純利得 <strong>${r.potIfWin.toFixed(1)}</strong> BB</div>
+          <div class="autofill-summary-line">${t("calc.autofill.summaryLine", { call: r.callAmount.toFixed(1), pot: r.potIfWin.toFixed(1) })}</div>
           <details class="autofill-details">
-            <summary>▸ 計算の内訳</summary>
+            <summary>${t("calc.autofill.detailsSummary")}</summary>
             <div class="autofill-body">
               <div class="autofill-section">
-                <div class="autofill-h">📊 ポット構成</div>
+                <div class="autofill-h">${t("calc.autofill.potComp")}</div>
                 <ul class="autofill-list">
-                  ${heroBlindPaid > 0 ? `<li>自分(${heroPos}) blind: <code>${heroBlindPaid.toFixed(1)}</code> <span class="muted">(sunk)</span></li>` : ""}
-                  ${heroAntePaid > 0 ? `<li>自分(${heroPos}) ante: <code>${heroAntePaid.toFixed(1)}</code> <span class="muted">(sunk, BB全額)</span></li>` : ""}
+                  ${heroBlindPaid > 0 ? `<li>${t("calc.autofill.heroBlind", { pos: heroPos ?? "", v: heroBlindPaid.toFixed(1) })}</li>` : ""}
+                  ${heroAntePaid > 0 ? `<li>${t("calc.autofill.heroAnte", { pos: heroPos ?? "", v: heroAntePaid.toFixed(1) })}</li>` : ""}
                   ${r.deadBreakdown.sbDead > 0 ? `<li>SB dead: <code>${r.deadBreakdown.sbDead.toFixed(1)}</code> <span class="muted">(SB folded)</span></li>` : ""}
                   ${r.deadBreakdown.bbDead > 0 ? `<li>BB dead: <code>${r.deadBreakdown.bbDead.toFixed(1)}</code> <span class="muted">(BB folded)</span></li>` : ""}
-                  ${villainAntePaid > 0 ? `<li>相手(${villainPos}) ante: <code>${villainAntePaid.toFixed(1)}</code> <span class="muted">(sunk, BB全額)</span></li>` : ""}
-                  ${r.deadBreakdown.anteDead > 0 && anteOwnerLabel === null ? `<li>ante dead: <code>${r.deadBreakdown.anteDead.toFixed(1)}</code> <span class="muted">(前任 BB folded)</span></li>` : ""}
-                  <li>自分これから払う <strong>call</strong>: <code>${r.callAmount.toFixed(1)}</code></li>
-                  <li>相手(${villainPos}) push (live): <code>${(r.matched - r.villainLiveCommit).toFixed(1)}</code>${r.villainLiveCommit > 0 ? ` + 既出 blind ${r.villainLiveCommit.toFixed(1)}` : ""} = <code>${r.matched.toFixed(1)}</code></li>
-                  <li><strong>合計 pot: ${r.potAtShowdown.toFixed(1)} BB</strong></li>
+                  ${villainAntePaid > 0 ? `<li>${t("calc.autofill.villainAnte", { pos: villainPos ?? "", v: villainAntePaid.toFixed(1) })}</li>` : ""}
+                  ${r.deadBreakdown.anteDead > 0 && anteOwnerLabel === null ? `<li>${t("calc.autofill.anteDead", { v: r.deadBreakdown.anteDead.toFixed(1) })}</li>` : ""}
+                  <li>${t("calc.autofill.heroToPay", { v: r.callAmount.toFixed(1) })}</li>
+                  <li>${t("calc.autofill.villainPush", { pos: villainPos ?? "", live: (r.matched - r.villainLiveCommit).toFixed(1), blind: r.villainLiveCommit > 0 ? t("calc.autofill.villainPushBlind", { v: r.villainLiveCommit.toFixed(1) }) : "", matched: r.matched.toFixed(1) })}</li>
+                  <li><strong>${t("calc.autofill.totalPot", { v: r.potAtShowdown.toFixed(1) })}</strong></li>
                 </ul>
               </div>
               <div class="autofill-section">
-                <div class="autofill-h">⚖️ コール vs フォールド</div>
+                <div class="autofill-h">${t("calc.autofill.callVsFold")}</div>
                 <table class="autofill-table">
-                  <tr><th>選択</th><th>残スタック</th><th>vs fold</th><th>起点比</th></tr>
+                  ${t("calc.autofill.tableHead")}
                   <tr><td>fold</td><td>${stackIfFold.toFixed(1)}</td><td>±0</td><td class="${netFold >= 0 ? 'good' : 'bad'}">${fmt(netFold)}</td></tr>
                   <tr><td>call+win</td><td>${stackIfWin.toFixed(1)}</td><td class="good">+${r.potIfWin.toFixed(1)}</td><td class="${netWin >= 0 ? 'good' : 'bad'}">${fmt(netWin)}</td></tr>
                   <tr><td>call+lose</td><td>${stackIfLose.toFixed(1)}</td><td class="bad">-${r.callAmount.toFixed(1)}</td><td class="bad">${fmt(netLose)}</td></tr>
@@ -316,12 +317,12 @@ function renderHeroSummary(a: HeroSummaryArg): void {
   const villainRow = hasVillain
     ? `
       <div class="hero-summary-row villain">
-        <div class="hero-summary-row-label">⚔️ 相手</div>
+        <div class="hero-summary-row-label">${t("calc.summary.villain")}</div>
         <div class="hero-summary-row-stat">${villainStack}<span class="unit">BB</span></div>
         <div class="hero-summary-row-stat">${villainPos}</div>
         <div class="hero-summary-row-stat accent">${villainEqPct.toFixed(1)}<span class="unit">%</span></div>
       </div>`
-    : `<div class="hero-summary-row villain muted-row">⚔️ 相手未指定</div>`;
+    : `<div class="hero-summary-row villain muted-row">${t("calc.summary.villainUnset")}</div>`;
 
   // 周りスタック (hero/villain 以外)
   const otherStacks = a.stacks
@@ -333,7 +334,7 @@ function renderHeroSummary(a: HeroSummaryArg): void {
   const contextLine = `
     <div class="hero-summary-context">
       <span>💰 <strong>${payoutText}</strong></span>
-      ${otherStacks ? `<span>👥 周り <strong>${otherStacks}</strong> BB</span>` : ""}
+      ${otherStacks ? t("calc.summary.aroundHtml", { stacks: otherStacks }) : ""}
     </div>
   `;
 
@@ -341,20 +342,20 @@ function renderHeroSummary(a: HeroSummaryArg): void {
   // 「これはまだ自分で入力していないサンプルです」と分かるバッジを添える。
   // オンボーディングを閉じると次回の recompute から自然に消える。
   const sampleBadge = !isOnboardingDone()
-    ? `<span class="hero-summary-sample-badge">サンプル</span>`
+    ? `<span class="hero-summary-sample-badge">${t("calc.summary.sample")}</span>`
     : "";
   const collapsed = isHeroSummaryCollapsed();
 
   heroSummaryEl.innerHTML = `
     <div class="hero-summary-title-row">
-      <span class="hero-summary-title">状況サマリー (タップ＝用語解説)</span>
+      <span class="hero-summary-title">${t("calc.summary.title")}</span>
       ${sampleBadge}
-      <button type="button" id="hero-summary-collapse-btn" class="hero-summary-collapse-btn" aria-label="${collapsed ? "展開" : "折りたたみ"}" title="折りたたみ切替">${collapsed ? "▲" : "▼"}</button>
+      <button type="button" id="hero-summary-collapse-btn" class="hero-summary-collapse-btn" aria-label="${collapsed ? t("calc.summary.expand") : t("calc.summary.collapse")}" title="${t("calc.summary.collapseToggle")}">${collapsed ? "▲" : "▼"}</button>
     </div>
     <div class="hero-summary-body${collapsed ? " collapsed" : ""}">
       ${contextLine}
       <div class="hero-summary-row hero">
-        <div class="hero-summary-row-label">🎯 自分</div>
+        <div class="hero-summary-row-label">${t("calc.summary.hero")}</div>
         <div class="hero-summary-row-stat">${heroStack}<span class="unit">BB</span></div>
         <div class="hero-summary-row-stat">${heroPos}</div>
         <div class="hero-summary-row-stat accent tappable" data-info="ICM">${heroEqPct.toFixed(1)}<span class="unit">%</span></div>
@@ -362,15 +363,15 @@ function renderHeroSummary(a: HeroSummaryArg): void {
       ${villainRow}
       <div class="hero-summary-grid">
         <div class="hero-summary-item" data-info="BF">
-          <div class="hero-summary-label tappable">BF ⓘ</div>
+          <div class="hero-summary-label tappable">${t("calc.summary.bfLabel")}</div>
           <div class="hero-summary-value ${bfClass}">${a.bf.toFixed(2)}</div>
         </div>
         <div class="hero-summary-item" data-info="必要勝率">
-          <div class="hero-summary-label tappable">必要勝率 ⓘ</div>
+          <div class="hero-summary-label tappable">${t("calc.summary.reqLabel")}</div>
           <div class="hero-summary-value">${(a.requiredEq * 100).toFixed(1)}<span class="unit">%</span></div>
         </div>
         <div class="hero-summary-item" data-info="RP">
-          <div class="hero-summary-label tappable">RP ⓘ</div>
+          <div class="hero-summary-label tappable">${t("calc.summary.rpLabel")}</div>
           <div class="hero-summary-value warn">+${(a.rp * 100).toFixed(1)}<span class="unit">%</span></div>
         </div>
       </div>
@@ -486,55 +487,20 @@ function renderBFMatrix(stacks: number[], payouts: number[]): void {
 // ===== 用語解説モーダル =====
 const INFO_TEXTS: Record<string, { title: string; body: string }> = {
   ICM: {
-    title: "ICM (Independent Chip Model)",
-    body: `
-      <p>トナメの<strong>チップを「今すぐ$に換金したらいくら？」</strong>に変換する計算式。</p>
-      <p>賞金は順位ごとに固定なので、チップ 2倍 ≠ 賞金 2倍。<br />
-      バストすると最低順位の賞金しか貰えない非対称性を反映する。</p>
-      <p>ICM% は <code>その人の $EV ÷ 総賞金</code>。例: 25% = 平均すると総賞金の 1/4 を持っていける期待値。</p>
-    `,
+    title: t("info.icm.title"),
+    body: t("info.icm.body"),
   },
   BF: {
-    title: "BF (Bubble Factor)",
-    body: `
-      <p><strong>「チップの痛さ ÷ チップの嬉しさ」</strong>を表す係数。HU all-in 想定。</p>
-      <ul>
-        <li><strong>1.00</strong>: チップ ⇄ $ がリニア (ICM 圧ゼロ)</li>
-        <li><strong>1.20</strong>: 「100失う痛さ = 83取る嬉しさ」→ 20%余分にタイト</li>
-        <li><strong>1.50+</strong>: バブル/サテライトレベル、超タイト</li>
-      </ul>
-      <p>厳密な定義: <code>BF = (現在 - 負け時の $) ÷ (勝ち時 - 現在の $)</code>。
-      HRC / ICMIZER と同じ計算。</p>
-      <p>※ 1:1 ポットオッズ時に <code>必要勝率 = BF/(BF+1)</code>。BF=1.2 なら 54.5%、BF=1.5 なら 60%。</p>
-    `,
+    title: t("info.bf.title"),
+    body: t("info.bf.body"),
   },
   RP: {
-    title: "Risk Premium (RP)",
-    body: `
-      <p><strong>cEV (チップ EV) と $EV (ICM EV) の差</strong>。ICM の重みでどれだけ余分に勝率が必要か。</p>
-      <ul>
-        <li>RP = 0%: cEV と $EV が同じ (ICM 影響なし)</li>
-        <li>RP = +10%: コインフリップ (50%) でも実際は 60% 必要</li>
-        <li>RP = +20%: バブル時、+30% でサテライト</li>
-      </ul>
-      <p>計算: <code>RP = $EV 必要勝率 − cEV 必要勝率</code></p>
-      <p>1:1 オッズの場合: <code>RP = BF/(BF+1) − 50%</code></p>
-    `,
+    title: t("info.rp.title"),
+    body: t("info.rp.body"),
   },
   必要勝率: {
-    title: "必要勝率 (Required Equity)",
-    body: `
-      <p>このコールが <strong>EV 0 になる最低勝率</strong>。ハンドの実勝率がこれを超えるなら call、下なら fold。</p>
-      <ul>
-        <li><strong>cEV 必要勝率</strong>: ポット odds だけ (ICM 無視)</li>
-        <li><strong>$EV 必要勝率</strong>: BF (ICM 圧) を反映、こっちが実戦判断用</li>
-      </ul>
-      <p>厳密式: <code>$EV = (call × BF) ÷ (call × BF + win)</code></p>
-      <p>例: コール 8 BB / pot 20 BB / BF 1.4<br />
-      → cEV = 8/(8+20) = 28.6%<br />
-      → $EV = (8×1.4)/(8×1.4 + 20) = 11.2/31.2 = <strong>35.9%</strong><br />
-      (1:1 オッズ時は <code>BF/(BF+1)</code>)</p>
-    `,
+    title: t("info.req.title"),
+    body: t("info.req.body"),
   },
 };
 
@@ -583,11 +549,12 @@ function updatePositionWarn(heroIndex: number, villainIndex: number): void {
   }
   if (heroAct < villainAct) {
     warnEl.classList.remove("hidden");
-    warnEl.innerHTML = `
-      ⚠ <strong>ポジション逆転</strong>: 行動順は <code>${heroPos}(${heroAct + 1}) → ${villainPos}(${villainAct + 1})</code>。
-      実戦では <strong>hero (${heroPos}) が先に行動</strong>するため、villain (${villainPos}) の open push に対して call することはあり得ません。
-      (call 計算は math 上は動きますが、ポジを入れ替える方が現実的)
-    `;
+    warnEl.innerHTML = t("calc.warn.position.html", {
+      heroPos,
+      heroAct: heroAct + 1,
+      villainPos,
+      villainAct: villainAct + 1,
+    });
   } else {
     warnEl.classList.add("hidden");
   }
@@ -600,10 +567,7 @@ function updatePositionWarn(heroIndex: number, villainIndex: number): void {
 const DEPTH_WARN_THRESHOLD_BB = 20;
 
 function depthWarnHtml(effStack: number): string {
-  return `
-    ⚠️ 実効 ${fmt(effStack, 1)}bb: この深さでは push/fold 以外の選択肢
-    (小さいオープンやコール) が現実的です。本ツールの計算はオールイン前提です。
-  `;
+  return t("calc.warn.depth.html", { eff: fmt(effStack, 1) });
 }
 
 function updateDepthWarn(heroIndex: number, villainIndex: number, stacks: number[]): void {
@@ -682,7 +646,7 @@ function renderHandVerdict(): void {
     return cls;
   });
   const coveragePct = (inRangeCount / 169) * 100;
-  hvGridCountEl.textContent = `169中 ${inRangeCount} ハンド (${coveragePct.toFixed(0)}%)`;
+  hvGridCountEl.textContent = t("calc.hv.count", { n: inRangeCount, pct: coveragePct.toFixed(0) });
 
   if (hvPickedHand) {
     const eq = equity(hvPickedHand, villainRange) * 100;
@@ -692,9 +656,15 @@ function renderHandVerdict(): void {
     hvBannerEl.classList.toggle("hv-banner-call", isCall);
     hvBannerEl.classList.toggle("hv-banner-fold", !isCall);
     const verdict = isCall
-      ? `✅ コール (${margin >= 0 ? "+" : ""}${margin.toFixed(1)}%)`
-      : `❌ フォールド (${margin.toFixed(1)}%)`;
-    hvBannerEl.innerHTML = `<strong>${hvPickedHand}</strong>: equity ${eq.toFixed(1)}% ${isCall ? "≥" : "<"} 必要 ${reqPct.toFixed(1)}% → ${verdict}`;
+      ? t("calc.hv.verdict.call", { margin: `${margin >= 0 ? "+" : ""}${margin.toFixed(1)}` })
+      : t("calc.hv.verdict.fold", { margin: margin.toFixed(1) });
+    hvBannerEl.innerHTML = t("calc.hv.banner", {
+      hand: hvPickedHand,
+      eq: eq.toFixed(1),
+      op: isCall ? "≥" : "<",
+      req: reqPct.toFixed(1),
+      verdict,
+    });
   } else {
     hvBannerEl.classList.add("hidden");
     hvBannerEl.innerHTML = "";
@@ -728,14 +698,14 @@ export function initCalculator(): void {
     const heroIdx = players.findIndex((p) => p.role === "hero");
     const villainIdx = players.findIndex((p) => p.role === "villain");
     if (heroIdx < 0 || villainIdx < 0) {
-      autofillHint.textContent = "⚠ 🎯自分と⚔️相手を1人ずつ指定してください";
+      autofillHint.textContent = t("calc.autofill.err.needHV");
       return;
     }
     const heroStack = players[heroIdx]!.stack;
     const villainStack = players[villainIdx]!.stack;
     const risk = Math.min(heroStack, villainStack);
     if (risk <= 0) {
-      autofillHint.textContent = "⚠ スタックが0です";
+      autofillHint.textContent = t("calc.autofill.err.zeroStack");
       return;
     }
 
@@ -757,8 +727,17 @@ export function initCalculator(): void {
     potWinInput.value = (risk + dead).toFixed(1);
     callManualOverride = false; // autofill 押したら自動追従モードに戻す
 
-    const modeLabel = anteMode === "perPlayer" ? `1人${anteRawV}×${players.length}人` : "合計";
-    autofillHint.innerHTML = `✓ コール <strong>${risk}</strong>, 純利得 <strong>${(risk + dead).toFixed(1)}</strong> = リスク ${risk} + 死に金 ${dead.toFixed(1)} (SB ${sb} + BB ${bb} + アンティ ${totalAnte.toFixed(1)} [${modeLabel}])`;
+    const modeLabel = anteMode === "perPlayer" ? t("calc.autofill.modePerPlayer", { ante: anteRawV, n: players.length }) : t("calc.autofill.modeTotal");
+    autofillHint.innerHTML = t("calc.autofill.result", {
+      risk,
+      pot: (risk + dead).toFixed(1),
+      risk2: risk,
+      dead: dead.toFixed(1),
+      sb,
+      bb,
+      ante: totalAnte.toFixed(1),
+      mode: modeLabel,
+    });
     recompute();
   });
 
@@ -804,12 +783,12 @@ export function initCalculator(): void {
       const body = heroSummaryEl.querySelector<HTMLElement>(".hero-summary-body");
       body?.classList.toggle("collapsed", nextCollapsed);
       collapseBtn.textContent = nextCollapsed ? "▲" : "▼";
-      collapseBtn.setAttribute("aria-label", nextCollapsed ? "展開" : "折りたたみ");
+      collapseBtn.setAttribute("aria-label", nextCollapsed ? t("calc.summary.expand") : t("calc.summary.collapse"));
       return;
     }
-    const t = target.closest<HTMLElement>("[data-info]");
-    if (t) {
-      const key = t.dataset.info;
+    const infoEl = target.closest<HTMLElement>("[data-info]");
+    if (infoEl) {
+      const key = infoEl.dataset.info;
       if (key) openInfoModal(key);
     }
   });

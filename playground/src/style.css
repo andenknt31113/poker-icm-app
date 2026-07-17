@@ -505,6 +505,15 @@ th {
   background: var(--accent);
   color: #000;
 }
+/* 言語トグルは絵文字ではなく短いテキスト ("EN" / "日本語")。折り返さず横幅を可変に。 */
+.header-lang-btn {
+  width: auto;
+  min-width: 36px;
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
 .share-toast {
   background: var(--accent);
   color: #000;
