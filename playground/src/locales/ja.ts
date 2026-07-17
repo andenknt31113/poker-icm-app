@@ -11,6 +11,8 @@ export const ja: Record<string, string> = {
   "header.share.aria": "共有",
   "header.theme.title": "テーマ切替",
   "header.theme.aria": "テーマ切替",
+  "header.lang.title": "言語切替",
+  "header.lang.aria": "言語切替",
   "header.infoModal.close.aria": "閉じる",
 
   // ===== index.html: タブ =====
@@ -364,6 +366,14 @@ export const ja: Record<string, string> = {
   "pwa.offline.text": "📡 オフライン — 計算はすべて端末内で動作します",
 
   // ===== 練習問題の表示 (render.ts) =====
+  // 卓面ラベル (Phase B 抽出)
+  "practice.table.bbLeft": "BB 残",
+  "practice.table.pot": "Pot",
+  "practice.table.ante": "ante",
+  // bento カードの英語ラベル (Phase B 抽出。日本語表示でも従来どおり英語のまま)
+  "practice.bento.tournamentState": "TOURNAMENT STATE",
+  "practice.bento.blinds": "Blinds",
+  "practice.bento.heroStack": "HERO STACK",
   "practice.bento.ante": "アンティ合計",
   "practice.bento.pay": "ペイ",
   "practice.topxNote": "※ Top X% は本ツール定義の強度順。他ツールとは一致しない場合があります。",
@@ -469,6 +479,18 @@ export const ja: Record<string, string> = {
   "calc.autofill.modeTotal": "合計",
   "calc.autofill.modePerPlayer": "1人{ante}×{n}人",
   "calc.autofill.result": "✓ コール <strong>{risk}</strong>, 純利得 <strong>{pot}</strong> = リスク {risk2} + 死に金 {dead} (SB {sb} + BB {bb} + アンティ {ante} [{mode}])",
+  // 「▸ 計算の内訳」details 本体 (Phase B 抽出)
+  "calc.autofill.potComp": "📊 ポット構成",
+  "calc.autofill.heroBlind": "自分({pos}) blind: <code>{v}</code> <span class=\"muted\">(sunk)</span>",
+  "calc.autofill.heroAnte": "自分({pos}) ante: <code>{v}</code> <span class=\"muted\">(sunk, BB全額)</span>",
+  "calc.autofill.villainAnte": "相手({pos}) ante: <code>{v}</code> <span class=\"muted\">(sunk, BB全額)</span>",
+  "calc.autofill.anteDead": "ante dead: <code>{v}</code> <span class=\"muted\">(前任 BB folded)</span>",
+  "calc.autofill.heroToPay": "自分これから払う <strong>call</strong>: <code>{v}</code>",
+  "calc.autofill.villainPush": "相手({pos}) push (live): <code>{live}</code>{blind} = <code>{matched}</code>",
+  "calc.autofill.villainPushBlind": " + 既出 blind {v}",
+  "calc.autofill.totalPot": "合計 pot: {v} BB",
+  "calc.autofill.callVsFold": "⚖️ コール vs フォールド",
+  "calc.autofill.tableHead": "<tr><th>選択</th><th>残スタック</th><th>vs fold</th><th>起点比</th></tr>",
 
   // ===== 状況サマリー (calculator.ts renderHeroSummary) =====
   "calc.summary.title": "状況サマリー (タップ＝用語解説)",
@@ -556,4 +578,151 @@ export const ja: Record<string, string> = {
       → $EV = (8×1.4)/(8×1.4 + 20) = 11.2/31.2 = <strong>35.9%</strong><br />
       (1:1 オッズ時は <code>BF/(BF+1)</code>)</p>
     `,
+
+  // ===== 練習: 「📖 詳しい計算式」details 本体 (judge.ts, Phase B 抽出) =====
+  // RP 当てモード
+  "practice.rpDetails.body.html": `
+        <h4>1. Bubble Factor (参考値: 対称フリップ近似)</h4>
+        <p><code>BF = (現状 − 負け) ÷ (勝ち − 現状) = {bfNum} ÷ {bfDen} = {bf}</code></p>
+        <h4>2. 必要勝率</h4>
+        <ul>
+          <li>cEV: <code>リスク ÷ (リスク + リターン) = {call} ÷ ({call} + {pot}) = {cev}%</code></li>
+          <li>$EV (BF 近似): <code>(リスク × BF) ÷ (リスク × BF + リターン) = {evBF} ÷ ({evBF} + {pot}) = {approx}%</code></li>
+          <li>$EV (厳密 ICM): <code>(Efold − Elose) ÷ (Ewin − Elose) = {exactNum} ÷ {exactDen} = {exact}%</code></li>
+        </ul>
+        <h4>3. Risk Premium</h4>
+        <p><code>RP = 厳密$EV − cEV = {exact}% − {cev}% = +{rp}%</code></p>
+        <p style="font-size: 11px; color: var(--muted); margin: 4px 0 0;">
+          BF 近似: <strong>+{rpApprox}%</strong> / 厳密 ICM: <strong style="color: var(--accent);">+{rp}%</strong>（判定はこちら）
+        </p>
+        <p style="font-size: 11px; color: var(--muted); margin: 4px 0 0;">
+          ※ BF が大きい (バブルに近い / スタックが拮抗) ほど RP は大きくなります。BF 近似は境界付近で厳密値と数%ずれることがあります。
+        </p>
+      `,
+
+  // call/fold 判定モード
+  "practice.cfDetails.sbDeadLine": `<li>SB dead blind: <code>{v}</code> BB <span style="color: var(--muted);">(SB folded → dead)</span></li>`,
+  "practice.cfDetails.verdictCall": "コール (+EV)",
+  "practice.cfDetails.verdictFold": "フォールド (-EV)",
+  "practice.cfDetails.body.html": `
+        <h4>1. ポット構成 (BB ante 構造)</h4>
+        <ul style="font-size: 12px; line-height: 1.5;">
+          <li>自分(BB) blind: <code>{bb}</code> BB <span style="color: var(--muted);">(既出 sunk)</span></li>
+          <li>自分(BB) ante: <code>{ante}</code> BB <span style="color: var(--muted);">(既出 sunk, BBが全額負担)</span></li>
+          {sbDeadLine}
+          <li>自分(BB) これから払う <strong>call</strong>: <code>{callFixed}</code> BB</li>
+          <li>相手({villainPos}) match: <code>{villainMatch}</code> BB <span style="color: var(--muted);">(全 stack {villainStack} のうちマッチ分)</span></li>
+          <li><strong>合計 pot (showdown 時): {pot} BB</strong></li>
+        </ul>
+
+        <h4>2. 判断 (call vs fold 比較・終端スタック)</h4>
+        <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
+          <tr><th style="text-align:left; padding: 4px;">選択</th><th style="text-align:right; padding: 4px;">最終スタック</th><th style="text-align:right; padding: 4px;">vs fold</th><th style="text-align:right; padding: 4px;">起点比</th></tr>
+          <tr><td style="padding: 4px;">フォールド</td><td style="text-align:right; padding: 4px;"><code>{stackFold}</code></td><td style="text-align:right; padding: 4px;"><code>±0</code></td><td style="text-align:right; padding: 4px; color: {netFoldCol};"><code>{netFoldSign}{netFold}</code></td></tr>
+          <tr><td style="padding: 4px;">コール+勝ち</td><td style="text-align:right; padding: 4px;"><code>{stackWin}</code></td><td style="text-align:right; padding: 4px; color: var(--good);"><code>{winVsFoldSign}{winVsFold}</code></td><td style="text-align:right; padding: 4px; color: {netWinCol};"><code>{netWinSign}{netWin}</code></td></tr>
+          <tr><td style="padding: 4px;">コール+負け</td><td style="text-align:right; padding: 4px;"><code>{stackLose}</code></td><td style="text-align:right; padding: 4px; color: var(--bad);"><code>{loseVsFold}</code></td><td style="text-align:right; padding: 4px; color: var(--bad);"><code>{netLose}</code></td></tr>
+        </table>
+        <p style="font-size: 11px; color: var(--muted); margin: 6px 0 0;">
+          📌 この3つの終端スタック (fold / コール+勝ち / コール+負け) が、下の「3. ICM エクイティ」の計算にそのまま使われます。<br>
+          「起点 (hand 開始) からの純利益」は <strong>{netWinSign}{netWin} BB</strong> (= 最終 {stackWin} − 起点 {heroStack})。
+        </p>
+
+        <h4>3. ICM エクイティ ($ 単位・厳密計算)</h4>
+        <ul>
+          <li>フォールド時: <code>{eqFold}</code></li>
+          <li>コール+勝った時: <code>{eqWin}</code> (fold比 {eqWinVsFoldSign}{eqWinVsFold})</li>
+          <li>コール+負けた時: <code>{eqLose}</code> (fold比 {eqLoseVsFold})</li>
+        </ul>
+        <p style="font-size: 11px; color: var(--muted); margin: 4px 0 0;">
+          ※ 上の「2. 判断」の終端スタックそれぞれを ICM (Malmuth-Harville) に通した $ エクイティです。近似 (BF) を経由しない厳密値です。
+        </p>
+
+        <h4>4. 参考: Bubble Factor 近似 (実効スタックの対称フリップ)</h4>
+        <p><code>BF = (現状 − 負け) ÷ (勝ち − 現状) = {bfNum} ÷ {bfDen} = {bf}</code></p>
+        <p style="font-size: 11px; color: var(--muted); margin: 4px 0 0;">
+          ※ BF は「実効スタック同士の対称フリップ」という汎用シナリオで測った指標で、実際のコールの fold/win/lose 終端 (上のセクション2・3) とは別の計算です。参考値として掲載しています。
+        </p>
+
+        <h4>5. 必要勝率 + Risk Premium</h4>
+        <ul>
+          <li>cEV: <code>リスク ÷ (リスク + リターン) = {call} ÷ ({call} + {potIfWin}) = {cev}%</code></li>
+          <li>$EV (BF 近似・線形化): <code>(リスク × BF) ÷ (リスク × BF + リターン) = ({call} × {bf2}) ÷ ({call} × {bf2} + {potIfWin}) = {approx}%</code></li>
+          <li>$EV (厳密 ICM): <code>(Efold − Elose) ÷ (Ewin − Elose) = {exactNum} ÷ {exactDen} = {exact}%</code></li>
+        </ul>
+        <p style="font-size: 12px; margin: 6px 0;">
+          <strong>BF 近似: {approx}% / 厳密 ICM: <span style="color: var(--accent);">{exact}%</span>（判定はこちら）</strong>
+        </p>
+        <ul>
+          <li><strong>RP (厳密 ICM)</strong>: <code>厳密$EV − cEV = {exact}% − {cev}% = {rpSign}{rp}%</code></li>
+        </ul>
+        <p style="font-size: 11px; color: var(--muted); margin: 4px 0 0;">
+          ※ BF 近似は線形化のため境界付近で厳密値と 1〜2% ずれることがあります。call/fold の判定は必ず厳密 ICM 側 ({exact}%) を使用しています。
+        </p>
+
+        <h4>6. ハンド equity</h4>
+        <p><code>{heroHand}</code> vs Top {villainCallRangePct}% range → <strong>{heroEq}%</strong></p>
+
+        <h4>7. 判定</h4>
+        <p>
+          ハンド equity <code>{heroEq}%</code>
+          {verdictOp}
+          必要勝率 (厳密 ICM) <code>{exact}%</code>
+          → <strong>{verdict}</strong>
+        </p>
+      `,
+
+  // push 判定モード
+  "practice.pushDetails.verdictPush": "オールイン (+EV)",
+  "practice.pushDetails.verdictFold": "フォールド (-EV)",
+  "practice.pushDetails.body.html": `
+        <h4>1. ポット構成 (push→call 時, BB ante 構造)</h4>
+        <ul style="font-size: 12px; line-height: 1.5;">
+          <li>自分(SB) push (全 stack): <code>{heroStack}</code> BB</li>
+          <li>相手(BB) ante: <code>{ante}</code> BB <span style="color: var(--muted);">(BB が全額負担, dead)</span></li>
+          <li>matched (少ない方に揃える): <code>{matched}</code> BB</li>
+          <li><strong>合計 pot (showdown 時): {pot} BB</strong></li>
+        </ul>
+
+        <h4>2. 終端スタック (push 判定 4 終端)</h4>
+        <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
+          <tr><th style="text-align:left; padding: 4px;">終端</th><th style="text-align:right; padding: 4px;">最終スタック</th><th style="text-align:right; padding: 4px;">起点比</th></tr>
+          <tr><td style="padding: 4px;">フォールド (push しない)</td><td style="text-align:right; padding: 4px;"><code>{stackFold}</code></td><td style="text-align:right; padding: 4px; color: {foldCol};"><code>{foldSign}{foldRel}</code></td></tr>
+          <tr><td style="padding: 4px;">push → villain fold (スチール)</td><td style="text-align:right; padding: 4px;"><code>{stackSteal}</code></td><td style="text-align:right; padding: 4px; color: {stealCol};"><code>{stealSign}{stealRel}</code></td></tr>
+          <tr><td style="padding: 4px;">push → call → 勝ち</td><td style="text-align:right; padding: 4px;"><code>{stackWin}</code></td><td style="text-align:right; padding: 4px; color: var(--good);"><code>{winSign}{winRel}</code></td></tr>
+          <tr><td style="padding: 4px;">push → call → 負け</td><td style="text-align:right; padding: 4px;"><code>{stackLose}</code></td><td style="text-align:right; padding: 4px; color: var(--bad);"><code>{loseRel}</code></td></tr>
+        </table>
+
+        <h4>3. ICM エクイティ ($ 単位・厳密計算)</h4>
+        <ul>
+          <li>フォールド時: <code>{eqFold}</code></li>
+          <li>push → villain fold (スチール成功): <code>{eqSteal}</code></li>
+          <li>push → call → 勝った時: <code>{eqWin}</code></li>
+          <li>push → call → 負けた時: <code>{eqLose}</code></li>
+        </ul>
+
+        <h4>4. villain のコール率・equity 内訳</h4>
+        <ul>
+          <li>villain (BB) 想定コールレンジ: <code>Top {villainCallRangePct}%</code></li>
+          <li>コール率 (コンボ重み比) pCall: <code>{pCall}%</code> <span style="color: var(--muted);">(スチール成功率 = 1 − pCall = {stealPct}%)</span></li>
+          <li>{heroHand} vs コールレンジ equity: <code>{eqVsCallRange}%</code></li>
+        </ul>
+
+        <h4>5. push の $EV</h4>
+        <p><code>evPush = (1−pCall)×Esteal + pCall×(eq×Ewin + (1−eq)×Elose)<br />
+        = {oneMinusPCall}×{eqSteal} + {pCall3}×({eq3}×{eqWin} + {oneMinusEq}×{eqLose})<br />
+        = {evPush}</code></p>
+        <p><code>evFold = {evFold}</code></p>
+
+        <h4>6. 判定</h4>
+        <p>
+          push $EV <code>{evPush}</code>
+          {verdictOp}
+          fold $EV <code>{evFold}</code>
+          → <strong>{verdict}</strong>
+        </p>
+      `,
+
+  // ===== 規約モーダル: EN モード時のみ表示する注記 (guide.ts, Phase B) =====
+  // 規約本文 (legalContent.ts) は日本語のまま。EN モードでは冒頭にこの一文を足す。
+  "legal.enOnlyNote": "The terms below are currently available in Japanese only.",
 };

@@ -193,24 +193,21 @@ export function judgePracticeRP(guess: number): void {
     <div>${t("practice.rp.errorLabel")} <strong style="color: ${isCorrect ? "var(--good)" : "var(--bad)"}">${diff >= 0 ? "+" : ""}${diff.toFixed(1)}%</strong></div>
     <details class="practice-details">
       <summary>${t("practice.details.summary")}</summary>
-      <div class="practice-details-body">
-        <h4>1. Bubble Factor (参考値: 対称フリップ近似)</h4>
-        <p><code>BF = (現状 − 負け) ÷ (勝ち − 現状) = ${(p.bfEquityNow - p.bfEquityLose).toFixed(3)} ÷ ${(p.bfEquityWin - p.bfEquityNow).toFixed(3)} = ${p.bf.toFixed(3)}</code></p>
-        <h4>2. 必要勝率</h4>
-        <ul>
-          <li>cEV: <code>リスク ÷ (リスク + リターン) = ${p.callAmount} ÷ (${p.callAmount} + ${p.potIfWin.toFixed(1)}) = ${(p.cEV * 100).toFixed(1)}%</code></li>
-          <li>$EV (BF 近似): <code>(リスク × BF) ÷ (リスク × BF + リターン) = ${evBF.toFixed(2)} ÷ (${evBF.toFixed(2)} + ${p.potIfWin.toFixed(1)}) = ${(p.dollarEVApprox * 100).toFixed(1)}%</code></li>
-          <li>$EV (厳密 ICM): <code>(Efold − Elose) ÷ (Ewin − Elose) = ${(p.equityFold - p.equityLose).toFixed(3)} ÷ ${(p.equityWin - p.equityLose).toFixed(3)} = ${(p.dollarEV * 100).toFixed(1)}%</code></li>
-        </ul>
-        <h4>3. Risk Premium</h4>
-        <p><code>RP = 厳密$EV − cEV = ${(p.dollarEV * 100).toFixed(1)}% − ${(p.cEV * 100).toFixed(1)}% = +${actualRP.toFixed(2)}%</code></p>
-        <p style="font-size: 11px; color: var(--muted); margin: 4px 0 0;">
-          BF 近似: <strong>+${actualRPApprox.toFixed(2)}%</strong> / 厳密 ICM: <strong style="color: var(--accent);">+${actualRP.toFixed(2)}%</strong>（判定はこちら）
-        </p>
-        <p style="font-size: 11px; color: var(--muted); margin: 4px 0 0;">
-          ※ BF が大きい (バブルに近い / スタックが拮抗) ほど RP は大きくなります。BF 近似は境界付近で厳密値と数%ずれることがあります。
-        </p>
-      </div>
+      <div class="practice-details-body">${t("practice.rpDetails.body.html", {
+        bfNum: (p.bfEquityNow - p.bfEquityLose).toFixed(3),
+        bfDen: (p.bfEquityWin - p.bfEquityNow).toFixed(3),
+        bf: p.bf.toFixed(3),
+        call: p.callAmount,
+        pot: p.potIfWin.toFixed(1),
+        cev: (p.cEV * 100).toFixed(1),
+        evBF: evBF.toFixed(2),
+        approx: (p.dollarEVApprox * 100).toFixed(1),
+        exactNum: (p.equityFold - p.equityLose).toFixed(3),
+        exactDen: (p.equityWin - p.equityLose).toFixed(3),
+        exact: (p.dollarEV * 100).toFixed(1),
+        rp: actualRP.toFixed(2),
+        rpApprox: actualRPApprox.toFixed(2),
+      })}</div>
     </details>
     <div style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px;">
       <button id="practice-next-btn" type="button" class="solve-btn">${t("practice.nextBtn")}</button>
@@ -254,6 +251,76 @@ export function judgePractice(answer: "call" | "fold"): void {
     </div>
   `
     : "";
+
+  // 「📖 詳しい計算式」details 本体を組み立てる (辞書化のため値を先に確定)。
+  const dHeroIdx = p.scenarioPlayers.findIndex((x) => x.role === "hero");
+  const dVillainIdx = p.scenarioPlayers.findIndex((x) => x.role === "villain");
+  const dHeroStack = p.scenarioPlayers[dHeroIdx]!.stack;
+  const dVillainStack = p.scenarioPlayers[dVillainIdx]!.stack;
+  const dVillainPos = p.scenarioPlayers[dVillainIdx]!.position;
+  const dSbDead = dVillainPos === "SB" ? 0 : p.sb;
+  const dVillainMatch = p.callAmount + p.bb;
+  const dPot = p.potIfWin + p.callAmount;
+  // 終端スタック (厳密 ICM = calculateExactCallEquity と全く同じ計算から取得)
+  const dStackIfFold = p.stacksFold[dHeroIdx]!;
+  const dStackIfWin = p.stacksWin[dHeroIdx]!;
+  const dStackIfLose = p.stacksLose[dHeroIdx]!;
+  const dWinVsFold = dStackIfWin - dStackIfFold;
+  const dLoseVsFold = dStackIfLose - dStackIfFold;
+  const dNetWin = dStackIfWin - dHeroStack;
+  const dNetLose = dStackIfLose - dHeroStack;
+  const dNetFold = dStackIfFold - dHeroStack;
+  const dSgn = (v: number) => (v >= 0 ? "+" : "");
+  const dCol = (v: number) => (v >= 0 ? "var(--good)" : "var(--bad)");
+  const cfDetailsBody = t("practice.cfDetails.body.html", {
+    sbDeadLine: dSbDead > 0 ? t("practice.cfDetails.sbDeadLine", { v: dSbDead.toFixed(1) }) : "",
+    bb: p.bb.toFixed(1),
+    ante: p.totalAnte.toFixed(1),
+    call: p.callAmount,
+    callFixed: p.callAmount.toFixed(1),
+    villainPos: dVillainPos ?? "",
+    villainMatch: dVillainMatch.toFixed(1),
+    villainStack: dVillainStack,
+    pot: dPot.toFixed(1),
+    potIfWin: p.potIfWin.toFixed(1),
+    stackFold: dStackIfFold.toFixed(1),
+    stackWin: dStackIfWin.toFixed(1),
+    stackLose: dStackIfLose.toFixed(1),
+    netFoldCol: dCol(dNetFold),
+    netFoldSign: dSgn(dNetFold),
+    netFold: dNetFold.toFixed(1),
+    winVsFoldSign: dSgn(dWinVsFold),
+    winVsFold: dWinVsFold.toFixed(1),
+    netWinCol: dCol(dNetWin),
+    netWinSign: dSgn(dNetWin),
+    netWin: dNetWin.toFixed(1),
+    loseVsFold: dLoseVsFold.toFixed(1),
+    netLose: dNetLose.toFixed(1),
+    heroStack: dHeroStack,
+    eqFold: p.equityFold.toFixed(3),
+    eqWin: p.equityWin.toFixed(3),
+    eqWinVsFoldSign: p.equityWin - p.equityFold >= 0 ? "+" : "",
+    eqWinVsFold: (p.equityWin - p.equityFold).toFixed(3),
+    eqLose: p.equityLose.toFixed(3),
+    eqLoseVsFold: (p.equityLose - p.equityFold).toFixed(3),
+    bfNum: (p.bfEquityNow - p.bfEquityLose).toFixed(3),
+    bfDen: (p.bfEquityWin - p.bfEquityNow).toFixed(3),
+    bf: p.bf.toFixed(3),
+    bf2: p.bf.toFixed(2),
+    cev: (p.cEV * 100).toFixed(1),
+    approx: (p.dollarEVApprox * 100).toFixed(1),
+    exactNum: (p.equityFold - p.equityLose).toFixed(3),
+    exactDen: (p.equityWin - p.equityLose).toFixed(3),
+    exact: (p.dollarEV * 100).toFixed(1),
+    rpSign: (p.dollarEV - p.cEV) * 100 >= 0 ? "+" : "",
+    rp: ((p.dollarEV - p.cEV) * 100).toFixed(2),
+    heroHand: p.heroHand,
+    villainCallRangePct: p.villainCallRangePct,
+    heroEq: (p.heroEq * 100).toFixed(1),
+    verdictOp: p.heroEq >= p.dollarEV ? "≥" : "<",
+    verdict: p.heroEq >= p.dollarEV ? t("practice.cfDetails.verdictCall") : t("practice.cfDetails.verdictFold"),
+  });
+
   fb.innerHTML = `
     ${tutorialBlockHtml}
     <div class="verdict-row">
@@ -267,95 +334,7 @@ export function judgePractice(answer: "call" | "fold"): void {
     <div>${t("practice.label.margin")} <strong style="color: ${margin >= 0 ? "var(--good)" : "var(--bad)"}">${margin >= 0 ? "+" : ""}${(margin * 100).toFixed(1)}%</strong></div>
     <details class="practice-details">
       <summary>${t("practice.details.summary")}</summary>
-      <div class="practice-details-body">
-        ${(() => {
-          const heroIdx = p.scenarioPlayers.findIndex((x) => x.role === "hero");
-          const villainIdx = p.scenarioPlayers.findIndex((x) => x.role === "villain");
-          const heroPlayer = p.scenarioPlayers[heroIdx]!;
-          const villainPlayer = p.scenarioPlayers[villainIdx]!;
-          const heroStack = heroPlayer.stack;
-          const villainStack = villainPlayer.stack;
-          const villainPos = villainPlayer.position;
-          const sbDead = villainPos === "SB" ? 0 : p.sb;
-          const villainMatch = p.callAmount + p.bb;
-          const pot = p.potIfWin + p.callAmount;
-          // 終端スタック (厳密 ICM = calculateExactCallEquity と全く同じ計算から取得)
-          const stackIfFold = p.stacksFold[heroIdx]!;
-          const stackIfWin = p.stacksWin[heroIdx]!;
-          const stackIfLose = p.stacksLose[heroIdx]!;
-          const winVsFold = stackIfWin - stackIfFold;
-          const loseVsFold = stackIfLose - stackIfFold;
-          const netWinFromStart = stackIfWin - heroStack;
-          const netLoseFromStart = stackIfLose - heroStack;
-          const netFoldFromStart = stackIfFold - heroStack;
-          return `
-        <h4>1. ポット構成 (BB ante 構造)</h4>
-        <ul style="font-size: 12px; line-height: 1.5;">
-          <li>自分(BB) blind: <code>${p.bb.toFixed(1)}</code> BB <span style="color: var(--muted);">(既出 sunk)</span></li>
-          <li>自分(BB) ante: <code>${p.totalAnte.toFixed(1)}</code> BB <span style="color: var(--muted);">(既出 sunk, BBが全額負担)</span></li>
-          ${sbDead > 0 ? `<li>SB dead blind: <code>${sbDead.toFixed(1)}</code> BB <span style="color: var(--muted);">(SB folded → dead)</span></li>` : ""}
-          <li>自分(BB) これから払う <strong>call</strong>: <code>${p.callAmount.toFixed(1)}</code> BB</li>
-          <li>相手(${villainPos}) match: <code>${villainMatch.toFixed(1)}</code> BB <span style="color: var(--muted);">(全 stack ${villainStack} のうちマッチ分)</span></li>
-          <li><strong>合計 pot (showdown 時): ${pot.toFixed(1)} BB</strong></li>
-        </ul>
-
-        <h4>2. 判断 (call vs fold 比較・終端スタック)</h4>
-        <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
-          <tr><th style="text-align:left; padding: 4px;">選択</th><th style="text-align:right; padding: 4px;">最終スタック</th><th style="text-align:right; padding: 4px;">vs fold</th><th style="text-align:right; padding: 4px;">起点比</th></tr>
-          <tr><td style="padding: 4px;">フォールド</td><td style="text-align:right; padding: 4px;"><code>${stackIfFold.toFixed(1)}</code></td><td style="text-align:right; padding: 4px;"><code>±0</code></td><td style="text-align:right; padding: 4px; color: ${netFoldFromStart >= 0 ? 'var(--good)' : 'var(--bad)'};"><code>${netFoldFromStart >= 0 ? '+' : ''}${netFoldFromStart.toFixed(1)}</code></td></tr>
-          <tr><td style="padding: 4px;">コール+勝ち</td><td style="text-align:right; padding: 4px;"><code>${stackIfWin.toFixed(1)}</code></td><td style="text-align:right; padding: 4px; color: var(--good);"><code>${winVsFold >= 0 ? '+' : ''}${winVsFold.toFixed(1)}</code></td><td style="text-align:right; padding: 4px; color: ${netWinFromStart >= 0 ? 'var(--good)' : 'var(--bad)'};"><code>${netWinFromStart >= 0 ? '+' : ''}${netWinFromStart.toFixed(1)}</code></td></tr>
-          <tr><td style="padding: 4px;">コール+負け</td><td style="text-align:right; padding: 4px;"><code>${stackIfLose.toFixed(1)}</code></td><td style="text-align:right; padding: 4px; color: var(--bad);"><code>${loseVsFold.toFixed(1)}</code></td><td style="text-align:right; padding: 4px; color: var(--bad);"><code>${netLoseFromStart.toFixed(1)}</code></td></tr>
-        </table>
-        <p style="font-size: 11px; color: var(--muted); margin: 6px 0 0;">
-          📌 この3つの終端スタック (fold / コール+勝ち / コール+負け) が、下の「3. ICM エクイティ」の計算にそのまま使われます。<br>
-          「起点 (hand 開始) からの純利益」は <strong>${netWinFromStart >= 0 ? '+' : ''}${netWinFromStart.toFixed(1)} BB</strong> (= 最終 ${stackIfWin.toFixed(1)} − 起点 ${heroStack})。
-        </p>
-          `;
-        })()}
-
-        <h4>3. ICM エクイティ ($ 単位・厳密計算)</h4>
-        <ul>
-          <li>フォールド時: <code>${p.equityFold.toFixed(3)}</code></li>
-          <li>コール+勝った時: <code>${p.equityWin.toFixed(3)}</code> (fold比 ${p.equityWin - p.equityFold >= 0 ? "+" : ""}${(p.equityWin - p.equityFold).toFixed(3)})</li>
-          <li>コール+負けた時: <code>${p.equityLose.toFixed(3)}</code> (fold比 ${(p.equityLose - p.equityFold).toFixed(3)})</li>
-        </ul>
-        <p style="font-size: 11px; color: var(--muted); margin: 4px 0 0;">
-          ※ 上の「2. 判断」の終端スタックそれぞれを ICM (Malmuth-Harville) に通した $ エクイティです。近似 (BF) を経由しない厳密値です。
-        </p>
-
-        <h4>4. 参考: Bubble Factor 近似 (実効スタックの対称フリップ)</h4>
-        <p><code>BF = (現状 − 負け) ÷ (勝ち − 現状) = ${(p.bfEquityNow - p.bfEquityLose).toFixed(3)} ÷ ${(p.bfEquityWin - p.bfEquityNow).toFixed(3)} = ${p.bf.toFixed(3)}</code></p>
-        <p style="font-size: 11px; color: var(--muted); margin: 4px 0 0;">
-          ※ BF は「実効スタック同士の対称フリップ」という汎用シナリオで測った指標で、実際のコールの fold/win/lose 終端 (上のセクション2・3) とは別の計算です。参考値として掲載しています。
-        </p>
-
-        <h4>5. 必要勝率 + Risk Premium</h4>
-        <ul>
-          <li>cEV: <code>リスク ÷ (リスク + リターン) = ${p.callAmount} ÷ (${p.callAmount} + ${p.potIfWin.toFixed(1)}) = ${(p.cEV * 100).toFixed(1)}%</code></li>
-          <li>$EV (BF 近似・線形化): <code>(リスク × BF) ÷ (リスク × BF + リターン) = (${p.callAmount} × ${p.bf.toFixed(2)}) ÷ (${p.callAmount} × ${p.bf.toFixed(2)} + ${p.potIfWin.toFixed(1)}) = ${(p.dollarEVApprox * 100).toFixed(1)}%</code></li>
-          <li>$EV (厳密 ICM): <code>(Efold − Elose) ÷ (Ewin − Elose) = ${(p.equityFold - p.equityLose).toFixed(3)} ÷ ${(p.equityWin - p.equityLose).toFixed(3)} = ${(p.dollarEV * 100).toFixed(1)}%</code></li>
-        </ul>
-        <p style="font-size: 12px; margin: 6px 0;">
-          <strong>BF 近似: ${(p.dollarEVApprox * 100).toFixed(1)}% / 厳密 ICM: <span style="color: var(--accent);">${(p.dollarEV * 100).toFixed(1)}%</span>（判定はこちら）</strong>
-        </p>
-        <ul>
-          <li><strong>RP (厳密 ICM)</strong>: <code>厳密$EV − cEV = ${(p.dollarEV * 100).toFixed(1)}% − ${(p.cEV * 100).toFixed(1)}% = ${((p.dollarEV - p.cEV) * 100 >= 0 ? "+" : "")}${((p.dollarEV - p.cEV) * 100).toFixed(2)}%</code></li>
-        </ul>
-        <p style="font-size: 11px; color: var(--muted); margin: 4px 0 0;">
-          ※ BF 近似は線形化のため境界付近で厳密値と 1〜2% ずれることがあります。call/fold の判定は必ず厳密 ICM 側 (${(p.dollarEV * 100).toFixed(1)}%) を使用しています。
-        </p>
-
-        <h4>6. ハンド equity</h4>
-        <p><code>${p.heroHand}</code> vs Top ${p.villainCallRangePct}% range → <strong>${(p.heroEq * 100).toFixed(1)}%</strong></p>
-
-        <h4>7. 判定</h4>
-        <p>
-          ハンド equity <code>${(p.heroEq * 100).toFixed(1)}%</code>
-          ${p.heroEq >= p.dollarEV ? "≥" : "<"}
-          必要勝率 (厳密 ICM) <code>${(p.dollarEV * 100).toFixed(1)}%</code>
-          → <strong>${p.heroEq >= p.dollarEV ? "コール (+EV)" : "フォールド (-EV)"}</strong>
-        </p>
-      </div>
+      <div class="practice-details-body">${cfDetailsBody}</div>
     </details>
 
     <h3 style="font-size: 13px; margin: 12px 0 4px;">${t("practice.cf.heroRangeH3", { pct: (p.dollarEV * 100).toFixed(1) })}</h3>
@@ -435,53 +414,42 @@ export function judgePracticePush(answer: "push" | "fold"): void {
     <div>${t("practice.label.margin")} <strong style="color: ${marginDollar >= 0 ? "var(--good)" : "var(--bad)"}">${marginDollar >= 0 ? "+" : ""}${marginDollar.toFixed(3)}</strong> <span class="muted">${t("practice.push.marginPoolNote", { v: `${marginPct >= 0 ? "+" : ""}${marginPct.toFixed(2)}` })}</span></div>
     <details class="practice-details">
       <summary>${t("practice.details.summary")}</summary>
-      <div class="practice-details-body">
-        <h4>1. ポット構成 (push→call 時, BB ante 構造)</h4>
-        <ul style="font-size: 12px; line-height: 1.5;">
-          <li>自分(SB) push (全 stack): <code>${heroStack.toFixed(1)}</code> BB</li>
-          <li>相手(BB) ante: <code>${p.totalAnte.toFixed(1)}</code> BB <span style="color: var(--muted);">(BB が全額負担, dead)</span></li>
-          <li>matched (少ない方に揃える): <code>${matched.toFixed(1)}</code> BB</li>
-          <li><strong>合計 pot (showdown 時): ${pot.toFixed(1)} BB</strong></li>
-        </ul>
-
-        <h4>2. 終端スタック (push 判定 4 終端)</h4>
-        <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
-          <tr><th style="text-align:left; padding: 4px;">終端</th><th style="text-align:right; padding: 4px;">最終スタック</th><th style="text-align:right; padding: 4px;">起点比</th></tr>
-          <tr><td style="padding: 4px;">フォールド (push しない)</td><td style="text-align:right; padding: 4px;"><code>${stackFold.toFixed(1)}</code></td><td style="text-align:right; padding: 4px; color: ${stackFold - heroStack >= 0 ? "var(--good)" : "var(--bad)"};"><code>${stackFold - heroStack >= 0 ? "+" : ""}${(stackFold - heroStack).toFixed(1)}</code></td></tr>
-          <tr><td style="padding: 4px;">push → villain fold (スチール)</td><td style="text-align:right; padding: 4px;"><code>${stackSteal.toFixed(1)}</code></td><td style="text-align:right; padding: 4px; color: ${stackSteal - heroStack >= 0 ? "var(--good)" : "var(--bad)"};"><code>${stackSteal - heroStack >= 0 ? "+" : ""}${(stackSteal - heroStack).toFixed(1)}</code></td></tr>
-          <tr><td style="padding: 4px;">push → call → 勝ち</td><td style="text-align:right; padding: 4px;"><code>${stackWin.toFixed(1)}</code></td><td style="text-align:right; padding: 4px; color: var(--good);"><code>${stackWin - heroStack >= 0 ? "+" : ""}${(stackWin - heroStack).toFixed(1)}</code></td></tr>
-          <tr><td style="padding: 4px;">push → call → 負け</td><td style="text-align:right; padding: 4px;"><code>${stackLose.toFixed(1)}</code></td><td style="text-align:right; padding: 4px; color: var(--bad);"><code>${(stackLose - heroStack).toFixed(1)}</code></td></tr>
-        </table>
-
-        <h4>3. ICM エクイティ ($ 単位・厳密計算)</h4>
-        <ul>
-          <li>フォールド時: <code>${equityFold.toFixed(3)}</code></li>
-          <li>push → villain fold (スチール成功): <code>${equitySteal.toFixed(3)}</code></li>
-          <li>push → call → 勝った時: <code>${equityWin.toFixed(3)}</code></li>
-          <li>push → call → 負けた時: <code>${equityLose.toFixed(3)}</code></li>
-        </ul>
-
-        <h4>4. villain のコール率・equity 内訳</h4>
-        <ul>
-          <li>villain (BB) 想定コールレンジ: <code>Top ${p.villainCallRangePct}%</code></li>
-          <li>コール率 (コンボ重み比) pCall: <code>${(pCall * 100).toFixed(1)}%</code> <span style="color: var(--muted);">(スチール成功率 = 1 − pCall = ${((1 - pCall) * 100).toFixed(1)}%)</span></li>
-          <li>${p.heroHand} vs コールレンジ equity: <code>${(eqVsCallRange * 100).toFixed(1)}%</code></li>
-        </ul>
-
-        <h4>5. push の $EV</h4>
-        <p><code>evPush = (1−pCall)×Esteal + pCall×(eq×Ewin + (1−eq)×Elose)<br />
-        = ${(1 - pCall).toFixed(3)}×${equitySteal.toFixed(3)} + ${pCall.toFixed(3)}×(${eqVsCallRange.toFixed(3)}×${equityWin.toFixed(3)} + ${(1 - eqVsCallRange).toFixed(3)}×${equityLose.toFixed(3)})<br />
-        = ${evPush.toFixed(3)}</code></p>
-        <p><code>evFold = ${evFold.toFixed(3)}</code></p>
-
-        <h4>6. 判定</h4>
-        <p>
-          push $EV <code>${evPush.toFixed(3)}</code>
-          ${evPush >= evFold ? "≥" : "<"}
-          fold $EV <code>${evFold.toFixed(3)}</code>
-          → <strong>${evPush >= evFold ? "オールイン (+EV)" : "フォールド (-EV)"}</strong>
-        </p>
-      </div>
+      <div class="practice-details-body">${t("practice.pushDetails.body.html", {
+        heroStack: heroStack.toFixed(1),
+        ante: p.totalAnte.toFixed(1),
+        matched: matched.toFixed(1),
+        pot: pot.toFixed(1),
+        stackFold: stackFold.toFixed(1),
+        foldCol: stackFold - heroStack >= 0 ? "var(--good)" : "var(--bad)",
+        foldSign: stackFold - heroStack >= 0 ? "+" : "",
+        foldRel: (stackFold - heroStack).toFixed(1),
+        stackSteal: stackSteal.toFixed(1),
+        stealCol: stackSteal - heroStack >= 0 ? "var(--good)" : "var(--bad)",
+        stealSign: stackSteal - heroStack >= 0 ? "+" : "",
+        stealRel: (stackSteal - heroStack).toFixed(1),
+        stackWin: stackWin.toFixed(1),
+        winSign: stackWin - heroStack >= 0 ? "+" : "",
+        winRel: (stackWin - heroStack).toFixed(1),
+        stackLose: stackLose.toFixed(1),
+        loseRel: (stackLose - heroStack).toFixed(1),
+        eqFold: equityFold.toFixed(3),
+        eqSteal: equitySteal.toFixed(3),
+        eqWin: equityWin.toFixed(3),
+        eqLose: equityLose.toFixed(3),
+        villainCallRangePct: p.villainCallRangePct,
+        pCall: (pCall * 100).toFixed(1),
+        stealPct: ((1 - pCall) * 100).toFixed(1),
+        heroHand: p.heroHand,
+        eqVsCallRange: (eqVsCallRange * 100).toFixed(1),
+        oneMinusPCall: (1 - pCall).toFixed(3),
+        pCall3: pCall.toFixed(3),
+        eq3: eqVsCallRange.toFixed(3),
+        oneMinusEq: (1 - eqVsCallRange).toFixed(3),
+        evPush: evPush.toFixed(3),
+        evFold: evFold.toFixed(3),
+        verdictOp: evPush >= evFold ? "≥" : "<",
+        verdict: evPush >= evFold ? t("practice.pushDetails.verdictPush") : t("practice.pushDetails.verdictFold"),
+      })}</div>
     </details>
 
     <h3 style="font-size: 13px; margin: 12px 0 4px;">${t("practice.push.heroRangeH3")}</h3>
