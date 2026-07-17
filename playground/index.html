@@ -40,6 +40,7 @@
             <button id="help-btn" class="header-btn" type="button" title="使い方ガイド" aria-label="ヘルプ" data-i18n-attr="title:header.help.title;aria-label:header.help.aria">❓</button>
             <button id="share-url-btn-top" class="header-btn" type="button" title="シナリオを URL で共有" aria-label="共有" data-i18n-attr="title:header.share.title;aria-label:header.share.aria">🔗</button>
             <button id="theme-toggle" class="header-btn" type="button" title="テーマ切替" aria-label="テーマ切替" data-i18n-attr="title:header.theme.title;aria-label:header.theme.aria">🌙</button>
+            <button id="lang-toggle" class="header-btn header-lang-btn" type="button" title="言語切替" aria-label="言語切替" data-i18n-attr="title:header.lang.title;aria-label:header.lang.aria">EN</button>
           </div>
         </div>
         <p id="share-url-toast" class="share-toast hidden"></p>
@@ -82,7 +83,7 @@
               <button type="button" data-scenario="satellite3" class="scenario-btn" data-i18n="setup.presets.satellite3">🛰 サテライト (3人入賞)</button>
             </div>
             <div class="presets-label" style="margin-top: 10px;">
-              自分のシナリオ
+              <span data-i18n="setup.presets.userLabel">自分のシナリオ</span>
               <button id="save-scenario-btn" type="button" class="save-btn" data-i18n="setup.presets.saveBtn">＋ 現在の状況を保存</button>
             </div>
             <div id="user-scenarios" class="scenario-presets user"></div>
@@ -127,7 +128,7 @@
               <button data-preset="33,33,33" type="button" data-i18n="setup.payouts.preset.satellite">🛰 サテライト Top3</button>
             </div>
             <div class="presets-label">
-              保存済み
+              <span data-i18n="setup.payouts.savedLabel">保存済み</span>
               <button id="save-payout" type="button" class="save-btn" data-i18n="setup.payouts.saveBtn">
                 ＋ 現在の値を保存
               </button>
@@ -249,7 +250,7 @@
         </p>
         <div class="grid">
           <label>
-            コール額
+            <span data-i18n="result.eq.callLabel">コール額</span>
             <div class="num-stepper">
               <button type="button" class="num-step-btn" data-target="call" data-delta="-1">−1</button>
               <input id="call" type="number" inputmode="decimal" placeholder="例: 8.0" min="0.1" step="0.1" data-i18n-attr="placeholder:result.eq.call.placeholder" />
@@ -257,7 +258,7 @@
             </div>
           </label>
           <label>
-            勝った時の純利得
+            <span data-i18n="result.eq.potwinLabel">勝った時の純利得</span>
             <div class="num-stepper">
               <button type="button" class="num-step-btn" data-target="potwin" data-delta="-1">−1</button>
               <input id="potwin" type="number" inputmode="decimal" placeholder="例: 10.5" min="0.1" step="0.1" data-i18n-attr="placeholder:result.eq.potwin.placeholder" />
@@ -318,7 +319,7 @@
             <input id="nash-bb" type="number" inputmode="decimal" value="1.0" min="0.1" step="0.1" />
           </label>
           <label>
-            アンティ合計
+            <span data-i18n="nash.ante.label">アンティ合計</span>
             <input id="nash-ante" type="number" inputmode="decimal" value="1.0" min="0" step="0.05" />
           </label>
         </div>

@@ -60,7 +60,7 @@ function renderRoundTable(
     seats.push(`
       <div class="round-table-seat ${cls}" style="left:${sx}%;top:${sy}%">
         <div class="seat-pos">${tag}${p.position || `P${i + 1}`}</div>
-        <div class="seat-stack">${remaining.toFixed(remaining % 1 === 0 ? 0 : 2)}<span class="seat-stack-unit">BB 残</span></div>
+        <div class="seat-stack">${remaining.toFixed(remaining % 1 === 0 ? 0 : 2)}<span class="seat-stack-unit">${t("practice.table.bbLeft")}</span></div>
       </div>
     `);
 
@@ -81,11 +81,11 @@ function renderRoundTable(
     const potTotal = blinds.sb + blinds.bb + blinds.totalAnte;
     // ante は dead money として中央 pot の脇にチップ表示 (どの席にも紐付かないため)
     const anteChip = blinds.totalAnte > 0
-      ? `<div class="round-table-chip ante" style="left:42%;top:50%">ante ${blinds.totalAnte.toFixed(blinds.totalAnte % 1 === 0 ? 0 : 1)}<small>bb</small></div>`
+      ? `<div class="round-table-chip ante" style="left:42%;top:50%">${t("practice.table.ante")} ${blinds.totalAnte.toFixed(blinds.totalAnte % 1 === 0 ? 0 : 1)}<small>bb</small></div>`
       : "";
     potHtml = `
       ${anteChip}
-      <div class="round-table-pot">Pot ${potTotal.toFixed(1)}<small>bb</small></div>
+      <div class="round-table-pot">${t("practice.table.pot")} ${potTotal.toFixed(1)}<small>bb</small></div>
     `;
   }
   container.innerHTML = `
@@ -112,14 +112,14 @@ function renderScenarioBento(p: PracticeProblem, extraHtml: string): string {
       <div class="scenario-glow scenario-glow-b"></div>
       <div class="scenario-main">
         <div class="scenario-col">
-          <div class="scenario-label">TOURNAMENT STATE</div>
-          <div class="scenario-fact"><span class="scenario-fact-key">Blinds</span><span class="scenario-fact-val">SB ${p.sb} / BB ${p.bb}</span></div>
+          <div class="scenario-label">${t("practice.bento.tournamentState")}</div>
+          <div class="scenario-fact"><span class="scenario-fact-key">${t("practice.bento.blinds")}</span><span class="scenario-fact-val">SB ${p.sb} / BB ${p.bb}</span></div>
           <div class="scenario-fact"><span class="scenario-fact-key">${t("practice.bento.ante")}</span><span class="scenario-fact-val">${p.totalAnte}</span></div>
           <div class="scenario-fact"><span class="scenario-fact-key">${t("practice.bento.pay")}</span><span class="scenario-fact-val">${payoutStr}</span></div>
         </div>
         <div class="scenario-divider"></div>
         <div class="scenario-col scenario-col-hero">
-          <div class="scenario-label">HERO STACK</div>
+          <div class="scenario-label">${t("practice.bento.heroStack")}</div>
           <div class="scenario-hero-stack">${heroStack}<span class="scenario-unit">BB</span></div>
         </div>
       </div>

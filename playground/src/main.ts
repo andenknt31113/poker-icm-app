@@ -11,6 +11,7 @@ import "@fontsource/jetbrains-mono/latin-700.css";
 import "./appState.js";
 import "./domRefs.js";
 import { applyStaticTranslations } from "./i18n.js";
+import { initLangToggle } from "./langToggle.js";
 import { initNumberInputAutoSelect } from "./dom.js";
 
 // ===== 各機能モジュール =====
@@ -29,6 +30,7 @@ import { initProgress } from "./practice/progress.js";
 // 静的 DOM の文言を辞書から適用する。各 init より前に実行することで、
 // footer のビルドSHA追記 (initPwa) など JS 側の後処理がその上に乗る。
 applyStaticTranslations();
+initLangToggle();
 
 initNumberInputAutoSelect();
 initSetup();

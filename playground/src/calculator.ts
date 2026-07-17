@@ -166,23 +166,23 @@ export function recompute(): void {
             <summary>${t("calc.autofill.detailsSummary")}</summary>
             <div class="autofill-body">
               <div class="autofill-section">
-                <div class="autofill-h">📊 ポット構成</div>
+                <div class="autofill-h">${t("calc.autofill.potComp")}</div>
                 <ul class="autofill-list">
-                  ${heroBlindPaid > 0 ? `<li>自分(${heroPos}) blind: <code>${heroBlindPaid.toFixed(1)}</code> <span class="muted">(sunk)</span></li>` : ""}
-                  ${heroAntePaid > 0 ? `<li>自分(${heroPos}) ante: <code>${heroAntePaid.toFixed(1)}</code> <span class="muted">(sunk, BB全額)</span></li>` : ""}
+                  ${heroBlindPaid > 0 ? `<li>${t("calc.autofill.heroBlind", { pos: heroPos ?? "", v: heroBlindPaid.toFixed(1) })}</li>` : ""}
+                  ${heroAntePaid > 0 ? `<li>${t("calc.autofill.heroAnte", { pos: heroPos ?? "", v: heroAntePaid.toFixed(1) })}</li>` : ""}
                   ${r.deadBreakdown.sbDead > 0 ? `<li>SB dead: <code>${r.deadBreakdown.sbDead.toFixed(1)}</code> <span class="muted">(SB folded)</span></li>` : ""}
                   ${r.deadBreakdown.bbDead > 0 ? `<li>BB dead: <code>${r.deadBreakdown.bbDead.toFixed(1)}</code> <span class="muted">(BB folded)</span></li>` : ""}
-                  ${villainAntePaid > 0 ? `<li>相手(${villainPos}) ante: <code>${villainAntePaid.toFixed(1)}</code> <span class="muted">(sunk, BB全額)</span></li>` : ""}
-                  ${r.deadBreakdown.anteDead > 0 && anteOwnerLabel === null ? `<li>ante dead: <code>${r.deadBreakdown.anteDead.toFixed(1)}</code> <span class="muted">(前任 BB folded)</span></li>` : ""}
-                  <li>自分これから払う <strong>call</strong>: <code>${r.callAmount.toFixed(1)}</code></li>
-                  <li>相手(${villainPos}) push (live): <code>${(r.matched - r.villainLiveCommit).toFixed(1)}</code>${r.villainLiveCommit > 0 ? ` + 既出 blind ${r.villainLiveCommit.toFixed(1)}` : ""} = <code>${r.matched.toFixed(1)}</code></li>
-                  <li><strong>合計 pot: ${r.potAtShowdown.toFixed(1)} BB</strong></li>
+                  ${villainAntePaid > 0 ? `<li>${t("calc.autofill.villainAnte", { pos: villainPos ?? "", v: villainAntePaid.toFixed(1) })}</li>` : ""}
+                  ${r.deadBreakdown.anteDead > 0 && anteOwnerLabel === null ? `<li>${t("calc.autofill.anteDead", { v: r.deadBreakdown.anteDead.toFixed(1) })}</li>` : ""}
+                  <li>${t("calc.autofill.heroToPay", { v: r.callAmount.toFixed(1) })}</li>
+                  <li>${t("calc.autofill.villainPush", { pos: villainPos ?? "", live: (r.matched - r.villainLiveCommit).toFixed(1), blind: r.villainLiveCommit > 0 ? t("calc.autofill.villainPushBlind", { v: r.villainLiveCommit.toFixed(1) }) : "", matched: r.matched.toFixed(1) })}</li>
+                  <li><strong>${t("calc.autofill.totalPot", { v: r.potAtShowdown.toFixed(1) })}</strong></li>
                 </ul>
               </div>
               <div class="autofill-section">
-                <div class="autofill-h">⚖️ コール vs フォールド</div>
+                <div class="autofill-h">${t("calc.autofill.callVsFold")}</div>
                 <table class="autofill-table">
-                  <tr><th>選択</th><th>残スタック</th><th>vs fold</th><th>起点比</th></tr>
+                  ${t("calc.autofill.tableHead")}
                   <tr><td>fold</td><td>${stackIfFold.toFixed(1)}</td><td>±0</td><td class="${netFold >= 0 ? 'good' : 'bad'}">${fmt(netFold)}</td></tr>
                   <tr><td>call+win</td><td>${stackIfWin.toFixed(1)}</td><td class="good">+${r.potIfWin.toFixed(1)}</td><td class="${netWin >= 0 ? 'good' : 'bad'}">${fmt(netWin)}</td></tr>
                   <tr><td>call+lose</td><td>${stackIfLose.toFixed(1)}</td><td class="bad">-${r.callAmount.toFixed(1)}</td><td class="bad">${fmt(netLose)}</td></tr>
