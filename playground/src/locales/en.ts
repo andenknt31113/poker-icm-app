@@ -51,7 +51,7 @@ export const en: Record<string, string> = {
   "setup.player.role.hero": "You",
   "setup.player.role.villain": "Villain",
   "setup.player.role.other": "Other",
-  "setup.player.role.otherText": "Oth", // REVIEW: 「他」の短縮ラベル
+  "setup.player.role.otherText": "None", // fable レビュー済: 役割なしを自然な英語で
   "setup.payout.rank": "#{n}",
   "setup.userScenarios.empty": "No saves yet. Tap “+ Save current situation” to add one.",
   "setup.share.copiedHint": "✓ URL copied to clipboard!",
@@ -506,7 +506,7 @@ export const en: Record<string, string> = {
   "calc.summary.villainUnset": "⚔️ Villain unset",
   "calc.summary.aroundHtml": "<span>👥 Around <strong>{stacks}</strong> BB</span>",
   "calc.summary.bfLabel": "BF ⓘ",
-  "calc.summary.reqLabel": "Req eq ⓘ", // REVIEW: 「必要勝率」。ピル幅のため短縮
+  "calc.summary.reqLabel": "Req. eq ⓘ", // fable レビュー済: ピル幅優先の短縮形
   "calc.summary.rpLabel": "RP ⓘ",
 
   // ===== 警告 (calculator.ts) =====
