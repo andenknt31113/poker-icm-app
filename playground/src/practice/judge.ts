@@ -1,4 +1,5 @@
 import type { PracticeProblem } from "./types.js";
+import { t } from "../i18n.js";
 import { ensureDerivedFields, problemRP, getPracticeDifficulty, getPracticeMode, RP_TOLERANCE, practiceProblemDedupKey } from "./generate.js";
 import { getCurrentProblem, setCurrentProblem, renderJudgeHeroGrid, renderJudgeHeroGridPush } from "./render.js";
 import { isTutorialActive, getTutorialStep, TUTORIAL_PROBLEMS } from "./tutorialState.js";
@@ -14,14 +15,18 @@ export function updatePracticeBadges(): void {
   const reviewCountEl = document.getElementById("review-count");
   const reviewBtnEl = document.getElementById("practice-review-btn");
   if (streakEl) {
-    streakEl.textContent = `🔥 連続正解 ${streak}`;
+    streakEl.textContent = t("practice.badge.streak", { n: streak });
     streakEl.classList.toggle("active", streak >= 3);
   }
   if (accEl) {
     if (stats.total > 0) {
-      accEl.textContent = `正解率 ${((stats.correct / stats.total) * 100).toFixed(0)}% (${stats.correct}/${stats.total})`;
+      accEl.textContent = t("practice.badge.acc", {
+        pct: ((stats.correct / stats.total) * 100).toFixed(0),
+        correct: stats.correct,
+        total: stats.total,
+      });
     } else {
-      accEl.textContent = "正解率 -";
+      accEl.textContent = t("practice.badge.accEmpty");
     }
   }
   if (reviewCountEl) reviewCountEl.textContent = String(review.length);
@@ -42,13 +47,13 @@ export function practiceLesson(p: PracticeProblem): string {
   // WTA (ペイ1つ) は ICM 圧ゼロ。均等ペイ判定より先に処理しないと
   // max=min で「サテライト」に誤マッチする
   if (payouts.length === 1) {
-    return "🏆 WTA (勝者総取り) ではチップ＝賞金がリニア。ICM 圧はゼロなので、cEV (チップの損得) どおりに判断できます。";
+    return t("practice.lesson.wta");
   }
   if (payouts.length >= 2) {
     const maxPayout = Math.max(...payouts);
     const minPayout = Math.min(...payouts);
     if (maxPayout > 0 && maxPayout - minPayout < maxPayout * 0.15) {
-      return "🛰 サテライトでは『残ること』が全て。どんな強いハンドでも RP が極端に上がり、ほぼ全てのコールが正当化されません。";
+      return t("practice.lesson.satellite");
     }
   }
 
@@ -58,10 +63,10 @@ export function practiceLesson(p: PracticeProblem): string {
 
   if (hero && villain) {
     if (villain.stack >= hero.stack && rp >= 5) {
-      return "⚠️ カバーされている相手へのコールは、負け＝敗退。トーナメント生命を賭けるため Risk Premium が跳ね上がります。";
+      return t("practice.lesson.covered");
     }
     if (villain.stack < hero.stack && rp < 5) {
-      return "自分が相手をカバーしている時は、負けても飛ばないため RP は小さめ。cEV に近い感覚でコールできます。";
+      return t("practice.lesson.covering");
     }
   }
 
@@ -70,11 +75,11 @@ export function practiceLesson(p: PracticeProblem): string {
       (pl) => pl.role === "other" && pl.stack < hero.stack,
     );
     if (hasShorterOther) {
-      return "自分より短いスタックが残っている間は、無理に勝負しなくても順位が上がる可能性があります。それが RP の源泉です。";
+      return t("practice.lesson.shorter");
     }
   }
 
-  return "必要勝率 = cEV + Risk Premium。ICM 下では『チップで得』でも『賞金で損』になり得ることを常に確認しましょう。";
+  return t("practice.lesson.general");
 }
 
 /**
@@ -89,13 +94,13 @@ export function practiceLesson(p: PracticeProblem): string {
 export function practicePushLesson(p: PracticeProblem): string {
   const payouts = p.payouts;
   if (payouts.length === 1) {
-    return "🏆 WTA (勝者総取り) では ICM 圧はゼロ。push もチップ EV (cEV) どおりに判断できます。";
+    return t("practice.pushLesson.wta");
   }
   if (payouts.length >= 2) {
     const maxPayout = Math.max(...payouts);
     const minPayout = Math.min(...payouts);
     if (maxPayout > 0 && maxPayout - minPayout < maxPayout * 0.15) {
-      return "🛰 サテライトでは『残ること』が全て。push 側も極端にタイトになり、スチールが見込めても大半のハンドは fold が正解になります。";
+      return t("practice.pushLesson.satellite");
     }
   }
 
@@ -104,15 +109,15 @@ export function practicePushLesson(p: PracticeProblem): string {
   const marginNorm = p.pushMarginNorm ?? 0;
 
   if (hero && villain && villain.stack >= hero.stack && marginNorm < 0.03) {
-    return "⚠️ カバーされている相手への push は、コールされて負ければ即敗退。トーナメント生命を賭けるため、通常よりタイトな range で push すべきです。";
+    return t("practice.pushLesson.covered");
   }
 
   const pCall = p.pushPCall ?? 0;
   if (pCall < 0.15) {
-    return "💨 相手のコール率 (=スチール成功率の裏返し) が低いほど、ハンドが弱くても push を広げられます。fold されて pot を丸取りできる期待が大きいためです。";
+    return t("practice.pushLesson.steal");
   }
 
-  return "push の $EV = (1−コール率)×スチール成功時 + コール率×(勝率×勝ち時 + (1−勝率)×負け時)。fold の $EV と比較し、必ず ICM 込みで判断しましょう。";
+  return t("practice.pushLesson.general");
 }
 
 function recordPracticeResult(isCorrect: boolean, p: PracticeProblem): void {
@@ -179,15 +184,15 @@ export function judgePracticeRP(guess: number): void {
   const evBF = p.callAmount * p.bf;
   fb.innerHTML = `
     <div class="verdict-row">
-      <div class="verdict">${isCorrect ? "🎉 正解!" : "😅 不正解"}</div>
-      <button id="practice-next-btn-top" type="button" class="solve-btn compact">🎲 次へ</button>
+      <div class="verdict">${isCorrect ? t("practice.verdict.correct") : t("practice.verdict.wrong")}</div>
+      <button id="practice-next-btn-top" type="button" class="solve-btn compact">${t("practice.nextBtnTop")}</button>
     </div>
     <div class="practice-lesson">💡 ${practiceLesson(p)}</div>
-    <div>あなたの回答: <strong>+${guess.toFixed(1)}%</strong></div>
-    <div>正解 RP (厳密 ICM): <strong style="color: var(--accent)">+${actualRP.toFixed(1)}%</strong> <span class="muted">(許容 ±${tol}%)</span></div>
-    <div>誤差: <strong style="color: ${isCorrect ? "var(--good)" : "var(--bad)"}">${diff >= 0 ? "+" : ""}${diff.toFixed(1)}%</strong></div>
+    <div>${t("practice.rp.yourAnswerLabel")} <strong>+${guess.toFixed(1)}%</strong></div>
+    <div>${t("practice.rp.correctLabel")} <strong style="color: var(--accent)">+${actualRP.toFixed(1)}%</strong> <span class="muted">${t("practice.rp.tolNote", { tol })}</span></div>
+    <div>${t("practice.rp.errorLabel")} <strong style="color: ${isCorrect ? "var(--good)" : "var(--bad)"}">${diff >= 0 ? "+" : ""}${diff.toFixed(1)}%</strong></div>
     <details class="practice-details">
-      <summary>📖 詳しい計算式 (タップで展開)</summary>
+      <summary>${t("practice.details.summary")}</summary>
       <div class="practice-details-body">
         <h4>1. Bubble Factor (参考値: 対称フリップ近似)</h4>
         <p><code>BF = (現状 − 負け) ÷ (勝ち − 現状) = ${(p.bfEquityNow - p.bfEquityLose).toFixed(3)} ÷ ${(p.bfEquityWin - p.bfEquityNow).toFixed(3)} = ${p.bf.toFixed(3)}</code></p>
@@ -208,8 +213,8 @@ export function judgePracticeRP(guess: number): void {
       </div>
     </details>
     <div style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px;">
-      <button id="practice-next-btn" type="button" class="solve-btn">🎲 次の問題</button>
-      <button id="practice-apply-btn" type="button" class="solve-btn" style="background: var(--card); color: var(--text); border: 1px solid var(--border);">📥 設定に取り込む (詳細分析)</button>
+      <button id="practice-next-btn" type="button" class="solve-btn">${t("practice.nextBtn")}</button>
+      <button id="practice-apply-btn" type="button" class="solve-btn" style="background: var(--card); color: var(--text); border: 1px solid var(--border);">${t("practice.applyBtn")}</button>
     </div>
   `;
   fb.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -225,7 +230,7 @@ export function judgePractice(answer: "call" | "fold"): void {
   const margin = p.heroEq - p.dollarEV;
   const correctIsCall = margin >= 0;
   const isCorrect = (correctIsCall && answer === "call") || (!correctIsCall && answer === "fold");
-  const verdict = correctIsCall ? "✅ コール (+EV)" : "❌ フォールド (-EV)";
+  const verdict = correctIsCall ? t("practice.verdict.call") : t("practice.verdict.fold");
   fb.className = "practice-feedback " + (isCorrect ? "correct" : "wrong");
 
   // チュートリアル中は streak/正解率/復習リストに記録しない
@@ -243,25 +248,25 @@ export function judgePractice(answer: "call" | "fold"): void {
   const tutorialBlockHtml = tutorialDef
     ? `
     <div class="tutorial-explain-card">
-      <div class="tutorial-explain-title">💡 教訓: ${tutorialDef.title}</div>
+      <div class="tutorial-explain-title">${t("practice.tutorial.explainTitle", { title: tutorialDef.title })}</div>
       <div class="tutorial-explain-body">${tutorialDef.lesson}</div>
-      <button id="tutorial-next-btn" type="button" class="solve-btn">次の問題へ →</button>
+      <button id="tutorial-next-btn" type="button" class="solve-btn">${t("practice.tutorial.nextBtn")}</button>
     </div>
   `
     : "";
   fb.innerHTML = `
     ${tutorialBlockHtml}
     <div class="verdict-row">
-      <div class="verdict">${isCorrect ? "🎉 正解!" : "😅 不正解"} 正答: ${verdict}</div>
-      <button id="practice-next-btn-top" type="button" class="solve-btn compact">🎲 次へ</button>
+      <div class="verdict">${isCorrect ? t("practice.verdict.correct") : t("practice.verdict.wrong")} ${t("practice.verdict.answerPrefix")} ${verdict}</div>
+      <button id="practice-next-btn-top" type="button" class="solve-btn compact">${t("practice.nextBtnTop")}</button>
     </div>
     <div class="practice-lesson">💡 ${practiceLesson(p)}</div>
-    <div>cEV 必要勝率: <strong>${(p.cEV * 100).toFixed(1)}%</strong></div>
-    <div>必要勝率 (厳密 ICM): <strong>${(p.dollarEV * 100).toFixed(1)}%</strong> <span class="muted">(参考: BF近似 ${(p.dollarEVApprox * 100).toFixed(1)}%)</span></div>
-    <div>${p.heroHand} の equity vs Top${p.villainCallRangePct}%: <strong>${(p.heroEq * 100).toFixed(1)}%</strong></div>
-    <div>余裕: <strong style="color: ${margin >= 0 ? "var(--good)" : "var(--bad)"}">${margin >= 0 ? "+" : ""}${(margin * 100).toFixed(1)}%</strong></div>
+    <div>${t("practice.cf.cevLabel")} <strong>${(p.cEV * 100).toFixed(1)}%</strong></div>
+    <div>${t("practice.cf.reqLabel")} <strong>${(p.dollarEV * 100).toFixed(1)}%</strong> <span class="muted">${t("practice.cf.reqApproxNote", { v: (p.dollarEVApprox * 100).toFixed(1) })}</span></div>
+    <div>${t("practice.cf.handEquity", { hand: p.heroHand, pct: p.villainCallRangePct })} <strong>${(p.heroEq * 100).toFixed(1)}%</strong></div>
+    <div>${t("practice.label.margin")} <strong style="color: ${margin >= 0 ? "var(--good)" : "var(--bad)"}">${margin >= 0 ? "+" : ""}${(margin * 100).toFixed(1)}%</strong></div>
     <details class="practice-details">
-      <summary>📖 詳しい計算式 (タップで展開)</summary>
+      <summary>${t("practice.details.summary")}</summary>
       <div class="practice-details-body">
         ${(() => {
           const heroIdx = p.scenarioPlayers.findIndex((x) => x.role === "hero");
@@ -353,15 +358,15 @@ export function judgePractice(answer: "call" | "fold"): void {
       </div>
     </details>
 
-    <h3 style="font-size: 13px; margin: 12px 0 4px;">🎯 自分の call レンジ 🟢 (必要勝率 ${(p.dollarEV * 100).toFixed(1)}% 超のハンド)</h3>
+    <h3 style="font-size: 13px; margin: 12px 0 4px;">${t("practice.cf.heroRangeH3", { pct: (p.dollarEV * 100).toFixed(1) })}</h3>
     <div id="practice-hero-grid" class="hand-grid"></div>
     <div class="grid-legend">
-      <span><span class="legend-box in-range-hero"></span>call (余裕 +0% 以上 = +EV)</span>
-      <span><span class="legend-box"></span>fold (余裕 マイナス = -EV)</span>
+      <span><span class="legend-box in-range-hero"></span>${t("practice.cf.legend.call")}</span>
+      <span><span class="legend-box"></span>${t("practice.cf.legend.fold")}</span>
     </div>
     <div style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px;">
-      <button id="practice-next-btn" type="button" class="solve-btn">🎲 次の問題</button>
-      <button id="practice-apply-btn" type="button" class="solve-btn" style="background: var(--card); color: var(--text); border: 1px solid var(--border);">📥 設定に取り込む (詳細分析)</button>
+      <button id="practice-next-btn" type="button" class="solve-btn">${t("practice.nextBtn")}</button>
+      <button id="practice-apply-btn" type="button" class="solve-btn" style="background: var(--card); color: var(--text); border: 1px solid var(--border);">${t("practice.applyBtn")}</button>
     </div>
   `;
   renderJudgeHeroGrid(p);
@@ -378,7 +383,7 @@ export function judgePracticePush(answer: "push" | "fold"): void {
 
   const shouldPush = p.pushShouldPush ?? false;
   const isCorrect = (shouldPush && answer === "push") || (!shouldPush && answer === "fold");
-  const verdict = shouldPush ? "🚀 オールイン (+EV)" : "❌ フォールド (-EV)";
+  const verdict = shouldPush ? t("practice.verdict.push") : t("practice.verdict.fold");
   fb.className = "practice-feedback " + (isCorrect ? "correct" : "wrong");
 
   if (!isTutorialActive()) {
@@ -421,15 +426,15 @@ export function judgePracticePush(answer: "push" | "fold"): void {
 
   fb.innerHTML = `
     <div class="verdict-row">
-      <div class="verdict">${isCorrect ? "🎉 正解!" : "😅 不正解"} 正答: ${verdict}</div>
-      <button id="practice-next-btn-top" type="button" class="solve-btn compact">🎲 次へ</button>
+      <div class="verdict">${isCorrect ? t("practice.verdict.correct") : t("practice.verdict.wrong")} ${t("practice.verdict.answerPrefix")} ${verdict}</div>
+      <button id="practice-next-btn-top" type="button" class="solve-btn compact">${t("practice.nextBtnTop")}</button>
     </div>
     <div class="practice-lesson">💡 ${practicePushLesson(p)}</div>
     <div>fold $EV: <strong>${evFold.toFixed(3)}</strong></div>
-    <div>push $EV: <strong>${evPush.toFixed(3)}</strong> <span class="muted">(villain call率 ${(pCall * 100).toFixed(0)}% / call された時の hero equity ${(eqVsCallRange * 100).toFixed(1)}%)</span></div>
-    <div>余裕: <strong style="color: ${marginDollar >= 0 ? "var(--good)" : "var(--bad)"}">${marginDollar >= 0 ? "+" : ""}${marginDollar.toFixed(3)}</strong> <span class="muted">(プール比 ${marginPct >= 0 ? "+" : ""}${marginPct.toFixed(2)}%)</span></div>
+    <div>push $EV: <strong>${evPush.toFixed(3)}</strong> <span class="muted">${t("practice.push.evNote", { pcall: (pCall * 100).toFixed(0), eq: (eqVsCallRange * 100).toFixed(1) })}</span></div>
+    <div>${t("practice.label.margin")} <strong style="color: ${marginDollar >= 0 ? "var(--good)" : "var(--bad)"}">${marginDollar >= 0 ? "+" : ""}${marginDollar.toFixed(3)}</strong> <span class="muted">${t("practice.push.marginPoolNote", { v: `${marginPct >= 0 ? "+" : ""}${marginPct.toFixed(2)}` })}</span></div>
     <details class="practice-details">
-      <summary>📖 詳しい計算式 (タップで展開)</summary>
+      <summary>${t("practice.details.summary")}</summary>
       <div class="practice-details-body">
         <h4>1. ポット構成 (push→call 時, BB ante 構造)</h4>
         <ul style="font-size: 12px; line-height: 1.5;">
@@ -479,15 +484,15 @@ export function judgePracticePush(answer: "push" | "fold"): void {
       </div>
     </details>
 
-    <h3 style="font-size: 13px; margin: 12px 0 4px;">🚀 自分の push レンジ 🟢 (push +EV のハンド)</h3>
+    <h3 style="font-size: 13px; margin: 12px 0 4px;">${t("practice.push.heroRangeH3")}</h3>
     <div id="practice-hero-grid" class="hand-grid"></div>
     <div class="grid-legend">
       <span><span class="legend-box in-range-hero"></span>push (+EV)</span>
       <span><span class="legend-box"></span>fold (-EV)</span>
     </div>
     <div style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px;">
-      <button id="practice-next-btn" type="button" class="solve-btn">🎲 次の問題</button>
-      <button id="practice-apply-btn" type="button" class="solve-btn" style="background: var(--card); color: var(--text); border: 1px solid var(--border);">📥 設定に取り込む (詳細分析)</button>
+      <button id="practice-next-btn" type="button" class="solve-btn">${t("practice.nextBtn")}</button>
+      <button id="practice-apply-btn" type="button" class="solve-btn" style="background: var(--card); color: var(--text); border: 1px solid var(--border);">${t("practice.applyBtn")}</button>
     </div>
   `;
   renderJudgeHeroGridPush(p);

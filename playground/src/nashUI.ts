@@ -2,6 +2,7 @@ import { solveHUNash } from "@poker-icm/core";
 import { ALL_169_HANDS, handAt, type HandNotation } from "./handRanking.js";
 import { huEquity, hasHUMatrix } from "./huEquityMatrix.js";
 import { renderGrid } from "./grid.js";
+import { t } from "./i18n.js";
 import { $ } from "./dom.js";
 import {
   players,
@@ -105,12 +106,18 @@ export function updateNashOvercallWarn(): void {
   const partsHtml: string[] = [];
   if (between.length > 0) {
     partsHtml.push(
-      `<strong>${between.length}</strong> 人が pusher と caller の間 (${between.map((p) => `${p.position}(${p.stack}BB)`).join(", ")})`,
+      t("nash.overcall.between", {
+        n: between.length,
+        list: between.map((p) => `${p.position}(${p.stack}BB)`).join(", "),
+      }),
     );
   }
   if (behind.length > 0) {
     partsHtml.push(
-      `<strong>${behind.length}</strong> 人が caller の後ろ (${behind.map((p) => `${p.position}(${p.stack}BB)`).join(", ")})`,
+      t("nash.overcall.behind", {
+        n: behind.length,
+        list: behind.map((p) => `${p.position}(${p.stack}BB)`).join(", "),
+      }),
     );
   }
 
@@ -120,13 +127,14 @@ export function updateNashOvercallWarn(): void {
   const callerNeedsTighten = behind.length > 0;
 
   warnEl.classList.remove("hidden");
-  warnEl.innerHTML = `
-    ⚠ <strong>HU Nash 想定外の介入者あり</strong>: ${partsHtml.join(" / ")}。
-    <br />→ <strong>pusher (${pusherPos}) は HU Nash よりさらに狭く push</strong> すべき
-    （介在者が強いハンドで over-call/3bet する分、fold equity が減るため）。
-    ${callerNeedsTighten ? `<br />→ <strong>caller (${callerPos}) も狭く call</strong> すべき (後ろに ${behind.length} 人控えてるため)。` : `<br />→ caller (${callerPos}) は概ね HU Nash 通り (介在者が降りた前提なので)。`}
-    <br />当 Nash 結果は HU 2-way 想定の参考値として読んでください。
-  `;
+  const callerAdvice = callerNeedsTighten
+    ? t("nash.overcall.callerTighten", { callerPos: callerPos ?? "", n: behind.length })
+    : t("nash.overcall.callerOk", { callerPos: callerPos ?? "" });
+  warnEl.innerHTML = t("nash.overcall.main.html", {
+    parts: partsHtml.join(" / "),
+    pusherPos: pusherPos ?? "",
+    callerAdvice,
+  });
 }
 
 function runNash(): void {
@@ -139,26 +147,26 @@ function runNash(): void {
   // 単一値のため)。heroIndex/villainIndex がともに -1 のケースは
   // `heroIndex < 0 || villainIndex < 0` で既に弾かれる。防御的に残す。
   if (heroIndex < 0 || villainIndex < 0 || heroIndex === villainIndex) {
-    nashStatus.innerHTML = `<span class="error">🎯自分と⚔️相手をそれぞれ1人ずつ指定してください</span>`;
+    nashStatus.innerHTML = `<span class="error">${t("nash.err.needHV")}</span>`;
     return;
   }
   if (payouts.length === 0) {
-    nashStatus.innerHTML = `<span class="error">ペイ構造を入力してください</span>`;
+    nashStatus.innerHTML = `<span class="error">${t("nash.err.needPayout")}</span>`;
     return;
   }
   const sb = Number(nashSbInput.value);
   const bb = Number(nashBbInput.value);
   const anteRaw = Number(nashAnteInput.value);
   if (!Number.isFinite(sb) || sb <= 0) {
-    nashStatus.innerHTML = `<span class="error">SB が不正</span>`;
+    nashStatus.innerHTML = `<span class="error">${t("nash.err.sb")}</span>`;
     return;
   }
   if (!Number.isFinite(bb) || bb <= 0) {
-    nashStatus.innerHTML = `<span class="error">BB が不正</span>`;
+    nashStatus.innerHTML = `<span class="error">${t("nash.err.bb")}</span>`;
     return;
   }
   if (!Number.isFinite(anteRaw) || anteRaw < 0) {
-    nashStatus.innerHTML = `<span class="error">アンティが不正</span>`;
+    nashStatus.innerHTML = `<span class="error">${t("nash.err.ante")}</span>`;
     return;
   }
   // ante モード判定: total なら人数で割る、perPlayer ならそのまま
@@ -172,7 +180,7 @@ function runNash(): void {
   // ボタンを「計算中…」に
   nashSolveBtn.disabled = true;
   const oldText = nashSolveBtn.textContent;
-  nashSolveBtn.textContent = "計算中…";
+  nashSolveBtn.textContent = t("nash.calculating");
   nashStatus.textContent = "";
 
   // 描画ブロックを避けるため setTimeout で処理を後回し
@@ -200,19 +208,19 @@ function runNash(): void {
 
       const sbCount = result.sbPushRange.size;
       const bbCount = result.bbCallRange.size;
-      nashSbStats.innerHTML = `${sbCount} 個 (${(result.sbPushPct * 100).toFixed(1)}%)`;
-      nashBbStats.innerHTML = `${bbCount} 個 (${(result.bbCallPct * 100).toFixed(1)}%)`;
+      nashSbStats.innerHTML = t("nash.stats", { n: sbCount, pct: (result.sbPushPct * 100).toFixed(1) });
+      nashBbStats.innerHTML = t("nash.stats", { n: bbCount, pct: (result.bbCallPct * 100).toFixed(1) });
 
       const convStr = result.converged
-        ? `<span style="color: var(--good)">収束</span>`
-        : `<span style="color: var(--warn)">未収束</span>`;
-      nashStatus.innerHTML = `${convStr}（${result.iterations} iter / ${elapsedMs.toFixed(0)} ms）`;
+        ? `<span style="color: var(--good)">${t("nash.converged")}</span>`
+        : `<span style="color: var(--warn)">${t("nash.notConverged")}</span>`;
+      nashStatus.innerHTML = `${convStr}${t("nash.statusSuffix", { iter: result.iterations, ms: elapsedMs.toFixed(0) })}`;
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       nashStatus.innerHTML = `<span class="error">${msg}</span>`;
     } finally {
       nashSolveBtn.disabled = false;
-      nashSolveBtn.textContent = oldText ?? "Nash 計算";
+      nashSolveBtn.textContent = oldText ?? t("nash.solveBtn");
     }
   }, 10);
 }
@@ -245,8 +253,7 @@ export function initNashUI(): void {
   renderGrid(nashBbGrid, () => "");
 
   if (!hasHUMatrix()) {
-    nashStatus.textContent =
-      "⚠ HU equity matrix が未生成です（hu-equity-matrix.json）。`npx tsx scripts/build-hu-matchups.mts` を実行してください。";
+    nashStatus.textContent = t("nash.matrixMissing");
   }
 
   nashSolveBtn.addEventListener("click", runNash);

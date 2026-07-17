@@ -37,9 +37,9 @@
         <div class="header-row">
           <h1>🎰 Poker ICM/BF</h1>
           <div class="header-actions">
-            <button id="help-btn" class="header-btn" type="button" title="使い方ガイド" aria-label="ヘルプ">❓</button>
-            <button id="share-url-btn-top" class="header-btn" type="button" title="シナリオを URL で共有" aria-label="共有">🔗</button>
-            <button id="theme-toggle" class="header-btn" type="button" title="テーマ切替" aria-label="テーマ切替">🌙</button>
+            <button id="help-btn" class="header-btn" type="button" title="使い方ガイド" aria-label="ヘルプ" data-i18n-attr="title:header.help.title;aria-label:header.help.aria">❓</button>
+            <button id="share-url-btn-top" class="header-btn" type="button" title="シナリオを URL で共有" aria-label="共有" data-i18n-attr="title:header.share.title;aria-label:header.share.aria">🔗</button>
+            <button id="theme-toggle" class="header-btn" type="button" title="テーマ切替" aria-label="テーマ切替" data-i18n-attr="title:header.theme.title;aria-label:header.theme.aria">🌙</button>
           </div>
         </div>
         <p id="share-url-toast" class="share-toast hidden"></p>
@@ -50,40 +50,40 @@
         <div class="info-modal-content">
           <div class="info-modal-header">
             <h3 id="info-modal-title"></h3>
-            <button type="button" id="info-modal-close" aria-label="閉じる">✕</button>
+            <button type="button" id="info-modal-close" aria-label="閉じる" data-i18n-attr="aria-label:header.infoModal.close.aria">✕</button>
           </div>
           <div id="info-modal-body"></div>
         </div>
       </div>
 
-      <nav class="tab-bar" role="tablist" aria-label="セクション">
-        <button type="button" class="tab-btn active" data-tab="setup"><span class="tab-icon">⚙️</span><span class="tab-label">セットアップ</span></button>
-        <button type="button" class="tab-btn" data-tab="result"><span class="tab-icon">📊</span><span class="tab-label">計算結果</span></button>
-        <button type="button" class="tab-btn" data-tab="hand"><span class="tab-icon">🃏</span><span class="tab-label">ハンド比較</span></button>
-        <button type="button" class="tab-btn" data-tab="nash"><span class="tab-icon">🎯</span><span class="tab-label">ナッシュ均衡</span></button>
-        <button type="button" class="tab-btn" data-tab="practice"><span class="tab-icon">🎲</span><span class="tab-label">練習</span></button>
+      <nav class="tab-bar" role="tablist" aria-label="セクション" data-i18n-attr="aria-label:tabs.aria">
+        <button type="button" class="tab-btn active" data-tab="setup"><span class="tab-icon">⚙️</span><span class="tab-label" data-i18n="tabs.setup">セットアップ</span></button>
+        <button type="button" class="tab-btn" data-tab="result"><span class="tab-icon">📊</span><span class="tab-label" data-i18n="tabs.result">計算結果</span></button>
+        <button type="button" class="tab-btn" data-tab="hand"><span class="tab-icon">🃏</span><span class="tab-label" data-i18n="tabs.hand">ハンド比較</span></button>
+        <button type="button" class="tab-btn" data-tab="nash"><span class="tab-icon">🎯</span><span class="tab-label" data-i18n="tabs.nash">ナッシュ均衡</span></button>
+        <button type="button" class="tab-btn" data-tab="practice"><span class="tab-icon">🎲</span><span class="tab-label" data-i18n="tabs.practice">練習</span></button>
       </nav>
 
 
       <section class="card" data-tab="setup">
-        <h2>シナリオプリセット</h2>
+        <h2 data-i18n="setup.presets.h2">シナリオプリセット</h2>
         <details class="section-toggle" id="scenario-presets-toggle">
-          <summary>プリセット一覧（タップで開閉）</summary>
+          <summary data-i18n="setup.presets.summary">プリセット一覧（タップで開閉）</summary>
           <div class="section-toggle-body">
-            <p class="hint">タップで状況一発セット。スタック・ポジション・ペイアウトを丸ごと反映。</p>
+            <p class="hint" data-i18n="setup.presets.hint">タップで状況一発セット。スタック・ポジション・ペイアウトを丸ごと反映。</p>
             <div class="scenario-presets">
-              <button type="button" data-scenario="ft9" class="scenario-btn">9-max FT 開幕</button>
-              <button type="button" data-scenario="ftBubble" class="scenario-btn">FT バブル (短/普通×3)</button>
-              <button type="button" data-scenario="ft6" class="scenario-btn">6 残り</button>
-              <button type="button" data-scenario="ft4" class="scenario-btn">4 残り</button>
-              <button type="button" data-scenario="ft3" class="scenario-btn">3-handed</button>
-              <button type="button" data-scenario="hu" class="scenario-btn">HU 10/10</button>
-              <button type="button" data-scenario="huShort" class="scenario-btn">HU 短/長</button>
-              <button type="button" data-scenario="satellite3" class="scenario-btn">🛰 サテライト (3人入賞)</button>
+              <button type="button" data-scenario="ft9" class="scenario-btn" data-i18n="setup.presets.ft9">9-max FT 開幕</button>
+              <button type="button" data-scenario="ftBubble" class="scenario-btn" data-i18n="setup.presets.ftBubble">FT バブル (短/普通×3)</button>
+              <button type="button" data-scenario="ft6" class="scenario-btn" data-i18n="setup.presets.ft6">6 残り</button>
+              <button type="button" data-scenario="ft4" class="scenario-btn" data-i18n="setup.presets.ft4">4 残り</button>
+              <button type="button" data-scenario="ft3" class="scenario-btn" data-i18n="setup.presets.ft3">3-handed</button>
+              <button type="button" data-scenario="hu" class="scenario-btn" data-i18n="setup.presets.hu">HU 10/10</button>
+              <button type="button" data-scenario="huShort" class="scenario-btn" data-i18n="setup.presets.huShort">HU 短/長</button>
+              <button type="button" data-scenario="satellite3" class="scenario-btn" data-i18n="setup.presets.satellite3">🛰 サテライト (3人入賞)</button>
             </div>
             <div class="presets-label" style="margin-top: 10px;">
               自分のシナリオ
-              <button id="save-scenario-btn" type="button" class="save-btn">＋ 現在の状況を保存</button>
+              <button id="save-scenario-btn" type="button" class="save-btn" data-i18n="setup.presets.saveBtn">＋ 現在の状況を保存</button>
             </div>
             <div id="user-scenarios" class="scenario-presets user"></div>
           </div>
@@ -91,8 +91,8 @@
       </section>
 
       <section class="card" data-tab="setup">
-        <h2>プレイヤー</h2>
-        <p class="hint">
+        <h2 data-i18n="setup.players.h2">プレイヤー</h2>
+        <p class="hint" data-i18n-html="setup.players.hint.html">
           各プレイヤーのスタックを入力。<strong>🎯 自分</strong> /
           <strong>⚔️ 相手</strong> をタップで指定。最大9人。
         </p>
@@ -101,34 +101,34 @@
           <button id="add-player" class="add-btn" type="button">
             + プレイヤー追加
           </button>
-          <button id="randomize-stacks" class="add-btn" type="button" title="現プレイヤーのスタックを 3-30 BB のランダム値に">
+          <button id="randomize-stacks" class="add-btn" type="button" title="現プレイヤーのスタックを 3-30 BB のランダム値に" data-i18n="setup.players.randomize" data-i18n-attr="title:setup.players.randomize.title">
             🎲 スタックをランダム化
           </button>
         </div>
       </section>
 
       <section class="card" data-tab="setup">
-        <h2>ペイ構造</h2>
-        <p class="hint">1位から順に賞金を入力。単位は % でも $ でも OK。</p>
+        <h2 data-i18n="setup.payouts.h2">ペイ構造</h2>
+        <p class="hint" data-i18n="setup.payouts.hint">1位から順に賞金を入力。単位は % でも $ でも OK。</p>
         <div id="payouts-list" class="payouts-list"></div>
-        <button id="add-payout" class="add-btn" type="button">
+        <button id="add-payout" class="add-btn" type="button" data-i18n="setup.payouts.add">
           + 順位追加
         </button>
         <input id="payouts" type="hidden" value="50, 30, 20" />
         <details class="section-toggle" id="payout-presets-toggle">
-          <summary>プリセット・保存済み（タップで開閉）</summary>
+          <summary data-i18n="setup.payouts.summary">プリセット・保存済み（タップで開閉）</summary>
           <div class="section-toggle-body">
-            <div class="presets-label">プリセット</div>
+            <div class="presets-label" data-i18n="setup.payouts.presetLabel">プリセット</div>
             <div class="presets">
-              <button data-preset="50,30,20" type="button">Top3 (50/30/20)</button>
-              <button data-preset="65,35" type="button">Top2 (65/35)</button>
-              <button data-preset="100" type="button">WTA</button>
-              <button data-preset="40,25,15,10,5,3,2" type="button">9-max FT</button>
-              <button data-preset="33,33,33" type="button">🛰 サテライト Top3</button>
+              <button data-preset="50,30,20" type="button" data-i18n="setup.payouts.preset.top3">Top3 (50/30/20)</button>
+              <button data-preset="65,35" type="button" data-i18n="setup.payouts.preset.top2">Top2 (65/35)</button>
+              <button data-preset="100" type="button" data-i18n="setup.payouts.preset.wta">WTA</button>
+              <button data-preset="40,25,15,10,5,3,2" type="button" data-i18n="setup.payouts.preset.ft9">9-max FT</button>
+              <button data-preset="33,33,33" type="button" data-i18n="setup.payouts.preset.satellite">🛰 サテライト Top3</button>
             </div>
             <div class="presets-label">
               保存済み
-              <button id="save-payout" type="button" class="save-btn">
+              <button id="save-payout" type="button" class="save-btn" data-i18n="setup.payouts.saveBtn">
                 ＋ 現在の値を保存
               </button>
             </div>
@@ -139,20 +139,20 @@
 
       <section class="card" data-tab="setup">
         <div class="share-row">
-          <button id="share-url-btn" type="button" class="solve-btn share-btn">🔗 シナリオを URL で共有</button>
+          <button id="share-url-btn" type="button" class="solve-btn share-btn" data-i18n="setup.share.btn">🔗 シナリオを URL で共有</button>
           <span id="share-url-hint" class="hint"></span>
         </div>
       </section>
 
       <section class="card" data-tab="result">
-        <h2>ICM エクイティ</h2>
+        <h2 data-i18n="result.icm.h2">ICM エクイティ</h2>
         <table id="icm-table">
           <thead>
             <tr>
-              <th>#</th>
-              <th>スタック</th>
-              <th>$ エクイティ</th>
-              <th>%</th>
+              <th data-i18n="result.icm.th.rank">#</th>
+              <th data-i18n="result.icm.th.stack">スタック</th>
+              <th data-i18n="result.icm.th.equity">$ エクイティ</th>
+              <th data-i18n="result.icm.th.pct">%</th>
             </tr>
           </thead>
           <tbody id="icm-rows"></tbody>
@@ -160,19 +160,19 @@
       </section>
 
       <section class="card" data-tab="result">
-        <h2>BF マップ</h2>
-        <p class="hint">
+        <h2 data-i18n="result.bf.h2">BF マップ</h2>
+        <p class="hint" data-i18n-html="result.bf.hint.html">
           🎯自分と⚔️相手のオールイン想定。リスクするチップは小さい方のスタックに自動調整されます。
         </p>
         <div id="bf-result" class="result"></div>
 
-        <h3 class="bf-matrix-title">全員 vs 全員 BF マップ 🆕</h3>
-        <p class="hint">
+        <h3 class="bf-matrix-title" data-i18n="result.bf.matrixTitle">全員 vs 全員 BF マップ 🆕</h3>
+        <p class="hint" data-i18n-html="result.bf.matrixHint.html">
           縦軸 = Hero（自分）、横軸 = Villain（相手）。
           上段=1:1ポット時のRisk Premium、下段=BF値。
         </p>
         <details class="howto" id="bf-howto">
-          <summary>📖 表の見方（クリックで展開）</summary>
+          <summary data-i18n="result.bf.howto.summary">📖 表の見方（クリックで展開）</summary>
           <div class="howto-body">
             <h4>1. 各セルの数字</h4>
             <p>
@@ -239,12 +239,12 @@
           </div>
           <div class="bf-matrix-fade" aria-hidden="true"></div>
         </div>
-        <p class="hint bf-matrix-scroll-hint hidden" id="bf-matrix-scroll-hint">→ 横にスクロール</p>
+        <p class="hint bf-matrix-scroll-hint hidden" id="bf-matrix-scroll-hint" data-i18n="result.bf.scrollHint">→ 横にスクロール</p>
       </section>
 
       <section class="card" data-tab="result">
-        <h2>必要勝率 (cEV / $EV / RP)</h2>
-        <p class="hint">
+        <h2 data-i18n="result.eq.h2">必要勝率 (cEV / $EV / RP)</h2>
+        <p class="hint" data-i18n-html="result.eq.hint.html">
           🎯と⚔️のオールイン想定で自動計算。手動入力したい場合は数値を上書きしてください。
         </p>
         <div class="grid">
@@ -252,7 +252,7 @@
             コール額
             <div class="num-stepper">
               <button type="button" class="num-step-btn" data-target="call" data-delta="-1">−1</button>
-              <input id="call" type="number" inputmode="decimal" placeholder="例: 8.0" min="0.1" step="0.1" />
+              <input id="call" type="number" inputmode="decimal" placeholder="例: 8.0" min="0.1" step="0.1" data-i18n-attr="placeholder:result.eq.call.placeholder" />
               <button type="button" class="num-step-btn" data-target="call" data-delta="1">+1</button>
             </div>
           </label>
@@ -260,13 +260,13 @@
             勝った時の純利得
             <div class="num-stepper">
               <button type="button" class="num-step-btn" data-target="potwin" data-delta="-1">−1</button>
-              <input id="potwin" type="number" inputmode="decimal" placeholder="例: 10.5" min="0.1" step="0.1" />
+              <input id="potwin" type="number" inputmode="decimal" placeholder="例: 10.5" min="0.1" step="0.1" data-i18n-attr="placeholder:result.eq.potwin.placeholder" />
               <button type="button" class="num-step-btn" data-target="potwin" data-delta="1">+1</button>
             </div>
           </label>
         </div>
         <p class="hint" id="autofill-hint" style="margin-top: 6px;"></p>
-        <button id="autofill-call" type="button" class="save-btn" style="margin-top: 10px;">
+        <button id="autofill-call" type="button" class="save-btn" style="margin-top: 10px;" data-i18n="result.eq.autofillBtn">
           🔄 自動算出に戻す
         </button>
         <div id="position-warn" class="warn-box hidden"></div>
@@ -274,22 +274,22 @@
         <div id="eq-result" class="result"></div>
 
         <div class="hv-section">
-          <h3>🃏 このハンド、コールできる？</h3>
-          <p class="hint">
+          <h3 data-i18n="result.hv.h3">🃏 このハンド、コールできる？</h3>
+          <p class="hint" data-i18n-html="result.hv.hint.html">
             上の必要勝率を「自分の持っているハンド」に当てはめる機能です。
             ① 相手がオールインしてきそうなレンジの広さを選ぶ →
             ② 🟩緑 = コールできるハンド → ③ 自分のハンドをタップで個別判定。
           </p>
-          <p id="hv-empty-msg" class="hint hidden">プレイヤーで 🎯自分 と ⚔️相手 を指定してください</p>
+          <p id="hv-empty-msg" class="hint hidden" data-i18n="result.hv.emptyMsg">プレイヤーで 🎯自分 と ⚔️相手 を指定してください</p>
           <div id="hv-body">
             <div id="depth-warn-hv" class="warn-box hidden"></div>
             <div id="hv-range-pills" class="hv-pills">
-              <button type="button" class="hv-pill" data-range="15">タイト Top15%</button>
-              <button type="button" class="hv-pill active" data-range="30">普通 Top30%</button>
-              <button type="button" class="hv-pill" data-range="50">ルース Top50%</button>
+              <button type="button" class="hv-pill" data-range="15" data-i18n="result.hv.range.tight">タイト Top15%</button>
+              <button type="button" class="hv-pill active" data-range="30" data-i18n="result.hv.range.normal">普通 Top30%</button>
+              <button type="button" class="hv-pill" data-range="50" data-i18n="result.hv.range.loose">ルース Top50%</button>
             </div>
             <div id="hv-banner" class="hv-banner hidden"></div>
-            <p class="hint hv-source-note">必要勝率 = 上の $EV (True Req)</p>
+            <p class="hint hv-source-note" data-i18n="result.hv.sourceNote">必要勝率 = 上の $EV (True Req)</p>
             <div class="hv-grid-wrap">
               <div id="hv-grid" class="hand-grid"></div>
               <p class="hint" id="hv-grid-count"></p>
@@ -299,8 +299,8 @@
       </section>
 
       <section class="card" data-tab="nash">
-        <h2>Nash 均衡 (HU push/fold)</h2>
-        <p class="hint">
+        <h2 data-i18n="nash.h2">Nash 均衡 (HU push/fold)</h2>
+        <p class="hint" data-i18n-html="nash.hint.html">
           🎯自分 (pusher) と ⚔️相手 (caller) のヘッズアップ Nash 均衡を計算（ICM反映済み）。
           <br />
           ※ HU 2-way 想定。BTN+BB のように間に他プレイヤーがいる場合は警告が出ます。
@@ -323,18 +323,18 @@
           </label>
         </div>
 
-        <button id="nash-solve" type="button" class="solve-btn">Nash 計算</button>
+        <button id="nash-solve" type="button" class="solve-btn" data-i18n="nash.solveBtn">Nash 計算</button>
         <p id="nash-status" class="hint"></p>
         <div id="nash-overcall-warn" class="warn-box hidden"></div>
 
         <div class="range-grids">
           <div>
-            <h3>🎯自分 push レンジ 🔴</h3>
+            <h3 data-i18n="nash.sbRange.h3">🎯自分 push レンジ 🔴</h3>
             <p class="hint" id="nash-sb-stats"></p>
             <div id="nash-sb-grid" class="hand-grid"></div>
           </div>
           <div>
-            <h3>⚔️相手 call レンジ 🟢</h3>
+            <h3 data-i18n="nash.bbRange.h3">⚔️相手 call レンジ 🟢</h3>
             <p class="hint" id="nash-bb-stats"></p>
             <div id="nash-bb-grid" class="hand-grid"></div>
           </div>
@@ -342,18 +342,18 @@
       </section>
 
       <section class="card" data-tab="hand">
-        <h2>ハンドレンジ比較</h2>
-        <p class="hint">
+        <h2 data-i18n="hand.h2">ハンドレンジ比較</h2>
+        <p class="hint" data-i18n-html="hand.hint.html">
           HU all-in 想定。<strong>hero=BB</strong>（最終 actor）のときに完全に有効。
           他ポジションは「後ろのプレイヤーが全員 fold した」想定の概算として参考程度に。
         </p>
         <div id="hand-position-banner" class="warn-box hidden"></div>
 
         <div class="direction-tabs" role="tablist">
-          <button type="button" class="direction-tab active" data-direction="callBack">
+          <button type="button" class="direction-tab active" data-direction="callBack" data-i18n="hand.direction.callBack">
             自分の call レンジを求める
           </button>
-          <button type="button" class="direction-tab" data-direction="pushBack">
+          <button type="button" class="direction-tab" data-direction="pushBack" data-i18n="hand.direction.pushBack">
             自分の push レンジを求める
           </button>
         </div>
@@ -363,10 +363,11 @@
             type="button"
             class="mode-tab active"
             data-mode="preset"
+            data-i18n="hand.mode.preset"
           >
             プリセット (Top X%)
           </button>
-          <button type="button" class="mode-tab" data-mode="custom">
+          <button type="button" class="mode-tab" data-mode="custom" data-i18n="hand.mode.custom">
             カスタム編集
           </button>
         </div>
@@ -383,7 +384,7 @@
               step="1"
             />
           </label>
-          <p class="hint">※ Top X% は本ツール定義の強度順。他ツールとは一致しない場合があります。</p>
+          <p class="hint" data-i18n="hand.preset.hint">※ Top X% は本ツール定義の強度順。他ツールとは一致しない場合があります。</p>
         </div>
         <div id="custom-controls" class="hidden">
           <p class="hint">
@@ -391,9 +392,9 @@
             選択中: <strong id="custom-count">0</strong>個 (<span id="custom-pct">0</span>%)
           </p>
           <div class="custom-actions">
-            <button type="button" id="custom-all">全選択</button>
-            <button type="button" id="custom-clear">全消去</button>
-            <button type="button" id="custom-from-preset">
+            <button type="button" id="custom-all" data-i18n="hand.custom.actions.all">全選択</button>
+            <button type="button" id="custom-clear" data-i18n="hand.custom.actions.clear">全消去</button>
+            <button type="button" id="custom-from-preset" data-i18n="hand.custom.actions.fromPreset">
               プリセットから読み込む
             </button>
           </div>
@@ -413,14 +414,14 @@
       </section>
 
       <section class="card" data-tab="practice">
-        <h2>🎲 練習問題</h2>
+        <h2 data-i18n="practice.h2">🎲 練習問題</h2>
         <p class="hint" id="practice-hint">
           実戦形式のクイズで call/fold 判断を鍛えます。
         </p>
         <div class="practice-mode">
-          <button type="button" class="mode-btn active" data-mode="callfold">⚖️ call/fold 判定</button>
-          <button type="button" class="mode-btn" data-mode="rp">📊 RP 当て</button>
-          <button type="button" class="mode-btn" data-mode="push">🚀 push 判定</button>
+          <button type="button" class="mode-btn active" data-mode="callfold" data-i18n="practice.mode.callfold">⚖️ call/fold 判定</button>
+          <button type="button" class="mode-btn" data-mode="rp" data-i18n="practice.mode.rp">📊 RP 当て</button>
+          <button type="button" class="mode-btn" data-mode="push" data-i18n="practice.mode.push">🚀 push 判定</button>
         </div>
         <div class="practice-controls">
           <div class="practice-stats">
@@ -428,28 +429,28 @@
             <span id="practice-acc" class="acc-badge">正解率 -</span>
           </div>
           <div class="practice-difficulty">
-            <span class="diff-label">難易度:</span>
-            <button type="button" class="diff-btn" data-diff="easy">Easy</button>
-            <button type="button" class="diff-btn active" data-diff="normal">Normal</button>
-            <button type="button" class="diff-btn" data-diff="hard">Hard</button>
+            <span class="diff-label" data-i18n="practice.diff.label">難易度:</span>
+            <button type="button" class="diff-btn" data-diff="easy" data-i18n="practice.diff.easy">Easy</button>
+            <button type="button" class="diff-btn active" data-diff="normal" data-i18n="practice.diff.normal">Normal</button>
+            <button type="button" class="diff-btn" data-diff="hard" data-i18n="practice.diff.hard">Hard</button>
           </div>
         </div>
         <details id="practice-progress" class="practice-progress">
-          <summary>📈 成績の推移</summary>
+          <summary data-i18n="practice.progress.summary">📈 成績の推移</summary>
           <div id="practice-progress-body"></div>
         </details>
         <div id="practice-actions-top" class="practice-actions-top">
-          <button id="practice-new-btn" type="button" class="solve-btn">🎲 新しい問題</button>
-          <button id="practice-review-btn" type="button" class="solve-btn" style="background: var(--card); color: var(--text); border: 1px solid var(--border);">📚 復習 (<span id="review-count">0</span>)</button>
-          <button id="practice-tutorial-btn" type="button" class="solve-btn tutorial-cta-btn">🎓 導入コース</button>
+          <button id="practice-new-btn" type="button" class="solve-btn" data-i18n="practice.newBtn">🎲 新しい問題</button>
+          <button id="practice-review-btn" type="button" class="solve-btn" style="background: var(--card); color: var(--text); border: 1px solid var(--border);" data-i18n-html="practice.reviewBtn.html">📚 復習 (<span id="review-count">0</span>)</button>
+          <button id="practice-tutorial-btn" type="button" class="solve-btn tutorial-cta-btn" data-i18n="practice.tutorialBtn">🎓 導入コース</button>
         </div>
         <div id="practice-area" class="practice-area"></div>
       </section>
 
       <footer>
-        <p id="footer-version">Poker ICM/BF</p>
+        <p id="footer-version" data-i18n="footer.version">Poker ICM/BF</p>
         <p>
-          <button type="button" id="footer-legal-link" class="footer-legal-link">
+          <button type="button" id="footer-legal-link" class="footer-legal-link" data-i18n="footer.legalLink">
             📄 利用規約・プライバシーポリシー
           </button>
         </p>

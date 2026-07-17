@@ -1,4 +1,5 @@
 import type { Difficulty, PracticeMode } from "./types.js";
+import { t } from "../i18n.js";
 import { loadHistory, loadStats, HISTORY_KEY, type PracticeHistoryEntry } from "./store.js";
 
 export { appendHistory } from "./store.js";
@@ -20,7 +21,7 @@ function buildPracticeSparklineSVG(history: PracticeHistoryEntry[]): string {
   const groups: PracticeHistoryEntry[][] = [];
   for (let i = 0; i < recent.length; i += 10) groups.push(recent.slice(i, i + 10));
   if (groups.length < 4) {
-    return `<div class="progress-sparkline-empty">まだデータが足りません (${recent.length}問)</div>`;
+    return `<div class="progress-sparkline-empty">${t("practice.progress.notEnough", { n: recent.length })}</div>`;
   }
   const accs = groups.map((g) => g.filter((e) => e.ok).length / g.length);
   const W = 300;
@@ -40,7 +41,7 @@ function buildPracticeSparklineSVG(history: PracticeHistoryEntry[]): string {
   const lastX = pts[pts.length - 1]![0].toFixed(1);
   const areaStr = `${firstX},${(H - padBottom).toFixed(1)} ${lineStr} ${lastX},${(H - padBottom).toFixed(1)}`;
   return `
-    <svg class="progress-sparkline-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" width="100%" height="60" role="img" aria-label="直近の正解率推移">
+    <svg class="progress-sparkline-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" width="100%" height="60" role="img" aria-label="${t("practice.progress.sparklineAria")}">
       <polygon points="${areaStr}" style="fill: color-mix(in srgb, var(--accent) 22%, transparent); stroke: none;"></polygon>
       <polyline points="${lineStr}" style="fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round;"></polyline>
     </svg>
@@ -69,30 +70,30 @@ export function updatePracticeProgress(): void {
   const modeRows = (["callfold", "rp", "push"] as PracticeMode[]).map((m) => {
     const items = history.filter((e) => e.mode === m);
     const c = items.filter((e) => e.ok).length;
-    const t = items.length;
-    const label = m === "callfold" ? "コール/フォールド判定" : m === "rp" ? "RP 当て" : "push 判定";
-    return { label, c, t, acc: t > 0 ? c / t : null };
+    const total = items.length;
+    const label = m === "callfold" ? t("practice.progress.mode.callfold") : m === "rp" ? t("practice.progress.mode.rp") : t("practice.progress.mode.push");
+    return { label, c, t: total, acc: total > 0 ? c / total : null };
   });
 
   body.innerHTML = `
     <div class="progress-headline">
       <div class="progress-headline-item">
-        <div class="progress-headline-label">直近20問</div>
+        <div class="progress-headline-label">${t("practice.progress.recent20")}</div>
         <div class="progress-headline-value" style="color: ${progressAccColor(last20Acc)}">${progressFmtPct(last20Acc)}</div>
-        <div class="progress-headline-sub">${last20Correct}/${last20.length}問</div>
+        <div class="progress-headline-sub">${t("practice.progress.qCount", { c: last20Correct, t: last20.length })}</div>
       </div>
       <div class="progress-headline-item">
-        <div class="progress-headline-label">全期間</div>
+        <div class="progress-headline-label">${t("practice.progress.allTime")}</div>
         <div class="progress-headline-value" style="color: ${progressAccColor(overallAcc)}">${progressFmtPct(overallAcc)}</div>
-        <div class="progress-headline-sub">${stats.correct}/${stats.total}問</div>
+        <div class="progress-headline-sub">${t("practice.progress.qCount", { c: stats.correct, t: stats.total })}</div>
       </div>
     </div>
     <div class="progress-sparkline-wrap">
-      <div class="progress-block-title">推移 (直近100問・10問ごとの正解率)</div>
+      <div class="progress-block-title">${t("practice.progress.trendTitle")}</div>
       ${buildPracticeSparklineSVG(history)}
     </div>
     <div class="progress-block">
-      <div class="progress-block-title">難易度別</div>
+      <div class="progress-block-title">${t("practice.progress.byDiff")}</div>
       <div class="progress-breakdown-grid">
         ${diffRows.map((r) => `
           <div class="progress-breakdown-cell">
@@ -104,7 +105,7 @@ export function updatePracticeProgress(): void {
       </div>
     </div>
     <div class="progress-block">
-      <div class="progress-block-title">モード別</div>
+      <div class="progress-block-title">${t("practice.progress.byMode")}</div>
       <div class="progress-breakdown-grid">
         ${modeRows.map((r) => `
           <div class="progress-breakdown-cell">
@@ -115,7 +116,7 @@ export function updatePracticeProgress(): void {
         `).join("")}
       </div>
     </div>
-    <button id="practice-history-reset-btn" type="button" class="progress-reset-btn">🗑️ 履歴をリセット</button>
+    <button id="practice-history-reset-btn" type="button" class="progress-reset-btn">${t("practice.progress.resetBtn")}</button>
   `;
 }
 
@@ -125,7 +126,7 @@ export function initProgress(): void {
   document.getElementById("practice-progress")?.addEventListener("click", (e) => {
     const target = e.target as HTMLElement;
     if (!target.closest("#practice-history-reset-btn")) return;
-    if (confirm("練習履歴（成績の推移データ）をリセットしますか？\n※連続正解数・累計正解率・復習リストは変更されません。")) {
+    if (confirm(t("practice.progress.resetConfirm"))) {
       try { localStorage.removeItem(HISTORY_KEY); } catch { /* ignore */ }
       updatePracticeProgress();
     }

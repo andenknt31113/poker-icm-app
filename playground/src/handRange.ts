@@ -7,6 +7,7 @@ import {
 import { huEquity } from "./huEquityMatrix.js";
 import { equity } from "./equity.js";
 import { renderGrid } from "./grid.js";
+import { t } from "./i18n.js";
 import { $ } from "./dom.js";
 import {
   players,
@@ -169,13 +170,13 @@ export function renderRangeComparison(requiredEquity: number): void {
   const heroGridTitle = document.getElementById("hero-grid-title");
   const villainRangeLabel = document.getElementById("villain-range-label");
   if (direction === "callBack") {
-    if (villainGridTitle) villainGridTitle.textContent = "相手のpushレンジ 🔴";
-    if (heroGridTitle) heroGridTitle.textContent = "自分のcallレンジ 🟢";
-    if (villainRangeLabel) villainRangeLabel.textContent = "相手のpushレンジ";
+    if (villainGridTitle) villainGridTitle.textContent = t("hand.title.villainPush");
+    if (heroGridTitle) heroGridTitle.textContent = t("hand.title.heroCall");
+    if (villainRangeLabel) villainRangeLabel.textContent = t("hand.label.villainPush");
   } else {
-    if (villainGridTitle) villainGridTitle.textContent = "相手のcallレンジ 🟢";
-    if (heroGridTitle) heroGridTitle.textContent = "自分のpushレンジ 🔴";
-    if (villainRangeLabel) villainRangeLabel.textContent = "相手のcallレンジ";
+    if (villainGridTitle) villainGridTitle.textContent = t("hand.title.villainCall");
+    if (heroGridTitle) heroGridTitle.textContent = t("hand.title.heroPush");
+    if (villainRangeLabel) villainRangeLabel.textContent = t("hand.label.villainCall");
   }
 
   // 色ルール: push = 赤 (in-range-villain), call = 緑 (in-range-hero)
@@ -208,7 +209,12 @@ export function renderRangeComparison(requiredEquity: number): void {
       return "";
     });
     const callPct = ((callable / totalHands) * 100).toFixed(0);
-    callStats.innerHTML = `必要勝率 <strong>${(requiredEquity * 100).toFixed(1)}%</strong> 以上のハンド: <strong>${callable}</strong>個 (Top ${callPct}%) ／ ボーダーライン: ${marginal}個`;
+    callStats.innerHTML = t("hand.callStats.callBack", {
+      req: (requiredEquity * 100).toFixed(1),
+      callable,
+      callPct,
+      marginal,
+    });
   } else {
     // 逆算: 相手 call (villainRange) に対し自分が push +EV になるハンド
     const result = computePushBackRange(villainRange);
@@ -218,7 +224,12 @@ export function renderRangeComparison(requiredEquity: number): void {
       return "";
     });
     const pPct = ((result.pushRange.size / totalHands) * 100).toFixed(1);
-    callStats.innerHTML = `相手が call <strong>${((villainRange.size / totalHands) * 100).toFixed(0)}%</strong> してくる前提で、自分が push +EV のハンド: <strong>${result.pushRange.size}</strong>個 (${pPct}%) ／ ボーダー: ${result.marginal.size}個。<br />相手が call ワイドだと push を狭めるべき方向に動きます。`;
+    callStats.innerHTML = t("hand.callStats.pushBack", {
+      villainPct: ((villainRange.size / totalHands) * 100).toFixed(0),
+      n: result.pushRange.size,
+      pPct,
+      marginal: result.marginal.size,
+    });
   }
 
   // カスタムモードのカウント表示
@@ -249,7 +260,7 @@ export function updateHandPositionBanner(heroIndex: number): void {
   // direction で「caller」を決める
   const callerIndex = direction === "callBack" ? heroIndex : villainIndex;
   const callerPos = players[callerIndex]?.position;
-  const callerLabel = direction === "callBack" ? "hero (自分)" : "villain (相手)";
+  const callerLabel = direction === "callBack" ? t("hand.banner.callerLabel.hero") : t("hand.banner.callerLabel.villain");
   if (!callerPos) {
     banner.classList.add("hidden");
     return;
@@ -267,22 +278,19 @@ export function updateHandPositionBanner(heroIndex: number): void {
     .sort((a, b) => a.act - b.act);
   banner.classList.remove("hidden");
   if (behind.length === 0) {
-    banner.innerHTML = `
-      ℹ️ ${callerLabel}=<strong>${callerPos}</strong>。後ろにプレイヤーがいないので
-      HU all-in モデルは厳密に有効です。
-    `;
+    banner.innerHTML = t("hand.banner.noBehind.html", { label: callerLabel, pos: callerPos });
   } else {
     const list = behind.map((x) => `${x.pos} (${x.stack}BB)`).join(", ");
     const directionNote = direction === "callBack"
-      ? "ここで「call OK」と出ても実戦ではより硬い range で受けるべきです。"
-      : "ここで「push OK」と出ても実戦では over-call の可能性を加味してより硬い range で push するべきです。";
-    banner.innerHTML = `
-      ⚠ ${callerLabel}=<strong>${callerPos}</strong>。このセクションは
-      <strong>caller=BB (最終 actor)</strong> 想定の HU all-in モデルです。
-      ${callerLabel} の後ろに残ってる ${behind.length} 人 (${list}) の
-      <strong>over-call リスク</strong>は反映されません。
-      ${directionNote}
-    `;
+      ? t("hand.banner.note.callBack")
+      : t("hand.banner.note.pushBack");
+    banner.innerHTML = t("hand.banner.behind.html", {
+      label: callerLabel,
+      pos: callerPos,
+      n: behind.length,
+      list,
+      note: directionNote,
+    });
   }
 }
 
