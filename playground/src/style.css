@@ -3129,3 +3129,23 @@ footer a {
   display: none;
 }
 
+
+/* ===== ハンドレンジ比較: 判定バンド凡例 + タップ検分 ===== */
+.hand-grid-legend {
+  margin: 6px 0 2px;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.hand-cell-detail {
+  margin: 4px 0 2px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-deep);
+  font-size: 12px;
+}
+
+.hand-cell-detail.hidden {
+  display: none;
+}

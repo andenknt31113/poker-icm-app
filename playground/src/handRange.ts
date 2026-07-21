@@ -5,6 +5,7 @@ import {
   type HandNotation,
 } from "./handRanking.js";
 import { huEquity } from "./huEquityMatrix.js";
+import { comboCountVsHero } from "./rangeEquity.js";
 import { equity } from "./equity.js";
 import { renderGrid } from "./grid.js";
 import { t } from "./i18n.js";
@@ -116,31 +117,26 @@ function computePushBackRange(villainCallRange: Set<HandNotation>): PushBackResu
   const winEq = icmAt(baseStacks[heroIdx]! + matched + totalAnte, baseStacks[villainIdx]! - matched);
   const loseEq = icmAt(baseStacks[heroIdx]! - matched, baseStacks[villainIdx]! + matched + totalAnte);
 
-  // combo weight
-  const comboCount = (h: HandNotation): number => {
-    if (h.length === 2) return 6;
-    return h[2] === "s" ? 4 : 12;
-  };
-  let totalCombos = 0;
-  let callCombos = 0;
-  for (const h of ALL_169_HANDS) {
-    const c = comboCount(h);
-    totalCombos += c;
-    if (villainCallRange.has(h)) callCombos += c;
-  }
-  const foldRate = (totalCombos - callCombos) / totalCombos;
-
+  // コンボ重みは hero の実カードを考慮したカードリムーバル込みで数える
+  // (hero が A を持てば villain の AX コンボは減る → fold 率が上がる)。
   const pushRange = new Set<HandNotation>();
   const marginal = new Set<HandNotation>();
   for (const heroHand of ALL_169_HANDS) {
-    let evPush = foldRate * stealEq;
-    if (callCombos > 0) {
-      let sdSum = 0;
-      for (const v of villainCallRange) {
-        const w = comboCount(v);
+    let totalCombos = 0;
+    let callCombos = 0;
+    let sdSum = 0;
+    for (const v of ALL_169_HANDS) {
+      const w = comboCountVsHero(heroHand, v);
+      totalCombos += w;
+      if (villainCallRange.has(v)) {
+        callCombos += w;
         const heq = huEquity(heroHand, v);
         sdSum += w * (heq * winEq + (1 - heq) * loseEq);
       }
+    }
+    const foldRate = totalCombos > 0 ? (totalCombos - callCombos) / totalCombos : 1;
+    let evPush = foldRate * stealEq;
+    if (callCombos > 0 && totalCombos > 0) {
       evPush += sdSum / totalCombos;
     }
     const margin = evPush - foldEq;
@@ -150,6 +146,40 @@ function computePushBackRange(villainCallRange: Set<HandNotation>): PushBackResu
     else if (norm >= -0.003) marginal.add(heroHand);
   }
   return { pushRange, marginal };
+}
+
+// ボーダー判定バンド幅 (±2pt)。equity の MC 誤差 (±0.3pt 程度) と
+// 「相手のレンジ想定そのもののズレ」を考慮した五分圏として扱う。
+const MARGINAL_BAND = 0.02;
+
+// タップで数値検分中のハンド (callBack 方向のみ)。
+let inspectedHand: HandNotation | null = null;
+
+/** 検分中ハンドの数値詳細 (勝率/必要勝率/差分/判定) を #hand-cell-detail に表示する。 */
+function renderInspectDetail(villainRange: Set<HandNotation>, requiredEquity: number): void {
+  const el = document.getElementById("hand-cell-detail");
+  if (!el) return;
+  if (!inspectedHand || direction !== "callBack") {
+    el.classList.add("hidden");
+    el.innerHTML = "";
+    return;
+  }
+  const eq = equity(inspectedHand, villainRange);
+  const margin = (eq - requiredEquity) * 100;
+  const verdict =
+    margin >= MARGINAL_BAND * 100
+      ? t("hand.inspect.verdict.call")
+      : margin > -MARGINAL_BAND * 100
+        ? t("hand.inspect.verdict.marginal")
+        : t("hand.inspect.verdict.fold");
+  el.classList.remove("hidden");
+  el.innerHTML = t("hand.inspect.detail.html", {
+    hand: inspectedHand,
+    eq: (eq * 100).toFixed(1),
+    req: (requiredEquity * 100).toFixed(1),
+    margin: `${margin >= 0 ? "+" : ""}${margin.toFixed(1)}`,
+    verdict,
+  });
 }
 
 export function renderRangeComparison(requiredEquity: number): void {
@@ -192,21 +222,26 @@ export function renderRangeComparison(requiredEquity: number): void {
   const totalHands = ALL_169_HANDS.length;
 
   if (direction === "callBack") {
-    // 既存ロジック: 相手 push に対し自分 call できるハンド
+    // 相手 push に対し自分 call できるハンド。
+    // 判定バンドは必要勝率 ±2pt の対称バンド:
+    //   margin >= +2pt   → 緑 (明確なコール)
+    //   |margin| < 2pt   → 黄 (ボーダー: MC 誤差 ±0.3pt とレンジ想定のズレを考慮した五分圏)
+    //   margin <= -2pt   → 無色 (明確なフォールド)
     let callable = 0;
     let marginal = 0;
     renderGrid(heroGrid, (hand) => {
       const eq = equity(hand, villainRange);
       const margin = eq - requiredEquity;
-      if (margin >= 0.03) {
+      let cls = "";
+      if (margin >= MARGINAL_BAND) {
         callable++;
-        return heroPushClass;
-      }
-      if (margin >= -0.02) {
+        cls = heroPushClass;
+      } else if (margin > -MARGINAL_BAND) {
         marginal++;
-        return "marginal";
+        cls = "marginal";
       }
-      return "";
+      if (hand === inspectedHand) cls += " picked";
+      return cls;
     });
     const callPct = ((callable / totalHands) * 100).toFixed(0);
     callStats.innerHTML = t("hand.callStats.callBack", {
@@ -215,6 +250,7 @@ export function renderRangeComparison(requiredEquity: number): void {
       callPct,
       marginal,
     });
+    renderInspectDetail(villainRange, requiredEquity);
   } else {
     // 逆算: 相手 call (villainRange) に対し自分が push +EV になるハンド
     const result = computePushBackRange(villainRange);
@@ -420,6 +456,15 @@ export function initHandRange(onChange: () => void): void {
       onChange();
     });
   }
+
+  // hero グリッド (call レンジ側) タップで数値検分。もう一度同じセルで解除。
+  heroGrid.addEventListener("click", (e) => {
+    if (direction !== "callBack") return;
+    const cell = (e.target as HTMLElement).closest<HTMLDivElement>(".hand-cell");
+    if (!cell || !cell.title) return;
+    inspectedHand = inspectedHand === cell.title ? null : (cell.title as HandNotation);
+    onChange();
+  });
 
   // pushRangeInput の変更は再計算トリガー
   pushRangeInput.addEventListener("input", onChange);
