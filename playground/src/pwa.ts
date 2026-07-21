@@ -180,6 +180,10 @@ function isStandaloneDisplay(): boolean {
 }
 
 function initInstallPrompt(): void {
+  // Capacitor (ネイティブアプリ) 内では「ホーム画面に追加」の概念自体が無意味。
+  // UA に iPhone を含むため iOS Safari 向け案内バナーが誤表示されるのを防ぐ
+  // (エージェント自己申告の抜けを fable レビューで補完)。
+  if (isCapacitorNative()) return;
   if (isStandaloneDisplay()) return;
 
   let deferredInstallPrompt: BeforeInstallPromptEvent | null = null;
