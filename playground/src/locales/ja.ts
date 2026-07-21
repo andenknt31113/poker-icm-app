@@ -84,6 +84,8 @@ export const ja: Record<string, string> = {
   "result.bf.matrixTitle": "全員 vs 全員 BF マップ 🆕",
   "result.bf.matrixHint.html": "\n          縦軸 = Hero（自分）、横軸 = Villain（相手）。\n          上段=1:1ポット時のRisk Premium、下段=BF値。\n        ",
   "result.bf.howto.summary": "📖 表の見方（クリックで展開）",
+  "result.bf.howto.body.html":
+    "\n            <h4>1. 各セルの数字</h4>\n            <p><strong>下段の BF（Bubble Factor）</strong>がメイン指標。</p>\n            <ul>\n              <li><strong>1.00</strong> = チップ ⇄ $ がリニア（ICM圧ゼロ）</li>\n              <li><strong>1.16</strong> = チップ100失う痛さ ＝ チップ86を取る嬉しさ。<strong>16%余分にタイト</strong>に打つべき</li>\n              <li><strong>1.41</strong> = チップ100失う痛さ ＝ チップ71を取る嬉しさ。<strong>41%余分にタイト</strong>に打つべき（やばい）</li>\n            </ul>\n            <p><strong>上段の Risk Premium</strong>は、コール額＝ポット（1:1オッズ）の時に cEVより何%余分に勝率が必要か。たとえば +8.5% なら「コインフリップ（50%）でも実は 58.5% 勝てないとコール NG」。</p>\n            <h4>2. 色の意味</h4>\n            <ul>\n              <li>🟢 <strong>濃い緑</strong> (BF &lt; 0.85): ICM追い風、広くコール可</li>\n              <li>🟢 緑 (0.85〜1.0): やや有利</li>\n              <li>🟡 黄緑〜黄 (1.0〜1.1): 中立、ほぼ cEV 通り</li>\n              <li>🟠 オレンジ (1.1〜1.25): ICM圧、タイトに</li>\n              <li>🔴 赤 (&gt; 1.25): 超危険、プレミア限定</li>\n            </ul>\n            <h4>3. 戦略的な読み方</h4>\n            <ul>\n              <li><strong>赤いセル</strong>の相手が絡んできたら → 降りる方向にウェイト</li>\n              <li><strong>緑のセル</strong>の相手 → ややルース寄せOK</li>\n              <li><strong>自分が最短スタック</strong>の行は全体的にBFが低い（=失うものが少ない）→ 比較的気楽に勝負できる</li>\n              <li><strong>チップリーダー対 2番手</strong>のセルは BF が跳ね上がる → リーダー同士の絡みは慎重に</li>\n              <li><strong>中堅スタック</strong>がリーダーに絡まれた時が最もタイトに打つべき場面（典型的な ICM プレッシャー）</li>\n            </ul>\n            <h4>4. 実戦での使い方</h4>\n            <ol>\n              <li>テーブル着席後、全員のスタックを入力</li>\n              <li>左端の<strong>自分の行</strong>を見て「誰に対してタイト/ルース打つべきか」を把握</li>\n              <li>ハンド中に「あれ、この相手ヤバい？」となったら該当セルを確認</li>\n            </ol>\n            <p class=\"howto-note\">※ 表は左右対称ではない（hero/villain入れ替えると BF が微妙に違う）。これはコール側がリスクを取るためで、他プレイヤーの分布によって非対称になる。</p>\n          ",
   "result.bf.scrollHint": "→ 横にスクロール",
 
   // ===== index.html: 計算結果 - 必要勝率 =====
@@ -260,7 +262,6 @@ export const ja: Record<string, string> = {
               <li>「ICM エクイティ」表で各プレイヤーの $ 価値を確認</li>
               <li>「全員 vs 全員 BF マップ」で 🎯 vs ⚔️ のセルを確認</li>
               <li>コール額/純利得は🎯⚔️から自動算出（手動編集した後は「🔄 自動算出に戻す」で戻せる）</li>
-              <li>「🃏 ハンド別判定」で相手レンジを選び、自分のハンドをタップして個別に call/fold を確認</li>
             </ol>
           </div>
         </details>
@@ -496,8 +497,6 @@ export const ja: Record<string, string> = {
   // ===== 警告 (calculator.ts) =====
   "calc.warn.position.html": "\n      ⚠ <strong>ポジション逆転</strong>: 行動順は <code>{heroPos}({heroAct}) → {villainPos}({villainAct})</code>。\n      実戦では <strong>hero ({heroPos}) が先に行動</strong>するため、villain ({villainPos}) の open push に対して call することはあり得ません。\n      (call 計算は math 上は動きますが、ポジを入れ替える方が現実的)\n    ",
   "calc.warn.depth.html": "\n    ⚠️ 実効 {eff}bb: この深さでは push/fold 以外の選択肢\n    (小さいオープンやコール) が現実的です。本ツールの計算はオールイン前提です。\n  ",
-
-  // ===== ハンド別判定 (calculator.ts renderHandVerdict) =====
 
   // ===== 用語解説モーダル (calculator.ts INFO_TEXTS) =====
   "info.icm.title": "ICM (Independent Chip Model)",
