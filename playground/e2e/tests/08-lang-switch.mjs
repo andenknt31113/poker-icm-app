@@ -10,7 +10,7 @@ async function textOf(page, sel) {
 }
 
 export default async function testLangSwitch({ baseURL, createContext }) {
-  const context = await createContext({ tutorialDone: true });
+  const context = await createContext({ tutorialDone: true, pro: true });
   try {
     const page = await context.newPage();
     const errors = attachErrorCollector(page, "lang-switch");

@@ -727,4 +727,18 @@ export const en: Record<string, string> = {
 
   // ===== 規約モーダル: EN モード時のみ表示する注記 (guide.ts, Phase B) =====
   "legal.enOnlyNote": "The terms below are currently available in Japanese only.",
+
+  // ===== ペイウォール (freemium ゲート, paywall.ts) =====
+  "paywall.title": "🔓 Recreate your own table",
+  "paywall.lead": "With Pro, recreate your exact table and analyze it.",
+  "paywall.feature.editStacks": "Edit stacks freely",
+  "paywall.feature.replay": "Recreate and analyze real hands",
+  "paywall.feature.save": "Save scenarios and reload them anytime",
+  "paywall.price": "Price: {price}",
+  "paywall.cta.upgrade": "Upgrade to Pro",
+  "paywall.cta.restore": "Restore purchases",
+  "paywall.web.note": "This feature is available in the app version.",
+  "paywall.close.aria": "Close",
+  "paywall.comingSoon": "Coming soon",
+  "paywall.lock.title": "Pro feature",
 };

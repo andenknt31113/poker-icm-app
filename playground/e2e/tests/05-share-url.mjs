@@ -11,7 +11,7 @@ import { attachErrorCollector, assertNoErrors } from "../lib/context.mjs";
 const FTBUBBLE_PLAYER_COUNT = 4;
 
 export default async function testShareUrl({ baseURL, createContext }) {
-  const context1 = await createContext({ tutorialDone: true });
+  const context1 = await createContext({ tutorialDone: true, pro: true });
   try {
     const page1 = await context1.newPage();
     const errors1 = attachErrorCollector(page1, "share-url:source");
@@ -28,7 +28,7 @@ export default async function testShareUrl({ baseURL, createContext }) {
 
     assertNoErrors(errors1, "共有URL生成 (元コンテキスト)");
 
-    const context2 = await createContext({ tutorialDone: true });
+    const context2 = await createContext({ tutorialDone: true, pro: true });
     try {
       const page2 = await context2.newPage();
       const errors2 = attachErrorCollector(page2, "share-url:restored");

@@ -7,7 +7,7 @@
 import { attachErrorCollector, assertNoErrors } from "../lib/context.mjs";
 
 export default async function testTutorialIntro({ baseURL, createContext }) {
-  const context = await createContext({ tutorialDone: false });
+  const context = await createContext({ tutorialDone: false, pro: true });
   try {
     const page = await context.newPage();
     const errors = attachErrorCollector(page, "tutorial-intro");

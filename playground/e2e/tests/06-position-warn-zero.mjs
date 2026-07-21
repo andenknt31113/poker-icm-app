@@ -23,7 +23,7 @@ async function isPositionWarnHidden(page) {
 }
 
 export default async function testPositionWarnZero({ baseURL, createContext }) {
-  const context = await createContext({ tutorialDone: true });
+  const context = await createContext({ tutorialDone: true, pro: true });
   try {
     const page = await context.newPage();
     const errors = attachErrorCollector(page, "position-warn-zero");

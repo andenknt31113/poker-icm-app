@@ -3150,3 +3150,104 @@ footer a {
 .hv-grid-wrap {
   margin-top: 6px;
 }
+
+/* ===== freemium ロック (Pro ゲート) ===== */
+/* ロックされたスタック/ペイ金額入力: readonly のまま、タップでペイウォールが出る
+   ことを示唆する見た目 (薄く・カーソルはポインタ)。 */
+.player-stack.locked-pro,
+.payout-amount.locked-pro {
+  cursor: pointer;
+  opacity: 0.8;
+}
+/* 入力欄の隣に出す 🔒 バッジ。 */
+.lock-badge {
+  font-size: 12px;
+  opacity: 0.75;
+  flex-shrink: 0;
+  user-select: none;
+}
+/* ロックされたボタン (追加/ランダム化/保存/ペイプリセット) に 🔒 を付す。
+   remove ボタン (✕) には付けない。 */
+.add-btn.locked-pro::after,
+.save-btn.locked-pro::after,
+.presets:not(.saved) button.locked-pro::after {
+  content: " 🔒";
+  font-size: 0.9em;
+  opacity: 0.8;
+}
+
+/* ===== ペイウォール モーダル (.guide-modal トーンを踏襲) ===== */
+.paywall-lead {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--text);
+}
+.paywall-features {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.paywall-features li {
+  position: relative;
+  padding-left: 24px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.paywall-features li::before {
+  content: "✓";
+  position: absolute;
+  left: 4px;
+  color: var(--accent);
+  font-weight: 700;
+}
+.paywall-price {
+  margin: 0 0 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+}
+.paywall-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
+}
+.paywall-restore {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 6px 2px;
+  font-family: inherit;
+}
+.paywall-web-note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+  padding: 8px 4px;
+}
+
+/* 「準備中」トースト (画面下部中央) */
+.paywall-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(88px + env(safe-area-inset-bottom, 0));
+  transform: translateX(-50%);
+  z-index: 400;
+  background: var(--accent);
+  color: #000;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+.paywall-toast.hidden {
+  display: none;
+}

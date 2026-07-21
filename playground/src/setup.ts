@@ -2,6 +2,8 @@ import { MAX_PLAYERS } from "@poker-icm/core";
 import { t as tr } from "./i18n.js";
 import { $ } from "./dom.js";
 import { isCapacitorNative } from "./capacitorEnv.js";
+import { isPro } from "./entitlement.js";
+import { openPaywall } from "./paywall.js";
 import { recompute, setCallManualOverride } from "./calculator.js";
 import {
   players,
@@ -33,6 +35,8 @@ const randomizeStacksBtn = $<HTMLButtonElement>("randomize-stacks");
 
 export function renderPlayers(): void {
   playersList.innerHTML = "";
+  // freemium: 無料時はスタック編集をロック (readonly + 🔒)。役割/ポジションは無料のまま。
+  const locked = !isPro();
   const validPositions: Position[] = ["", ...positionsForN(players.length)];
   players.forEach((p, i) => {
     const row = document.createElement("div");
@@ -45,20 +49,23 @@ export function renderPlayers(): void {
       .join("");
     row.innerHTML = `
       <span class="player-num">#${i + 1}</span>
-      <input type="number" inputmode="decimal" class="player-stack" min="0" step="1" value="${p.stack}" data-id="${p.id}" />
-      <span class="player-unit">BB</span>
+      <input type="number" inputmode="decimal" class="player-stack${locked ? " locked-pro" : ""}" min="0" step="1" value="${p.stack}" data-id="${p.id}"${locked ? " readonly" : ""} />
+      ${locked ? `<span class="lock-badge" aria-hidden="true" title="${tr("paywall.lock.title")}">🔒</span>` : `<span class="player-unit">BB</span>`}
       <select class="player-pos" data-id="${p.id}" title="${tr("setup.player.pos.title")}">${posOptions}</select>
       <div class="player-roles" data-id="${p.id}">
         <button type="button" class="role-btn ${p.role === "hero" ? "active hero" : ""}" data-role="hero" title="${tr("setup.player.role.hero")}">🎯</button>
         <button type="button" class="role-btn ${p.role === "villain" ? "active villain" : ""}" data-role="villain" title="${tr("setup.player.role.villain")}">⚔️</button>
         <button type="button" class="role-btn ${p.role === "other" ? "active" : ""}" data-role="other" title="${tr("setup.player.role.other")}">${tr("setup.player.role.otherText")}</button>
       </div>
-      <button type="button" class="player-remove" data-id="${p.id}" title="${tr("setup.common.delete")}" ${players.length <= 2 ? "disabled" : ""}>✕</button>
+      <button type="button" class="player-remove${locked ? " locked-pro" : ""}" data-id="${p.id}" title="${tr("setup.common.delete")}" ${!locked && players.length <= 2 ? "disabled" : ""}>✕</button>
     `;
     playersList.appendChild(row);
   });
 
-  addPlayerBtn.disabled = players.length >= MAX_PLAYERS;
+  addPlayerBtn.classList.toggle("locked-pro", locked);
+  randomizeStacksBtn.classList.toggle("locked-pro", locked);
+  // Pro 時のみ MAX で disable。無料時は disable せず、押下でペイウォールを出す。
+  addPlayerBtn.disabled = !locked && players.length >= MAX_PLAYERS;
   addPlayerBtn.textContent =
     players.length >= MAX_PLAYERS
       ? tr("setup.players.addMax", { n: MAX_PLAYERS })
@@ -380,17 +387,22 @@ function syncPayoutsInput(): void {
 
 function renderPayouts(): void {
   payoutsList.innerHTML = "";
+  // freemium: 無料時はペイ構造の手編集をロック (readonly + 🔒)。
+  // シナリオプリセット適用によるペイ変更 (setPayouts 経由) は許可 (プログラム的な差し替え)。
+  const locked = !isPro();
   payoutsArr.forEach((amt, i) => {
     const row = document.createElement("div");
     row.className = "payout-row";
     row.innerHTML = `
       <span class="payout-num">${tr("setup.payout.rank", { n: i + 1 })}</span>
-      <input type="number" inputmode="decimal" class="payout-amount" min="0" step="0.5" value="${amt}" data-i="${i}" />
-      <button type="button" class="payout-remove" data-i="${i}" title="${tr("setup.common.delete")}" ${payoutsArr.length <= 1 ? "disabled" : ""}>✕</button>
+      <input type="number" inputmode="decimal" class="payout-amount${locked ? " locked-pro" : ""}" min="0" step="0.5" value="${amt}" data-i="${i}"${locked ? " readonly" : ""} />
+      ${locked ? `<span class="lock-badge" aria-hidden="true" title="${tr("paywall.lock.title")}">🔒</span>` : ""}
+      <button type="button" class="payout-remove${locked ? " locked-pro" : ""}" data-i="${i}" title="${tr("setup.common.delete")}" ${!locked && payoutsArr.length <= 1 ? "disabled" : ""}>✕</button>
     `;
     payoutsList.appendChild(row);
   });
-  addPayoutBtn.disabled = payoutsArr.length >= MAX_PAYOUTS;
+  addPayoutBtn.classList.toggle("locked-pro", locked);
+  addPayoutBtn.disabled = !locked && payoutsArr.length >= MAX_PAYOUTS;
 }
 
 export function setPayouts(values: number[]): void {
@@ -614,14 +626,29 @@ export function initSetup(): void {
     }
     const remove = t.closest<HTMLButtonElement>(".player-remove");
     if (remove) {
+      if (!isPro()) {
+        openPaywall();
+        return;
+      }
       const id = Number(remove.dataset.id);
       if (Number.isFinite(id)) removePlayer(id);
+    }
+  });
+
+  // freemium: ロック中のスタック入力はタップ/フォーカスでペイウォールを出す
+  // (readonly なので値は変えられないが、能動的にアップグレード導線を見せる)。
+  playersList.addEventListener("focusin", (e) => {
+    const el = e.target as HTMLElement;
+    if (el.classList.contains("player-stack") && !isPro()) {
+      (el as HTMLInputElement).blur();
+      openPaywall();
     }
   });
 
   playersList.addEventListener("input", (e) => {
     const t = e.target as HTMLInputElement;
     if (!t.classList.contains("player-stack")) return;
+    if (!isPro()) return; // readonly のはずだが二重ガード
     const id = Number(t.dataset.id);
     if (Number.isFinite(id)) updateStack(id, Number(t.value));
   });
@@ -633,8 +660,14 @@ export function initSetup(): void {
     if (Number.isFinite(id)) setPosition(id, t.value as Position);
   });
 
-  addPlayerBtn.addEventListener("click", addPlayer);
-  randomizeStacksBtn.addEventListener("click", randomizeStacks);
+  addPlayerBtn.addEventListener("click", () => {
+    if (!isPro()) return openPaywall();
+    addPlayer();
+  });
+  randomizeStacksBtn.addEventListener("click", () => {
+    if (!isPro()) return openPaywall();
+    randomizeStacks();
+  });
 
   document.querySelectorAll<HTMLButtonElement>(".scenario-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -644,7 +677,9 @@ export function initSetup(): void {
   });
 
   const saveScenarioBtn = document.getElementById("save-scenario-btn") as HTMLButtonElement | null;
+  saveScenarioBtn?.classList.toggle("locked-pro", !isPro());
   saveScenarioBtn?.addEventListener("click", () => {
+    if (!isPro()) return openPaywall();
     const name = window.prompt(tr("setup.prompt.scenarioName"), "");
     if (!name) return;
     const list = loadUserScenarios();
@@ -691,9 +726,19 @@ export function initSetup(): void {
 
   renderUserScenarios();
 
+  // freemium: ロック中のペイ金額入力はタップ/フォーカスでペイウォール。
+  payoutsList.addEventListener("focusin", (e) => {
+    const el = e.target as HTMLElement;
+    if (el.classList.contains("payout-amount") && !isPro()) {
+      (el as HTMLInputElement).blur();
+      openPaywall();
+    }
+  });
+
   payoutsList.addEventListener("input", (e) => {
     const t = e.target as HTMLInputElement;
     if (!t.classList.contains("payout-amount")) return;
+    if (!isPro()) return; // readonly のはずだが二重ガード
     const i = Number(t.dataset.i);
     const v = Number(t.value);
     if (Number.isFinite(i) && i >= 0 && i < payoutsArr.length) {
@@ -706,7 +751,12 @@ export function initSetup(): void {
   payoutsList.addEventListener("click", (e) => {
     const t = e.target as HTMLElement;
     const remove = t.closest<HTMLButtonElement>(".payout-remove");
-    if (remove && payoutsArr.length > 1) {
+    if (!remove) return;
+    if (!isPro()) {
+      openPaywall();
+      return;
+    }
+    if (payoutsArr.length > 1) {
       const i = Number(remove.dataset.i);
       if (Number.isFinite(i) && i >= 0 && i < payoutsArr.length) {
         payoutsArr.splice(i, 1);
@@ -718,6 +768,7 @@ export function initSetup(): void {
   });
 
   addPayoutBtn.addEventListener("click", () => {
+    if (!isPro()) return openPaywall();
     if (payoutsArr.length >= MAX_PAYOUTS) return;
     payoutsArr.push(0);
     syncPayoutsInput();
@@ -727,10 +778,14 @@ export function initSetup(): void {
 
   renderPayouts();
 
+  // ペイプリセットピル (Top3/Top2/WTA 等) は「ペイ構造の編集」に含まれるためロック。
+  // (シナリオプリセットの scenario-btn は無料。こちらは payout プリセットのみ。)
   document
     .querySelectorAll<HTMLButtonElement>(".presets:not(.saved) button")
     .forEach((btn) => {
+      btn.classList.toggle("locked-pro", !isPro());
       btn.addEventListener("click", () => {
+        if (!isPro()) return openPaywall();
         const v = btn.dataset.preset;
         if (v) setPayouts(parseList(v));
       });
@@ -740,6 +795,10 @@ export function initSetup(): void {
     const t = e.target as HTMLElement;
     const wrap = t.closest<HTMLSpanElement>(".saved-preset");
     if (!wrap) return;
+    if (!isPro()) {
+      openPaywall();
+      return;
+    }
     const idx = Number(wrap.dataset.i);
     const list = loadSavedPayouts();
     if (t.classList.contains("del")) {
@@ -753,7 +812,9 @@ export function initSetup(): void {
     }
   });
 
+  savePayoutBtn.classList.toggle("locked-pro", !isPro());
   savePayoutBtn.addEventListener("click", () => {
+    if (!isPro()) return openPaywall();
     const value = payoutsInput.value.trim();
     if (!value) return;
     const name = window.prompt(

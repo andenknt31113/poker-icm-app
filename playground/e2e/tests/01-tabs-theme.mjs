@@ -20,7 +20,7 @@ const TAB_READY_SELECTOR = {
 
 export default async function testTabsTheme({ baseURL, createContext }) {
   for (const theme of ["dark", "light"]) {
-    const context = await createContext({ theme, tutorialDone: true });
+    const context = await createContext({ theme, tutorialDone: true, pro: true });
     try {
       const page = await context.newPage();
       const errors = attachErrorCollector(page, `theme=${theme}`);
