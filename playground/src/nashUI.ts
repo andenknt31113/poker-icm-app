@@ -1,6 +1,7 @@
 import { solveHUNash } from "@poker-icm/core";
 import { ALL_169_HANDS, handAt, type HandNotation } from "./handRanking.js";
 import { huEquity, hasHUMatrix } from "./huEquityMatrix.js";
+import { comboCountVsHero } from "./rangeEquity.js";
 import { renderGrid } from "./grid.js";
 import { t } from "./i18n.js";
 import { $ } from "./dom.js";
@@ -197,8 +198,10 @@ function runNash(): void {
         ante,
         huEquity,
         allHands: ALL_169_HANDS,
-        maxIterations: 2000,
-        convergenceTolerance: 0.0005,
+        // カードリムーバル込みのコンボ重みで best response を厳密化（被搾取度を低減）。
+        comboWeight: comboCountVsHero,
+        maxIterations: 500,
+        convergenceTolerance: 0.001,
       });
       const elapsedMs = performance.now() - t0;
 

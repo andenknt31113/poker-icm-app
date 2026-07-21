@@ -13,7 +13,7 @@ export type {
   PushDecisionInput,
   PushDecisionResult,
 } from "./pushDecision.js";
-export { solveHUNash } from "./nash.js";
+export { solveHUNash, huNashExploitability } from "./nash.js";
 export type {
   BubbleFactorInput,
   BubbleFactorResult,
@@ -23,4 +23,10 @@ export type {
   RequiredEquityResult,
   Stacks,
 } from "./types.js";
-export type { HUNashInput, HUNashResult, HandLabel } from "./nash.js";
+export type {
+  HUNashInput,
+  HUNashResult,
+  HandLabel,
+  ComboWeightFn,
+  ExploitabilityResult,
+} from "./nash.js";
