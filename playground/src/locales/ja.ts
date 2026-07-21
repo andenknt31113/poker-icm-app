@@ -722,4 +722,8 @@ export const ja: Record<string, string> = {
   "paywall.close.aria": "閉じる",
   "paywall.comingSoon": "準備中です",
   "paywall.lock.title": "Pro 機能です",
+  "paywall.purchase.success": "Pro にアップグレードしました",
+  "paywall.restore.success": "購入を復元しました",
+  "paywall.restore.notFound": "復元できる購入が見つかりませんでした",
+  "paywall.error": "処理に失敗しました。時間をおいて再度お試しください",
 };
