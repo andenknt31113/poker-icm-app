@@ -14,10 +14,15 @@ export const $ = <T extends HTMLElement>(id: string): T => {
 export function initNumberInputAutoSelect(): void {
   document.addEventListener("focusin", (e) => {
     const target = e.target;
-    if (target instanceof HTMLInputElement && target.type === "number") {
+    if (target instanceof HTMLInputElement && target.type === "number" && !target.readOnly) {
       // フォーカス直後は一部モバイルブラウザでカーソル位置確定前に select() が
       // 効かないことがあるため、次フレームまで遅延させる。
-      requestAnimationFrame(() => target.select());
+      // 注意: select() はフォーカスを失った input を再フォーカスさせるため、
+      // 遅延中に blur された場合 (freemium のロック入力など) は実行しない。
+      // これを怠ると blur → select() → focusin → blur… の無限ループになる。
+      requestAnimationFrame(() => {
+        if (document.activeElement === target) target.select();
+      });
     }
   });
 }

@@ -637,6 +637,16 @@ export function initSetup(): void {
 
   // freemium: ロック中のスタック入力はタップ/フォーカスでペイウォールを出す
   // (readonly なので値は変えられないが、能動的にアップグレード導線を見せる)。
+  // pointerdown + preventDefault でそもそもフォーカスさせない (モバイルで
+  // フォーカス起点の副作用ループやキーボード表示を防ぐ)。focusin は
+  // キーボード操作 (Tab 移動) 向けのフォールバック。
+  playersList.addEventListener("pointerdown", (e) => {
+    const el = e.target as HTMLElement;
+    if (el.classList.contains("player-stack") && !isPro()) {
+      e.preventDefault();
+      openPaywall();
+    }
+  });
   playersList.addEventListener("focusin", (e) => {
     const el = e.target as HTMLElement;
     if (el.classList.contains("player-stack") && !isPro()) {
@@ -727,6 +737,14 @@ export function initSetup(): void {
   renderUserScenarios();
 
   // freemium: ロック中のペイ金額入力はタップ/フォーカスでペイウォール。
+  // (スタック入力と同じく pointerdown で先取りし、focusin はフォールバック。)
+  payoutsList.addEventListener("pointerdown", (e) => {
+    const el = e.target as HTMLElement;
+    if (el.classList.contains("payout-amount") && !isPro()) {
+      e.preventDefault();
+      openPaywall();
+    }
+  });
   payoutsList.addEventListener("focusin", (e) => {
     const el = e.target as HTMLElement;
     if (el.classList.contains("payout-amount") && !isPro()) {
