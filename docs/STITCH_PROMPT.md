@@ -30,7 +30,7 @@ DESIGN SYSTEM (apply consistently):
   text + small 3px bar at top of the tab.
   Tabs: ⚙️セットアップ / 📊計算結果 / 🃏ハンド比較 / 🎯ナッシュ均衡 / 🎲練習
 - Header: "🎰 Poker ICM/BF" centered, round icon buttons right: ❓ help,
-  🔗 share, 🌙 theme toggle.
+  EN language toggle. (Dark theme only — no theme switcher.)
 ```
 
 ---
@@ -178,8 +178,6 @@ Screen: Setup tab, latest version.
   🎯自分 / ⚔️相手 toggle chips (cyan/red borders when active). Buttons:
   + プレイヤー追加, 🎲 スタックをランダム化.
 - Card 3 ペイ構造: rank rows (1st/2nd/3rd + %), preset pills, saved payouts.
-- Card 4 📝 メモ textarea.
-- Full-width glowing primary "🔗 シナリオを URL で共有".
 ```
 
 ### A-10. PWA 系バナー（インストール導線・オフライン）
@@ -197,17 +195,6 @@ All must feel native to the dark cyan design system, non-intrusive.
 ---
 
 ## B. バリエーション・改善イテレーション用
-
-### B-1. ライトモード一式
-
-```
-Take the current screen and create a LIGHT theme variation:
-bg #F5F7FA, cards #FFFFFF, borders #D4DAE1, text #1A2027, muted #6B7280,
-accent #0288D1, good #2E7D32, warn #EF6C00, bad #C62828.
-Keep ALL layout identical. Inset input shadows become much subtler; glows
-become soft colored shadows. Playing cards stay white with a visible border.
-Check number legibility in JetBrains Mono at small sizes.
-```
 
 ### B-2. 情報密度チューニング（上級者向け）
 
