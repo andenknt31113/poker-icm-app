@@ -70,7 +70,7 @@ async function main() {
       run: () => testLangSwitch({ baseURL, createContext }),
     },
     {
-      name: "freemium(無料): スタックreadonly / 追加でペイウォール / 結果閲覧可 / 役割変更可 / 共有URL閲覧可 / ペイウォール日英",
+      name: "freemium(無料): スタックreadonly / 追加でペイウォール / 結果閲覧可 / 役割変更可 / ペイウォール日英",
       run: () => testFreemiumGate({ baseURL, createContext }),
     },
   ];

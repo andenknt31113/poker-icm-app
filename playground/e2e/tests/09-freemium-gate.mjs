@@ -1,5 +1,5 @@
 // 9. freemium ゲート (無料状態): スタック readonly / 追加でペイウォール /
-//    プリセット計算結果は閲覧可 / 役割変更は可 / 共有URL閲覧可 / ペイウォール日英表示。
+//    プリセット計算結果は閲覧可 / 役割変更は可 / ペイウォール日英表示。
 //
 // このテストだけ pro フラグを立てない (= 無料状態) で走らせる。他の回帰テストは
 // { pro: true } (ロック解除 = 現行挙動) で走る。
@@ -51,45 +51,19 @@ export default async function testFreemiumGate({ baseURL, createContext }) {
     if (!roleActive) throw new Error("無料時に役割 (hero) の付け替えができていない");
 
     // ③ シナリオプリセット適用 → 計算結果タブで全結果が閲覧できる
+    // (ハンド別判定パネルと URL 共有は製品判断で廃止済みのため、
+    //  BF マトリクスと必要勝率フローの閲覧可否で確認する)
     await page.click('.scenario-btn[data-scenario="ftBubble"]');
     await page.click('.tab-btn[data-tab="result"]');
-    await page.waitForSelector("#hv-grid .hand-cell", { state: "visible" });
-    await page.click('#hv-grid .hand-cell[title="AKs"]');
-    await page.waitForSelector("#hv-banner:not(.hidden)", { state: "visible" });
-    const bannerText = await page.textContent("#hv-banner");
-    if (!bannerText || !bannerText.includes("AKs")) {
-      throw new Error(`無料時に計算結果 (ハンド判定バナー) が閲覧できない: "${bannerText}"`);
+    await page.waitForSelector("#bf-matrix .bf-cell", { state: "visible" });
+    const bfCells = await page.$$eval("#bf-matrix .bf-cell", (els) => els.length);
+    if (bfCells < 12) {
+      throw new Error(`無料時に BF マトリクスが閲覧できない (セル数 ${bfCells})`);
     }
-
-    // ⑤ 共有URLで開いたシナリオが (無料でも) 閲覧できる
-    await page.click('.tab-btn[data-tab="setup"]');
-    await page.click("#share-url-btn-top");
-    await page.waitForSelector("#share-toast-url-input", { state: "visible" });
-    const sharedUrl = await page.getAttribute("#share-toast-url-input", "value");
-    if (!sharedUrl || !sharedUrl.includes("#s=")) {
-      throw new Error(`共有URLの生成に失敗: "${sharedUrl}"`);
-    }
-
-    const context2 = await createContext({ tutorialDone: true }); // 無料状態で開く
-    try {
-      const page2 = await context2.newPage();
-      const errors2 = attachErrorCollector(page2, "freemium-gate:shared");
-      await page2.goto(sharedUrl, { waitUntil: "load" });
-      await page2.waitForFunction(
-        (n) => document.querySelectorAll("#players-list .player-row").length === n,
-        4, // ftBubble = 4 人
-        { timeout: 10_000 },
-      );
-      // 閲覧はできるが、無料なので編集はロック (readonly のまま)
-      const sharedReadonly = await page2.$eval("#players-list .player-stack", (el) =>
-        el.hasAttribute("readonly"),
-      );
-      if (!sharedReadonly) {
-        throw new Error("共有URLで開いたシナリオが無料時に編集可能になっている (readonly でない)");
-      }
-      assertNoErrors(errors2, "共有URL閲覧 (無料・新コンテキスト)");
-    } finally {
-      await context2.close();
+    await page.waitForSelector("#eq-result .eq-flow-final", { state: "visible" });
+    const evText = await page.textContent("#eq-result .eq-flow-final");
+    if (!evText || !/%/.test(evText)) {
+      throw new Error(`無料時に必要勝率 ($EV) が閲覧できない: "${evText}"`);
     }
 
     // ⑥ (en) 言語を英語へ切り替えてもペイウォールが表示される
