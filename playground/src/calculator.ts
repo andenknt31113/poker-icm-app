@@ -4,10 +4,7 @@ import {
   calculatePotOdds,
   calculateRequiredEquity,
 } from "@poker-icm/core";
-import { topRange, type HandNotation } from "./handRanking.js";
-import { equity } from "./equity.js";
 import { renderRangeComparison, updateHandPositionBanner } from "./handRange.js";
-import { renderGrid } from "./grid.js";
 import { updateNashOvercallWarn } from "./nashUI.js";
 import { isOnboardingDone } from "./guide.js";
 import { t } from "./i18n.js";
@@ -224,11 +221,6 @@ export function recompute(): void {
     // レンジ比較
     renderRangeComparison(eq.dollarEV);
 
-    // 🃏 ハンド別判定 (🎯自分/⚔️相手が両方指定されている時のみ有効)
-    updateHandVerdictRequiredEquity(
-      heroIndex >= 0 && villainIndex >= 0 && heroIndex !== villainIndex ? eq.dollarEV : null,
-    );
-
     // Hero サマリー
     renderHeroSummary({
       heroIndex,
@@ -255,7 +247,6 @@ export function recompute(): void {
     bfResult.innerHTML = "";
     eqResult.innerHTML = "";
     heroSummaryEl.classList.remove("active");
-    updateHandVerdictRequiredEquity(null);
     updateDepthWarn(-1, -1, []);
   }
 }
@@ -572,12 +563,10 @@ function depthWarnHtml(effStack: number): string {
 
 function updateDepthWarn(heroIndex: number, villainIndex: number, stacks: number[]): void {
   const eqWarnEl = document.getElementById("depth-warn-eq");
-  const hvWarnEl = document.getElementById("depth-warn-hv");
-  if (!eqWarnEl && !hvWarnEl) return;
+  if (!eqWarnEl) return;
 
   const hide = (): void => {
-    eqWarnEl?.classList.add("hidden");
-    hvWarnEl?.classList.add("hidden");
+    eqWarnEl.classList.add("hidden");
   };
 
   if (heroIndex < 0 || villainIndex < 0 || heroIndex === villainIndex) {
@@ -595,86 +584,8 @@ function updateDepthWarn(heroIndex: number, villainIndex: number, stacks: number
     hide();
     return;
   }
-  const html = depthWarnHtml(effStack);
-  if (eqWarnEl) {
-    eqWarnEl.innerHTML = html;
-    eqWarnEl.classList.remove("hidden");
-  }
-  if (hvWarnEl) {
-    hvWarnEl.innerHTML = html;
-    hvWarnEl.classList.remove("hidden");
-  }
-}
-
-// ===== 🃏 ハンド別判定 (計算結果タブ・必要勝率カード内) =====
-// クイック判断 (合成テーブルの概算) は精度と入力の手間が見合わず廃止したが、
-// 「13x13グリッドでハンドをタップ→即 GO/NO GO」というインタラクションは実データに
-// 基づく判定として価値が高いため、recompute() が出す必要勝率 ($EV) を使って移植する。
-const hvBodyEl = $<HTMLDivElement>("hv-body");
-const hvEmptyMsgEl = $<HTMLParagraphElement>("hv-empty-msg");
-const hvRangePillsEl = $<HTMLDivElement>("hv-range-pills");
-const hvBannerEl = $<HTMLDivElement>("hv-banner");
-const hvGridEl = $<HTMLDivElement>("hv-grid");
-const hvGridCountEl = $<HTMLParagraphElement>("hv-grid-count");
-
-let hvRangePct = 30;
-let hvPickedHand: HandNotation | null = null;
-/** recompute() が出した必要勝率 ($EV, 0〜1)。🎯/⚔️ 未指定など計算不能時は null。 */
-let hvRequiredEquity: number | null = null;
-
-/** hvRequiredEquity と選択中のレンジ/ハンドを元にグリッドとバナーを再描画する。 */
-function renderHandVerdict(): void {
-  if (hvRequiredEquity === null) {
-    hvBodyEl.classList.add("hidden");
-    hvEmptyMsgEl.classList.remove("hidden");
-    return;
-  }
-  hvBodyEl.classList.remove("hidden");
-  hvEmptyMsgEl.classList.add("hidden");
-
-  const reqEquity = hvRequiredEquity;
-  const reqPct = reqEquity * 100;
-  const villainRange = topRange(hvRangePct);
-
-  let inRangeCount = 0;
-  renderGrid(hvGridEl, (hand) => {
-    const eq = equity(hand, villainRange);
-    const inRange = eq >= reqEquity;
-    if (inRange) inRangeCount++;
-    let cls = inRange ? "in-range-hero" : "";
-    if (hand === hvPickedHand) cls += " picked";
-    return cls;
-  });
-  const coveragePct = (inRangeCount / 169) * 100;
-  hvGridCountEl.textContent = t("calc.hv.count", { n: inRangeCount, pct: coveragePct.toFixed(0) });
-
-  if (hvPickedHand) {
-    const eq = equity(hvPickedHand, villainRange) * 100;
-    const isCall = eq >= reqPct;
-    const margin = eq - reqPct;
-    hvBannerEl.classList.remove("hidden");
-    hvBannerEl.classList.toggle("hv-banner-call", isCall);
-    hvBannerEl.classList.toggle("hv-banner-fold", !isCall);
-    const verdict = isCall
-      ? t("calc.hv.verdict.call", { margin: `${margin >= 0 ? "+" : ""}${margin.toFixed(1)}` })
-      : t("calc.hv.verdict.fold", { margin: margin.toFixed(1) });
-    hvBannerEl.innerHTML = t("calc.hv.banner", {
-      hand: hvPickedHand,
-      eq: eq.toFixed(1),
-      op: isCall ? "≥" : "<",
-      req: reqPct.toFixed(1),
-      verdict,
-    });
-  } else {
-    hvBannerEl.classList.add("hidden");
-    hvBannerEl.innerHTML = "";
-  }
-}
-
-/** recompute() の末尾から呼ばれるフック。必要勝率 (dollarEV) か null (計算不能) を渡す。 */
-function updateHandVerdictRequiredEquity(requiredEquity: number | null): void {
-  hvRequiredEquity = requiredEquity;
-  renderHandVerdict();
+  eqWarnEl.innerHTML = depthWarnHtml(effStack);
+  eqWarnEl.classList.remove("hidden");
 }
 
 /** 計算結果タブの初期化・イベント配線。main.ts から一度だけ呼ぶ。 */
@@ -793,19 +704,4 @@ export function initCalculator(): void {
     }
   });
 
-  hvRangePillsEl.addEventListener("click", (e) => {
-    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(".hv-pill");
-    if (!btn || !btn.dataset.range) return;
-    hvRangePillsEl.querySelectorAll(".hv-pill").forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-    hvRangePct = Number(btn.dataset.range);
-    renderHandVerdict();
-  });
-
-  hvGridEl.addEventListener("click", (e) => {
-    const cell = (e.target as HTMLElement).closest<HTMLDivElement>(".hand-cell");
-    if (!cell) return;
-    hvPickedHand = cell.title;
-    renderHandVerdict();
-  });
 }

@@ -38,12 +38,9 @@
           <h1>🎰 Poker ICM/BF</h1>
           <div class="header-actions">
             <button id="help-btn" class="header-btn" type="button" title="使い方ガイド" aria-label="ヘルプ" data-i18n-attr="title:header.help.title;aria-label:header.help.aria">❓</button>
-            <button id="share-url-btn-top" class="header-btn" type="button" title="シナリオを URL で共有" aria-label="共有" data-i18n-attr="title:header.share.title;aria-label:header.share.aria">🔗</button>
-            <button id="theme-toggle" class="header-btn" type="button" title="テーマ切替" aria-label="テーマ切替" data-i18n-attr="title:header.theme.title;aria-label:header.theme.aria">🌙</button>
             <button id="lang-toggle" class="header-btn header-lang-btn" type="button" title="言語切替" aria-label="言語切替" data-i18n-attr="title:header.lang.title;aria-label:header.lang.aria">EN</button>
           </div>
         </div>
-        <p id="share-url-toast" class="share-toast hidden"></p>
       </header>
 
       <div id="hero-summary" class="hero-summary"></div>
@@ -136,13 +133,6 @@
             <div id="saved-payouts" class="presets saved"></div>
           </div>
         </details>
-      </section>
-
-      <section class="card" data-tab="setup">
-        <div class="share-row">
-          <button id="share-url-btn" type="button" class="solve-btn share-btn" data-i18n="setup.share.btn">🔗 シナリオを URL で共有</button>
-          <span id="share-url-hint" class="hint"></span>
-        </div>
       </section>
 
       <section class="card" data-tab="result">
@@ -274,29 +264,6 @@
         <div id="depth-warn-eq" class="warn-box hidden"></div>
         <div id="eq-result" class="result"></div>
 
-        <div class="hv-section">
-          <h3 data-i18n="result.hv.h3">🃏 このハンド、コールできる？</h3>
-          <p class="hint" data-i18n-html="result.hv.hint.html">
-            上の必要勝率を「自分の持っているハンド」に当てはめる機能です。
-            ① 相手がオールインしてきそうなレンジの広さを選ぶ →
-            ② 🟩緑 = コールできるハンド → ③ 自分のハンドをタップで個別判定。
-          </p>
-          <p id="hv-empty-msg" class="hint hidden" data-i18n="result.hv.emptyMsg">プレイヤーで 🎯自分 と ⚔️相手 を指定してください</p>
-          <div id="hv-body">
-            <div id="depth-warn-hv" class="warn-box hidden"></div>
-            <div id="hv-range-pills" class="hv-pills">
-              <button type="button" class="hv-pill" data-range="15" data-i18n="result.hv.range.tight">タイト Top15%</button>
-              <button type="button" class="hv-pill active" data-range="30" data-i18n="result.hv.range.normal">普通 Top30%</button>
-              <button type="button" class="hv-pill" data-range="50" data-i18n="result.hv.range.loose">ルース Top50%</button>
-            </div>
-            <div id="hv-banner" class="hv-banner hidden"></div>
-            <p class="hint hv-source-note" data-i18n="result.hv.sourceNote">必要勝率 = 上の $EV (True Req)</p>
-            <div class="hv-grid-wrap">
-              <div id="hv-grid" class="hand-grid"></div>
-              <p class="hint" id="hv-grid-count"></p>
-            </div>
-          </div>
-        </div>
       </section>
 
       <section class="card" data-tab="nash">

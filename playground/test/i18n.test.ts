@@ -15,7 +15,9 @@ describe("i18n t()", () => {
 
   it("{name} プレースホルダを params で置換する", () => {
     expect(t("setup.players.addMax", { n: 9 })).toBe("(最大 9 人)");
-    expect(t("calc.hv.count", { n: 42, pct: 25 })).toBe("169中 42 ハンド (25%)");
+    expect(t("hand.callStats.callBack", { req: 37.8, callable: 68, callPct: 40, marginal: 39 })).toBe(
+      "必要勝率 <strong>37.8%</strong> 以上のハンド: <strong>68</strong>個 (Top 40%) ／ ボーダーライン: 39個",
+    );
   });
 
   it("同じプレースホルダが複数回あってもすべて置換する", () => {
