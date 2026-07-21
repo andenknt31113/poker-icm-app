@@ -1,6 +1,7 @@
 import { MAX_PLAYERS } from "@poker-icm/core";
 import { t as tr } from "./i18n.js";
 import { $ } from "./dom.js";
+import { isCapacitorNative } from "./capacitorEnv.js";
 import { recompute, setCallManualOverride } from "./calculator.js";
 import {
   players,
@@ -551,6 +552,27 @@ async function doShareScenario(): Promise<void> {
   const url = `${location.origin}${location.pathname}#s=${hash}`;
   const hint = document.getElementById("share-url-hint");
   const toast = document.getElementById("share-url-toast");
+
+  // Capacitor (iOS) では navigator.share / navigator.clipboard が期待通りに
+  // 動かない (もしくは非対応の) ケースがあるため、ネイティブの共有シートを
+  // 優先して試す。dynamic import なので通常ブラウザの Web バンドルには含まれない。
+  if (isCapacitorNative()) {
+    try {
+      const { Share } = await import("@capacitor/share");
+      await Share.share({ url });
+      // 共有シートの提示・完了・キャンセルまで含めてネイティブ側で完結する。
+      return;
+    } catch (e) {
+      // ユーザーが共有シートを閉じた(キャンセルした)場合もここに reject されてくる。
+      // その場合は何もせず終える (クリップボードコピーへ進むと「キャンセルしたのに
+      // 勝手にコピーされた」という誤動作になるため)。
+      // @capacitor/share が読み込めない・ネイティブ側で本当に失敗した場合のみ、
+      // 既存のクリップボード動線に処理を続ける。
+      const message = e instanceof Error ? e.message : String(e);
+      if (/cancel/i.test(message)) return;
+    }
+  }
+
   try {
     await navigator.clipboard.writeText(url);
     if (hint) hint.textContent = tr("setup.share.copiedHint");
