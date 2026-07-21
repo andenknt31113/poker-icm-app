@@ -187,13 +187,22 @@ async function onRestoreClick(): Promise<void> {
   }
 }
 
-/** RevenueCat のエラーがユーザーキャンセルか (purchasePackage が reject する形)。 */
+/**
+ * RevenueCat のエラーがユーザーキャンセルか (purchasePackage が reject する形)。
+ * SDK のバージョン/ブリッジにより reject 形が揺れるため、複数のシグナルを見る:
+ *   - userCancelled === true (hybrid SDK が付与するフラグ)
+ *   - code が PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR (= 1 / "1") か
+ *     "PURCHASE_CANCELLED" を含む文字列
+ */
 function isUserCancelled(e: unknown): boolean {
-  return (
-    typeof e === "object" &&
-    e !== null &&
-    (e as { userCancelled?: unknown }).userCancelled === true
-  );
+  if (typeof e !== "object" || e === null) return false;
+  const err = e as { userCancelled?: unknown; code?: unknown; errorCode?: unknown };
+  if (err.userCancelled === true) return true;
+  for (const c of [err.code, err.errorCode]) {
+    if (c === 1 || c === "1") return true;
+    if (typeof c === "string" && c.toUpperCase().includes("PURCHASE_CANCELLED")) return true;
+  }
+  return false;
 }
 
 // ===== トースト (画面下部の一時通知) =====
