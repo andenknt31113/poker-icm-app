@@ -343,29 +343,6 @@ th {
   line-height: 1.7;
 }
 
-.verdict .badge {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-weight: bold;
-  margin-right: 6px;
-}
-
-.badge.call {
-  background: var(--good);
-  color: #002b00;
-}
-
-.badge.fold {
-  background: var(--bad);
-  color: #2b0000;
-}
-
-.badge.marginal {
-  background: var(--warn);
-  color: #2b1500;
-}
-
 .error {
   color: var(--bad);
   font-family: var(--mono);
