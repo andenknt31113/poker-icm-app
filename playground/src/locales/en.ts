@@ -14,10 +14,6 @@ export const en: Record<string, string> = {
   // ===== index.html: ヘッダー =====
   "header.help.title": "How to use",
   "header.help.aria": "Help",
-  "header.share.title": "Share scenario via URL",
-  "header.share.aria": "Share",
-  "header.theme.title": "Toggle theme",
-  "header.theme.aria": "Toggle theme",
   "header.lang.title": "Switch language",
   "header.lang.aria": "Switch language",
   "header.infoModal.close.aria": "Close",
@@ -54,10 +50,6 @@ export const en: Record<string, string> = {
   "setup.player.role.otherText": "None", // fable レビュー済: 役割なしを自然な英語で
   "setup.payout.rank": "#{n}",
   "setup.userScenarios.empty": "No saves yet. Tap “+ Save current situation” to add one.",
-  "setup.share.copiedHint": "✓ URL copied to clipboard!",
-  "setup.share.copiedToast": "✓ Copied the URL to your clipboard",
-  "setup.share.failHint": "⚠ Auto-copy failed. Long-press the field below to copy.",
-  "setup.share.failToastMsg": "⚠ Auto-copy failed. Long-press to copy.",
   "setup.prompt.scenarioName": "Enter a scenario name",
   "setup.confirm.deleteScenario": "Delete this scenario?",
   "setup.prompt.savePayout": "Save with a name (e.g. JOPT / APT / My HU)",
@@ -84,8 +76,6 @@ export const en: Record<string, string> = {
   "setup.payouts.savedLabel": "\n              Saved\n              ",
   "setup.payouts.saveBtn": "\n                + Save current values\n              ",
 
-  // ===== index.html: セットアップ - URL共有 =====
-  "setup.share.btn": "🔗 Share scenario via URL",
 
   // ===== index.html: 計算結果 - ICM エクイティ =====
   "result.icm.h2": "ICM equity",
@@ -110,13 +100,6 @@ export const en: Record<string, string> = {
   "result.eq.potwinLabel": "\n            Net gain if you win\n            ",
   "result.eq.potwin.placeholder": "e.g. 10.5",
   "result.eq.autofillBtn": "\n          🔄 Back to auto-calc\n        ",
-  "result.hv.h3": "🃏 Can you call this hand?",
-  "result.hv.hint.html": "\n            Applies the required equity above to “the hand you’re holding.”\n            ① Pick how wide a range the villain might shove →\n            ② 🟩 green = callable hands → ③ tap your hand for an individual verdict.\n          ",
-  "result.hv.emptyMsg": "Set 🎯 you and ⚔️ villain in the players list",
-  "result.hv.range.tight": "Tight Top 15%",
-  "result.hv.range.normal": "Normal Top 30%",
-  "result.hv.range.loose": "Loose Top 50%",
-  "result.hv.sourceNote": "Required equity = $EV (true req) above",
 
   // ===== index.html: ナッシュ均衡 =====
   "nash.h2": "Nash equilibrium (HU push/fold)",
@@ -264,7 +247,6 @@ export const en: Record<string, string> = {
               <li>Tap “Scenario presets” to load a situation instantly</li>
               <li>Adjust stacks under “Players” (add more with + Add player)</li>
               <li>Tap to set 🎯 you / ⚔️ villain</li>
-              <li>Share the current scenario by URL with 🔗</li>
             </ol>
           </div>
         </details>
@@ -514,10 +496,6 @@ export const en: Record<string, string> = {
   "calc.warn.depth.html": "\n    ⚠️ Effective {eff}bb: at this depth, options other than push/fold\n    (small opens or calls) are realistic. This tool assumes all-in.\n  ",
 
   // ===== ハンド別判定 (calculator.ts renderHandVerdict) =====
-  "calc.hv.count": "{n} of 169 hands ({pct}%)",
-  "calc.hv.verdict.call": "✅ Call ({margin}%)",
-  "calc.hv.verdict.fold": "❌ Fold ({margin}%)",
-  "calc.hv.banner": "<strong>{hand}</strong>: equity {eq}% {op} required {req}% → {verdict}",
 
   // ===== 用語解説モーダル (calculator.ts INFO_TEXTS) =====
   "info.icm.title": "ICM (Independent Chip Model)",

@@ -17,8 +17,7 @@ import { runSuite } from "./lib/harness.mjs";
 import testTabsTheme from "./tests/01-tabs-theme.mjs";
 import testPracticeModes from "./tests/02-practice-modes.mjs";
 import testTutorialIntro from "./tests/03-tutorial-intro.mjs";
-import testPresetVerdictBanner from "./tests/04-preset-verdict-banner.mjs";
-import testShareUrl from "./tests/05-share-url.mjs";
+import testPresetResultFlow from "./tests/04-preset-result-flow.mjs";
 import testFooterVersion from "./tests/06-footer-version.mjs";
 import testPositionWarnZero from "./tests/06-position-warn-zero.mjs";
 import testPracticeCtaConsolidation from "./tests/07-practice-cta-consolidation.mjs";
@@ -39,7 +38,7 @@ async function main() {
 
   const tests = [
     {
-      name: "5タブ x ダーク/ライト レンダリング (console/pageerror ゼロ)",
+      name: "5タブ レンダリング・ダーク固定 (console/pageerror ゼロ)",
       run: () => testTabsTheme({ baseURL, createContext }),
     },
     {
@@ -51,12 +50,8 @@ async function main() {
       run: () => testTutorialIntro({ baseURL, createContext }),
     },
     {
-      name: "プリセット(ftBubble) → 計算結果タブ → ハンド判定バナー",
-      run: () => testPresetVerdictBanner({ baseURL, createContext }),
-    },
-    {
-      name: "URL共有: hash生成 → 新コンテキストで復元",
-      run: () => testShareUrl({ baseURL, createContext }),
+      name: "プリセット(ftBubble) → 計算結果タブ → BFマトリクス+必要勝率",
+      run: () => testPresetResultFlow({ baseURL, createContext }),
     },
     {
       name: "全8プリセット+デフォルト → 計算結果タブ → position-warn ゼロ",
@@ -67,7 +62,7 @@ async function main() {
       run: () => testPracticeCtaConsolidation({ baseURL, createContext }),
     },
     {
-      name: "フッターのビルドバージョン表示 + ヘッダーレイアウト崩れなし (dark/light)",
+      name: "フッターのビルドバージョン表示 + ヘッダーレイアウト崩れなし (ダーク固定)",
       run: () => testFooterVersion({ baseURL, createContext }),
     },
     {

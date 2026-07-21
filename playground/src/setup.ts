@@ -1,7 +1,6 @@
 import { MAX_PLAYERS } from "@poker-icm/core";
 import { t as tr } from "./i18n.js";
 import { $ } from "./dom.js";
-import { isCapacitorNative } from "./capacitorEnv.js";
 import { isPro } from "./entitlement.js";
 import { openPaywall } from "./paywall.js";
 import { recompute, setCallManualOverride } from "./calculator.js";
@@ -496,122 +495,7 @@ function initCollapsibleSection(detailsId: string, storageKey: string): void {
   });
 }
 
-// ===== シナリオ URL 共有 =====
-function encodeStateToHash(): string {
-  const sbEl = document.getElementById("nash-sb") as HTMLInputElement | null;
-  const bbEl = document.getElementById("nash-bb") as HTMLInputElement | null;
-  const anteEl = document.getElementById("nash-ante") as HTMLInputElement | null;
-  const anteMode =
-    (document.querySelector<HTMLInputElement>(
-      'input[name="ante-mode"]:checked',
-    )?.value ?? "total") as "total" | "perPlayer";
-  const compact = {
-    p: players.map((p) => [p.stack, p.role[0], p.position]),
-    py: payoutsArr,
-    n: {
-      sb: Number(sbEl?.value) || DEFAULT_SB,
-      bb: Number(bbEl?.value) || DEFAULT_BB,
-      a: Number(anteEl?.value) || 0,
-      m: anteMode === "perPlayer" ? "p" : "t",
-    },
-  };
-  const json = JSON.stringify(compact);
-  return btoa(encodeURIComponent(json));
-}
-
-function decodeStateFromHash(hash: string): void {
-  try {
-    const json = decodeURIComponent(atob(hash));
-    const data = JSON.parse(json) as {
-      p?: [number, string, string][];
-      py?: number[];
-      n?: { sb?: number; bb?: number; a?: number; m?: string };
-    };
-    if (Array.isArray(data.p)) {
-      players.length = 0;
-      for (const [stack, roleC, position] of data.p) {
-        const role: Role =
-          roleC === "h" ? "hero" : roleC === "v" ? "villain" : "other";
-        players.push({ id: allocPlayerId(), stack, role, position: position as Position });
-      }
-      renderPlayers();
-    }
-    if (Array.isArray(data.py) && data.py.length > 0) {
-      setPayouts(data.py);
-    }
-    if (data.n) {
-      const sbEl = document.getElementById("nash-sb") as HTMLInputElement | null;
-      const bbEl = document.getElementById("nash-bb") as HTMLInputElement | null;
-      const anteEl = document.getElementById("nash-ante") as HTMLInputElement | null;
-      if (sbEl && data.n.sb != null) sbEl.value = String(data.n.sb);
-      if (bbEl && data.n.bb != null) bbEl.value = String(data.n.bb);
-      if (anteEl && data.n.a != null) anteEl.value = String(data.n.a);
-      const modeValue = data.n.m === "p" ? "perPlayer" : "total";
-      const radio = document.querySelector<HTMLInputElement>(
-        `input[name="ante-mode"][value="${modeValue}"]`,
-      );
-      if (radio) radio.checked = true;
-    }
-    setCallManualOverride(false);
-    recompute();
-  } catch (e) {
-    console.warn("URL hash decode 失敗", e);
-  }
-}
-
-async function doShareScenario(): Promise<void> {
-  const hash = encodeStateToHash();
-  const url = `${location.origin}${location.pathname}#s=${hash}`;
-  const hint = document.getElementById("share-url-hint");
-  const toast = document.getElementById("share-url-toast");
-
-  // Capacitor (iOS) では navigator.share / navigator.clipboard が期待通りに
-  // 動かない (もしくは非対応の) ケースがあるため、ネイティブの共有シートを
-  // 優先して試す。dynamic import なので通常ブラウザの Web バンドルには含まれない。
-  if (isCapacitorNative()) {
-    try {
-      const { Share } = await import("@capacitor/share");
-      await Share.share({ url });
-      // 共有シートの提示・完了・キャンセルまで含めてネイティブ側で完結する。
-      return;
-    } catch (e) {
-      // ユーザーが共有シートを閉じた(キャンセルした)場合もここに reject されてくる。
-      // その場合は何もせず終える (クリップボードコピーへ進むと「キャンセルしたのに
-      // 勝手にコピーされた」という誤動作になるため)。
-      // @capacitor/share が読み込めない・ネイティブ側で本当に失敗した場合のみ、
-      // 既存のクリップボード動線に処理を続ける。
-      const message = e instanceof Error ? e.message : String(e);
-      if (/cancel/i.test(message)) return;
-    }
-  }
-
-  try {
-    await navigator.clipboard.writeText(url);
-    if (hint) hint.textContent = tr("setup.share.copiedHint");
-    if (toast) {
-      toast.textContent = tr("setup.share.copiedToast");
-      toast.classList.remove("hidden");
-      setTimeout(() => toast.classList.add("hidden"), 2500);
-    }
-  } catch {
-    // クリップボード API が使えない環境向けフォールバック。
-    // トーストに生 URL を全文表示するのではなく、選択しやすい readonly input を出して
-    // 「長押しでコピー」を案内する (モバイルでの長押し選択がしやすい)。
-    if (hint) hint.textContent = tr("setup.share.failHint");
-    if (toast) {
-      toast.innerHTML = `
-        <div class="share-toast-msg">${tr("setup.share.failToastMsg")}</div>
-        <input type="text" class="share-toast-input" id="share-toast-url-input" readonly value="${url}" />
-      `;
-      toast.classList.remove("hidden");
-      const urlInput = toast.querySelector<HTMLInputElement>("#share-toast-url-input");
-      urlInput?.addEventListener("focus", () => urlInput.select());
-      urlInput?.addEventListener("click", () => urlInput.select());
-    }
-  }
-}
-
-/** セットアップタブ全体 (プレイヤー・シナリオ・ペイ構造・URL共有) の初期化。main.ts から一度だけ呼ぶ。 */
+/** セットアップタブ全体 (プレイヤー・シナリオ・ペイ構造) の初期化。main.ts から一度だけ呼ぶ。 */
 export function initSetup(): void {
   // イベントデリゲーション
   playersList.addEventListener("click", (e) => {
@@ -853,12 +737,4 @@ export function initSetup(): void {
   initCollapsibleSection("scenario-presets-toggle", "poker-icm-collapse-scenario-presets");
   initCollapsibleSection("payout-presets-toggle", "poker-icm-collapse-payout-presets");
 
-  document.getElementById("share-url-btn")?.addEventListener("click", doShareScenario);
-  document.getElementById("share-url-btn-top")?.addEventListener("click", doShareScenario);
-
-  // 起動時に URL hash があれば復元
-  if (location.hash.startsWith("#s=")) {
-    const hash = location.hash.slice(3);
-    setTimeout(() => decodeStateFromHash(hash), 50);
-  }
 }

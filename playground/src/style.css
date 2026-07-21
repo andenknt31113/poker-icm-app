@@ -14,22 +14,6 @@
   --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 
-:root[data-theme="light"] {
-  --bg: #f5f7fa;
-  --bg-deep: #e8ebf0;
-  --card: #ffffff;
-  --border: #d4dae1;
-  --text: #1a2027;
-  --muted: #6b7280;
-  --accent: #0288d1;
-  --heading: #01579b;
-  --good: #2e7d32;
-  --warn: #ef6c00;
-  --bad: #c62828;
-  --hero-summary-bg: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-  --hero-summary-shadow: 0 2px 12px rgba(2, 136, 209, 0.18);
-}
-
 * {
   box-sizing: border-box;
 }
@@ -513,33 +497,6 @@ th {
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
-}
-.share-toast {
-  background: var(--accent);
-  color: #000;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  margin-top: 8px;
-  text-align: center;
-  font-weight: bold;
-}
-.share-toast.hidden {
-  display: none;
-}
-.share-toast-msg {
-  margin-bottom: 6px;
-}
-.share-toast-input {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 8px 10px;
-  border-radius: 6px;
-  border: 1px solid rgba(0, 0, 0, 0.25);
-  background: rgba(255, 255, 255, 0.85);
-  color: #000;
-  font-family: var(--mono);
-  font-size: 12px;
 }
 
 /* ===== ボトムタブナビ ===== */
@@ -1499,16 +1456,6 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* ===== 共有 ===== */
-.share-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-}
-.share-btn {
-  width: auto !important;
-}
 
 /* ===== 情報モーダル ===== */
 .info-modal {
@@ -3081,76 +3028,6 @@ footer a {
   background: var(--border);
 }
 
-/* ===== 🃏 ハンド別判定 (計算結果タブ・必要勝率カード内) ===== */
-.hv-section {
-  margin-top: 18px;
-  padding-top: 14px;
-  border-top: 1px solid var(--border);
-}
-.hv-section h3 {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0 0 4px;
-}
-
-.hv-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 8px 0 4px;
-}
-.hv-pill {
-  background: var(--card);
-  color: var(--muted);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 6px 12px;
-  font-size: 11px;
-  cursor: pointer;
-  font-family: inherit;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
-}
-.hv-pill:hover {
-  border-color: var(--accent);
-}
-.hv-pill.active {
-  border-color: var(--accent);
-  color: var(--accent);
-  font-weight: bold;
-  background: color-mix(in srgb, var(--accent) 12%, var(--card));
-}
-
-.hv-banner {
-  border-radius: 8px;
-  padding: 10px 12px;
-  font-size: 13px;
-  line-height: 1.5;
-  margin: 8px 0;
-  border: 1px solid var(--border);
-  background: var(--bg-deep);
-}
-.hv-banner.hidden {
-  display: none;
-}
-.hv-banner-call {
-  border-color: color-mix(in srgb, var(--good) 60%, var(--border));
-  color: var(--good);
-}
-.hv-banner-fold {
-  border-color: color-mix(in srgb, var(--bad) 60%, var(--border));
-  color: var(--bad);
-}
-
-.hv-source-note {
-  margin-top: 0;
-  margin-bottom: 6px;
-}
-
-.hv-grid-wrap {
-  margin-top: 6px;
-}
-
 /* ===== freemium ロック (Pro ゲート) ===== */
 /* ロックされたスタック/ペイ金額入力: readonly のまま、タップでペイウォールが出る
    ことを示唆する見た目 (薄く・カーソルはポインタ)。 */
@@ -3251,3 +3128,4 @@ footer a {
 .paywall-toast.hidden {
   display: none;
 }
+
