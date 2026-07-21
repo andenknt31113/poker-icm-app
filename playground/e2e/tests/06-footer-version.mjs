@@ -1,4 +1,4 @@
-// 6. フッターのビルドバージョン表示 + ヘッダーレイアウト崩れ確認 (dark/light)
+// 6. フッターのビルドバージョン表示 + ヘッダーレイアウト崩れ確認 (ダーク固定)
 //
 // Issue #15: 「Phase 0 動作確認 · @poker-icm/core」という開発中の文言を
 // 「Poker ICM/BF · build <sha>」に差し替え、subtitle (値を変えるとリアル
@@ -9,12 +9,12 @@
 //   3. subtitle 除去後もヘッダー (タイトル行 + アクションボタン列) が
 //      重なったり崩れたりしていないこと (h1 とボタン列の bounding box が
 //      overlap しない)
-// を dark/light 両テーマで検証する。
+// を検証する (テーマはダーク固定)。
 import { attachErrorCollector, assertNoErrors } from "../lib/context.mjs";
 
 export default async function testFooterVersion({ baseURL, createContext }) {
-  for (const theme of ["dark", "light"]) {
-    const context = await createContext({ theme, tutorialDone: true });
+  for (const theme of ["dark"]) {
+    const context = await createContext({ tutorialDone: true });
     try {
       const page = await context.newPage();
       const errors = attachErrorCollector(page, `theme=${theme}`);

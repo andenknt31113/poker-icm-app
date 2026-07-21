@@ -1,56 +1,24 @@
 import { t } from "./i18n.js";
 import { isCapacitorNative } from "./capacitorEnv.js";
 
-// ===== テーマ切替 (dark/light) =====
-const THEME_KEY = "poker-icm-theme";
-type Theme = "dark" | "light";
-
-// Capacitor (iOS) 上ではステータスバーの文字色がアプリのテーマに追従しないため、
-// テーマ切替時に @capacitor/status-bar で明示的に合わせる。
-// 通常ブラウザではステータスバー API 自体が存在しないため isCapacitorNative() で
-// 早期リターンし、dynamic import すら発生させない (web バンドルへの影響ゼロ)。
-function syncStatusBarStyle(theme: Theme): void {
+// ===== テーマ (ダーク固定) =====
+// ライトテーマと切替ボタンは製品判断で廃止し、ダーク配色のみにした。
+// 過去に localStorage へ保存された "light" 設定が残っていても無視される
+// (data-theme 属性を付けないことがダーク表示の条件のため、何もしなければダーク)。
+function initTheme(): void {
+  document.documentElement.removeAttribute("data-theme");
+  // Capacitor (iOS) 上ではステータスバーの文字色を明示的に合わせる必要がある。
+  // 通常ブラウザではステータスバー API 自体が存在しないため isCapacitorNative() で
+  // 早期リターンし、dynamic import すら発生させない (web バンドルへの影響ゼロ)。
   if (!isCapacitorNative()) return;
   import("@capacitor/status-bar")
-    .then(({ StatusBar, Style }) => {
-      // Style.Light = 明るい背景向け (濃い文字色) / Style.Dark = 暗い背景向け (明るい文字色)
-      const style = theme === "light" ? Style.Light : Style.Dark;
-      return StatusBar.setStyle({ style });
-    })
+    .then(({ StatusBar, Style }) =>
+      // Style.Dark = 暗い背景向け (明るい文字色)
+      StatusBar.setStyle({ style: Style.Dark }),
+    )
     .catch(() => {
       /* @capacitor/status-bar が使えない (プラグイン未同梱・呼び出し失敗) 場合は無視 */
     });
-}
-
-function applyTheme(t: Theme): void {
-  if (t === "light") {
-    document.documentElement.setAttribute("data-theme", "light");
-  } else {
-    document.documentElement.removeAttribute("data-theme");
-  }
-  const btn = document.getElementById("theme-toggle");
-  if (btn) btn.textContent = t === "light" ? "☀️" : "🌙";
-  const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-  if (themeColorMeta) themeColorMeta.setAttribute("content", t === "light" ? "#f5f7fa" : "#0f1419");
-  try { localStorage.setItem(THEME_KEY, t); } catch { /* ignore */ }
-  syncStatusBarStyle(t);
-}
-
-function initTheme(): void {
-  const savedTheme = ((): Theme => {
-    try {
-      const v = localStorage.getItem(THEME_KEY);
-      if (v === "light" || v === "dark") return v;
-    } catch { /* ignore */ }
-    return window.matchMedia?.("(prefers-color-scheme: light)").matches
-      ? "light"
-      : "dark";
-  })();
-  applyTheme(savedTheme);
-  document.getElementById("theme-toggle")?.addEventListener("click", () => {
-    const cur = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
-    applyTheme(cur === "dark" ? "light" : "dark");
-  });
 }
 
 // ===== 画面下部トースト共通スタック =====

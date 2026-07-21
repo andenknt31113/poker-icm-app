@@ -7,10 +7,6 @@ export const ja: Record<string, string> = {
   // ===== index.html: ヘッダー =====
   "header.help.title": "使い方ガイド",
   "header.help.aria": "ヘルプ",
-  "header.share.title": "シナリオを URL で共有",
-  "header.share.aria": "共有",
-  "header.theme.title": "テーマ切替",
-  "header.theme.aria": "テーマ切替",
   "header.lang.title": "言語切替",
   "header.lang.aria": "言語切替",
   "header.infoModal.close.aria": "閉じる",
@@ -47,10 +43,6 @@ export const ja: Record<string, string> = {
   "setup.player.role.otherText": "他",
   "setup.payout.rank": "{n}位",
   "setup.userScenarios.empty": "まだ保存なし。「＋ 現在の状況を保存」を押すと追加",
-  "setup.share.copiedHint": "✓ URL をクリップボードにコピー！",
-  "setup.share.copiedToast": "✓ URL をクリップボードにコピーしました",
-  "setup.share.failHint": "⚠ 自動コピーに失敗しました。下の欄を長押ししてコピーしてください",
-  "setup.share.failToastMsg": "⚠ 自動コピーに失敗しました。長押しでコピーしてください",
   "setup.prompt.scenarioName": "シナリオ名を入力",
   "setup.confirm.deleteScenario": "このシナリオを削除しますか？",
   "setup.prompt.savePayout": "名前を付けて保存（例: JOPT / APT / マイHU）",
@@ -78,8 +70,6 @@ export const ja: Record<string, string> = {
   "setup.payouts.savedLabel": "\n              保存済み\n              ",
   "setup.payouts.saveBtn": "\n                ＋ 現在の値を保存\n              ",
 
-  // ===== index.html: セットアップ - URL共有 =====
-  "setup.share.btn": "🔗 シナリオを URL で共有",
 
   // ===== index.html: 計算結果 - ICM エクイティ =====
   "result.icm.h2": "ICM エクイティ",
@@ -104,13 +94,6 @@ export const ja: Record<string, string> = {
   "result.eq.potwinLabel": "\n            勝った時の純利得\n            ",
   "result.eq.potwin.placeholder": "例: 10.5",
   "result.eq.autofillBtn": "\n          🔄 自動算出に戻す\n        ",
-  "result.hv.h3": "🃏 このハンド、コールできる？",
-  "result.hv.hint.html": "\n            上の必要勝率を「自分の持っているハンド」に当てはめる機能です。\n            ① 相手がオールインしてきそうなレンジの広さを選ぶ →\n            ② 🟩緑 = コールできるハンド → ③ 自分のハンドをタップで個別判定。\n          ",
-  "result.hv.emptyMsg": "プレイヤーで 🎯自分 と ⚔️相手 を指定してください",
-  "result.hv.range.tight": "タイト Top15%",
-  "result.hv.range.normal": "普通 Top30%",
-  "result.hv.range.loose": "ルース Top50%",
-  "result.hv.sourceNote": "必要勝率 = 上の $EV (True Req)",
 
   // ===== index.html: ナッシュ均衡 =====
   "nash.h2": "Nash 均衡 (HU push/fold)",
@@ -260,7 +243,6 @@ export const ja: Record<string, string> = {
               <li>「シナリオプリセット」をタップして状況を一発セット</li>
               <li>「プレイヤー」でスタックを調整（足りなければ + プレイヤー追加）</li>
               <li>🎯自分 / ⚔️相手 をタップで指定</li>
-              <li>🔗 で今のシナリオを URL 共有</li>
             </ol>
           </div>
         </details>
@@ -511,10 +493,6 @@ export const ja: Record<string, string> = {
   "calc.warn.depth.html": "\n    ⚠️ 実効 {eff}bb: この深さでは push/fold 以外の選択肢\n    (小さいオープンやコール) が現実的です。本ツールの計算はオールイン前提です。\n  ",
 
   // ===== ハンド別判定 (calculator.ts renderHandVerdict) =====
-  "calc.hv.count": "169中 {n} ハンド ({pct}%)",
-  "calc.hv.verdict.call": "✅ コール ({margin}%)",
-  "calc.hv.verdict.fold": "❌ フォールド ({margin}%)",
-  "calc.hv.banner": "<strong>{hand}</strong>: equity {eq}% {op} 必要 {req}% → {verdict}",
 
   // ===== 用語解説モーダル (calculator.ts INFO_TEXTS) =====
   "info.icm.title": "ICM (Independent Chip Model)",
