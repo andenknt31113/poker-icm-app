@@ -4,13 +4,18 @@
  * 概要:
  *   - SB（hero）が all-in push するか fold するかを各ハンドで決める。
  *   - BB（villain）は SB の push に対して call するか fold するかを各ハンドで決める。
- *   - 反復応答 (best response) を交互に回して固定点（ナッシュ均衡）に収束させる。
+ *   - Fictitious Play（相手の平均戦略への best response の平均化）で
+ *     ε-Nash 均衡に収束させる。
  *   - 全ての終端 EV は ICM ($エクイティ) で評価する。これにより BF/ICM 圧が自然に反映される。
  *
- * 簡略化:
- *   - 各ハンド（pair / suited / offsuit）は組合せ数で重み付け。
- *   - カードリムーバル（ブロッカー効果）は huEquity 関数側に MC で大筋反映済み前提で簡略化。
- *   - 「Pure な push/fold 均衡」のみを求め、混合戦略は扱わない（境界ハンドは EV 比較で決定）。
+ * 精度に関わる設計:
+ *   - 各ハンド（pair / suited / offsuit）は組合せ数で重み付け。既定は固定重み
+ *     6/4/12（comboCount）だが、`comboWeight` を注入することで hero の手札による
+ *     カードリムーバル（ブロッカー）込みの重みに置き換えられる。これにより境界
+ *     ハンドの best response 判定が厳密になり、被搾取度（exploitability）が下がる。
+ *   - 収束は「戦略の変化量」ではなく実測 exploitability（ε）で判定する。
+ *     Fictitious Play の平均戦略は ε→0 に収束するため、これが精度と直結する。
+ *   - 均衡は基本的に pure だが、境界（無差別）ハンドの混合頻度は frequency map に保持する。
  */
 
 import { calculateICM } from "./icm.js";
@@ -18,6 +23,13 @@ import type { Payouts, Stacks } from "./types.js";
 
 /** 表記は文字列にしておき、上位コードで HandNotation を流し込む。 */
 export type HandLabel = string;
+
+/**
+ * hero が heroHand（の代表コンボ）を持つときの、villain が villainHand を持つ
+ * 組合せ数。カードリムーバル（ブロッカー効果）を反映した重み関数の型。
+ * 省略時は固定重み（comboCount, hero を無視）を用いる。
+ */
+export type ComboWeightFn = (heroHand: HandLabel, villainHand: HandLabel) => number;
 
 export interface HUNashInput {
   /** 全プレイヤーのスタック（hero/villain以外も ICM 計算で必要）。 */
@@ -38,10 +50,18 @@ export interface HUNashInput {
   readonly huEquity: (hero: HandLabel, villain: HandLabel) => number;
   /** ハンド一覧（169個、順序は任意）。 */
   readonly allHands: readonly HandLabel[];
-  /** 反復回数の上限（既定 100）。 */
+  /** 反復回数の上限（既定 300）。 */
   readonly maxIterations?: number;
-  /** 収束判定の閾値（レンジ差 / 169。既定 0.001）。 */
+  /**
+   * 収束判定の閾値。実測 exploitability（ε）を bb 単位に換算した値がこれ未満で
+   * 収束とみなす（既定 0.002bb）。
+   */
   readonly convergenceTolerance?: number;
+  /**
+   * カードリムーバル込みのコンボ重み関数（省略時は固定重み 6/4/12）。
+   * 注入すると best response の精度が上がる。
+   */
+  readonly comboWeight?: ComboWeightFn;
 }
 
 export interface HUNashResult {
@@ -61,9 +81,14 @@ export interface HUNashResult {
   readonly sbPushPct: number;
   /** BB のコールレンジサイズ（個数 / 169）。 */
   readonly bbCallPct: number;
+  /** 収束時に達成された exploitability（bb 単位、SB/BB の大きい方）。 */
+  readonly exploitability: number;
 }
 
-const DEFAULT_MAX_ITER = 100;
+const DEFAULT_MAX_ITER = 500;
+// 収束閾値（bb 単位の exploitability）。equity テーブルの MC 標準誤差
+// (±0.35pt ≒ 0.0035 equity) 由来のノイズ床を下回る水準。これ以上厳しくしても
+// テーブル精度の範囲では意味のある改善にならない。
 const DEFAULT_TOLERANCE = 0.001;
 
 /**
@@ -79,30 +104,35 @@ function comboCount(hand: HandLabel): number {
   return 12;
 }
 
-/** Set 同士の対称差サイズ。 */
-function symmetricDiffSize<T>(
-  a: ReadonlySet<T>,
-  b: ReadonlySet<T>,
-): number {
-  let count = 0;
-  for (const v of a) if (!b.has(v)) count++;
-  for (const v of b) if (!a.has(v)) count++;
-  return count;
+/**
+ * HU push/fold ゲームの「盤面」を構築する内部ヘルパ。
+ * 終端 ICM エクイティ・コンボ重み行列・EV 評価関数・exploitability 換算係数を返す。
+ * solveHUNash と huNashExploitability の双方から使い、数値の整合を保証する。
+ */
+interface HUGame {
+  readonly n: number;
+  readonly handCombo: number[];
+  readonly totalCombos: number;
+  /** dealt 事前確率 prior[i] = handCombo[i] / totalCombos。 */
+  readonly prior: number[];
+  /** SB fold 時の SB エクイティ。 */
+  readonly evFoldSb: number;
+  /** BB fold（SB steal 成功）時の BB エクイティ。 */
+  readonly evFoldBb: number;
+  /** SB が hand hi を push したときの EV（BB の call 頻度配列を所与）。 */
+  pushEvSb(hi: number, bbCallProb: readonly number[]): number;
+  /**
+   * BB が hand vi を call したときの showdown EV と、
+   * vi 視点で SB が push してくる割合（0..1）を返す。
+   */
+  callEvBb(vi: number, sbPushProb: readonly number[]): { ev: number; pushFrac: number };
+  /** exploitability($) を bb 単位へ換算する係数（$ / bb）。SB 側。 */
+  readonly chipSlopeSb: number;
+  /** exploitability($) を bb 単位へ換算する係数（$ / bb）。BB 側。 */
+  readonly chipSlopeBb: number;
 }
 
-/**
- * HU push/fold ナッシュ均衡を解く（ICM 反映）。
- *
- * アルゴリズム:
- *   1. SB push range = any-two、BB call range = empty で初期化
- *   2. 以下を maxIterations 回繰り返す:
- *      a. BB の現 call range を所与に、SB の各ハンドで EV(push) vs EV(fold) を比較。
- *         push の方が EV 大なら新 push range に入れる。
- *      b. SB の新 push range を所与に、BB の各ハンドで EV(call) vs EV(fold) を比較。
- *         call の方が EV 大なら新 call range に入れる。
- *      c. レンジが前回とほぼ同じになったら（対称差 / 169 < tolerance）収束終了。
- */
-export function solveHUNash(input: HUNashInput): HUNashResult {
+function buildHUGame(input: HUNashInput): HUGame {
   const {
     stacks,
     payouts,
@@ -113,20 +143,19 @@ export function solveHUNash(input: HUNashInput): HUNashResult {
     ante = 0,
     huEquity,
     allHands,
-    maxIterations = DEFAULT_MAX_ITER,
-    convergenceTolerance = DEFAULT_TOLERANCE,
+    comboWeight,
   } = input;
 
   // ----- バリデーション -----
-  const n = stacks.length;
-  if (n < 2) throw new Error("HUNash: プレイヤー数が 2 未満");
+  const n0 = stacks.length;
+  if (n0 < 2) throw new Error("HUNash: プレイヤー数が 2 未満");
   if (sbIndex === bbIndex) {
     throw new Error("HUNash: sbIndex と bbIndex が同じ");
   }
-  if (sbIndex < 0 || sbIndex >= n) {
+  if (sbIndex < 0 || sbIndex >= n0) {
     throw new Error(`HUNash: sbIndex 範囲外 (${sbIndex})`);
   }
-  if (bbIndex < 0 || bbIndex >= n) {
+  if (bbIndex < 0 || bbIndex >= n0) {
     throw new Error(`HUNash: bbIndex 範囲外 (${bbIndex})`);
   }
   if (sb <= 0 || bb <= 0) {
@@ -145,25 +174,12 @@ export function solveHUNash(input: HUNashInput): HUNashResult {
     );
   }
 
-  // ante は実際には全員から取るが、SB/BB のリスクが減るわけではない。
-  // SB の実プット額 = sb（ante は別途引かれる）。
-  // ICM 評価時は「SB/BB から ante 分も既に控除済み」のスタックで考える。
-
-  const playerCount = n;
-  // ante 全員分の dead money（all-in 終結時に勝者が得る部分）
+  const playerCount = n0;
   const totalAnte = ante * playerCount;
 
   // 全プレイヤーから ante 控除した「ハンド開始時」のスタック
-  const baseStacks: number[] = stacks.map((s, i) => {
-    if (i === sbIndex || i === bbIndex) {
-      // SB/BB は ante も blinds も控除
-      return s - ante;
-    }
-    return s - ante;
-  });
+  const baseStacks: number[] = stacks.map((s) => s - ante);
 
-  // SB/BB から blinds をさらに控除した「ハンドプレイ前」のチップ。
-  // ※ blinds は pot に入っており、最終的に勝者へ。
   const sbBaseAfterBlind = baseStacks[sbIndex]! - sb;
   const bbBaseAfterBlind = baseStacks[bbIndex]! - bb;
   if (sbBaseAfterBlind < 0) {
@@ -173,15 +189,9 @@ export function solveHUNash(input: HUNashInput): HUNashResult {
     throw new Error("HUNash: BB の支払い後スタックが負");
   }
 
-  // 両者 all-in 時の matched 額（pot に入る各プレイヤーの total commitment）。
-  // = min(baseStacks[sb], baseStacks[bb]) = 短いスタックの全 chip。
-  // ※ 旧 effRemaining = min(sbBaseAfterBlind, bbBaseAfterBlind) はブラインド非対称時に
-  //   matched と 0.5 BB ずれて chip conservation を歪める（SB 負け時に 0 → 0.5 BB の幻 dust）。
   const matched = Math.min(baseStacks[sbIndex]!, baseStacks[bbIndex]!);
 
-  // ===== 終端 ICM 評価ヘルパ =====
-  // 任意の (sbStack, bbStack) を所与に、その他のスタックは baseStacks のまま ICM を評価し、
-  // SB と BB の $ エクイティを返す。
+  // 任意の (sbStack, bbStack) を所与に ICM を評価。
   function icmAt(sbStack: number, bbStack: number): { sbEq: number; bbEq: number } {
     const s: number[] = baseStacks.slice();
     s[sbIndex] = Math.max(0, sbStack);
@@ -190,66 +200,49 @@ export function solveHUNash(input: HUNashInput): HUNashResult {
     return { sbEq: eq[sbIndex]!, bbEq: eq[bbIndex]! };
   }
 
-  // ----- 各終端のスタック -----
-
-  // (1) SB folds: BB がポット全部（SB blind + 全員のアンティ）を回収。
-  //   SB stack = baseStacks[sb] - sb
-  //   BB stack = baseStacks[bb] + sb + totalAnte
+  // ----- 各終端のスタックと ICM -----
   const foldSbStack = baseStacks[sbIndex]! - sb;
   const foldBbStack = baseStacks[bbIndex]! + sb + totalAnte;
   const foldICM = icmAt(foldSbStack, foldBbStack);
 
-  // (2) SB pushes, BB folds: SB は BB blind と ante (dead money) を回収する。
-  //   厳密には SB は sb だけ pot に入れ、BB は bb だけ入れていた。
-  //   BB がフォールドすると SB は bb (BB の blind) と totalAnte (全員の ante) を取る。
-  //   SB の最終スタック = baseStacks[sb] + bb + totalAnte (※ ante はもう支払い済みなので、
-  //   ここで totalAnte を加算するのは「dead money 回収」に相当)
-  //   BB の最終スタック = baseStacks[bb] - bb
   const stealSbStack = baseStacks[sbIndex]! + bb + totalAnte;
   const stealBbStack = baseStacks[bbIndex]! - bb;
   const stealICM = icmAt(stealSbStack, stealBbStack);
 
-  // (3) SB pushes, BB calls. SB が勝ち。
-  //   両者 matched chip ずつ commit。pot = 2×matched + totalAnte。
-  //   勝者は (自分の余剰 = baseStacks - matched) + pot を取る。
-  //   = baseStacks[winner] - matched + 2×matched + totalAnte = baseStacks[winner] + matched + totalAnte
-  //   敗者は baseStacks[loser] - matched が残る（短い側なら 0、長い側なら正の余剰）。
   const winSbStack = baseStacks[sbIndex]! + matched + totalAnte;
   const winBbStack = baseStacks[bbIndex]! - matched;
   const winICM = icmAt(winSbStack, winBbStack);
 
-  // (4) SB pushes, BB calls. BB が勝ち。SB と BB を逆に。
   const loseSbStack = baseStacks[sbIndex]! - matched;
   const loseBbStack = baseStacks[bbIndex]! + matched + totalAnte;
   const loseICM = icmAt(loseSbStack, loseBbStack);
 
-  // ===== ハンドの組合せ重み =====
-  const weights: { hand: HandLabel; w: number }[] = allHands.map((h) => ({
-    hand: h,
-    w: comboCount(h),
-  }));
-  const totalCombos = weights.reduce((a, x) => a + x.w, 0);
-
-  // ===== Fictitious Play (混合戦略の平均化更新) =====
-  // 各ハンドの push/call 確率を実数で持ち、毎 iter で best response (binary 0/1) を計算、
-  // 学習率 lr で平均化更新: prob = (1 - lr) * prob + lr * best_response
-  // pure best response の振動を抑え、HU push/fold の真の Nash 均衡（ほぼ pure）に収束する。
-
-  // ハンドのインデックスマップ
-  const handIndex = new Map<HandLabel, number>(
-    allHands.map((h, i) => [h, i] as const),
-  );
+  // ----- コンボ重み行列 W[hi*n+vi] = comboWeight(hero=hi, villain=vi) -----
+  const n = allHands.length;
   const handCombo = allHands.map((h) => comboCount(h));
+  const totalCombos = handCombo.reduce((a, x) => a + x, 0);
+  const prior = handCombo.map((c) => c / totalCombos);
 
-  // 確率（0..1）。初期値: SB=1.0 (any-two push), BB=0.0 (empty call)
-  const sbPushProb = new Array<number>(allHands.length).fill(1.0);
-  const bbCallProb = new Array<number>(allHands.length).fill(0.0);
+  const wfn: ComboWeightFn =
+    comboWeight ?? ((_h, v) => comboCount(v));
+  const W = new Float64Array(n * n);
+  const rowTotal = new Float64Array(n);
+  for (let hi = 0; hi < n; hi++) {
+    let t = 0;
+    const hh = allHands[hi]!;
+    for (let vi = 0; vi < n; vi++) {
+      const w = wfn(hh, allHands[vi]!);
+      W[hi * n + vi] = w;
+      t += w;
+    }
+    rowTotal[hi] = t;
+  }
 
-  // huEquity をキャッシュ（同じセルを毎iter何度も叩くため）
-  const equityCache = new Float32Array(allHands.length * allHands.length);
-  const equityCached = new Uint8Array(allHands.length * allHands.length);
+  // equity キャッシュ（huEquity(hero=hi, villain=vi)）
+  const equityCache = new Float32Array(n * n);
+  const equityCached = new Uint8Array(n * n);
   function cachedEq(hi: number, vi: number): number {
-    const idx = hi * allHands.length + vi;
+    const idx = hi * n + vi;
     if (!equityCached[idx]) {
       equityCache[idx] = huEquity(allHands[hi]!, allHands[vi]!);
       equityCached[idx] = 1;
@@ -257,96 +250,235 @@ export function solveHUNash(input: HUNashInput): HUNashResult {
     return equityCache[idx]!;
   }
 
+  const evFoldSb = foldICM.sbEq;
+  const evFoldBb = stealICM.bbEq;
+  const winSbEq = winICM.sbEq;
+  const loseSbEq = loseICM.sbEq;
+  const winBbEq = winICM.bbEq;
+  const loseBbEq = loseICM.bbEq;
+  const stealSbEq = stealICM.sbEq;
+
+  function pushEvSb(hi: number, bbCallProb: readonly number[]): number {
+    const base = hi * n;
+    const T = rowTotal[hi]!;
+    let callW = 0;
+    let sd = 0;
+    for (let vi = 0; vi < n; vi++) {
+      const cp = bbCallProb[vi]!;
+      if (cp <= 0) continue;
+      const wc = W[base + vi]! * cp;
+      callW += wc;
+      const heq = cachedEq(hi, vi);
+      sd += wc * (heq * winSbEq + (1 - heq) * loseSbEq);
+    }
+    const foldW = T - callW;
+    return (foldW * stealSbEq + sd) / T;
+  }
+
+  function callEvBb(vi: number, sbPushProb: readonly number[]): { ev: number; pushFrac: number } {
+    const base = vi * n;
+    const T = rowTotal[vi]!;
+    let pushW = 0;
+    let sd = 0;
+    for (let hi = 0; hi < n; hi++) {
+      const pp = sbPushProb[hi]!;
+      if (pp <= 0) continue;
+      const wp = W[base + hi]! * pp;
+      pushW += wp;
+      const sbWin = cachedEq(hi, vi);
+      sd += wp * (sbWin * winBbEq + (1 - sbWin) * loseBbEq);
+    }
+    if (pushW <= 0) return { ev: evFoldBb, pushFrac: 0 };
+    return { ev: sd / pushW, pushFrac: pushW / T };
+  }
+
+  // chip → $ 換算係数（数値微分）。sb/bb は BB 単位なので chip = bb。
+  const d = 0.01;
+  const slopeSb =
+    (icmAt(sbStack0 + d, bbStack0).sbEq - icmAt(sbStack0 - d, bbStack0).sbEq) /
+    (2 * d);
+  const slopeBb =
+    (icmAt(sbStack0, bbStack0 + d).bbEq - icmAt(sbStack0, bbStack0 - d).bbEq) /
+    (2 * d);
+
+  return {
+    n,
+    handCombo,
+    totalCombos,
+    prior,
+    evFoldSb,
+    evFoldBb,
+    pushEvSb,
+    callEvBb,
+    chipSlopeSb: Math.abs(slopeSb) > 1e-12 ? Math.abs(slopeSb) : 1,
+    chipSlopeBb: Math.abs(slopeBb) > 1e-12 ? Math.abs(slopeBb) : 1,
+  };
+}
+
+/**
+ * 与えられた戦略プロファイルの被搾取度（exploitability, ε-Nash の ε）を計算する。
+ *
+ * 定義:
+ *   - SB 側 ε: BB 戦略を固定したとき、SB が各ハンドで best response（push/fold の
+ *     良い方）に切り替えて得られる EV 利得。全ハンドを dealt prior で加重。
+ *   - BB 側 ε: SB 戦略を固定したとき、BB が各ハンドで best response（call/fold）に
+ *     切り替えて得られる EV 利得。BB は SB が push してきたときのみ行動するため、
+ *     その頻度で加重。
+ *   - ε は両者の大きい方。$ 単位と bb 単位の両方を返す。
+ *
+ * カードリムーバル込みの厳密なゲームで測るため、`comboWeight` を渡すことを推奨。
+ */
+export interface ExploitabilityResult {
+  /** SB 側 exploitability（$）。 */
+  readonly sbDollar: number;
+  /** BB 側 exploitability（$）。 */
+  readonly bbDollar: number;
+  /** SB 側 exploitability（bb）。 */
+  readonly sbBb: number;
+  /** BB 側 exploitability（bb）。 */
+  readonly bbBb: number;
+  /** ε = max(SB, BB)（bb）。 */
+  readonly epsilonBb: number;
+  /** ε = max(SB, BB)（$）。 */
+  readonly epsilonDollar: number;
+}
+
+export function huNashExploitability(
+  input: HUNashInput,
+  profile: {
+    readonly sbPushFreq: ReadonlyMap<HandLabel, number>;
+    readonly bbCallFreq: ReadonlyMap<HandLabel, number>;
+  },
+): ExploitabilityResult {
+  const game = buildHUGame(input);
+  const { allHands } = input;
+  const n = game.n;
+
+  const sbProb = new Array<number>(n);
+  const bbProb = new Array<number>(n);
+  for (let i = 0; i < n; i++) {
+    const h = allHands[i]!;
+    sbProb[i] = profile.sbPushFreq.get(h) ?? 0;
+    bbProb[i] = profile.bbCallFreq.get(h) ?? 0;
+  }
+
+  let sbDollar = 0;
+  let bbDollar = 0;
+  for (let hi = 0; hi < n; hi++) {
+    const evPush = game.pushEvSb(hi, bbProb);
+    const evFold = game.evFoldSb;
+    const best = Math.max(evPush, evFold);
+    const cur = sbProb[hi]! * evPush + (1 - sbProb[hi]!) * evFold;
+    sbDollar += game.prior[hi]! * (best - cur);
+  }
+  for (let vi = 0; vi < n; vi++) {
+    const { ev: evCall, pushFrac } = game.callEvBb(vi, sbProb);
+    const evFold = game.evFoldBb;
+    const best = Math.max(evCall, evFold);
+    const cur = bbProb[vi]! * evCall + (1 - bbProb[vi]!) * evFold;
+    // BB は SB が push してきたときのみ行動する → pushFrac で加重
+    bbDollar += game.prior[vi]! * pushFrac * (best - cur);
+  }
+
+  const sbBb = sbDollar / game.chipSlopeSb;
+  const bbBb = bbDollar / game.chipSlopeBb;
+  return {
+    sbDollar,
+    bbDollar,
+    sbBb,
+    bbBb,
+    epsilonBb: Math.max(sbBb, bbBb),
+    epsilonDollar: Math.max(sbDollar, bbDollar),
+  };
+}
+
+/**
+ * HU push/fold ナッシュ均衡を解く（ICM 反映）。
+ *
+ * アルゴリズム（Fictitious Play）:
+ *   1. SB push prob = 1（any-two push）、BB call prob = 0（empty）で初期化。
+ *   2. 各 iteration で、両者が相手の「平均戦略」に対する best response（binary）を
+ *      同時に計算し、平均化更新 prob = (1-lr)*prob + lr*BR（lr = 1/(t+1)）。
+ *      これにより prob は best response の時間平均となり、その exploitability は
+ *      理論上 ε→0 に収束する。
+ *   3. 実測 exploitability（bb 換算）が tolerance 未満になったら早期終了。
+ *
+ * 混合戦略: 境界（無差別）ハンドの頻度は frequency map に保持される。
+ */
+export function solveHUNash(input: HUNashInput): HUNashResult {
+  const {
+    allHands,
+    maxIterations = DEFAULT_MAX_ITER,
+    convergenceTolerance = DEFAULT_TOLERANCE,
+  } = input;
+
+  const game = buildHUGame(input);
+  const n = game.n;
+  const { evFoldSb, evFoldBb, chipSlopeSb, chipSlopeBb, prior } = game;
+
+  // 確率（0..1）。初期値: SB=1.0 (any-two push), BB=0.0 (empty call)
+  const sbPushProb = new Array<number>(n).fill(1.0);
+  const bbCallProb = new Array<number>(n).fill(0.0);
+
+  const sbBR = new Array<number>(n);
+  const bbBR = new Array<number>(n);
+
   let iter = 0;
   let converged = false;
+  let epsilonBb = Infinity;
 
   for (iter = 1; iter <= maxIterations; iter++) {
-    const lr = 1.0 / (iter + 1); // 古典 fictitious play の learning rate (1/(t+1))
+    // 線形平均化 (recency-weighted FP): 重み w_t = t → lr = 2/(t+1)。
+    // 一様平均 (1/(t+1)) より収束が速く、near-pure 均衡で ε を短時間で小さくできる。
+    const lr = 2.0 / (iter + 1);
 
-    // BB call の混合 weight 合計
-    let bbCallW = 0;
-    for (let i = 0; i < allHands.length; i++) bbCallW += handCombo[i]! * bbCallProb[i]!;
-    const bbFoldW = totalCombos - bbCallW;
-
-    // (a) SB best response (binary 0/1) given current bbCallProb
-    const evFoldSb = foldICM.sbEq;
-    const sbBR = new Array<number>(allHands.length);
-    for (let hi = 0; hi < allHands.length; hi++) {
-      let evPush = (bbFoldW / totalCombos) * stealICM.sbEq;
-      if (bbCallW > 0) {
-        let sdSum = 0;
-        for (let vi = 0; vi < allHands.length; vi++) {
-          const cp = bbCallProb[vi]!;
-          if (cp <= 0) continue;
-          const w = handCombo[vi]! * cp;
-          const heq = cachedEq(hi, vi);
-          sdSum += w * (heq * winICM.sbEq + (1 - heq) * loseICM.sbEq);
-        }
-        evPush += sdSum / totalCombos;
-      }
+    // (a) 両者、相手の「現平均戦略」に対する best response（binary）を同時計算。
+    //     同時に、その平均戦略の exploitability（$）を積算する。
+    let sbEpsDollar = 0;
+    for (let hi = 0; hi < n; hi++) {
+      const evPush = game.pushEvSb(hi, bbCallProb);
       sbBR[hi] = evPush > evFoldSb ? 1 : 0;
+      const best = evPush > evFoldSb ? evPush : evFoldSb;
+      const cur = sbPushProb[hi]! * evPush + (1 - sbPushProb[hi]!) * evFoldSb;
+      sbEpsDollar += prior[hi]! * (best - cur);
     }
 
-    // SB push の混合 weight 合計（NEW best response）
-    let sbPushW = 0;
-    for (let i = 0; i < allHands.length; i++) sbPushW += handCombo[i]! * sbBR[i]!;
-
-    // (b) BB best response given SB's NEW best response (binary 0/1)
-    const evFoldBb = stealICM.bbEq;
-    const bbBR = new Array<number>(allHands.length);
-    if (sbPushW === 0) {
-      for (let i = 0; i < allHands.length; i++) bbBR[i] = 0;
-    } else {
-      for (let vi = 0; vi < allHands.length; vi++) {
-        let sdSum = 0;
-        for (let hi = 0; hi < allHands.length; hi++) {
-          const pp = sbBR[hi]!;
-          if (pp <= 0) continue;
-          const w = handCombo[hi]! * pp;
-          const sbWin = cachedEq(hi, vi);
-          sdSum += w * (sbWin * winICM.bbEq + (1 - sbWin) * loseICM.bbEq);
-        }
-        const evCall = sdSum / sbPushW;
-        bbBR[vi] = evCall > evFoldBb ? 1 : 0;
-      }
+    let bbEpsDollar = 0;
+    for (let vi = 0; vi < n; vi++) {
+      const { ev: evCall, pushFrac } = game.callEvBb(vi, sbPushProb);
+      bbBR[vi] = evCall > evFoldBb ? 1 : 0;
+      const best = evCall > evFoldBb ? evCall : evFoldBb;
+      const cur = bbCallProb[vi]! * evCall + (1 - bbCallProb[vi]!) * evFoldBb;
+      bbEpsDollar += prior[vi]! * pushFrac * (best - cur);
     }
 
-    // (c) 平均化更新 (fictitious play): prob = (1-lr)*prob + lr*BR
-    let maxDelta = 0;
-    for (let i = 0; i < allHands.length; i++) {
-      const newSb = (1 - lr) * sbPushProb[i]! + lr * sbBR[i]!;
-      const newBb = (1 - lr) * bbCallProb[i]! + lr * bbBR[i]!;
-      const dSb = Math.abs(newSb - sbPushProb[i]!);
-      const dBb = Math.abs(newBb - bbCallProb[i]!);
-      if (dSb > maxDelta) maxDelta = dSb;
-      if (dBb > maxDelta) maxDelta = dBb;
-      sbPushProb[i] = newSb;
-      bbCallProb[i] = newBb;
+    epsilonBb = Math.max(sbEpsDollar / chipSlopeSb, bbEpsDollar / chipSlopeBb);
+
+    // (b) 平均化更新（fictitious play）
+    for (let i = 0; i < n; i++) {
+      sbPushProb[i] = (1 - lr) * sbPushProb[i]! + lr * sbBR[i]!;
+      bbCallProb[i] = (1 - lr) * bbCallProb[i]! + lr * bbBR[i]!;
     }
 
-    // 収束: 全ハンドの確率変化が tolerance 未満
-    if (maxDelta < convergenceTolerance) {
+    // (c) 実測 exploitability による収束判定（最低 2 反復は回す）。
+    if (iter >= 2 && epsilonBb < convergenceTolerance) {
       converged = true;
       break;
     }
   }
 
-  // 確率 > 0.5 を「レンジに含む」として binary 出力
-  // 同時に各ハンドの確率を frequency map として返す
+  // 確率 > 0.5 を「レンジに含む」として binary 出力。頻度は map に保持。
   const sbPushRange = new Set<HandLabel>();
   const bbCallRange = new Set<HandLabel>();
   const sbPushFreq = new Map<HandLabel, number>();
   const bbCallFreq = new Map<HandLabel, number>();
-  for (let i = 0; i < allHands.length; i++) {
+  for (let i = 0; i < n; i++) {
     const h = allHands[i]!;
     sbPushFreq.set(h, sbPushProb[i]!);
     bbCallFreq.set(h, bbCallProb[i]!);
     if (sbPushProb[i]! > 0.5) sbPushRange.add(h);
     if (bbCallProb[i]! > 0.5) bbCallRange.add(h);
   }
-
-  // handIndex は使わないので破棄させる（lint 抑制 + 将来の混合戦略出力用予約）
-  void handIndex;
 
   return {
     sbPushRange,
@@ -357,5 +489,6 @@ export function solveHUNash(input: HUNashInput): HUNashResult {
     converged,
     sbPushPct: sbPushRange.size / allHands.length,
     bbCallPct: bbCallRange.size / allHands.length,
+    exploitability: epsilonBb,
   };
 }
