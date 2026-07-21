@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { solveHUNash } from "../src/nash.js";
+import { solveHUNash, huNashExploitability } from "../src/nash.js";
 import type { HandLabel } from "../src/nash.js";
 
 /**
@@ -270,5 +270,117 @@ describe("solveHUNash", () => {
         allHands: ALL_HANDS,
       }),
     ).toThrow();
+  });
+});
+
+describe("huNashExploitability", () => {
+  // 代表スタックで、ソルバ出力の被搾取度（ε-Nash の ε）が閾値未満であることを検証。
+  // ソルバは既定 tolerance 0.001bb で収束するため、審判で測った ε も概ねそれ以下になる。
+  const EPS_THRESHOLD = 0.0015; // bb。既定 tolerance 0.001 に浮動小数の余裕を加えた値。
+
+  for (const stack of [3, 5, 8, 10, 15, 20, 25]) {
+    it(`eff ${stack}BB: 解の exploitability が ${EPS_THRESHOLD}bb 未満`, () => {
+      const input = {
+        stacks: [stack, stack],
+        payouts: [100],
+        sbIndex: 0,
+        bbIndex: 1,
+        sb: 0.5,
+        bb: 1,
+        ante: 0,
+        huEquity: fakeEq,
+        allHands: ALL_HANDS,
+      };
+      const r = solveHUNash(input);
+      expect(r.converged).toBe(true);
+      const eps = huNashExploitability(input, {
+        sbPushFreq: r.sbPushFreq,
+        bbCallFreq: r.bbCallFreq,
+      });
+      expect(eps.epsilonBb).toBeLessThan(EPS_THRESHOLD);
+      // result に載る exploitability と審判の値が概ね一致する
+      expect(Math.abs(r.exploitability - eps.epsilonBb)).toBeLessThan(0.001);
+    });
+  }
+
+  it("ante 有りでも exploitability は閾値未満", () => {
+    const input = {
+      stacks: [10, 10],
+      payouts: [100],
+      sbIndex: 0,
+      bbIndex: 1,
+      sb: 0.5,
+      bb: 1,
+      ante: 0.1,
+      huEquity: fakeEq,
+      allHands: ALL_HANDS,
+    };
+    const r = solveHUNash(input);
+    const eps = huNashExploitability(input, {
+      sbPushFreq: r.sbPushFreq,
+      bbCallFreq: r.bbCallFreq,
+    });
+    expect(eps.epsilonBb).toBeLessThan(0.0015);
+  });
+
+  it("メトリクスの健全性: 明らかに悪い戦略は高い ε を返す", () => {
+    // SB=any-two push, BB=never call という非均衡プロファイル。
+    // BB は AA すら降りるため大きく搾取可能。
+    const input = {
+      stacks: [10, 10],
+      payouts: [100],
+      sbIndex: 0,
+      bbIndex: 1,
+      sb: 0.5,
+      bb: 1,
+      ante: 0,
+      huEquity: fakeEq,
+      allHands: ALL_HANDS,
+    };
+    const anyTwo = new Map<HandLabel, number>(ALL_HANDS.map((h) => [h, 1]));
+    const never = new Map<HandLabel, number>(ALL_HANDS.map((h) => [h, 0]));
+    const badEps = huNashExploitability(input, {
+      sbPushFreq: anyTwo,
+      bbCallFreq: never,
+    });
+    const solved = solveHUNash(input);
+    const goodEps = huNashExploitability(input, {
+      sbPushFreq: solved.sbPushFreq,
+      bbCallFreq: solved.bbCallFreq,
+    });
+    // 悪い戦略の ε は均衡解の ε より桁違いに大きい
+    expect(badEps.epsilonBb).toBeGreaterThan(goodEps.epsilonBb * 20);
+    expect(badEps.epsilonBb).toBeGreaterThan(0.1);
+  });
+
+  it("comboWeight 注入（ブロッカー込み重み）でも収束し ε が小さい", () => {
+    // 簡易ブロッカー重み: hero と villain がランクを共有すると villain コンボを減らす。
+    // 実アプリの comboCountVsHero と同じ「自分の手札が相手コンボを削る」効果の縮図。
+    const blockerWeight = (hero: HandLabel, villain: HandLabel): number => {
+      const base = villain.length === 2 ? 6 : villain[2] === "s" ? 4 : 12;
+      const shared =
+        (hero.includes(villain[0]!) ? 1 : 0) +
+        (hero.includes(villain[1]!) ? 1 : 0);
+      return Math.max(1, base - shared);
+    };
+    const input = {
+      stacks: [12, 12],
+      payouts: [100],
+      sbIndex: 0,
+      bbIndex: 1,
+      sb: 0.5,
+      bb: 1,
+      ante: 0,
+      huEquity: fakeEq,
+      allHands: ALL_HANDS,
+      comboWeight: blockerWeight,
+    };
+    const r = solveHUNash(input);
+    expect(r.converged).toBe(true);
+    const eps = huNashExploitability(input, {
+      sbPushFreq: r.sbPushFreq,
+      bbCallFreq: r.bbCallFreq,
+    });
+    expect(eps.epsilonBb).toBeLessThan(0.0015);
   });
 });

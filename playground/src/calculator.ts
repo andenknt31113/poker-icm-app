@@ -118,10 +118,14 @@ export function recompute(): void {
     renderBFMatrix(stacks, payouts);
 
     // 必要勝率: hero/villain あれば自動更新 (BB ante 構造、ante は dead)
+    // スタック0のプレイヤーが hero/villain の場合 calculatePotOdds が throw する
+    // ため、自動算出はスキップ (throw で ICM 表全体が生エラーに置き換わるのを防ぐ)。
     if (
       heroIndex >= 0 &&
       villainIndex >= 0 &&
-      heroIndex !== villainIndex
+      heroIndex !== villainIndex &&
+      stacks[heroIndex]! > 0 &&
+      stacks[villainIndex]! > 0
     ) {
       const sbV = Number(nashSbInput?.value) || DEFAULT_SB;
       const bbV = Number(nashBbInput?.value) || DEFAULT_BB;

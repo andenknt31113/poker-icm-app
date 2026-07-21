@@ -90,6 +90,8 @@ export const en: Record<string, string> = {
   "result.bf.matrixTitle": "Everyone vs everyone BF map 🆕",
   "result.bf.matrixHint.html": "\n          Rows = Hero (you), columns = Villain.\n          Top = Risk Premium at a 1:1 pot, bottom = BF value.\n        ",
   "result.bf.howto.summary": "📖 How to read the table (click to expand)",
+  "result.bf.howto.body.html":
+    "\n            <h4>1. The numbers in each cell</h4>\n            <p>The <strong>BF (Bubble Factor) on the bottom row</strong> is the main metric.</p>\n            <ul>\n              <li><strong>1.00</strong> = chips ⇄ $ are linear (no ICM pressure)</li>\n              <li><strong>1.16</strong> = losing 100 chips hurts as much as winning 86 feels good. You should play <strong>16% tighter</strong> than chip-EV</li>\n              <li><strong>1.41</strong> = losing 100 chips hurts as much as winning 71 feels good. You should play <strong>41% tighter</strong> (yikes)</li>\n            </ul>\n            <p>The <strong>Risk Premium on the top row</strong> is how many extra % of equity you need beyond cEV when the call is pot-sized (1:1 odds). For example, +8.5% means \"even a coin flip (50%) isn't enough — you actually need 58.5% to call.\"</p>\n            <h4>2. What the colors mean</h4>\n            <ul>\n              <li>🟢 <strong>Dark green</strong> (BF &lt; 0.85): ICM tailwind, call wide</li>\n              <li>🟢 Green (0.85–1.0): slightly favorable</li>\n              <li>🟡 Yellow-green to yellow (1.0–1.1): neutral, roughly cEV</li>\n              <li>🟠 Orange (1.1–1.25): ICM pressure, play tight</li>\n              <li>🔴 Red (&gt; 1.25): very dangerous, premiums only</li>\n            </ul>\n            <h4>3. Reading it strategically</h4>\n            <ul>\n              <li>If an opponent in a <strong>red cell</strong> gets involved → weight toward folding</li>\n              <li>Opponents in <strong>green cells</strong> → leaning a bit looser is OK</li>\n              <li>Your row <strong>when you're the shortest stack</strong> has low BFs overall (= little to lose) → you can gamble relatively freely</li>\n              <li>The <strong>chip leader vs. second stack</strong> cell has a spiking BF → clashes between big stacks call for caution</li>\n              <li>A <strong>mid stack</strong> facing the leader is the spot to play tightest (classic ICM pressure)</li>\n            </ul>\n            <h4>4. Using it in play</h4>\n            <ol>\n              <li>Once seated, enter every player's stack</li>\n              <li>Look at <strong>your row</strong> on the far left to see who to play tight/loose against</li>\n              <li>Mid-hand, when you think \"wait, is this opponent dangerous?\", check the matching cell</li>\n            </ol>\n            <p class=\"howto-note\">Note: the table is not symmetric (swapping hero/villain shifts the BF slightly). This is because the calling side takes on risk, and the distribution of the other players makes it asymmetric.</p>\n          ",
   "result.bf.scrollHint": "→ Scroll sideways",
 
   // ===== index.html: 計算結果 - 必要勝率 =====
@@ -264,7 +266,6 @@ export const en: Record<string, string> = {
               <li>Check each player’s $ value in the “ICM equity” table</li>
               <li>Check the 🎯 vs ⚔️ cell in the “everyone vs everyone BF map”</li>
               <li>Call amount / net gain auto-calc from 🎯⚔️ (after editing, “🔄 Back to auto-calc” restores them)</li>
-              <li>In “🃏 Per-hand verdict,” pick the villain range and tap your hand for an individual call/fold</li>
             </ol>
           </div>
         </details>
@@ -499,8 +500,6 @@ export const en: Record<string, string> = {
   // ===== 警告 (calculator.ts) =====
   "calc.warn.position.html": "\n      ⚠ <strong>Position reversed</strong>: action order is <code>{heroPos}({heroAct}) → {villainPos}({villainAct})</code>.\n      In practice <strong>hero ({heroPos}) acts first</strong>, so calling a villain ({villainPos}) open shove can’t happen.\n      (The call math still runs, but swapping positions is more realistic.)\n    ",
   "calc.warn.depth.html": "\n    ⚠️ Effective {eff}bb: at this depth, options other than push/fold\n    (small opens or calls) are realistic. This tool assumes all-in.\n  ",
-
-  // ===== ハンド別判定 (calculator.ts renderHandVerdict) =====
 
   // ===== 用語解説モーダル (calculator.ts INFO_TEXTS) =====
   "info.icm.title": "ICM (Independent Chip Model)",

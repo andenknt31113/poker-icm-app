@@ -9,7 +9,6 @@
 export type HandNotation = string; // 例: "AA", "AKs", "AKo"
 
 const RANKS = ["A", "K", "Q", "J", "T", "9", "8", "7", "6", "5", "4", "3", "2"] as const;
-export const RANK_ORDER = RANKS;
 
 /** グリッド座標 (row, col) → ハンド表記。row/col は 0-12 (A=0, 2=12)。 */
 export function handAt(row: number, col: number): HandNotation {
@@ -18,22 +17,6 @@ export function handAt(row: number, col: number): HandNotation {
   if (row === col) return `${r1}${r2}`; // pair
   if (row < col) return `${r1}${r2}s`;   // suited (上三角)
   return `${r2}${r1}o`;                   // offsuit (下三角)
-}
-
-/** ハンドが属するグリッド位置を返す。 */
-export function gridPosition(hand: HandNotation): { row: number; col: number } {
-  if (hand.length === 2) {
-    // pair
-    const idx = RANKS.indexOf(hand[0]! as (typeof RANKS)[number]);
-    return { row: idx, col: idx };
-  }
-  const r1 = RANKS.indexOf(hand[0]! as (typeof RANKS)[number]);
-  const r2 = RANKS.indexOf(hand[1]! as (typeof RANKS)[number]);
-  const isSuited = hand[2] === "s";
-  // 表記順: 高い rank が左 = row。suited は r1<=r2 ではなく r1<r2 (高い方が前)
-  // r1 が必ず高い rank なので RANKS index が小さい
-  if (isSuited) return { row: r1, col: r2 };
-  return { row: r2, col: r1 };
 }
 
 /**
