@@ -15,7 +15,8 @@ import { initLangToggle } from "./langToggle.js";
 import { initNumberInputAutoSelect } from "./dom.js";
 
 // ===== 各機能モジュール =====
-import { initSetup, renderPlayers } from "./setup.js";
+import { initSetup, renderPlayers, refreshProGatedUi } from "./setup.js";
+import { initEntitlements, onEntitlementChange } from "./entitlement.js";
 import { initCalculator, recompute } from "./calculator.js";
 import { initHandRange } from "./handRange.js";
 import { initNashUI } from "./nashUI.js";
@@ -43,6 +44,16 @@ initGuide();
 initPracticeInteractions();
 initReview();
 initProgress();
+
+// ===== 課金 (RevenueCat) の初期化 =====
+// Pro 権限が確定/変化したら freemium ロックの見た目を再描画し、計算も更新する。
+// initEntitlements は await しない (ネットワーク待ちで初期描画をブロックしない)。
+// web / IAP 未設定では initEntitlements は即 return するため実質ノーオペ。
+onEntitlementChange(() => {
+  refreshProGatedUi();
+  recompute();
+});
+void initEntitlements();
 
 // ===== 初期描画 =====
 applyTab(getActiveTab());

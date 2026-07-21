@@ -741,4 +741,8 @@ export const en: Record<string, string> = {
   "paywall.close.aria": "Close",
   "paywall.comingSoon": "Coming soon",
   "paywall.lock.title": "Pro feature",
+  "paywall.purchase.success": "Upgraded to Pro",
+  "paywall.restore.success": "Purchases restored",
+  "paywall.restore.notFound": "No purchases found to restore",
+  "paywall.error": "Something went wrong. Please try again later",
 };

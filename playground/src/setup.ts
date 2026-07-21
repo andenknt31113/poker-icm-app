@@ -405,6 +405,19 @@ function renderPayouts(): void {
   addPayoutBtn.disabled = !locked && payoutsArr.length >= MAX_PAYOUTS;
 }
 
+/**
+ * Pro 権限が変化したとき (RevenueCat の購入/復元完了) に、freemium ロックの
+ * 見た目を一括で再描画する。ロック判定ロジック自体は各 render 関数内の isPro()
+ * に委ねており、ここではそれらを呼び直すだけ (ゲートの挙動は不変)。
+ * main.ts が onEntitlementChange 経由で呼ぶ。
+ */
+export function refreshProGatedUi(): void {
+  renderPlayers();
+  renderPayouts();
+  const saveScenarioBtn = document.getElementById("save-scenario-btn") as HTMLButtonElement | null;
+  saveScenarioBtn?.classList.toggle("locked-pro", !isPro());
+}
+
 export function setPayouts(values: number[]): void {
   const sanitized = sanitizePayoutsArray(values);
   replacePayouts(sanitized.length > 0 ? sanitized : [100]);
