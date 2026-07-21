@@ -1,8 +1,27 @@
 import { t } from "./i18n.js";
+import { isCapacitorNative } from "./capacitorEnv.js";
 
 // ===== テーマ切替 (dark/light) =====
 const THEME_KEY = "poker-icm-theme";
 type Theme = "dark" | "light";
+
+// Capacitor (iOS) 上ではステータスバーの文字色がアプリのテーマに追従しないため、
+// テーマ切替時に @capacitor/status-bar で明示的に合わせる。
+// 通常ブラウザではステータスバー API 自体が存在しないため isCapacitorNative() で
+// 早期リターンし、dynamic import すら発生させない (web バンドルへの影響ゼロ)。
+function syncStatusBarStyle(theme: Theme): void {
+  if (!isCapacitorNative()) return;
+  import("@capacitor/status-bar")
+    .then(({ StatusBar, Style }) => {
+      // Style.Light = 明るい背景向け (濃い文字色) / Style.Dark = 暗い背景向け (明るい文字色)
+      const style = theme === "light" ? Style.Light : Style.Dark;
+      return StatusBar.setStyle({ style });
+    })
+    .catch(() => {
+      /* @capacitor/status-bar が使えない (プラグイン未同梱・呼び出し失敗) 場合は無視 */
+    });
+}
+
 function applyTheme(t: Theme): void {
   if (t === "light") {
     document.documentElement.setAttribute("data-theme", "light");
@@ -14,6 +33,7 @@ function applyTheme(t: Theme): void {
   const themeColorMeta = document.querySelector('meta[name="theme-color"]');
   if (themeColorMeta) themeColorMeta.setAttribute("content", t === "light" ? "#f5f7fa" : "#0f1419");
   try { localStorage.setItem(THEME_KEY, t); } catch { /* ignore */ }
+  syncStatusBarStyle(t);
 }
 
 function initTheme(): void {
@@ -102,7 +122,10 @@ function showSwUpdateToast(waitingWorker: ServiceWorker): void {
 function initServiceWorker(): void {
   // ページ初期化時点では更新は未要求 (テストの分離にも必要)
   swUpdateRequested = false;
-  if ("serviceWorker" in navigator && location.protocol !== "file:") {
+  // Capacitor (iOS) は capacitor:// 独自スキームで動作し、file: と同様に
+  // Service Worker のユースケース (オフラインキャッシュ・PWA インストール) が
+  // 意味を持たない。SW 登録自体と更新トーストを丸ごとスキップする。
+  if ("serviceWorker" in navigator && location.protocol !== "file:" && !isCapacitorNative()) {
     // load は 1 ページにつき一度しか発火しないため { once: true } で確実に自己解除する
     window.addEventListener(
       "load",
@@ -157,6 +180,10 @@ function isStandaloneDisplay(): boolean {
 }
 
 function initInstallPrompt(): void {
+  // Capacitor (ネイティブアプリ) 内では「ホーム画面に追加」の概念自体が無意味。
+  // UA に iPhone を含むため iOS Safari 向け案内バナーが誤表示されるのを防ぐ
+  // (エージェント自己申告の抜けを fable レビューで補完)。
+  if (isCapacitorNative()) return;
   if (isStandaloneDisplay()) return;
 
   let deferredInstallPrompt: BeforeInstallPromptEvent | null = null;
