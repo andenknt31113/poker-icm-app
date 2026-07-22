@@ -148,9 +148,10 @@ function computePushBackRange(villainCallRange: Set<HandNotation>): PushBackResu
   return { pushRange, marginal };
 }
 
-// ボーダー判定バンド幅 (±2pt)。equity の MC 誤差 (±0.3pt 程度) と
-// 「相手のレンジ想定そのもののズレ」を考慮した五分圏として扱う。
-const MARGINAL_BAND = 0.02;
+// ボーダー判定バンド幅 (±0.1pt)。equity テーブルは 100万試行/ペア
+// (MC 標準誤差 ±0.05pt) に精密化済みで、±0.1pt はその約2σ。
+// 「数値上ほぼ完全に五分」のセルだけを黄にする最小幅 (ユーザー指定)。
+const MARGINAL_BAND = 0.001;
 
 // タップで数値検分中のハンド (callBack 方向のみ)。
 let inspectedHand: HandNotation | null = null;
@@ -223,10 +224,10 @@ export function renderRangeComparison(requiredEquity: number): void {
 
   if (direction === "callBack") {
     // 相手 push に対し自分 call できるハンド。
-    // 判定バンドは必要勝率 ±2pt の対称バンド:
-    //   margin >= +2pt   → 緑 (明確なコール)
-    //   |margin| < 2pt   → 黄 (ボーダー: MC 誤差 ±0.3pt とレンジ想定のズレを考慮した五分圏)
-    //   margin <= -2pt   → 無色 (明確なフォールド)
+    // 判定バンドは必要勝率 ±0.1pt の対称バンド:
+    //   margin >= +0.1pt   → 緑 (コール可)
+    //   |margin| < 0.1pt   → 黄 (ボーダー: 数値上ほぼ完全に五分)
+    //   margin <= -0.1pt   → 無色 (フォールド)
     let callable = 0;
     let marginal = 0;
     renderGrid(heroGrid, (hand) => {
