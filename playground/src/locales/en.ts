@@ -128,7 +128,7 @@ export const en: Record<string, string> = {
   "hand.title.villainCall": "Villain call range 🟢",
   "hand.title.heroPush": "Your push range 🔴",
   "hand.label.villainCall": "Villain call range",
-  "hand.legend.html": "🟩 ≥ required +2pt = call ／ 🟨 within ±2pt = borderline (coin-flip zone) ／ uncolored = fold. Tap a cell for exact numbers.",
+  "hand.legend.html": "🟩 ≥ required +0.1pt = call ／ 🟨 within ±0.1pt = borderline (a true coin flip) ／ uncolored = fold. Tap a cell for exact numbers.",
   "hand.inspect.detail.html": "<strong>{hand}</strong>: equity {eq}% − required {req}% = <strong>{margin}pt</strong> → {verdict}",
   "hand.inspect.verdict.call": "Call",
   "hand.inspect.verdict.marginal": "Borderline",

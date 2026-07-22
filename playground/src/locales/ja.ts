@@ -123,7 +123,7 @@ export const ja: Record<string, string> = {
   "hand.title.villainCall": "相手のcallレンジ 🟢",
   "hand.title.heroPush": "自分のpushレンジ 🔴",
   "hand.label.villainCall": "相手のcallレンジ",
-  "hand.legend.html": "🟩 必要勝率+2pt以上 = コール可 ／ 🟨 ±2pt = ボーダー (五分圏内) ／ 無色 = フォールド。セルをタップすると数値を表示。",
+  "hand.legend.html": "🟩 必要勝率+0.1pt以上 = コール可 ／ 🟨 ±0.1pt = ボーダー (ほぼ完全に五分) ／ 無色 = フォールド。セルをタップすると数値を表示。",
   "hand.inspect.detail.html": "<strong>{hand}</strong>: 勝率 {eq}% − 必要 {req}% = <strong>{margin}pt</strong> → {verdict}",
   "hand.inspect.verdict.call": "コール可",
   "hand.inspect.verdict.marginal": "五分 (ボーダー)",
