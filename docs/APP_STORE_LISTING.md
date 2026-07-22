@@ -120,8 +120,11 @@ ICM・Bubble Factor・Risk Premium・Nash均衡といった専門用語は、ア
 ・移動時間やスキマ時間に判断力トレーニングをしたい方
 ・ICMやBubble Factorという言葉を耳にしたことはあるが、仕組みをきちんと理解したい方
 
-【完全オフライン・プライバシー】
-本アプリの計算処理はすべて端末内で完結し、外部サーバーへのデータ送信は一切行いません。入力したスタックやペイアウト、練習の成績・復習履歴はすべて端末内にのみ保存されます。アカウント登録も不要で、ダウンロード後すぐに使い始められます。通信環境がない移動中でも、機内モードでも問題なくご利用いただけます。
+【オフライン設計・プライバシー】
+本アプリの計算処理はすべて端末内で完結し、入力したスタックやペイアウト、練習の成績・復習履歴が外部サーバーへ送信されることはありません。アカウント登録も不要で、ダウンロード後すぐに使い始められます。通信環境がない移動中でも、機内モードでも計算・練習機能はすべてご利用いただけます（Pro の購入・復元時のみ通信が必要です）。
+
+【無料版と Pro（買い切り）】
+無料版では、実戦を模した8種のシナリオプリセットで全計算機能（ICM・Bubble Factor マップ・必要勝率・レンジ比較・Nash 均衡・練習モード）をご利用いただけます。自分のテーブルを自由に再現したい方向けに、スタック・人数・ペイアウト構造の編集とシナリオ保存を、買い切りの Pro（一度の購入で永続利用・サブスクではありません）として提供しています。
 
 【ご注意】
 本アプリは実際の金銭を賭けるギャンブルではありません。ポーカートーナメントにおける意思決定を学習・シミュレーションするための計算・練習ツールです。表示される計算結果や判定は参考情報であり、その正確性・完全性を保証するものではありません。実戦での最終判断は、利用者ご自身の責任において行ってください。
@@ -287,33 +290,39 @@ andenknt31113@gmail.com
 
 ## 6. App Privacy（プライバシー）の回答案
 
-前提: 本アプリはネットワーク通信を一切行わず、すべてのデータ（プレイヤー設定・スタック・ペイアウト・練習履歴・成績）をブラウザ／端末内のストレージ（localStorage 相当）にのみ保存する。外部送信・第三者提供・広告SDK・アクセス解析SDKはいずれも組み込まれていない。
+前提: 計算・練習のデータ（プレイヤー設定・スタック・ペイアウト・練習履歴・成績）はすべて端末内ストレージにのみ保存され、外部送信・広告SDK・アクセス解析SDKは組み込まれていない。**ただし買い切り Pro (IAP) の権限管理に RevenueCat SDK を使用しており、購入・復元時に購入情報（レシート）とランダム生成の匿名 App User ID が RevenueCat に送信される**。このため「データ収集なし」ではなく、以下の2カテゴリを申告する。
 
 ### App Store Connect「App Privacy」質問への回答方針
 
 最初の質問「Do you or your third-party partners collect data from this app?」に対して:
 
-> **いいえ（No, we do not collect data from this app）** を選択する。
+> **はい（Yes, we collect data from this app）** を選択し、以下の2カテゴリのみ申告する。
 
-これにより以降の詳細カテゴリ（Contact Info / Health & Fitness / Financial Info / Location / Sensitive Info / Contacts / User Content / Browsing History / Search History / Identifiers / Purchases / Usage Data / Diagnostics / Other Data）は個別回答が不要になり、ストア上のプライバシー表示は **"Data Not Collected"**（データは収集されません）として表示される。
+| 申告カテゴリ | 項目 | 用途 | ユーザーとの紐付け | トラッキング |
+|---|---|---|---|---|
+| **Purchases** | Purchase History（購入履歴） | App Functionality（IAP の権限判定） | **紐付けなし (Not linked)** | **なし (No)** |
+| **Identifiers** | User ID（RevenueCat の匿名 App User ID） | App Functionality | **紐付けなし (Not linked)** | **なし (No)** |
+
+RevenueCat はランダム生成の匿名 ID のみを使い、氏名・メール等は収集しない（アカウント機能自体が無い）ため「Not linked to the user's identity」、広告・計測目的の使用は無いため「Tracking: No」で申告する。
 
 ### カテゴリ別の考え方（内部確認用メモ・参考）
 
 | カテゴリ | 収集有無 | 理由 |
 |---|---|---|
 | Contact Info（連絡先） | 収集なし | 入力フォーム・登録機能自体が存在しない |
-| Financial Info（決済情報） | 収集なし | 課金・決済処理は将来の買い切り課金導入時に別途 IAP 経由（Apple管理）で扱う想定。アプリ独自での収集は行わない |
+| Financial Info（決済情報） | 収集なし | 決済（カード情報等）は Apple が処理。アプリ・RevenueCat はカード情報に触れない |
 | Location（位置情報） | 収集なし | 位置情報 API を一切使用しない |
 | User Content（ユーザーコンテンツ） | 収集なし | プレイヤー名・スタック・ペイアウト等はすべてローカル保存のみで、サーバー送信なし |
-| Identifiers（識別子） | 収集なし | 広告ID・端末IDの取得・送信を行わない |
+| Identifiers（識別子） | **収集あり (User ID)** | RevenueCat の匿名 App User ID（ランダム生成、個人と紐付けなし）。広告ID (IDFA) は不使用 |
 | Usage Data（利用状況） | 収集なし | アクセス解析・行動トラッキングSDK未導入（`docs/TERMS_PRIVACY_DRAFT.md` の方針と一致） |
 | Diagnostics（診断情報） | 収集なし | クラッシュレポート／パフォーマンス計測SDK未導入 |
+| Purchases（購入） | **収集あり** | IAP の購入履歴を RevenueCat が権限判定のために処理 |
 | Other Data（その他） | 収集なし | 該当データなし |
 
 ### 注意事項（将来変更時）
 
 - 将来的にアクセス解析（例: privacy-friendly な計測ツール）やクラッシュレポートSDKを追加する場合は、App Privacy の回答を **必ず更新**し、`docs/TERMS_PRIVACY_DRAFT.md` のプライバシーポリシーにも追記すること。
-- 有料化（買い切り課金）を Apple の In-App Purchase / 有料アプリとして実装する場合、決済情報自体は Apple が処理するため本体アプリ側の収集区分は変わらない想定だが、実装時に再確認すること。
+- 買い切り課金 (IAP + RevenueCat) は導入済みで、上記のとおり Purchases / Identifiers を申告する。SDK 追加・用途変更時は必ずこの回答を見直すこと。
 
 ---
 
