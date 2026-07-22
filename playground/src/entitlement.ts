@@ -38,6 +38,10 @@ let rcRuntimePro = false;
  *   3. RevenueCat ランタイム判定 (当セッションで active を確認済み)
  */
 export function isPro(): boolean {
+  // 通常ブラウザ (web) では全機能を無料開放する (誰でも完全版)。
+  // Pro ゲートが効くのはアプリ版 (Capacitor ネイティブ) のみで、
+  // web はデモ・宣伝を兼ねた完全版という位置づけ。
+  if (!isCapacitorNative()) return true;
   if (rcRuntimePro) return true;
   try {
     if (localStorage.getItem(PRO_KEY) === "1") return true;

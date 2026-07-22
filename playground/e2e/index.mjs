@@ -22,7 +22,7 @@ import testFooterVersion from "./tests/06-footer-version.mjs";
 import testPositionWarnZero from "./tests/06-position-warn-zero.mjs";
 import testPracticeCtaConsolidation from "./tests/07-practice-cta-consolidation.mjs";
 import testLangSwitch from "./tests/08-lang-switch.mjs";
-import testFreemiumGate from "./tests/09-freemium-gate.mjs";
+import testWebFullyFree from "./tests/09-freemium-gate.mjs";
 
 async function main() {
   const t0 = Date.now();
@@ -70,8 +70,8 @@ async function main() {
       run: () => testLangSwitch({ baseURL, createContext }),
     },
     {
-      name: "freemium(無料): スタックreadonly / 追加でペイウォール / 結果閲覧可 / 役割変更可 / ペイウォール日英",
-      run: () => testFreemiumGate({ baseURL, createContext }),
+      name: "web 全機能無料開放: 編集可・ペイウォール非表示 (Proゲートはアプリ版のみ)",
+      run: () => testWebFullyFree({ baseURL, createContext }),
     },
   ];
 
