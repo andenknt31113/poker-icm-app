@@ -105,7 +105,7 @@ export const en: Record<string, string> = {
 
   // ===== index.html: ナッシュ均衡 =====
   "nash.h2": "Nash equilibrium (HU push/fold)",
-  "nash.hint.html": "\n          Computes the heads-up Nash equilibrium for 🎯 you (pusher) and ⚔️ villain (caller), ICM included.\n          <br />\n          ※ Assumes HU 2-way. A warning appears when other players sit between (e.g. BTN + BB).\n          <br />\n          Set 🎯/⚔️ in “1. Players” above, then press Solve Nash.\n        ",
+  "nash.hint.html": "\n          Computes the heads-up Nash equilibrium for 🎯 you (pusher) and ⚔️ villain (caller), ICM included.\n          <br />\n          ※ Assumes HU 2-way. A warning appears when other players sit between (e.g. BTN + BB).\n          <br />\n          ※ This equilibrium assumes a <strong>push-or-fold only</strong> game. At ~10BB or less it matches real play closely; the deeper the stacks, the wider the push range gets versus true GTO (read it as \"if your only options are shove or fold, shoving is fine\"), since real play also has small raises available.\n          <br />\n          Set 🎯/⚔️ in “1. Players” above, then press Solve Nash.\n        ",
   "nash.ante.label": "\n            Total ante\n            ",
   "nash.solveBtn": "Solve Nash",
   "nash.sbRange.h3": "🎯 You push range 🔴",
@@ -546,6 +546,7 @@ export const en: Record<string, string> = {
   "nash.calculating": "Calculating…",
   "nash.converged": "Converged",
   "nash.notConverged": "Not converged",
+  "nash.depthNote.html": "⚠ Effective stack <strong>{eff}BB</strong> is deep enough that the push/fold assumption starts to break down (guide: >10BB). Real play also has small raises available, so read this push range as an upper bound: \"if it is shove-or-fold, shoving is fine.\"",
   "nash.statusSuffix": "({iter} iter / {ms} ms)",
   "nash.stats": "{n} ({pct}%)",
   "nash.matrixMissing": "⚠ HU equity matrix not generated (hu-equity-matrix.json). Run `npx tsx scripts/build-hu-matchups.mts`.",
