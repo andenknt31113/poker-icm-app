@@ -218,6 +218,20 @@ function runNash(): void {
         ? `<span style="color: var(--good)">${t("nash.converged")}</span>`
         : `<span style="color: var(--warn)">${t("nash.notConverged")}</span>`;
       nashStatus.innerHTML = `${convStr}${t("nash.statusSuffix", { iter: result.iterations, ms: elapsedMs.toFixed(0) })}`;
+
+      // push/fold 前提の注意: 実効スタックが深い (>12BB) 場合のみ表示。
+      // 深くなるほど実戦には小さなレイズ等の選択肢があり、push/fold 2択の
+      // 均衡は真の GTO よりプッシュ寄りに出るため「上限」として読ませる。
+      const depthNote = document.getElementById("nash-depth-note");
+      if (depthNote) {
+        const effStack = Math.min(stacks[heroIndex] ?? 0, stacks[villainIndex] ?? 0);
+        if (effStack > 12) {
+          depthNote.innerHTML = t("nash.depthNote.html", { eff: String(effStack) });
+          depthNote.classList.remove("hidden");
+        } else {
+          depthNote.classList.add("hidden");
+        }
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       nashStatus.innerHTML = `<span class="error">${msg}</span>`;
