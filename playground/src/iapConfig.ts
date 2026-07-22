@@ -16,7 +16,7 @@
  * 注意: これは公開 (public) SDK キーであり、クライアントに埋め込む前提の値。
  * シークレットキー (sk_...) は絶対にここに置かないこと。
  */
-export const REVENUECAT_IOS_API_KEY = "";
+export const REVENUECAT_IOS_API_KEY = "appl_tAUhYwPoQmFHKrAOYqRgcoUJzCl";
 
 /**
  * Pro 権限を表す RevenueCat の entitlement 識別子。
