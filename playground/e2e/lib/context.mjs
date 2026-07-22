@@ -10,21 +10,25 @@
 // navigator.clipboard.writeText() は常に失敗し、決定的にフォールバック
 // (readonly input に URL を表示する分岐) に入るため、クリップボード権限の
 // 付与タイミングに依存しない安定したテストになる。
+// pro (freemium ゲート): 既定 false = 無料状態。既存の回帰テストは Pro 状態
+// (= ロック解除 = 現行挙動) を確認するため各テストで { pro: true } を渡す。
+// freemium 専用の新規テストは pro を省略 (= 無料) または明示 false で使う。
 export function makeContextFactory(browser) {
   return async function createContext(opts = {}) {
-    const { theme, tutorialDone = true, onboardingDone = true } = opts;
+    const { theme, tutorialDone = true, onboardingDone = true, pro = false } = opts;
     const context = await browser.newContext();
     await context.addInitScript(
-      ({ theme, tutorialDone, onboardingDone }) => {
+      ({ theme, tutorialDone, onboardingDone, pro }) => {
         try {
           if (onboardingDone) localStorage.setItem("poker-icm-onboarding-done", "1");
           if (tutorialDone) localStorage.setItem("poker-icm-tutorial-done", "1");
           if (theme) localStorage.setItem("poker-icm-theme", theme);
+          if (pro) localStorage.setItem("poker-icm-pro", "1");
         } catch {
           /* ignore */
         }
       },
-      { theme, tutorialDone, onboardingDone },
+      { theme, tutorialDone, onboardingDone, pro },
     );
     return context;
   };

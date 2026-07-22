@@ -708,4 +708,22 @@ export const ja: Record<string, string> = {
   // ===== 規約モーダル: EN モード時のみ表示する注記 (guide.ts, Phase B) =====
   // 規約本文 (legalContent.ts) は日本語のまま。EN モードでは冒頭にこの一文を足す。
   "legal.enOnlyNote": "The terms below are currently available in Japanese only.",
+
+  // ===== ペイウォール (freemium ゲート, paywall.ts) =====
+  "paywall.title": "🔓 自分のテーブルを再現しよう",
+  "paywall.lead": "Pro なら、自分の卓をそのまま再現して分析できます。",
+  "paywall.feature.editStacks": "スタックを自由に編集",
+  "paywall.feature.replay": "実戦のハンドを再現して分析",
+  "paywall.feature.save": "シナリオを保存していつでも呼び出し",
+  "paywall.price": "価格: {price}",
+  "paywall.cta.upgrade": "Pro にアップグレード",
+  "paywall.cta.restore": "購入を復元",
+  "paywall.web.note": "この機能はアプリ版でご利用いただけます。",
+  "paywall.close.aria": "閉じる",
+  "paywall.comingSoon": "準備中です",
+  "paywall.lock.title": "Pro 機能です",
+  "paywall.purchase.success": "Pro にアップグレードしました",
+  "paywall.restore.success": "購入を復元しました",
+  "paywall.restore.notFound": "復元できる購入が見つかりませんでした",
+  "paywall.error": "処理に失敗しました。時間をおいて再度お試しください",
 };

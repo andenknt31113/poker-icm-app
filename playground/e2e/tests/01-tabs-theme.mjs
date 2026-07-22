@@ -23,7 +23,7 @@ const TAB_READY_SELECTOR = {
 export default async function testTabsTheme({ baseURL, createContext }) {
   // 旧バージョンで保存された "light" 設定が残っているケースを再現し、
   // それでもダーク固定になることを検証する。
-  const context = await createContext({ theme: "light", tutorialDone: true });
+  const context = await createContext({ theme: "light", tutorialDone: true, pro: true });
   try {
     const page = await context.newPage();
     const errors = attachErrorCollector(page, "dark-fixed");

@@ -14,7 +14,7 @@ import { attachErrorCollector, assertNoErrors } from "../lib/context.mjs";
 
 export default async function testFooterVersion({ baseURL, createContext }) {
   for (const theme of ["dark"]) {
-    const context = await createContext({ tutorialDone: true });
+    const context = await createContext({ tutorialDone: true, pro: true });
     try {
       const page = await context.newPage();
       const errors = attachErrorCollector(page, `theme=${theme}`);

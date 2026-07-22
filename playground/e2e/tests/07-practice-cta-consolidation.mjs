@@ -10,7 +10,7 @@ import { attachErrorCollector, assertNoErrors } from "../lib/context.mjs";
 const MAX_ATTEMPTS = 30;
 
 export default async function testPracticeCtaConsolidation({ baseURL, createContext }) {
-  const context = await createContext({ tutorialDone: false });
+  const context = await createContext({ tutorialDone: false, pro: true });
   try {
     const page = await context.newPage();
     const errors = attachErrorCollector(page, "practice-cta-consolidation");
