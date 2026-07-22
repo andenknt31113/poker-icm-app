@@ -99,7 +99,7 @@ export const ja: Record<string, string> = {
 
   // ===== index.html: ナッシュ均衡 =====
   "nash.h2": "Nash 均衡 (HU push/fold)",
-  "nash.hint.html": "\n          🎯自分 (pusher) と ⚔️相手 (caller) のヘッズアップ Nash 均衡を計算（ICM反映済み）。\n          <br />\n          ※ HU 2-way 想定。BTN+BB のように間に他プレイヤーがいる場合は警告が出ます。\n          <br />\n          上の「1. プレイヤー」で 🎯/⚔️ を指定してから Nash 計算を押してください。\n        ",
+  "nash.hint.html": "\n          🎯自分 (pusher) と ⚔️相手 (caller) のヘッズアップ Nash 均衡を計算（ICM反映済み）。\n          <br />\n          ※ HU 2-way 想定。BTN+BB のように間に他プレイヤーがいる場合は警告が出ます。\n          <br />\n          ※ <strong>プッシュ or フォールドの2択</strong>を前提にした均衡です。目安 10BB 以下ならほぼ実戦どおり。深くなるほど、実際は小さなレイズ等の選択肢があるぶん、真の GTO よりプッシュレンジは広めに出ます（「押すか降りるかなら押してよい」の意味）。\n          <br />\n          上の「1. プレイヤー」で 🎯/⚔️ を指定してから Nash 計算を押してください。\n        ",
   "nash.ante.label": "\n            アンティ合計\n            ",
   "nash.solveBtn": "Nash 計算",
   "nash.sbRange.h3": "🎯自分 push レンジ 🔴",
@@ -543,6 +543,7 @@ export const ja: Record<string, string> = {
   "nash.calculating": "計算中…",
   "nash.converged": "収束",
   "nash.notConverged": "未収束",
+  "nash.depthNote.html": "⚠ 実効スタック <strong>{eff}BB</strong> は push/fold 前提が崩れ始める深さです（目安 10BB 超）。実戦では小さなレイズ等の選択肢があるため、この push レンジは「<strong>押すか降りるかなら押してよい</strong>」の上限として読んでください。",
   "nash.statusSuffix": "（{iter} iter / {ms} ms）",
   "nash.stats": "{n} 個 ({pct}%)",
   "nash.matrixMissing": "⚠ HU equity matrix が未生成です（hu-equity-matrix.json）。`npx tsx scripts/build-hu-matchups.mts` を実行してください。",
