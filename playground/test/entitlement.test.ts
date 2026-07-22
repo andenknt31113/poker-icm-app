@@ -52,26 +52,31 @@ beforeEach(() => {
 });
 
 describe("isPro の OR 判定", () => {
-  it("開発用裏口 poker-icm-pro==='1' で Pro", async () => {
+  it("web (非ネイティブ) では常に Pro (全機能無料開放)", async () => {
     const { isPro } = await loadEntitlement();
+    expect(isPro()).toBe(true);
+  });
+
+  it("開発用裏口 poker-icm-pro==='1' で Pro", async () => {
+    const { isPro } = await loadEntitlement({ native: true });
     expect(isPro()).toBe(false);
     localStorage.setItem("poker-icm-pro", "1");
     expect(isPro()).toBe(true);
   });
 
   it("RevenueCat キャッシュ poker-icm-pro-rc==='1' で Pro (オフライン起動維持)", async () => {
-    const { isPro } = await loadEntitlement();
+    const { isPro } = await loadEntitlement({ native: true });
     localStorage.setItem("poker-icm-pro-rc", "1");
     expect(isPro()).toBe(true);
   });
 
-  it("裏口もキャッシュも無ければ無料", async () => {
-    const { isPro } = await loadEntitlement();
+  it("ネイティブで裏口もキャッシュも無ければ無料", async () => {
+    const { isPro } = await loadEntitlement({ native: true });
     expect(isPro()).toBe(false);
   });
 
   it("裏口と RC キャッシュは別キー (裏口を消しても RC が残れば Pro)", async () => {
-    const { isPro } = await loadEntitlement();
+    const { isPro } = await loadEntitlement({ native: true });
     localStorage.setItem("poker-icm-pro", "1");
     localStorage.setItem("poker-icm-pro-rc", "1");
     localStorage.removeItem("poker-icm-pro");
@@ -81,7 +86,7 @@ describe("isPro の OR 判定", () => {
 
 describe("applyRevenueCatCustomerInfo", () => {
   it("pro active でキャッシュを立て isPro=true・onEntitlementChange 発火", async () => {
-    const { applyRevenueCatCustomerInfo, isPro, onEntitlementChange } = await loadEntitlement();
+    const { applyRevenueCatCustomerInfo, isPro, onEntitlementChange } = await loadEntitlement({ native: true });
     const seen: boolean[] = [];
     onEntitlementChange((pro) => seen.push(pro));
 
@@ -93,7 +98,7 @@ describe("applyRevenueCatCustomerInfo", () => {
   });
 
   it("pro 非 active でキャッシュを消し isPro=false", async () => {
-    const { applyRevenueCatCustomerInfo, isPro } = await loadEntitlement();
+    const { applyRevenueCatCustomerInfo, isPro } = await loadEntitlement({ native: true });
     localStorage.setItem("poker-icm-pro-rc", "1");
     const active = applyRevenueCatCustomerInfo(makeCustomerInfo(false));
     expect(active).toBe(false);
@@ -102,7 +107,7 @@ describe("applyRevenueCatCustomerInfo", () => {
   });
 
   it("状態が変わらないときは onEntitlementChange を呼ばない", async () => {
-    const { applyRevenueCatCustomerInfo, onEntitlementChange } = await loadEntitlement();
+    const { applyRevenueCatCustomerInfo, onEntitlementChange } = await loadEntitlement({ native: true });
     const cb = vi.fn();
     onEntitlementChange(cb);
     applyRevenueCatCustomerInfo(makeCustomerInfo(false)); // false のまま (初期も false)
