@@ -451,8 +451,9 @@ th {
   background: var(--card);
   border: 1px solid var(--border);
   color: var(--text);
-  width: 36px;
-  height: 36px;
+  /* Apple HIG のタップ領域推奨 44pt を確保 (旧 36px は監査 P3 指摘) */
+  width: 44px;
+  height: 44px;
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
