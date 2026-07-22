@@ -2,58 +2,79 @@
 
 ビルド・データ生成系の補助スクリプト置き場。Vite ビルドに直接乗らない、開発時 / 事前計算時に走らせる用。
 
-## `build-equity-table.mts`
+## equity 事前計算パイプライン（高精度版, 2026-07〜）
 
-169 種類のスターティングハンド × 「相手 Top X% レンジ」(X=1..100) の Monte Carlo equity を事前計算し、`src/data/equity-table.json` に書き出す。
+equity テーブルは 2 つ:
 
-ランタイム側 (`src/equityFromTable.ts`) はこの JSON を直接 import して lookup する。
+- `src/data/hu-equity-matrix.json` — 169×169 ハンドクラス対決 equity
+- `src/data/equity-table.json` — 169 ハンド × Top1..100% レンジ equity
+
+両者とも **1,000,000 試行/セルの Monte Carlo**（標準誤差 ~0.05pt）で生成する。
+
+### 高速化・並列化の仕組み
+
+- **`_fastEval.mts`** … 自作の高速整数 7-card 評価器。カードを整数 `rank*4+suit` で
+  表し、ビット演算で best-5 を「比較可能なスコア」に落とす。pokersolver の ~80 倍速
+  （~2M 試行/s/コア）。pokersolver と勝敗判定が **完全一致** することを 50 万ディールで
+  検証済み（回帰テスト: `test/fastEval.test.ts`）。
+- **`_mc.mts`** … MC コア（コンボ展開・seedable PRNG・HU/レンジ equity 計算）。
+- **`_workerBoot.mjs`** … worker_threads 用ブートストラップ。worker では tsx の
+  resolve リマップ（`.js`→`.ts`）が execArgv 経由で効かないため、`tsx/esm/api` の
+  `register()` を明示的に呼んでから本体 `.mts` を動的 import する。
+- 生成は **worker_threads で全 CPU コアに並列化**。
+
+### 乱数と再現性
+
+乱数は seedable な **mulberry32**。各セルのシードは `deriveSeed(baseSeed, i, j)` で
+`(baseSeed, hero index, villain index)`（テーブル側は `(baseSeed, hand index, pct)`）から
+決定的に導出する。**どのワーカー / どのバッチ順で計算しても同じセルは同じ乱数列**に
+なるため、結果は完全に再現可能で resume 安全。baseSeed は `--seed` で変更可能
+（HU 既定 `0x5eed01`、テーブル既定 `0x5eed02`）。
 
 ### 使い方
 
 ```bash
-# デフォルト (5000 試行/ペア、所要 ~15 分目安)
+# 既定 (1,000,000 試行/セル, 全コア)
+npx tsx scripts/build-hu-matchups.mts
 npx tsx scripts/build-equity-table.mts
 
-# 試行回数を指定（高精度には 10000 推奨）
-npx tsx scripts/build-equity-table.mts --trials 10000
+# 試行数・ワーカー数・シード指定
+npx tsx scripts/build-hu-matchups.mts --trials 500000 --workers 4 --seed 7
 
-# 早回し動作確認
-npx tsx scripts/build-equity-table.mts --trials 1000
-
-# 中断後に途中再開（既存 hand のエントリは再計算しない）
-npx tsx scripts/build-equity-table.mts --trials 10000 --resume
+# 中断後の再開（partial フラグ + 途中保存済みセルをスキップ）
+npx tsx scripts/build-hu-matchups.mts --resume
 ```
 
-### 仕様
+- どちらも数百セルごとに途中保存し、`_meta.partial=true` を立てる。完了時に
+  `partial:false`。中断しても `--resume` で未計算セルだけ再計算する。
+- HU マトリクスは対称性 `eq(A,B)=1-eq(B,A)` を使い **上三角（hero index ≤ villain index）
+  のみ計算・保存**（バンドルサイズ据え置き）。ランタイム `huEquityMatrix.ts` が対称性で
+  下三角を補完する。
+- 値は小数 4 桁に丸め（バンドルサイズ抑制。MC SE ~0.05pt に対し丸め誤差は無視できる）。
 
-- 出力: `src/data/equity-table.json` (`{ hand: { "1": eq, ..., "100": eq }, _meta: {...} }`)
-- 5 ハンドごと（500 ペア完了ごと）に途中保存。中断しても `--resume` で続けられる。
-- 各 trial で hero / villain の具体カードと board 5 枚をランダム配布、`pokersolver` で 7-card best-5 を評価。
-- ブロッカー (hero と villain でカードが被る) はリサンプリングで弾く。最大 50 回試して取れなければそのトライアルはスキップ。
-- レンジは `topRange(X)` を使うので、レンジ定義を変えたら再計算が必要。
+### 所要時間（参考: 4 コア）
 
-### 期待値の目安（リファレンス）
+| trials/セル | HU (14,196 ペア) | table (16,900 セル) |
+|---|---|---|
+| 1,000,000 | ~28 分 | ~45 分 |
+| 500,000 | ~14 分 | ~23 分 |
 
-- `AA vs Top 100%` ≈ 0.85
-- `KK vs Top 5%` ≈ 0.5–0.7（ブロッカー込みのレンジ内対戦は予想より高めに出る）
-- `22 vs Top 50%` ≈ 0.40
-- `AKs vs Top 10%` ≈ 0.55
-- `72o vs Top 100%` ≈ 0.34
+### 期待値の目安（169 クラス平均・厳密列挙で確認済み）
 
-### 所要時間（参考: M1 Mac）
-
-| trials | 16,900 ペア合計 |
-|---|---|
-| 100 | ~33 秒 |
-| 1,000 | ~5 分 |
-| 5,000 | ~25 分 |
-| 10,000 | ~55 分 |
+- `AA vs 22` ≈ 0.822（単一コンボの俗称値 0.80 ではなく、スート/フラッシュ相互作用込みの
+  クラス平均。厳密列挙 0.82217）
+- `AA vs KK` ≈ 0.819（厳密 0.81946）
+- `AKs vs QQ` ≈ 0.460（厳密 0.46049）
+- `AKo vs AKs` ≈ 0.475（厳密 0.47508）
+- `AA vs Top 100%` ≈ 0.85 / `72o vs Top 100%` ≈ 0.34
 
 ### 再生成のタイミング
 
-- `src/handRanking.ts` の `HAND_RANKING` を編集したら必ず再生成。
-- それ以外は基本不要。`--trials` を上げて精度を上げる時のみ走らせる。
+- `src/handRanking.ts` の `HAND_RANKING`（レンジ定義）を編集したら必ず再生成。
+- 精度を上げたい時に `--trials` を上げて再生成。
 
-## `_bench.mts` / `_smoke.mts`
+## 検証・開発補助スクリプト
 
-開発用の動作確認スクリプト。`pokersolver` の wiring と equity 計算の感覚値チェック。コミットしなくても問題ない。
+- `_fastEval_verify.mts` … `evaluate7` と pokersolver を大量ディールで突き合わせる
+  （`npx tsx scripts/_fastEval_verify.mts`）。
+- `_bench.mts` / `_smoke.mts` ほか `_*.mts` … 開発時の動作確認用。
