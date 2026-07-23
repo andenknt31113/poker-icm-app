@@ -10,6 +10,10 @@ Web 本体: Vite + TS の PWA (`playground/`)、ネイティブラッパー: Cap
 
 ---
 
+> **Node のバージョン**: Node **22** を推奨 (`.nvmrc` あり)。v20 でも概ね動くが、
+> `@capacitor/cli` が `EBADENGINE` 警告を出す。`npx cap` 系でエラーになった場合は
+> `brew install node@22 && brew link --overwrite node@22` で更新してから再実行する。
+
 ## 0. 前提
 
 - `capacitor.config.ts`: `appId = dev.workers.andenknt31113.pokericm`, `webDir = playground/dist`
