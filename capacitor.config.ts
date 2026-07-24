@@ -6,7 +6,11 @@ const config: CapacitorConfig = {
   // playground のビルド出力をネイティブアプリに同梱する
   webDir: "playground/dist",
   ios: {
-    contentInset: "always",
+    // WebView をステータスバー下まで広げ、上部の余白は CSS の
+    // env(safe-area-inset-top) だけで確保する。"always" にすると
+    // ネイティブ側のインセットと CSS の safe-area が二重掛けになり、
+    // ヘッダー上に大きな空白ができる (実機で確認済み)。
+    contentInset: "never",
   },
 };
 
