@@ -105,7 +105,7 @@ export const en: Record<string, string> = {
 
   // ===== index.html: ナッシュ均衡 =====
   "nash.h2": "Nash equilibrium (HU push/fold)",
-  "nash.hint.html": "\n          Computes the heads-up Nash equilibrium for 🎯 you (pusher) and ⚔️ villain (caller), ICM included.\n          <br />\n          ※ Assumes HU 2-way. A warning appears when other players sit between (e.g. BTN + BB).\n          <br />\n          ※ This equilibrium assumes a <strong>push-or-fold only</strong> game. At ~10BB or less it matches real play closely; the deeper the stacks, the wider the push range gets versus true GTO (read it as \"if your only options are shove or fold, shoving is fine\"), since real play also has small raises available.\n          <br />\n          Set 🎯/⚔️ in “1. Players” above, then press Solve Nash.\n        ",
+  "nash.hint.html": "\n          Computes the heads-up Nash equilibrium for 🎯 you (pusher) and ⚔️ villain (caller), ICM included.\n          <br />\n          ※ Assumes HU 2-way. A warning appears when other players sit between (e.g. BTN + BB).\n          <br />\n          ※ This equilibrium assumes a <strong>push-or-fold only</strong> game. At ~10BB or less it matches real play closely; the deeper the stacks, the wider the push range gets versus true GTO (read it as \"if your only options are shove or fold, shoving is fine\"), since real play also has small raises available.\n          <br />\n          Set 🎯/⚔️ under “Players” on the ⚙️ Setup tab, then press Solve Nash.\n        ",
   "nash.ante.label": "\n            Total ante\n            ",
   "nash.solveBtn": "Solve Nash",
   "nash.sbRange.h3": "🎯 You push range 🔴",
@@ -251,7 +251,7 @@ export const en: Record<string, string> = {
           <div class="howto-body">
             <p>Build a scenario by setting player stacks, payout structure, and 🎯 you / ⚔️ villain.</p>
             <ol>
-              <li>Tap “Scenario presets” to load a situation instantly</li>
+              <li>Open “Preset list” and tap a preset to load a situation instantly</li>
               <li>Adjust stacks under “Players” (add more with + Add player)</li>
               <li>Tap to set 🎯 you / ⚔️ villain</li>
             </ol>
@@ -270,18 +270,18 @@ export const en: Record<string, string> = {
           </div>
         </details>
         <details class="howto">
-          <summary>🃏 Hand comparison — what it does & how to use</summary>
+          <summary>🃏 Ranges — what it does & how to use</summary>
           <div class="howto-body">
             <p>Compare the villain’s push/call range with yours via Top X% or custom editing.</p>
             <ol>
-              <li>Choose “solve my call” or “solve my push”</li>
+              <li>Choose “Find my call range” or “Find my push range”</li>
               <li>For presets, adjust Top X% with the slider; for custom, tap grid cells to select</li>
               <li>Use the grid colors to see which hands you should call/push</li>
             </ol>
           </div>
         </details>
         <details class="howto">
-          <summary>🎯 Nash equilibrium — what it does & how to use</summary>
+          <summary>🎯 Nash — what it does & how to use</summary>
           <div class="howto-body">
             <p>Computes the HU push/fold Nash equilibrium (ICM included).</p>
             <ol>
