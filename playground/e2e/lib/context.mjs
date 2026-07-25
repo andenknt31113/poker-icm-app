@@ -5,11 +5,9 @@
 // 要素待ちが不安定になるのを防ぐため)。導入コース自体をテストする場合は
 // { tutorialDone: false } を渡す。
 //
-// クリップボード権限は既定では何も付与しない (Playwright の Chromium は
-// 既定で clipboard-write を拒否する)。これにより「URL共有」機能の
-// navigator.clipboard.writeText() は常に失敗し、決定的にフォールバック
-// (readonly input に URL を表示する分岐) に入るため、クリップボード権限の
-// 付与タイミングに依存しない安定したテストになる。
+// theme: 廃止済みのライトテーマ設定を localStorage に残した状態を作るための
+// オプション。01-tabs-theme.mjs が「古い "light" が残っていてもダーク固定に
+// なる」ことを確認するために使う (アプリ側に読み手はもう無い)。
 // pro (freemium ゲート): 既定 false = 無料状態。既存の回帰テストは Pro 状態
 // (= ロック解除 = 現行挙動) を確認するため各テストで { pro: true } を渡す。
 // freemium 専用の新規テストは pro を省略 (= 無料) または明示 false で使う。
