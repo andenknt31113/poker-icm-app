@@ -199,14 +199,14 @@ export const en: Record<string, string> = {
   "onboarding.step1.body": `
       <p>
         In tournaments, your <strong>chip count</strong> and its <strong>prize value</strong> aren’t the same.
-        This free app lets you both <strong>calculate</strong> that ICM pressure in numbers and
+        This app lets you both <strong>calculate</strong> that ICM pressure in numbers and
         <strong>practice</strong> it with quizzes.
       </p>
       <ul class="onboarding-tab-list">
-        <li><span class="onboarding-tab-icon">⚙️</span> Situation input (stacks, payouts, etc.)</li>
+        <li><span class="onboarding-tab-icon">⚙️</span> Setup (enter stacks and payouts)</li>
         <li><span class="onboarding-tab-icon">📊</span> Results (ICM, BF, required equity)</li>
-        <li><span class="onboarding-tab-icon">🃏</span> Range comparison</li>
-        <li><span class="onboarding-tab-icon">🎯</span> Nash equilibrium (optimal push/fold)</li>
+        <li><span class="onboarding-tab-icon">🃏</span> Ranges (compare hand ranges)</li>
+        <li><span class="onboarding-tab-icon">🎯</span> Nash (optimal push/fold)</li>
         <li><span class="onboarding-tab-icon">🎲</span> Practice (real-feel quizzes)</li>
       </ul>
     `,

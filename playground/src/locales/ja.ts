@@ -195,14 +195,14 @@ export const ja: Record<string, string> = {
   "onboarding.step1.body": `
       <p>
         トーナメントの「チップ枚数」と「賞金への価値」は同じではありません。
-        本ツールはこの <strong>ICM プレッシャー</strong>を、数字で『計算』しながら
-        クイズで『練習』もできる無料アプリです。
+        本アプリはこの <strong>ICM プレッシャー</strong>を、数字で『計算』しながら
+        クイズで『練習』もできます。
       </p>
       <ul class="onboarding-tab-list">
-        <li><span class="onboarding-tab-icon">⚙️</span> 状況入力（スタック・ペイアウトなど）</li>
+        <li><span class="onboarding-tab-icon">⚙️</span> セットアップ（スタック・ペイアウトの入力）</li>
         <li><span class="onboarding-tab-icon">📊</span> 計算結果（ICM・BF・必要勝率）</li>
-        <li><span class="onboarding-tab-icon">🃏</span> レンジ比較</li>
-        <li><span class="onboarding-tab-icon">🎯</span> Nash 均衡（push/fold の最適解）</li>
+        <li><span class="onboarding-tab-icon">🃏</span> ハンド比較（レンジの見比べ）</li>
+        <li><span class="onboarding-tab-icon">🎯</span> ナッシュ均衡（push/fold の最適解）</li>
         <li><span class="onboarding-tab-icon">🎲</span> 練習（クイズで実戦感覚）</li>
       </ul>
     `,
