@@ -27,8 +27,7 @@ const heroGrid = $<HTMLDivElement>("grid-hero");
 const callStats = $<HTMLParagraphElement>("call-stats");
 const presetControls = $<HTMLDivElement>("preset-controls");
 const customControls = $<HTMLDivElement>("custom-controls");
-const customCount = $<HTMLSpanElement>("custom-count");
-const customPct = $<HTMLSpanElement>("custom-pct");
+const customSelected = $<HTMLSpanElement>("custom-selected");
 const customClearBtn = $<HTMLButtonElement>("custom-clear");
 const customFromPresetBtn = $<HTMLButtonElement>("custom-from-preset");
 
@@ -272,8 +271,10 @@ export function renderRangeComparison(requiredEquity: number): void {
   // カスタムモードのカウント表示
   if (villainRangeMode === "custom") {
     const c = customVillainRange.size;
-    customCount.textContent = String(c);
-    customPct.textContent = ((c / totalHands) * 100).toFixed(0);
+    customSelected.innerHTML = t("hand.custom.selected.html", {
+      n: c,
+      pct: ((c / totalHands) * 100).toFixed(0),
+    });
   }
 }
 

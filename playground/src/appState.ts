@@ -64,7 +64,7 @@ export interface PersistedState {
 /**
  * 賞金配列のサニタイズ: 有限かつ非負の値のみ残す (parseList と同じ規則)。
  * 壊れた値 (負数・NaN・Infinity 等) は行ごと捨てる。
- * localStorage / 共有URL 経由で入り込んだ不正値がUI表示と実計算 (ICM) を
+ * localStorage 経由で入り込んだ不正値がUI表示と実計算 (ICM) を
  * 乖離させるのを防ぐ。
  */
 export function sanitizePayoutsArray(values: unknown): number[] {

@@ -105,7 +105,7 @@ export const en: Record<string, string> = {
 
   // ===== index.html: ナッシュ均衡 =====
   "nash.h2": "Nash equilibrium (HU push/fold)",
-  "nash.hint.html": "\n          Computes the heads-up Nash equilibrium for 🎯 you (pusher) and ⚔️ villain (caller), ICM included.\n          <br />\n          ※ Assumes HU 2-way. A warning appears when other players sit between (e.g. BTN + BB).\n          <br />\n          ※ This equilibrium assumes a <strong>push-or-fold only</strong> game. At ~10BB or less it matches real play closely; the deeper the stacks, the wider the push range gets versus true GTO (read it as \"if your only options are shove or fold, shoving is fine\"), since real play also has small raises available.\n          <br />\n          Set 🎯/⚔️ in “1. Players” above, then press Solve Nash.\n        ",
+  "nash.hint.html": "\n          Computes the heads-up Nash equilibrium for 🎯 you (pusher) and ⚔️ villain (caller), ICM included.\n          <br />\n          ※ Assumes HU 2-way. A warning appears when other players sit between (e.g. BTN + BB).\n          <br />\n          ※ This equilibrium assumes a <strong>push-or-fold only</strong> game. At ~10BB or less it matches real play closely; the deeper the stacks, the wider the push range gets versus true GTO (read it as \"if your only options are shove or fold, shoving is fine\"), since real play also has small raises available.\n          <br />\n          Set 🎯/⚔️ under “Players” on the ⚙️ Setup tab, then press Solve Nash.\n        ",
   "nash.ante.label": "\n            Total ante\n            ",
   "nash.solveBtn": "Solve Nash",
   "nash.sbRange.h3": "🎯 You push range 🔴",
@@ -119,6 +119,8 @@ export const en: Record<string, string> = {
   "hand.mode.preset": "\n            Preset (Top X%)\n          ",
   "hand.mode.custom": "\n            Custom edit\n          ",
   "hand.preset.hint": "※ Top X% uses this tool’s own strength ranking. It may not match other tools.",
+  "hand.custom.hint": "Tap grid cells to add/remove hands from the villain’s range.",
+  "hand.custom.selected.html": "Selected: <strong>{n}</strong> ({pct}%)",
   "hand.custom.actions.all": "Select all",
   "hand.custom.actions.clear": "Clear all",
   "hand.custom.actions.fromPreset": "\n              Load from preset\n            ",
@@ -199,14 +201,14 @@ export const en: Record<string, string> = {
   "onboarding.step1.body": `
       <p>
         In tournaments, your <strong>chip count</strong> and its <strong>prize value</strong> aren’t the same.
-        This free app lets you both <strong>calculate</strong> that ICM pressure in numbers and
+        This app lets you both <strong>calculate</strong> that ICM pressure in numbers and
         <strong>practice</strong> it with quizzes.
       </p>
       <ul class="onboarding-tab-list">
-        <li><span class="onboarding-tab-icon">⚙️</span> Situation input (stacks, payouts, etc.)</li>
+        <li><span class="onboarding-tab-icon">⚙️</span> Setup (enter stacks and payouts)</li>
         <li><span class="onboarding-tab-icon">📊</span> Results (ICM, BF, required equity)</li>
-        <li><span class="onboarding-tab-icon">🃏</span> Range comparison</li>
-        <li><span class="onboarding-tab-icon">🎯</span> Nash equilibrium (optimal push/fold)</li>
+        <li><span class="onboarding-tab-icon">🃏</span> Ranges (compare hand ranges)</li>
+        <li><span class="onboarding-tab-icon">🎯</span> Nash (optimal push/fold)</li>
         <li><span class="onboarding-tab-icon">🎲</span> Practice (real-feel quizzes)</li>
       </ul>
     `,
@@ -242,6 +244,9 @@ export const en: Record<string, string> = {
   "guide.close.aria": "Close",
   "guide.reopenBtn": "🔄 See the intro guide again",
   "guide.legalLink": "📄 Terms & Privacy Policy",
+  // アプリ版のみ表示 (guide.ts proNoteHtml)。価格は書かない。
+  "guide.proNote.html":
+    "ℹ️ Scenario presets, results, Nash equilibrium, and practice are all free. <strong>Freely editing stacks and payouts, and saving scenarios</strong> are 🔒 Pro (one-time purchase) features.",
   "guide.body.html": `
         <p class="guide-intro">
           This tool focuses on short-stack (~20bb) all-in spots.
@@ -251,7 +256,7 @@ export const en: Record<string, string> = {
           <div class="howto-body">
             <p>Build a scenario by setting player stacks, payout structure, and 🎯 you / ⚔️ villain.</p>
             <ol>
-              <li>Tap “Scenario presets” to load a situation instantly</li>
+              <li>Open “Preset list” and tap a preset to load a situation instantly</li>
               <li>Adjust stacks under “Players” (add more with + Add player)</li>
               <li>Tap to set 🎯 you / ⚔️ villain</li>
             </ol>
@@ -270,18 +275,18 @@ export const en: Record<string, string> = {
           </div>
         </details>
         <details class="howto">
-          <summary>🃏 Hand comparison — what it does & how to use</summary>
+          <summary>🃏 Ranges — what it does & how to use</summary>
           <div class="howto-body">
             <p>Compare the villain’s push/call range with yours via Top X% or custom editing.</p>
             <ol>
-              <li>Choose “solve my call” or “solve my push”</li>
+              <li>Choose “Find my call range” or “Find my push range”</li>
               <li>For presets, adjust Top X% with the slider; for custom, tap grid cells to select</li>
               <li>Use the grid colors to see which hands you should call/push</li>
             </ol>
           </div>
         </details>
         <details class="howto">
-          <summary>🎯 Nash equilibrium — what it does & how to use</summary>
+          <summary>🎯 Nash — what it does & how to use</summary>
           <div class="howto-body">
             <p>Computes the HU push/fold Nash equilibrium (ICM included).</p>
             <ol>

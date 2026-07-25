@@ -167,31 +167,29 @@
           <div class="howto-body" data-i18n-html="result.bf.howto.body.html">
             <h4>1. 各セルの数字</h4>
             <p>
-              <strong>下段の BF（Bubble Factor）</strong>がメイン指標。
+              <strong>下段の BF（Bubble Factor）</strong>がメイン指標。「この相手との勝負は、<strong>負けた痛みが勝った嬉しさの何倍か</strong>」を表す。
             </p>
             <ul>
-              <li><strong>1.00</strong> = チップ ⇄ $ がリニア（ICM圧ゼロ）</li>
+              <li><strong>1.00</strong> = 痛み＝嬉しさ。チップの価値どおり戦ってよい（ICM圧ゼロ）</li>
               <li>
-                <strong>1.16</strong> = チップ100失う痛さ ＝ チップ86を取る嬉しさ。
-                <strong>16%余分にタイト</strong>に打つべき
+                <strong>1.16</strong> = 痛みが 1.16 倍。1:1 のポットなら勝率 50% では足りず、
+                <strong>約 53.7%（+3.7pt）</strong>ないと割に合わない
               </li>
               <li>
-                <strong>1.41</strong> = チップ100失う痛さ ＝ チップ71を取る嬉しさ。
-                <strong>41%余分にタイト</strong>に打つべき（やばい）
+                <strong>1.41</strong> = 痛みが 1.41 倍。同じ条件で
+                <strong>約 58.5%（+8.5pt）</strong>必要。プレミアハンド級でないと合わない（やばい）
               </li>
             </ul>
             <p>
-              <strong>上段の Risk Premium</strong>は、コール額＝ポット（1:1オッズ）の時に
-              cEVより何%余分に勝率が必要か。たとえば +8.5% なら
-              「コインフリップ（50%）でも実は 58.5% 勝てないとコール NG」。
+              <strong>上段の Risk Premium</strong> は、まさにこの「上乗せ分」。コール額＝ポット（1:1オッズ）のとき、50% より<strong>何pt余分に勝率が必要か</strong>をそのまま表示している。
             </p>
             <h4>2. 色の意味</h4>
+            <p>色は BF <strong>0.6（緑）→ 1.0（黄）→ 1.4（赤）</strong>の連続グラデーション。読み方の目安:</p>
             <ul>
-              <li>🟢 <strong>濃い緑</strong> (BF &lt; 0.85): ICM追い風、広くコール可</li>
-              <li>🟢 緑 (0.85〜1.0): やや有利</li>
-              <li>🟡 黄緑〜黄 (1.0〜1.1): 中立、ほぼ cEV 通り</li>
-              <li>🟠 オレンジ (1.1〜1.25): ICM圧、タイトに</li>
-              <li>🔴 赤 (&gt; 1.25): 超危険、プレミア限定</li>
+              <li>🟢 緑 (BF &lt; 1.0): ICM追い風〜やや有利、広めにコール可</li>
+              <li>🟡 黄 (≈1.0): 中立、ほぼ cEV 通り</li>
+              <li>🟠 オレンジ (1.1〜1.3): ICM圧、タイトに</li>
+              <li>🔴 赤 (1.4 前後〜): 超危険、プレミア限定</li>
             </ul>
             <h4>3. 戦略的な読み方</h4>
             <ul>
@@ -219,8 +217,8 @@
               <li>ハンド中に「あれ、この相手ヤバい？」となったら該当セルを確認</li>
             </ol>
             <p class="howto-note">
-              ※ 表は左右対称ではない（hero/villain入れ替えると BF が微妙に違う）。
-              これはコール側がリスクを取るためで、他プレイヤーの分布によって非対称になる。
+              ※ 表は左右対称ではない（hero/villain を入れ替えると BF が変わる）。
+              同じチップ移動でも、双方のスタック量と順位状況で $ への影響が違うため（例: ショート側は負けると飛ぶが、カバーしている側は負けても生き残る）。
             </p>
           </div>
         </details>
@@ -273,7 +271,9 @@
           <br />
           ※ HU 2-way 想定。BTN+BB のように間に他プレイヤーがいる場合は警告が出ます。
           <br />
-          上の「1. プレイヤー」で 🎯/⚔️ を指定してから Nash 計算を押してください。
+          ※ <strong>プッシュ or フォールドの2択</strong>を前提にした均衡です。目安 10BB 以下ならほぼ実戦どおり。深くなるほど、実際は小さなレイズ等の選択肢があるぶん、真の GTO よりプッシュレンジは広めに出ます（「押すか降りるかなら押してよい」の意味）。
+          <br />
+          ⚙️ セットアップタブの「プレイヤー」で 🎯/⚔️ を指定してから Nash 計算を押してください。
         </p>
 
         <div class="grid">
@@ -357,8 +357,9 @@
         </div>
         <div id="custom-controls" class="hidden">
           <p class="hint">
-            グリッドのセルをタップして相手のレンジに追加/削除。<br />
-            選択中: <strong id="custom-count">0</strong>個 (<span id="custom-pct">0</span>%)
+            <span data-i18n="hand.custom.hint">グリッドのセルをタップして相手のレンジに追加/削除。</span><br />
+            <!-- 選択数の表示は handRange.ts が t("hand.custom.selected.html") で描画する -->
+            <span id="custom-selected"></span>
           </p>
           <div class="custom-actions">
             <button type="button" id="custom-all" data-i18n="hand.custom.actions.all">全選択</button>
@@ -377,7 +378,7 @@
           <div>
             <h3 id="hero-grid-title">自分のcallレンジ 🟢</h3>
             <div id="grid-hero" class="hand-grid"></div>
-            <p class="hint hand-grid-legend" data-i18n-html="hand.legend.html">🟩 必要勝率+2pt以上 = コール可 ／ 🟨 ±2pt = ボーダー (五分圏内) ／ 無色 = フォールド。セルをタップすると数値を表示。</p>
+            <p class="hint hand-grid-legend" data-i18n-html="hand.legend.html">🟩 必要勝率+0.1pt以上 = コール可 ／ 🟨 ±0.1pt = ボーダー (ほぼ完全に五分) ／ 無色 = フォールド。セルをタップすると数値を表示。</p>
             <p class="hint hand-cell-detail hidden" id="hand-cell-detail"></p>
             <p class="hint call-stats-below" id="call-stats"></p>
           </div>

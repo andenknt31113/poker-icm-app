@@ -505,9 +505,9 @@ body {
   gap: 3px;
   background: transparent;
   border: none;
-  /* タブバー背景は両テーマとも暗色固定 (rgba(15,20,25,0.95)) のため、
-     文字色もテーマの --muted に依らず暗背景向けの固定色にする。
-     ライトテーマの --muted (#6b7280) だとコントラスト不足になる。 */
+  /* タブバー背景は暗色固定 (rgba(15,20,25,0.95)) のため、文字色も
+     --muted に依らず暗背景向けの固定色にする。
+     (ライトテーマは廃止済みで、配色はダーク固定。) */
   color: #9aa3ad;
   padding: 8px 2px;
   font-size: 11px;
@@ -1432,8 +1432,6 @@ input[type="range"]::-moz-range-thumb {
   background: var(--accent);
   color: #000;
 }
-
-/* ===== 共有 ===== */
 
 /* ===== 情報モーダル ===== */
 .info-modal {
@@ -2936,6 +2934,17 @@ footer a {
   color: var(--muted);
   font-size: 12.5px;
   margin: 0 0 12px;
+}
+/* アプリ版のみ表示する「どこまで無料か」の注記 (guide.ts proNoteHtml) */
+.guide-pro-note {
+  color: var(--text);
+  font-size: 12.5px;
+  line-height: 1.6;
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
 }
 .guide-reopen-btn {
   margin-top: 4px;

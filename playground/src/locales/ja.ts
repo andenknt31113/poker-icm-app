@@ -99,7 +99,7 @@ export const ja: Record<string, string> = {
 
   // ===== index.html: ナッシュ均衡 =====
   "nash.h2": "Nash 均衡 (HU push/fold)",
-  "nash.hint.html": "\n          🎯自分 (pusher) と ⚔️相手 (caller) のヘッズアップ Nash 均衡を計算（ICM反映済み）。\n          <br />\n          ※ HU 2-way 想定。BTN+BB のように間に他プレイヤーがいる場合は警告が出ます。\n          <br />\n          ※ <strong>プッシュ or フォールドの2択</strong>を前提にした均衡です。目安 10BB 以下ならほぼ実戦どおり。深くなるほど、実際は小さなレイズ等の選択肢があるぶん、真の GTO よりプッシュレンジは広めに出ます（「押すか降りるかなら押してよい」の意味）。\n          <br />\n          上の「1. プレイヤー」で 🎯/⚔️ を指定してから Nash 計算を押してください。\n        ",
+  "nash.hint.html": "\n          🎯自分 (pusher) と ⚔️相手 (caller) のヘッズアップ Nash 均衡を計算（ICM反映済み）。\n          <br />\n          ※ HU 2-way 想定。BTN+BB のように間に他プレイヤーがいる場合は警告が出ます。\n          <br />\n          ※ <strong>プッシュ or フォールドの2択</strong>を前提にした均衡です。目安 10BB 以下ならほぼ実戦どおり。深くなるほど、実際は小さなレイズ等の選択肢があるぶん、真の GTO よりプッシュレンジは広めに出ます（「押すか降りるかなら押してよい」の意味）。\n          <br />\n          ⚙️ セットアップタブの「プレイヤー」で 🎯/⚔️ を指定してから Nash 計算を押してください。\n        ",
   "nash.ante.label": "\n            アンティ合計\n            ",
   "nash.solveBtn": "Nash 計算",
   "nash.sbRange.h3": "🎯自分 push レンジ 🔴",
@@ -113,6 +113,8 @@ export const ja: Record<string, string> = {
   "hand.mode.preset": "\n            プリセット (Top X%)\n          ",
   "hand.mode.custom": "\n            カスタム編集\n          ",
   "hand.preset.hint": "※ Top X% は本ツール定義の強度順。他ツールとは一致しない場合があります。",
+  "hand.custom.hint": "グリッドのセルをタップして相手のレンジに追加/削除。",
+  "hand.custom.selected.html": "選択中: <strong>{n}</strong>個 ({pct}%)",
   "hand.custom.actions.all": "全選択",
   "hand.custom.actions.clear": "全消去",
   "hand.custom.actions.fromPreset": "\n              プリセットから読み込む\n            ",
@@ -195,14 +197,14 @@ export const ja: Record<string, string> = {
   "onboarding.step1.body": `
       <p>
         トーナメントの「チップ枚数」と「賞金への価値」は同じではありません。
-        本ツールはこの <strong>ICM プレッシャー</strong>を、数字で『計算』しながら
-        クイズで『練習』もできる無料アプリです。
+        本アプリはこの <strong>ICM プレッシャー</strong>を、数字で『計算』しながら
+        クイズで『練習』もできます。
       </p>
       <ul class="onboarding-tab-list">
-        <li><span class="onboarding-tab-icon">⚙️</span> 状況入力（スタック・ペイアウトなど）</li>
+        <li><span class="onboarding-tab-icon">⚙️</span> セットアップ（スタック・ペイアウトの入力）</li>
         <li><span class="onboarding-tab-icon">📊</span> 計算結果（ICM・BF・必要勝率）</li>
-        <li><span class="onboarding-tab-icon">🃏</span> レンジ比較</li>
-        <li><span class="onboarding-tab-icon">🎯</span> Nash 均衡（push/fold の最適解）</li>
+        <li><span class="onboarding-tab-icon">🃏</span> ハンド比較（レンジの見比べ）</li>
+        <li><span class="onboarding-tab-icon">🎯</span> ナッシュ均衡（push/fold の最適解）</li>
         <li><span class="onboarding-tab-icon">🎲</span> 練習（クイズで実戦感覚）</li>
       </ul>
     `,
@@ -238,6 +240,9 @@ export const ja: Record<string, string> = {
   "guide.close.aria": "閉じる",
   "guide.reopenBtn": "🔄 もう一度はじめのガイドを見る",
   "guide.legalLink": "📄 利用規約・プライバシーポリシー",
+  // アプリ版のみ表示 (guide.ts proNoteHtml)。価格は書かない。
+  "guide.proNote.html":
+    "ℹ️ シナリオプリセット・計算結果・ナッシュ均衡・練習はすべて無料でお使いいただけます。スタックとペイ構造の<strong>自由編集・シナリオ保存</strong>は 🔒 Pro（買い切り）機能です。",
   "guide.body.html": `
         <p class="guide-intro">
           このツールはショートスタック（〜20bb）のオールイン局面に特化しています。
@@ -247,7 +252,7 @@ export const ja: Record<string, string> = {
           <div class="howto-body">
             <p>プレイヤーのスタック、ペイ構造、🎯自分/⚔️相手を設定してシナリオを作る画面。</p>
             <ol>
-              <li>「シナリオプリセット」をタップして状況を一発セット</li>
+              <li>「プリセット一覧」を開いてプリセットをタップし、状況を一発セット</li>
               <li>「プレイヤー」でスタックを調整（足りなければ + プレイヤー追加）</li>
               <li>🎯自分 / ⚔️相手 をタップで指定</li>
             </ol>
@@ -270,7 +275,7 @@ export const ja: Record<string, string> = {
           <div class="howto-body">
             <p>相手の push/call レンジと自分のレンジを Top X% やカスタム編集で比較する画面。</p>
             <ol>
-              <li>「自分の call を逆算」か「自分の push を逆算」を選ぶ</li>
+              <li>「自分の call レンジを求める」か「自分の push レンジを求める」を選ぶ</li>
               <li>プリセットならスライダーで Top X% を調整、カスタムならグリッドのセルをタップして選択</li>
               <li>グリッドの色分けで自分がコール/プッシュすべきハンドを確認</li>
             </ol>
