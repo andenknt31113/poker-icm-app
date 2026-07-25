@@ -357,8 +357,9 @@
         </div>
         <div id="custom-controls" class="hidden">
           <p class="hint">
-            グリッドのセルをタップして相手のレンジに追加/削除。<br />
-            選択中: <strong id="custom-count">0</strong>個 (<span id="custom-pct">0</span>%)
+            <span data-i18n="hand.custom.hint">グリッドのセルをタップして相手のレンジに追加/削除。</span><br />
+            <!-- 選択数の表示は handRange.ts が t("hand.custom.selected.html") で描画する -->
+            <span id="custom-selected"></span>
           </p>
           <div class="custom-actions">
             <button type="button" id="custom-all" data-i18n="hand.custom.actions.all">全選択</button>

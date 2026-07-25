@@ -113,6 +113,8 @@ export const ja: Record<string, string> = {
   "hand.mode.preset": "\n            プリセット (Top X%)\n          ",
   "hand.mode.custom": "\n            カスタム編集\n          ",
   "hand.preset.hint": "※ Top X% は本ツール定義の強度順。他ツールとは一致しない場合があります。",
+  "hand.custom.hint": "グリッドのセルをタップして相手のレンジに追加/削除。",
+  "hand.custom.selected.html": "選択中: <strong>{n}</strong>個 ({pct}%)",
   "hand.custom.actions.all": "全選択",
   "hand.custom.actions.clear": "全消去",
   "hand.custom.actions.fromPreset": "\n              プリセットから読み込む\n            ",

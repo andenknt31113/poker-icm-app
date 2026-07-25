@@ -119,6 +119,8 @@ export const en: Record<string, string> = {
   "hand.mode.preset": "\n            Preset (Top X%)\n          ",
   "hand.mode.custom": "\n            Custom edit\n          ",
   "hand.preset.hint": "※ Top X% uses this tool’s own strength ranking. It may not match other tools.",
+  "hand.custom.hint": "Tap grid cells to add/remove hands from the villain’s range.",
+  "hand.custom.selected.html": "Selected: <strong>{n}</strong> ({pct}%)",
   "hand.custom.actions.all": "Select all",
   "hand.custom.actions.clear": "Clear all",
   "hand.custom.actions.fromPreset": "\n              Load from preset\n            ",
