@@ -2937,6 +2937,17 @@ footer a {
   font-size: 12.5px;
   margin: 0 0 12px;
 }
+/* アプリ版のみ表示する「どこまで無料か」の注記 (guide.ts proNoteHtml) */
+.guide-pro-note {
+  color: var(--text);
+  font-size: 12.5px;
+  line-height: 1.6;
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+}
 .guide-reopen-btn {
   margin-top: 4px;
   width: 100%;

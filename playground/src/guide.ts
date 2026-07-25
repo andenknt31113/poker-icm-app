@@ -1,5 +1,6 @@
 import { applyTab, getActiveTab } from "./tabs.js";
 import { t, getLang } from "./i18n.js";
+import { isCapacitorNative } from "./capacitorEnv.js";
 import { LEGAL_CONTENT_HTML, LEGAL_CONTENT_TITLE } from "./legalContent.js";
 
 // ===== オンボーディング（初回ガイド）& 使い方ガイド =====
@@ -142,6 +143,20 @@ function closeOnboardingModal(): void {
 // ===== 使い方ガイド（❓ ボタン、常設） =====
 let guideModalEl: HTMLDivElement | null = null;
 
+/**
+ * ガイド冒頭に出す「どこまで無料か」の注記。アプリ版 (Capacitor ネイティブ) 専用。
+ *
+ * ガイドの手順は「スタックを調整」「全員のスタックを入力」など編集操作を前提に
+ * 書かれているが、アプリ版では編集系が Pro 買い切りゲートの内側にある。
+ * 無料ユーザーが手順どおり進むとペイウォールに当たるため、先に線引きを示す。
+ * web は全機能無料なので出さない (isCapacitorNative() で分岐)。
+ * 価格はここに書かない (ストア/offerings 由来の表示に一元化する)。
+ */
+function proNoteHtml(): string {
+  if (!isCapacitorNative()) return "";
+  return `<p class="guide-pro-note">${t("guide.proNote.html")}</p>`;
+}
+
 function ensureGuideModal(): HTMLDivElement {
   if (guideModalEl) return guideModalEl;
   const modal = document.createElement("div");
@@ -153,7 +168,7 @@ function ensureGuideModal(): HTMLDivElement {
         <h3>${t("guide.title")}</h3>
         <button type="button" class="guide-modal-close" id="guide-modal-close" aria-label="${t("guide.close.aria")}">✕</button>
       </div>
-      <div class="guide-modal-body">${t("guide.body.html")}</div>
+      <div class="guide-modal-body">${proNoteHtml()}${t("guide.body.html")}</div>
     </div>
   `;
   document.body.appendChild(modal);

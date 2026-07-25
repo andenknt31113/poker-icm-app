@@ -244,6 +244,9 @@ export const en: Record<string, string> = {
   "guide.close.aria": "Close",
   "guide.reopenBtn": "🔄 See the intro guide again",
   "guide.legalLink": "📄 Terms & Privacy Policy",
+  // アプリ版のみ表示 (guide.ts proNoteHtml)。価格は書かない。
+  "guide.proNote.html":
+    "ℹ️ Scenario presets, results, Nash equilibrium, and practice are all free. <strong>Freely editing stacks and payouts, and saving scenarios</strong> are 🔒 Pro (one-time purchase) features.",
   "guide.body.html": `
         <p class="guide-intro">
           This tool focuses on short-stack (~20bb) all-in spots.

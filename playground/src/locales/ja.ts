@@ -240,6 +240,9 @@ export const ja: Record<string, string> = {
   "guide.close.aria": "閉じる",
   "guide.reopenBtn": "🔄 もう一度はじめのガイドを見る",
   "guide.legalLink": "📄 利用規約・プライバシーポリシー",
+  // アプリ版のみ表示 (guide.ts proNoteHtml)。価格は書かない。
+  "guide.proNote.html":
+    "ℹ️ シナリオプリセット・計算結果・ナッシュ均衡・練習はすべて無料でお使いいただけます。スタックとペイ構造の<strong>自由編集・シナリオ保存</strong>は 🔒 Pro（買い切り）機能です。",
   "guide.body.html": `
         <p class="guide-intro">
           このツールはショートスタック（〜20bb）のオールイン局面に特化しています。
