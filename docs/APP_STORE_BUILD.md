@@ -260,5 +260,5 @@ accordingly.
 - `NSPhotoLibraryUsageDescription` 等、実際には使用していない権限の
   `Info.plist` エントリが Capacitor プラグインの追加によって不要に
   混入していないか、Archive 前に `ios/App/App/Info.plist` を確認する
-  (今回追加した `@capacitor/share` / `@capacitor/status-bar` は追加の
+  (同梱プラグイン `@capacitor/status-bar` / `@revenuecat/purchases-capacitor` は追加の
   権限プロンプトを必要としない)。

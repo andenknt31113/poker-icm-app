@@ -1,10 +1,11 @@
 # Poker ICM/BF Calculator (仮称)
 
-日本語UIの店舗トナメ向け ICM/BF/Nash 計算アプリ（モバイルWeb / PWA）。
+日本語UIの店舗トナメ向け ICM/BF/Nash 計算アプリ（モバイルWeb / PWA + iOS アプリ (Capacitor)）。
 
 ## 現在のステータス
 - 計算コア（ICM・BF・必要勝率・Nash・ポットオッズ）実装＆テスト済み
 - モバイルWeb UI（playground）が稼働中。5タブ構成・PWA対応
+- iOS アプリ (Capacitor + RevenueCat 買い切りIAP)。ビルド手順は docs/APP_STORE_BUILD.md
 - Cloudflare Workers にデプロイ済み
 - 開始日: 2026-05-08
 
