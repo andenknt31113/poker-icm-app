@@ -9,8 +9,8 @@ export const LEGAL_CONTENT_TITLE = "📄 利用規約・プライバシーポリ
 
 export const LEGAL_CONTENT_HTML = `
   <p class="legal-meta">
-    対象サービス: Poker ICM/BF（以下「本サービス」）<br />
-    URL: <code>https://poker-icm-app.andenknt31113.workers.dev/</code><br />
+    対象サービス: iOS アプリ「Poker ICM」および Web 版「Poker ICM/BF」（以下あわせて「本サービス」）<br />
+    Web 版 URL: <code>https://poker-icm-app.andenknt31113.workers.dev/</code><br />
     運営: 個人開発者
   </p>
 
@@ -70,7 +70,7 @@ export const LEGAL_CONTENT_HTML = `
   <p><strong>8. お問い合わせ</strong></p>
   <p>本規約に関するお問い合わせは、下記の連絡先までお願いします。</p>
   <ul>
-    <li>連絡先: 準備中</li>
+    <li>連絡先: andenknt31113@gmail.com</li>
   </ul>
 
   <h4>プライバシーポリシー</h4>
@@ -79,7 +79,7 @@ export const LEGAL_CONTENT_HTML = `
   <p>
     本サービスは、利用者のプレイ設定（スタック・ペイアウト等の入力データ）
     や練習問題の成績・履歴を、サーバーには送信せず、すべて利用者の
-    端末内（ブラウザのlocalStorage）にのみ保存します。運営者を含む
+    端末内（ブラウザまたはアプリ内のローカルストレージ）にのみ保存します。運営者を含む
     第三者がこれらのデータを閲覧・収集することはありません。
     （アプリ版の購入処理に伴う情報の扱いは第4条をご覧ください。）
   </p>
@@ -115,7 +115,7 @@ export const LEGAL_CONTENT_HTML = `
   <p><strong>5. お問い合わせ</strong></p>
   <p>本ポリシーに関するお問い合わせは、下記の連絡先までお願いします。</p>
   <ul>
-    <li>連絡先: 準備中</li>
+    <li>連絡先: andenknt31113@gmail.com</li>
   </ul>
 
   <p><strong>6. 改定について</strong></p>
