@@ -130,7 +130,7 @@ export const en: Record<string, string> = {
   "hand.title.villainCall": "Villain call range 🟢",
   "hand.title.heroPush": "Your push range 🔴",
   "hand.label.villainCall": "Villain call range",
-  "hand.legend.html": "🟩 ≥ required +0.1pt = call ／ 🟨 within ±0.1pt = borderline (a true coin flip) ／ uncolored = fold. Tap a cell for exact numbers.",
+  "hand.legend.html": "In “Find my call range”: 🟩 ≥ required +0.1pt = call ／ 🟨 within ±0.1pt = borderline (a true coin flip) ／ uncolored = fold. Tap a cell for exact numbers.<br />In “Find my push range”: 🟩 = shoving beats folding in $EV ／ 🟨 = borderline, essentially a tie ／ uncolored = fold.",
   "hand.inspect.detail.html": "<strong>{hand}</strong>: equity {eq}% − required {req}% = <strong>{margin}pt</strong> → {verdict}",
   "hand.inspect.verdict.call": "Call",
   "hand.inspect.verdict.marginal": "Borderline",
@@ -246,7 +246,7 @@ export const en: Record<string, string> = {
   "guide.legalLink": "📄 Terms & Privacy Policy",
   // アプリ版のみ表示 (guide.ts proNoteHtml)。価格は書かない。
   "guide.proNote.html":
-    "ℹ️ Scenario presets, results, Nash equilibrium, and practice are all free. <strong>Freely editing stacks and payouts, and saving scenarios</strong> are 🔒 Pro (one-time purchase) features.",
+    "ℹ️ Scenario presets, results, Nash equilibrium, and practice are all free. <strong>Editing stacks and payouts (including applying a payout preset), and saving scenarios</strong> are 🔒 Pro (one-time purchase) features.",
   "guide.body.html": `
         <p class="guide-intro">
           This tool focuses on short-stack (~20bb) all-in spots.

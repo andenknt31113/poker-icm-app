@@ -125,7 +125,7 @@ export const ja: Record<string, string> = {
   "hand.title.villainCall": "相手のcallレンジ 🟢",
   "hand.title.heroPush": "自分のpushレンジ 🔴",
   "hand.label.villainCall": "相手のcallレンジ",
-  "hand.legend.html": "🟩 必要勝率+0.1pt以上 = コール可 ／ 🟨 ±0.1pt = ボーダー (ほぼ完全に五分) ／ 無色 = フォールド。セルをタップすると数値を表示。",
+  "hand.legend.html": "「自分の call レンジを求める」時: 🟩 必要勝率+0.1pt以上 = コール可 ／ 🟨 ±0.1pt = ボーダー (ほぼ完全に五分) ／ 無色 = フォールド。セルをタップすると数値を表示。<br />「自分の push レンジを求める」時: 🟩 = push が $EV でフォールドを上回るハンド ／ 🟨 = ほぼ互角のボーダー ／ 無色 = フォールド。",
   "hand.inspect.detail.html": "<strong>{hand}</strong>: 勝率 {eq}% − 必要 {req}% = <strong>{margin}pt</strong> → {verdict}",
   "hand.inspect.verdict.call": "コール可",
   "hand.inspect.verdict.marginal": "五分 (ボーダー)",
@@ -242,7 +242,7 @@ export const ja: Record<string, string> = {
   "guide.legalLink": "📄 利用規約・プライバシーポリシー",
   // アプリ版のみ表示 (guide.ts proNoteHtml)。価格は書かない。
   "guide.proNote.html":
-    "ℹ️ シナリオプリセット・計算結果・ナッシュ均衡・練習はすべて無料でお使いいただけます。スタックとペイ構造の<strong>自由編集・シナリオ保存</strong>は 🔒 Pro（買い切り）機能です。",
+    "ℹ️ シナリオプリセット・計算結果・ナッシュ均衡・練習はすべて無料でお使いいただけます。スタックとペイ構造の<strong>編集（ペイ構造のプリセット適用を含む）・シナリオ保存</strong>は 🔒 Pro（買い切り）機能です。",
   "guide.body.html": `
         <p class="guide-intro">
           このツールはショートスタック（〜20bb）のオールイン局面に特化しています。
