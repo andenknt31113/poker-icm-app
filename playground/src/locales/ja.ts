@@ -395,13 +395,13 @@ export const ja: Record<string, string> = {
 
   // ===== 練習: 教訓 (judge.ts practiceLesson / practicePushLesson) =====
   "practice.lesson.wta": "🏆 WTA (勝者総取り) ではチップ＝賞金がリニア。ICM 圧はゼロなので、cEV (チップの損得) どおりに判断できます。",
-  "practice.lesson.satellite": "🛰 サテライトでは『残ること』が全て。どんな強いハンドでも RP が極端に上がり、ほぼ全てのコールが正当化されません。",
+  "practice.lesson.satellite": "🛰 サテライトでは『残ること』が全て。特に入賞圏に近い中〜大スタックほど RP が極端に上がり、強いハンドでもコールが正当化されにくくなります（逆に、飛んでも失うものが少ない最短スタックは広くコールできます）。",
   "practice.lesson.covered": "⚠️ カバーされている相手へのコールは、負け＝敗退。トーナメント生命を賭けるため Risk Premium が跳ね上がります。",
   "practice.lesson.covering": "自分が相手をカバーしている時は、負けても飛ばないため RP は小さめ。cEV に近い感覚でコールできます。",
   "practice.lesson.shorter": "自分より短いスタックが残っている間は、無理に勝負しなくても順位が上がる可能性があります。それが RP の源泉です。",
   "practice.lesson.general": "必要勝率 = cEV + Risk Premium。ICM 下では『チップで得』でも『賞金で損』になり得ることを常に確認しましょう。",
   "practice.pushLesson.wta": "🏆 WTA (勝者総取り) では ICM 圧はゼロ。push もチップ EV (cEV) どおりに判断できます。",
-  "practice.pushLesson.satellite": "🛰 サテライトでは『残ること』が全て。push 側も極端にタイトになり、スチールが見込めても大半のハンドは fold が正解になります。",
+  "practice.pushLesson.satellite": "🛰 サテライトでは『残ること』が全て。入賞圏に近いスタックほど push 側も極端にタイトになり、スチールが見込めても多くのハンドは fold が正解になりがちです（最短スタックは逆に、ほぼ何でも push できる場面が出てきます）。",
   "practice.pushLesson.covered": "⚠️ カバーされている相手への push は、コールされて負ければ即敗退。トーナメント生命を賭けるため、通常よりタイトな range で push すべきです。",
   "practice.pushLesson.steal": "💨 相手のコール率 (=スチール成功率の裏返し) が低いほど、ハンドが弱くても push を広げられます。fold されて pot を丸取りできる期待が大きいためです。",
   "practice.pushLesson.general": "push の $EV = (1−コール率)×スチール成功時 + コール率×(勝率×勝ち時 + (1−勝率)×負け時)。fold の $EV と比較し、必ず ICM 込みで判断しましょう。",
