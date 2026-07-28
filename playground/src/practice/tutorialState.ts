@@ -16,11 +16,11 @@ export interface TutorialProblemDef {
 
 // 各問題のパラメータは core の厳密 ICM 計算 (calculateExactCallEquity) で
 // 事前検証済み (report 参照)。以下はその検証結果:
-//   Q1: margin(heroEq-厳密必要勝率) = +16.8% (明確なコール, RP=0)
-//   Q2: RP = +2.35%, margin = +12.8% (小さい RP でも明確なコール)
-//   Q3: cEV必要勝率(44.1%) < heroEq(53.6%) < 厳密必要勝率(63.4%) ← ICMプレッシャーの核心
-//   Q4: margin = -3.2% (わずかにフォールド)
-//   Q5: margin = -12.4% (AKs でも大きくフォールド)
+//   Q1: BF = 1.000 / RP = 0.00pt、margin(heroEq-厳密必要勝率) = +17.3pt (明確なコール)
+//   Q2: RP = +2.35pt、margin = +13.0pt (小さい RP でも明確なコール)
+//   Q3: cEV必要勝率(44.1%) < heroEq(53.4%) < 厳密必要勝率(63.4%) ← ICMプレッシャーの核心
+//   Q4: RP = +21.2pt、margin = -3.7pt (わずかにフォールド)
+//   Q5: RP = +27.2pt、margin = -12.7pt (AKs でも大きくフォールド)
 export const TUTORIAL_PROBLEMS: TutorialProblemDef[] = [
   {
     title: t("practice.tutorial.q1.title"),

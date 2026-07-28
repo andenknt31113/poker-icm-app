@@ -85,7 +85,7 @@ export const ja: Record<string, string> = {
   "result.bf.matrixHint.html": "\n          縦軸 = Hero（自分）、横軸 = Villain（相手）。\n          上段=1:1ポット時のRisk Premium、下段=BF値。\n        ",
   "result.bf.howto.summary": "📖 表の見方（クリックで展開）",
   "result.bf.howto.body.html":
-    "\n            <h4>1. 各セルの数字</h4>\n            <p><strong>下段の BF（Bubble Factor）</strong>がメイン指標。「この相手との勝負は、<strong>負けた痛みが勝った嬉しさの何倍か</strong>」を表す。</p>\n            <ul>\n              <li><strong>1.00</strong> = 痛み＝嬉しさ。チップの価値どおり戦ってよい（ICM圧ゼロ）</li>\n              <li><strong>1.16</strong> = 痛みが 1.16 倍。1:1 のポットなら勝率 50% では足りず、<strong>約 53.7%（+3.7pt）</strong>ないと割に合わない</li>\n              <li><strong>1.41</strong> = 痛みが 1.41 倍。同じ条件で<strong>約 58.5%（+8.5pt）</strong>必要。プレミアハンド級でないと合わない（やばい）</li>\n            </ul>\n            <p><strong>上段の Risk Premium</strong> は、まさにこの「上乗せ分」。コール額＝ポット（1:1オッズ）のとき、50% より<strong>何pt余分に勝率が必要か</strong>をそのまま表示している。</p>\n            <h4>2. 色の意味</h4>\n            <p>色は BF <strong>0.6（緑）→ 1.0（黄）→ 1.4（赤）</strong>の連続グラデーション。読み方の目安:</p>\n            <ul>\n              <li>🟢 緑 (BF &lt; 1.0): ICM追い風〜やや有利、広めにコール可</li>\n              <li>🟡 黄 (≈1.0): 中立、ほぼ cEV 通り</li>\n              <li>🟠 オレンジ (1.1〜1.3): ICM圧、タイトに</li>\n              <li>🔴 赤 (1.4 前後〜): 超危険、プレミア限定</li>\n            </ul>\n            <h4>3. 戦略的な読み方</h4>\n            <ul>\n              <li><strong>赤いセル</strong>の相手が絡んできたら → 降りる方向にウェイト</li>\n              <li><strong>緑のセル</strong>の相手 → ややルース寄せOK</li>\n              <li><strong>自分が最短スタック</strong>の行は全体的にBFが低い（=失うものが少ない）→ 比較的気楽に勝負できる</li>\n              <li><strong>チップリーダー対 2番手</strong>のセルは BF が跳ね上がる → リーダー同士の絡みは慎重に</li>\n              <li><strong>中堅スタック</strong>がリーダーに絡まれた時が最もタイトに打つべき場面（典型的な ICM プレッシャー）</li>\n            </ul>\n            <h4>4. 実戦での使い方</h4>\n            <ol>\n              <li>テーブル着席後、全員のスタックを入力</li>\n              <li>左端の<strong>自分の行</strong>を見て「誰に対してタイト/ルース打つべきか」を把握</li>\n              <li>ハンド中に「あれ、この相手ヤバい？」となったら該当セルを確認</li>\n            </ol>\n            <p class=\"howto-note\">※ 表は左右対称ではない（hero/villain を入れ替えると BF が変わる）。同じチップ移動でも、双方のスタック量と順位状況で $ への影響が違うため（例: ショート側は負けると飛ぶが、カバーしている側は負けても生き残る）。</p>\n          ",
+    "\n            <h4>1. 各セルの数字</h4>\n            <p><strong>下段の BF（Bubble Factor）</strong>がメイン指標。「この相手との勝負は、<strong>負けた痛みが勝った嬉しさの何倍か</strong>」を表す。</p>\n            <ul>\n              <li><strong>1.00</strong> = 痛み＝嬉しさ。チップの価値どおり戦ってよい（ICM圧ゼロ）</li>\n              <li><strong>1.16</strong> = 痛みが 1.16 倍。1:1 のポットなら勝率 50% では足りず、<strong>約 53.7%（+3.7pt）</strong>ないと割に合わない</li>\n              <li><strong>1.41</strong> = 痛みが 1.41 倍。同じ条件で<strong>約 58.5%（+8.5pt）</strong>必要。プレミアハンド級でないと合わない（やばい）</li>\n            </ul>\n            <p><strong>上段の Risk Premium</strong> は、まさにこの「上乗せ分」。コール額＝ポット（1:1オッズ）のとき、50% より<strong>何pt余分に勝率が必要か</strong>をそのまま表示している。</p>\n            <h4>2. 色の意味</h4>\n            <p>色は BF <strong>1.0（黄）→ 1.4 以上（赤）</strong>と連続的に濃くなる。ICM の性質上 <strong>BF が 1.00 を下回ることはない</strong>ため、実際に出るのは黄〜赤の範囲。読み方の目安:</p>\n            <ul>\n              <li>🟡 黄 (BF ≈ 1.0): ICM圧ほぼゼロ、ほぼ cEV 通りに戦ってよい</li>\n              <li>🟠 オレンジ (1.1〜1.3): ICM圧、タイトに</li>\n              <li>🔴 赤 (1.4 前後〜): 超危険、プレミア限定</li>\n            </ul>\n            <h4>3. 戦略的な読み方</h4>\n            <ul>\n              <li><strong>赤いセル</strong>の相手が絡んできたら → 降りる方向にウェイト</li>\n              <li><strong>黄色に近い（BF が 1.0 前後の）セル</strong>の相手 → ややルース寄せOK</li>\n              <li><strong>自分が最短スタック</strong>の行は全体的にBFが低い（=失うものが少ない）→ 比較的気楽に勝負できる</li>\n              <li><strong>チップリーダー対 2番手</strong>のセルは BF が跳ね上がる → リーダー同士の絡みは慎重に（表全体で BF 最大になりやすいのは、2番手がリーダーに絡まれるセル）</li>\n              <li>自分がリーダーでないなら、自分の行の中で<strong>チップリーダーの列</strong>が最も BF が高くなりやすい → 大きいスタックに絡まれた時ほどタイトに（典型的な ICM プレッシャー）</li>\n            </ul>\n            <h4>4. 実戦での使い方</h4>\n            <ol>\n              <li>テーブル着席後、全員のスタックを入力</li>\n              <li>左端の<strong>自分の行</strong>を見て「誰に対してタイト/ルース打つべきか」を把握</li>\n              <li>ハンド中に「あれ、この相手ヤバい？」となったら該当セルを確認</li>\n            </ol>\n            <p class=\"howto-note\">※ 表は左右対称ではない（hero/villain を入れ替えると BF が変わる）。同じチップ移動でも、双方のスタック量と順位状況で $ への影響が違うため（例: ショート側は負けると飛ぶが、カバーしている側は負けても生き残る）。</p>\n          ",
   "result.bf.scrollHint": "→ 横にスクロール",
 
   // ===== index.html: 計算結果 - 必要勝率 =====
@@ -125,7 +125,7 @@ export const ja: Record<string, string> = {
   "hand.title.villainCall": "相手のcallレンジ 🟢",
   "hand.title.heroPush": "自分のpushレンジ 🔴",
   "hand.label.villainCall": "相手のcallレンジ",
-  "hand.legend.html": "🟩 必要勝率+0.1pt以上 = コール可 ／ 🟨 ±0.1pt = ボーダー (ほぼ完全に五分) ／ 無色 = フォールド。セルをタップすると数値を表示。",
+  "hand.legend.html": "「自分の call レンジを求める」時: 🟩 必要勝率+0.1pt以上 = コール可 ／ 🟨 ±0.1pt = ボーダー (ほぼ完全に五分) ／ 無色 = フォールド。セルをタップすると数値を表示。<br />「自分の push レンジを求める」時: 🟩 = push が $EV でフォールドを上回るハンド ／ 🟨 = ほぼ互角のボーダー ／ 無色 = フォールド。",
   "hand.inspect.detail.html": "<strong>{hand}</strong>: 勝率 {eq}% − 必要 {req}% = <strong>{margin}pt</strong> → {verdict}",
   "hand.inspect.verdict.call": "コール可",
   "hand.inspect.verdict.marginal": "五分 (ボーダー)",
@@ -164,13 +164,13 @@ export const ja: Record<string, string> = {
   // ===== 導入コース (tutorialState.ts: 固定5問) =====
   "practice.tutorial.q1.title": "チップ＝賞金の世界",
   "practice.tutorial.q1.narration": "全員が同じ賞金を狙う一発勝負 (Winner Take All)。ここではチップ＝そのまま賞金です。",
-  "practice.tutorial.q1.lesson": "WTA では順位という概念がなく、勝率がそのまま賞金期待値に直結します。だから Risk Premium はゼロ。cEV（チップ的な必要勝率）だけで判断できる、ICM プレッシャーが存在しない最もシンプルなケースです。",
+  "practice.tutorial.q1.lesson": "WTA では順位を上げること自体に賞金価値がなく、勝率がそのまま賞金期待値に直結します。だから Risk Premium はゼロ。cEV（チップ的な必要勝率）だけで判断できる、ICM プレッシャーが存在しない最もシンプルなケースです。",
   "practice.tutorial.q2.title": "相手をカバーしている",
   "practice.tutorial.q2.narration": "相手のスタックはあなたより少ない。もし負けても、あなたはまだトーナメントに残ります。",
   "practice.tutorial.q2.lesson": "自分が相手をカバーしている（負けても飛ばない）ときは、Risk Premium は小さめ。cEV に近い感覚でコールして大丈夫です。ICM プレッシャーは『自分が飛ぶリスク』があるときに強く働きます。",
   "practice.tutorial.q3.title": "バブルの罠",
   "practice.tutorial.q3.narration": "あなたは4人残りの3番手。チップリーダーがオールイン。ハンドは悪くない…がこれはワナかもしれない。",
-  "practice.tutorial.q3.lesson": "チップの上ではコールが得（cEV的には+EV）でも、厳密な ICM で計算すると必要勝率が跳ね上がり、フォールドが正解になることがあります。これが『ICM プレッシャー』の正体。飛べば賞金の可能性が消える一方、生き残れば上位の賞金が保証されるため、コールのリスクは額面以上に重いのです。",
+  "practice.tutorial.q3.lesson": "チップの上ではコールが得（cEV的には+EV）でも、厳密な ICM で計算すると必要勝率が跳ね上がり、フォールドが正解になることがあります。これが『ICM プレッシャー』の正体。飛べば賞金の可能性がその場で消える一方、降りれば入賞と上の賞金を狙うチャンスが残るため、コールのリスクは額面以上に重いのです。",
   "practice.tutorial.q4.title": "短スタックを待て",
   "practice.tutorial.q4.narration": "卓にはあなたよりずっと短いスタックの選手がいます。相手のオールインはギリギリ微妙なラインです。",
   "practice.tutorial.q4.lesson": "自分より短いスタックが残っている間は、その選手が先に飛んでくれれば自動的に順位が上がります。無理にコールしなくても得られる価値がある以上、微妙なラインはフォールド優位になりがちです。",
@@ -242,7 +242,7 @@ export const ja: Record<string, string> = {
   "guide.legalLink": "📄 利用規約・プライバシーポリシー",
   // アプリ版のみ表示 (guide.ts proNoteHtml)。価格は書かない。
   "guide.proNote.html":
-    "ℹ️ シナリオプリセット・計算結果・ナッシュ均衡・練習はすべて無料でお使いいただけます。スタックとペイ構造の<strong>自由編集・シナリオ保存</strong>は 🔒 Pro（買い切り）機能です。",
+    "ℹ️ シナリオプリセット・計算結果・ナッシュ均衡・練習はすべて無料でお使いいただけます。スタックとペイ構造の<strong>編集（ペイ構造のプリセット適用を含む）・シナリオ保存</strong>は 🔒 Pro（買い切り）機能です。",
   "guide.body.html": `
         <p class="guide-intro">
           このツールはショートスタック（〜20bb）のオールイン局面に特化しています。
@@ -395,13 +395,13 @@ export const ja: Record<string, string> = {
 
   // ===== 練習: 教訓 (judge.ts practiceLesson / practicePushLesson) =====
   "practice.lesson.wta": "🏆 WTA (勝者総取り) ではチップ＝賞金がリニア。ICM 圧はゼロなので、cEV (チップの損得) どおりに判断できます。",
-  "practice.lesson.satellite": "🛰 サテライトでは『残ること』が全て。どんな強いハンドでも RP が極端に上がり、ほぼ全てのコールが正当化されません。",
+  "practice.lesson.satellite": "🛰 サテライトでは『残ること』が全て。特に入賞圏に近い中〜大スタックほど RP が極端に上がり、強いハンドでもコールが正当化されにくくなります（逆に、飛んでも失うものが少ない最短スタックは広くコールできます）。",
   "practice.lesson.covered": "⚠️ カバーされている相手へのコールは、負け＝敗退。トーナメント生命を賭けるため Risk Premium が跳ね上がります。",
   "practice.lesson.covering": "自分が相手をカバーしている時は、負けても飛ばないため RP は小さめ。cEV に近い感覚でコールできます。",
   "practice.lesson.shorter": "自分より短いスタックが残っている間は、無理に勝負しなくても順位が上がる可能性があります。それが RP の源泉です。",
   "practice.lesson.general": "必要勝率 = cEV + Risk Premium。ICM 下では『チップで得』でも『賞金で損』になり得ることを常に確認しましょう。",
   "practice.pushLesson.wta": "🏆 WTA (勝者総取り) では ICM 圧はゼロ。push もチップ EV (cEV) どおりに判断できます。",
-  "practice.pushLesson.satellite": "🛰 サテライトでは『残ること』が全て。push 側も極端にタイトになり、スチールが見込めても大半のハンドは fold が正解になります。",
+  "practice.pushLesson.satellite": "🛰 サテライトでは『残ること』が全て。入賞圏に近いスタックほど push 側も極端にタイトになり、スチールが見込めても多くのハンドは fold が正解になりがちです（最短スタックは逆に、ほぼ何でも push できる場面が出てきます）。",
   "practice.pushLesson.covered": "⚠️ カバーされている相手への push は、コールされて負ければ即敗退。トーナメント生命を賭けるため、通常よりタイトな range で push すべきです。",
   "practice.pushLesson.steal": "💨 相手のコール率 (=スチール成功率の裏返し) が低いほど、ハンドが弱くても push を広げられます。fold されて pot を丸取りできる期待が大きいためです。",
   "practice.pushLesson.general": "push の $EV = (1−コール率)×スチール成功時 + コール率×(勝率×勝ち時 + (1−勝率)×負け時)。fold の $EV と比較し、必ず ICM 込みで判断しましょう。",
@@ -516,7 +516,7 @@ export const ja: Record<string, string> = {
       <p><strong>「チップの痛さ ÷ チップの嬉しさ」</strong>を表す係数。HU all-in 想定。</p>
       <ul>
         <li><strong>1.00</strong>: チップ ⇄ $ がリニア (ICM 圧ゼロ)</li>
-        <li><strong>1.20</strong>: 「100失う痛さ = 83取る嬉しさ」→ 20%余分にタイト</li>
+        <li><strong>1.20</strong>: 「100失う痛さ = 120取る嬉しさ」→ 20%余分にタイト</li>
         <li><strong>1.50+</strong>: バブル/サテライトレベル、超タイト</li>
       </ul>
       <p>厳密な定義: <code>BF = (現在 - 負け時の $) ÷ (勝ち時 - 現在の $)</code>。

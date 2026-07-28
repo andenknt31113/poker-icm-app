@@ -91,7 +91,7 @@ export const en: Record<string, string> = {
   "result.bf.matrixHint.html": "\n          Rows = Hero (you), columns = Villain.\n          Top = Risk Premium at a 1:1 pot, bottom = BF value.\n        ",
   "result.bf.howto.summary": "📖 How to read the table (click to expand)",
   "result.bf.howto.body.html":
-    "\n            <h4>1. The numbers in each cell</h4>\n            <p>The <strong>BF (Bubble Factor) on the bottom row</strong> is the main metric: <strong>how many times more losing hurts than winning feels good</strong> against this opponent.</p>\n            <ul>\n              <li><strong>1.00</strong> = pain equals joy — play your chips at face value (no ICM pressure)</li>\n              <li><strong>1.16</strong> = losing hurts 1.16×. In a 1:1 pot, 50% equity is not enough — you need <strong>about 53.7% (+3.7pt)</strong> to break even</li>\n              <li><strong>1.41</strong> = losing hurts 1.41×. Same spot needs <strong>about 58.5% (+8.5pt)</strong> — premium hands only (yikes)</li>\n            </ul>\n            <p>The <strong>Risk Premium on the top row</strong> is exactly that surcharge: <strong>how many extra points above 50%</strong> you need when the call is pot-sized (1:1 odds).</p>\n            <h4>2. What the colors mean</h4>\n            <p>The color is a continuous gradient from BF <strong>0.6 (green) → 1.0 (yellow) → 1.4 (red)</strong>. As a rule of thumb:</p>\n            <ul>\n              <li>🟢 Green (BF &lt; 1.0): ICM tailwind to slightly favorable, call wider</li>\n              <li>🟡 Yellow (≈1.0): neutral, roughly cEV</li>\n              <li>🟠 Orange (1.1–1.3): ICM pressure, play tight</li>\n              <li>🔴 Red (around 1.4+): very dangerous, premiums only</li>\n            </ul>\n            <h4>3. Reading it strategically</h4>\n            <ul>\n              <li>If an opponent in a <strong>red cell</strong> gets involved → weight toward folding</li>\n              <li>Opponents in <strong>green cells</strong> → leaning a bit looser is OK</li>\n              <li>Your row <strong>when you're the shortest stack</strong> has low BFs overall (= little to lose) → you can gamble relatively freely</li>\n              <li>The <strong>chip leader vs. second stack</strong> cell has a spiking BF → clashes between big stacks call for caution</li>\n              <li>A <strong>mid stack</strong> facing the leader is the spot to play tightest (classic ICM pressure)</li>\n            </ul>\n            <h4>4. Using it in play</h4>\n            <ol>\n              <li>Once seated, enter every player's stack</li>\n              <li>Look at <strong>your row</strong> on the far left to see who to play tight/loose against</li>\n              <li>Mid-hand, when you think \"wait, is this opponent dangerous?\", check the matching cell</li>\n            </ol>\n            <p class=\"howto-note\">Note: the table is not symmetric (swapping hero/villain changes the BF). The same chip transfer affects each player's $ equity differently depending on their stacks and payout position (e.g. the short stack busts when losing, while the covering stack survives).</p>\n          ",
+    "\n            <h4>1. The numbers in each cell</h4>\n            <p>The <strong>BF (Bubble Factor) on the bottom row</strong> is the main metric: <strong>how many times more losing hurts than winning feels good</strong> against this opponent.</p>\n            <ul>\n              <li><strong>1.00</strong> = pain equals joy — play your chips at face value (no ICM pressure)</li>\n              <li><strong>1.16</strong> = losing hurts 1.16×. In a 1:1 pot, 50% equity is not enough — you need <strong>about 53.7% (+3.7pt)</strong> to break even</li>\n              <li><strong>1.41</strong> = losing hurts 1.41×. Same spot needs <strong>about 58.5% (+8.5pt)</strong> — premium hands only (yikes)</li>\n            </ul>\n            <p>The <strong>Risk Premium on the top row</strong> is exactly that surcharge: <strong>how many extra points above 50%</strong> you need when the call is pot-sized (1:1 odds).</p>\n            <h4>2. What the colors mean</h4>\n            <p>The color deepens continuously from BF <strong>1.0 (yellow) to 1.4 and above (red)</strong>. Because of how ICM works, <strong>BF never drops below 1.00</strong>, so in practice you only ever see yellow through red. As a rule of thumb:</p>\n            <ul>\n              <li>🟡 Yellow (BF ≈ 1.0): almost no ICM pressure, play close to cEV</li>\n              <li>🟠 Orange (1.1–1.3): ICM pressure, play tight</li>\n              <li>🔴 Red (around 1.4+): very dangerous, premiums only</li>\n            </ul>\n            <h4>3. Reading it strategically</h4>\n            <ul>\n              <li>If an opponent in a <strong>red cell</strong> gets involved → weight toward folding</li>\n              <li>Opponents in <strong>near-yellow cells (BF around 1.0)</strong> → leaning a bit looser is OK</li>\n              <li>Your row <strong>when you're the shortest stack</strong> has low BFs overall (= little to lose) → you can gamble relatively freely</li>\n              <li>The <strong>chip leader vs. second stack</strong> cell has a spiking BF → clashes between big stacks call for caution (the highest BF in the whole table is usually the second stack facing the leader)</li>\n              <li>Unless you are the leader, the <strong>chip leader's column</strong> tends to be the highest BF in your row → the bigger the stack you tangle with, the tighter you play (classic ICM pressure)</li>\n            </ul>\n            <h4>4. Using it in play</h4>\n            <ol>\n              <li>Once seated, enter every player's stack</li>\n              <li>Look at <strong>your row</strong> on the far left to see who to play tight/loose against</li>\n              <li>Mid-hand, when you think \"wait, is this opponent dangerous?\", check the matching cell</li>\n            </ol>\n            <p class=\"howto-note\">Note: the table is not symmetric (swapping hero/villain changes the BF). The same chip transfer affects each player's $ equity differently depending on their stacks and payout position (e.g. the short stack busts when losing, while the covering stack survives).</p>\n          ",
   "result.bf.scrollHint": "→ Scroll sideways",
 
   // ===== index.html: 計算結果 - 必要勝率 =====
@@ -130,7 +130,7 @@ export const en: Record<string, string> = {
   "hand.title.villainCall": "Villain call range 🟢",
   "hand.title.heroPush": "Your push range 🔴",
   "hand.label.villainCall": "Villain call range",
-  "hand.legend.html": "🟩 ≥ required +0.1pt = call ／ 🟨 within ±0.1pt = borderline (a true coin flip) ／ uncolored = fold. Tap a cell for exact numbers.",
+  "hand.legend.html": "In “Find my call range”: 🟩 ≥ required +0.1pt = call ／ 🟨 within ±0.1pt = borderline (a true coin flip) ／ uncolored = fold. Tap a cell for exact numbers.<br />In “Find my push range”: 🟩 = shoving beats folding in $EV ／ 🟨 = borderline, essentially a tie ／ uncolored = fold.",
   "hand.inspect.detail.html": "<strong>{hand}</strong>: equity {eq}% − required {req}% = <strong>{margin}pt</strong> → {verdict}",
   "hand.inspect.verdict.call": "Call",
   "hand.inspect.verdict.marginal": "Borderline",
@@ -168,13 +168,13 @@ export const en: Record<string, string> = {
   // ===== 導入コース (tutorialState.ts: 固定5問) =====
   "practice.tutorial.q1.title": "When chips = prize",
   "practice.tutorial.q1.narration": "Winner-take-all, everyone chasing the same prize. Here chips are the prize, one to one.",
-  "practice.tutorial.q1.lesson": "In WTA there’s no notion of finishing position, so your win rate maps straight to prize EV. That makes the Risk Premium zero. You can decide on cEV (chip-based required equity) alone — the simplest case, with no ICM pressure.",
+  "practice.tutorial.q1.lesson": "In WTA there is no prize value in laddering up, so your win rate maps straight to prize EV. That makes the Risk Premium zero. You can decide on cEV (chip-based required equity) alone — the simplest case, with no ICM pressure.",
   "practice.tutorial.q2.title": "You cover them",
   "practice.tutorial.q2.narration": "The villain’s stack is smaller than yours. Even if you lose, you’re still in the tournament.",
   "practice.tutorial.q2.lesson": "When you cover the villain (losing doesn’t bust you), the Risk Premium is small. You can call close to cEV. ICM pressure bites hardest when you risk busting yourself.",
   "practice.tutorial.q3.title": "The bubble trap",
   "practice.tutorial.q3.narration": "You’re 3rd of 4 players left. The chip leader shoves. Your hand isn’t bad… but this might be a trap.",
-  "practice.tutorial.q3.lesson": "Even when calling wins chips (+EV in cEV terms), exact ICM can push the required equity way up and make folding correct. That’s the essence of ICM pressure: busting kills your shot at the prize, while surviving locks in a higher payout, so calling costs more than its face value.",
+  "practice.tutorial.q3.lesson": "Even when calling wins chips (+EV in cEV terms), exact ICM can push the required equity way up and make folding correct. That’s the essence of ICM pressure: busting kills your shot at the prize on the spot, while folding keeps your chance at the money and a higher payout alive, so calling costs more than its face value.",
   "practice.tutorial.q4.title": "Wait for the short stacks",
   "practice.tutorial.q4.narration": "There’s a much shorter stack at the table. The villain’s all-in is a borderline spot.",
   "practice.tutorial.q4.lesson": "While a shorter stack is still in, you ladder up automatically if they bust first. Since there’s value to be had without risking anything, borderline spots tend to favor folding.",
@@ -246,7 +246,7 @@ export const en: Record<string, string> = {
   "guide.legalLink": "📄 Terms & Privacy Policy",
   // アプリ版のみ表示 (guide.ts proNoteHtml)。価格は書かない。
   "guide.proNote.html":
-    "ℹ️ Scenario presets, results, Nash equilibrium, and practice are all free. <strong>Freely editing stacks and payouts, and saving scenarios</strong> are 🔒 Pro (one-time purchase) features.",
+    "ℹ️ Scenario presets, results, Nash equilibrium, and practice are all free. <strong>Editing stacks and payouts (including applying a payout preset), and saving scenarios</strong> are 🔒 Pro (one-time purchase) features.",
   "guide.body.html": `
         <p class="guide-intro">
           This tool focuses on short-stack (~20bb) all-in spots.
@@ -397,13 +397,13 @@ export const en: Record<string, string> = {
 
   // ===== 練習: 教訓 (judge.ts practiceLesson / practicePushLesson) =====
   "practice.lesson.wta": "🏆 In WTA (winner-take-all), chips = prize is linear. ICM pressure is zero, so you can decide purely on cEV (chip gain/loss).",
-  "practice.lesson.satellite": "🛰 In satellites, survival is everything. Even the strongest hands see RP spike so much that almost no call is justified.",
+  "practice.lesson.satellite": "🛰 In satellites, survival is everything. RP spikes hardest for the mid and big stacks close to locking up a seat, so even strong hands struggle to justify a call (the shortest stack, with little left to lose, can still call wide).",
   "practice.lesson.covered": "⚠️ Calling a player who covers you means losing = elimination. You’re risking your tournament life, so the Risk Premium spikes.",
   "practice.lesson.covering": "When you cover the villain, losing doesn’t bust you, so RP is small. You can call close to cEV.",
   "practice.lesson.shorter": "While a shorter stack is still in, you can ladder up without forcing a spot. That’s the source of RP.",
   "practice.lesson.general": "Required equity = cEV + Risk Premium. Under ICM, always check that a “chip profit” isn’t a “prize loss.”",
   "practice.pushLesson.wta": "🏆 In WTA (winner-take-all), ICM pressure is zero. You can judge shoves on chip EV (cEV) too.",
-  "practice.pushLesson.satellite": "🛰 In satellites, survival is everything. The shoving side also gets extremely tight — even with fold equity, most hands are folds.",
+  "practice.pushLesson.satellite": "🛰 In satellites, survival is everything. The closer a stack is to locking up a seat, the tighter it has to shove — even with fold equity, most hands become folds (the shortest stack is the opposite: it can end up shoving almost anything).",
   "practice.pushLesson.covered": "⚠️ Shoving into a player who covers you means instant elimination if called and beaten. Shove a tighter range than usual.",
   "practice.pushLesson.steal": "💨 The lower the villain’s call rate (the flip side of steal success), the wider you can shove even weak hands, because the fold equity to scoop the pot is large.",
   "practice.pushLesson.general": "Shove $EV = (1−call rate)×steal + call rate×(equity×win + (1−equity)×lose). Compare with fold $EV and always judge with ICM included.",
@@ -519,7 +519,7 @@ export const en: Record<string, string> = {
       <p>A coefficient for <strong>“chip pain ÷ chip joy.”</strong> Assumes HU all-in.</p>
       <ul>
         <li><strong>1.00</strong>: chips ⇄ $ is linear (zero ICM pressure)</li>
-        <li><strong>1.20</strong>: “losing 100 hurts = winning 83 feels good” → 20% tighter</li>
+        <li><strong>1.20</strong>: “losing 100 hurts = winning 120 feels good” → 20% tighter</li>
         <li><strong>1.50+</strong>: bubble/satellite level, ultra-tight</li>
       </ul>
       <p>Exact definition: <code>BF = (current − $ when losing) ÷ ($ when winning − current)</code>.
