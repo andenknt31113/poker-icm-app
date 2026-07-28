@@ -6,3 +6,6 @@ coverage/
 .env
 .env.local
 .vite/
+
+# Claude Code agent worktrees / session-local files
+.claude/
