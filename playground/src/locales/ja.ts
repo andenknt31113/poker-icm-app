@@ -516,7 +516,7 @@ export const ja: Record<string, string> = {
       <p><strong>「チップの痛さ ÷ チップの嬉しさ」</strong>を表す係数。HU all-in 想定。</p>
       <ul>
         <li><strong>1.00</strong>: チップ ⇄ $ がリニア (ICM 圧ゼロ)</li>
-        <li><strong>1.20</strong>: 「100失う痛さ = 83取る嬉しさ」→ 20%余分にタイト</li>
+        <li><strong>1.20</strong>: 「100失う痛さ = 120取る嬉しさ」→ 20%余分にタイト</li>
         <li><strong>1.50+</strong>: バブル/サテライトレベル、超タイト</li>
       </ul>
       <p>厳密な定義: <code>BF = (現在 - 負け時の $) ÷ (勝ち時 - 現在の $)</code>。

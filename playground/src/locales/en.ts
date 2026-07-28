@@ -519,7 +519,7 @@ export const en: Record<string, string> = {
       <p>A coefficient for <strong>“chip pain ÷ chip joy.”</strong> Assumes HU all-in.</p>
       <ul>
         <li><strong>1.00</strong>: chips ⇄ $ is linear (zero ICM pressure)</li>
-        <li><strong>1.20</strong>: “losing 100 hurts = winning 83 feels good” → 20% tighter</li>
+        <li><strong>1.20</strong>: “losing 100 hurts = winning 120 feels good” → 20% tighter</li>
         <li><strong>1.50+</strong>: bubble/satellite level, ultra-tight</li>
       </ul>
       <p>Exact definition: <code>BF = (current − $ when losing) ÷ ($ when winning − current)</code>.
