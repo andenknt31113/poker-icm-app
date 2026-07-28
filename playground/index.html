@@ -92,7 +92,8 @@
         <h2 data-i18n="setup.players.h2">プレイヤー</h2>
         <p class="hint" data-i18n-html="setup.players.hint.html">
           各プレイヤーのスタックを入力。<strong>🎯 自分</strong> /
-          <strong>⚔️ 相手</strong> をタップで指定。最大9人。
+          <strong>⚔️ 相手</strong> をタップで指定。最大9人。<br />
+          ポジションは<strong>1人ぶん選べば残り全員が自動で並びます</strong>。
         </p>
         <div id="players-list" class="players-list"></div>
         <div class="players-actions">
@@ -376,9 +377,11 @@
           </div>
           <div>
             <h3 id="hero-grid-title">自分のcallレンジ 🟢</h3>
-            <div id="grid-hero" class="hand-grid"></div>
-            <p class="hint hand-grid-legend" data-i18n-html="hand.legend.html">「自分の call レンジを求める」時: 🟩 必要勝率+0.1pt以上 = コール可 ／ 🟨 ±0.1pt = ボーダー (ほぼ完全に五分) ／ 無色 = フォールド。セルをタップすると数値を表示。<br />「自分の push レンジを求める」時: 🟩 = push が $EV でフォールドを上回るハンド ／ 🟨 = ほぼ互角のボーダー ／ 無色 = フォールド。</p>
+            <!-- タップしたセルの答えはグリッドの「上」に置く。グリッドの下に置くと
+                 13行ぶん下がって画面外になり、タップしても何も起きないように見えるため。 -->
             <p class="hint hand-cell-detail hidden" id="hand-cell-detail"></p>
+            <div id="grid-hero" class="hand-grid"></div>
+            <p class="hint hand-grid-legend" data-i18n-html="hand.legend.html">👆 <strong>セルをタップ</strong>すると、そのハンドの勝率と「コール可／フォールド」がグリッドの上に出ます。<br />「自分の call レンジを求める」時: 🟩 必要勝率+0.1pt以上 = コール可 ／ 🟨 ±0.1pt = ボーダー (ほぼ完全に五分) ／ 無色 = フォールド。<br />「自分の push レンジを求める」時: 🟩 = push が $EV でフォールドを上回るハンド ／ 🟨 = ほぼ互角のボーダー ／ 無色 = フォールド。</p>
             <p class="hint call-stats-below" id="call-stats"></p>
           </div>
         </div>

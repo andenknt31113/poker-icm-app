@@ -114,9 +114,10 @@ input:focus {
   background: transparent;
   border: 1px solid var(--border);
   color: var(--muted);
-  padding: 3px 8px;
+  /* 高さ 23px は指では押しにくかったため、上下パディングで約 34px に */
+  padding: 8px 10px;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 12px;
   cursor: pointer;
   font-family: inherit;
 }
@@ -186,7 +187,8 @@ input:focus {
   background: var(--bg);
   border: 1px solid var(--border);
   color: var(--text);
-  padding: 6px 10px;
+  /* ペイ構造プリセットも指で押す想定。高さ 30px → 約 40px */
+  padding: 11px 12px;
   border-radius: 6px;
   font-size: 12px;
   cursor: pointer;
@@ -359,7 +361,9 @@ th {
 
 .player-row {
   display: grid;
-  grid-template-columns: 22px minmax(56px, 1fr) 18px 46px auto 26px;
+  /* 行内の小さなコントロール (ポジション select・役割・削除) を指で押せる大きさに
+     広げたぶん、各列幅もあわせて確保する。スタック入力は 1fr で残りを取る。 */
+  grid-template-columns: 22px minmax(56px, 1fr) 18px 48px auto 30px;
   gap: 4px;
   align-items: center;
   background: var(--bg);
@@ -377,7 +381,7 @@ th {
   font-size: 11px;
   font-family: var(--mono);
   cursor: pointer;
-  height: 30px;
+  height: 38px;
   appearance: none;
   text-align: center;
 }
@@ -422,6 +426,10 @@ th {
 }
 .player-stack[type="number"] {
   -moz-appearance: textfield;
+  /* 実戦で一番よく叩く入力。指で狙える高さ (約 42px) を確保する。
+     padding は汎用の input[type="number"] 規則 (8px 10px) より詳細度が
+     高いこのセレクタで指定しないと効かない。 */
+  padding: 10px 4px;
 }
 
 .player-unit {
@@ -470,7 +478,8 @@ th {
 /* 言語トグルは絵文字ではなく短いテキスト ("EN" / "日本語")。折り返さず横幅を可変に。 */
 .header-lang-btn {
   width: auto;
-  min-width: 36px;
+  /* ❓ ボタン (44px) と揃え、Apple HIG のタップ領域 44pt を横幅でも確保 */
+  min-width: 44px;
   padding: 0 8px;
   font-size: 12px;
   font-weight: 600;
@@ -604,7 +613,9 @@ body {
   color: var(--muted);
   font-size: 12px;
   line-height: 1;
-  padding: 4px 6px;
+  /* 折りたたみ ▼ は 24x20px で見落とし・押し損ねが起きていたため拡大 */
+  padding: 11px 14px;
+  margin: -7px -8px -7px auto;
   cursor: pointer;
   border-radius: 4px;
 }
@@ -758,7 +769,8 @@ body {
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: 999px;
-  padding: 8px 14px;
+  /* 初見ユーザーの主動線 (プリセット一発セット)。高さ 35px → 約 43px */
+  padding: 12px 16px;
   font-size: 12px;
   cursor: pointer;
   font-family: inherit;
@@ -826,7 +838,8 @@ body {
 }
 .payout-row {
   display: grid;
-  grid-template-columns: 44px 1fr 30px;
+  /* 削除ボタンを 34px に広げたので列幅もあわせる */
+  grid-template-columns: 44px 1fr 34px;
   gap: 6px;
   align-items: center;
   background: var(--bg);
@@ -863,10 +876,12 @@ body {
 }
 .payout-amount[type="number"] {
   -moz-appearance: textfield;
+  /* スタック入力と同じく、指で狙える高さを確保 (詳細度の都合でここに書く) */
+  padding: 10px 10px;
 }
 .payout-remove {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   border: 1px solid var(--border);
   background: transparent;
   color: var(--muted);
@@ -886,12 +901,13 @@ body {
 
 .player-roles {
   display: flex;
-  gap: 2px;
+  gap: 3px;
 }
 
 .role-btn {
-  width: 26px;
-  height: 26px;
+  /* 🎯自分 / ⚔️相手 の指定は最頻出の操作。26px は指には小さすぎたので拡大 */
+  width: 34px;
+  height: 34px;
   border: 1px solid var(--border);
   background: transparent;
   color: var(--muted);
@@ -925,14 +941,14 @@ body {
 }
 
 .player-remove {
-  width: 24px;
-  height: 24px;
+  width: 30px;
+  height: 30px;
   border: 1px solid var(--border);
   background: transparent;
   color: var(--muted);
   border-radius: 4px;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 12px;
   padding: 0;
 }
 
@@ -2598,7 +2614,8 @@ footer a {
   font-size: 12px;
   font-family: inherit;
   cursor: pointer;
-  padding: 4px 2px;
+  /* 高さ 25px → 約 40px。フッターの規約リンクも指で押せるように */
+  padding: 11px 8px;
   margin-top: 2px;
 }
 
