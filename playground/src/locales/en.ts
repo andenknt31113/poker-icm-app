@@ -56,7 +56,7 @@ export const en: Record<string, string> = {
 
   // ===== index.html: セットアップ - プレイヤー =====
   "setup.players.h2": "Players",
-  "setup.players.hint.html": "\n          Enter each player’s stack. Tap to set <strong>🎯 You</strong> /\n          <strong>⚔️ Villain</strong>. Up to 9 players.\n        ",
+  "setup.players.hint.html": "\n          Enter each player’s stack. Tap to set <strong>🎯 You</strong> /\n          <strong>⚔️ Villain</strong>. Up to 9 players.<br />\n          For positions, <strong>pick just one and the rest fill in automatically</strong>.\n        ",
   "setup.players.add": "+ Add player",
   "setup.players.addMax": "(max {n})",
   "setup.players.randomize.title": "Randomize current players’ stacks to 3–30 BB",
@@ -130,7 +130,7 @@ export const en: Record<string, string> = {
   "hand.title.villainCall": "Villain call range 🟢",
   "hand.title.heroPush": "Your push range 🔴",
   "hand.label.villainCall": "Villain call range",
-  "hand.legend.html": "In “Find my call range”: 🟩 ≥ required +0.1pt = call ／ 🟨 within ±0.1pt = borderline (a true coin flip) ／ uncolored = fold. Tap a cell for exact numbers.<br />In “Find my push range”: 🟩 = shoving beats folding in $EV ／ 🟨 = borderline, essentially a tie ／ uncolored = fold.",
+  "hand.legend.html": "👆 <strong>Tap any cell</strong> to see that hand’s equity and a call/fold verdict above the grid.<br />In “Find my call range”: 🟩 ≥ required +0.1pt = call ／ 🟨 within ±0.1pt = borderline (a true coin flip) ／ uncolored = fold.<br />In “Find my push range”: 🟩 = shoving beats folding in $EV ／ 🟨 = borderline, essentially a tie ／ uncolored = fold.",
   "hand.inspect.detail.html": "<strong>{hand}</strong>: equity {eq}% − required {req}% = <strong>{margin}pt</strong> → {verdict}",
   "hand.inspect.verdict.call": "Call",
   "hand.inspect.verdict.marginal": "Borderline",

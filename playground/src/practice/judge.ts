@@ -321,12 +321,14 @@ export function judgePractice(answer: "call" | "fold"): void {
     verdict: p.heroEq >= p.dollarEV ? t("practice.cfDetails.verdictCall") : t("practice.cfDetails.verdictFold"),
   });
 
+  // 導入コース中でも「正解/不正解」を先頭に置く。フィードバックは scrollIntoView で
+  // 先頭が画面に来るため、教訓カードを上に置くと回答直後に結果が見えなかった。
   fb.innerHTML = `
-    ${tutorialBlockHtml}
     <div class="verdict-row">
       <div class="verdict">${isCorrect ? t("practice.verdict.correct") : t("practice.verdict.wrong")} ${t("practice.verdict.answerPrefix")} ${verdict}</div>
       <button id="practice-next-btn-top" type="button" class="solve-btn compact">${t("practice.nextBtnTop")}</button>
     </div>
+    ${tutorialBlockHtml}
     <div class="practice-lesson">💡 ${practiceLesson(p)}</div>
     <div>${t("practice.cf.cevLabel")} <strong>${(p.cEV * 100).toFixed(1)}%</strong></div>
     <div>${t("practice.cf.reqLabel")} <strong>${(p.dollarEV * 100).toFixed(1)}%</strong> <span class="muted">${t("practice.cf.reqApproxNote", { v: (p.dollarEVApprox * 100).toFixed(1) })}</span></div>

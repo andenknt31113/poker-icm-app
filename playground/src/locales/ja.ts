@@ -49,7 +49,7 @@ export const ja: Record<string, string> = {
 
   // ===== index.html: セットアップ - プレイヤー =====
   "setup.players.h2": "プレイヤー",
-  "setup.players.hint.html": "\n          各プレイヤーのスタックを入力。<strong>🎯 自分</strong> /\n          <strong>⚔️ 相手</strong> をタップで指定。最大9人。\n        ",
+  "setup.players.hint.html": "\n          各プレイヤーのスタックを入力。<strong>🎯 自分</strong> /\n          <strong>⚔️ 相手</strong> をタップで指定。最大9人。<br />\n          ポジションは<strong>1人ぶん選べば残り全員が自動で並びます</strong>。\n        ",
   // add-player ボタンのテキストは renderPlayers() (setup.ts) が制御するため JS 側で t() する
   "setup.players.add": "+ プレイヤー追加",
   "setup.players.addMax": "(最大 {n} 人)",
@@ -125,7 +125,7 @@ export const ja: Record<string, string> = {
   "hand.title.villainCall": "相手のcallレンジ 🟢",
   "hand.title.heroPush": "自分のpushレンジ 🔴",
   "hand.label.villainCall": "相手のcallレンジ",
-  "hand.legend.html": "「自分の call レンジを求める」時: 🟩 必要勝率+0.1pt以上 = コール可 ／ 🟨 ±0.1pt = ボーダー (ほぼ完全に五分) ／ 無色 = フォールド。セルをタップすると数値を表示。<br />「自分の push レンジを求める」時: 🟩 = push が $EV でフォールドを上回るハンド ／ 🟨 = ほぼ互角のボーダー ／ 無色 = フォールド。",
+  "hand.legend.html": "👆 <strong>セルをタップ</strong>すると、そのハンドの勝率と「コール可／フォールド」がグリッドの上に出ます。<br />「自分の call レンジを求める」時: 🟩 必要勝率+0.1pt以上 = コール可 ／ 🟨 ±0.1pt = ボーダー (ほぼ完全に五分) ／ 無色 = フォールド。<br />「自分の push レンジを求める」時: 🟩 = push が $EV でフォールドを上回るハンド ／ 🟨 = ほぼ互角のボーダー ／ 無色 = フォールド。",
   "hand.inspect.detail.html": "<strong>{hand}</strong>: 勝率 {eq}% − 必要 {req}% = <strong>{margin}pt</strong> → {verdict}",
   "hand.inspect.verdict.call": "コール可",
   "hand.inspect.verdict.marginal": "五分 (ボーダー)",
