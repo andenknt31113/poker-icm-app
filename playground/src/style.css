@@ -1,3 +1,61 @@
+/* ============================================================================
+ * poker-icm-app スタイルシート
+ *
+ * 単一ファイル構成。セクションは「===== 見出し =====」形式のコメントで区切ってあり、
+ * 上から下へ「基盤 → 画面の共通部品 → タブごとの UI → モーダル/オーバーレイ」の
+ * 順に並ぶ。読むときも足すときもこの順序を崩さないこと。
+ *
+ * ---- 目次 (セクション見出しで検索できる) ----
+ *   基盤 (CSS 変数・リセット・タイポグラフィ・入力)
+ *   ICM 結果テーブル
+ *   計算結果カード (.result)
+ *   必要勝率フロー: cEV → + Risk Premium → $EV(True Req)
+ *   プレイヤーリスト
+ *   ヘッダー (テーマ・言語切替)
+ *   ボトムタブナビ
+ *   Hero サマリー
+ *   シナリオプリセット
+ *   ペイアウトリスト
+ *   見方の説明
+ *   折りたたみ可能なプリセット群 (シナリオ/ペイ構造カード)
+ *   BF マトリックス
+ *   モードタブ
+ *   レンジスライダー共通 (シアンの光るつまみ)
+ *   方向タブ (push⇄call 逆算)
+ *   ステッパー (+/- ボタン付き数値入力)
+ *   情報モーダル
+ *   円卓ビュー
+ *   練習問題
+ *   練習モード切替 (3分割: call/fold・RP・push)
+ *   RP 当てクイズ
+ *   成績の推移パネル
+ *   シナリオ bento カード: Tournament State / Hero Stack
+ *   Hero ハンド: トランプ2枚の視覚表現
+ *   🎓 導入コース (固定5問チュートリアル)
+ *   注意/警告ボックス
+ *   グリッド凡例
+ *   Nash ソルバ ボタン
+ *   autofill ヒント (Section 5)
+ *   PWA: 画面下部トーストの共有スタック
+ *   PWA: iOS ホーム画面追加ヒントバナー
+ *   PWA: Service Worker 更新通知トースト
+ *   オフライン状態インジケータ
+ *   オンボーディング / 使い方ガイド モーダル
+ *   初回ヒントバー (セットアップタブ最上部)
+ *   freemium ロック (Pro ゲート)
+ *   ペイウォール モーダル (.guide-modal トーンを踏襲)
+ *   ハンドレンジ比較: 判定バンド凡例 + タップ検分
+ *
+ * ---- 前提となる取り決め ----
+ *   - テーマはダーク固定。ライトテーマと [data-theme] 切替は製品判断で廃止済み
+ *     (pwa.ts initTheme 参照)。配色の分岐は書かない。
+ *   - 同じセレクタが 2 度出てくる箇所がある (例: `body`、`.bf-matrix .bf-diag`、
+ *     `.tutorial-narration-body`)。いずれも「共通指定をまとめた後で、その
+ *     セクション固有の値だけを上書きする」意図的なカスケード順の利用であり、
+ *     順序に意味がある。安易にマージしないこと。
+ * ========================================================================= */
+
+/* ===== 基盤 (CSS 変数・リセット・タイポグラフィ・入力) ===== */
 :root {
   --bg: #0f1419;
   --bg-deep: #050709;
@@ -203,6 +261,7 @@ input:focus {
   color: var(--accent);
 }
 
+/* ===== ICM 結果テーブル ===== */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -261,6 +320,7 @@ th {
   background: var(--accent);
 }
 
+/* ===== 計算結果カード (.result) ===== */
 .result {
   font-family: var(--mono);
   font-size: 14px;
@@ -1172,10 +1232,6 @@ body {
   justify-content: center;
   border-radius: 4px;
   padding: 4px;
-}
-
-.bf-matrix .bf-hdr-row {
-  align-items: center;
 }
 
 .bf-matrix .stack-info {
@@ -2469,7 +2525,7 @@ body.tutorial-active #practice-apply-btn {
   margin-bottom: 4px;
 }
 
-/* 注意/警告ボックス */
+/* ===== 注意/警告ボックス ===== */
 .warn-box {
   background: rgba(255, 167, 38, 0.08);
   border: 1px solid rgba(255, 167, 38, 0.4);
@@ -2520,7 +2576,7 @@ body.tutorial-active #practice-apply-btn {
   position: relative;
 }
 
-/* グリッド凡例 */
+/* ===== グリッド凡例 ===== */
 .grid-legend {
   display: flex;
   flex-wrap: wrap;
@@ -2558,7 +2614,7 @@ body.tutorial-active #practice-apply-btn {
   color: #2b1500;
 }
 
-/* Nash ソルバ ボタン */
+/* ===== Nash ソルバ ボタン ===== */
 .solve-btn {
   display: inline-block;
   background: var(--accent);
