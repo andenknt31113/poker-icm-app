@@ -78,7 +78,8 @@ export function advanceTutorial(): void {
   }
 }
 
-export function finishTutorial(): void {
+/** 5問すべて終えたときの修了カード表示。advanceTutorial からのみ呼ばれる。 */
+function finishTutorial(): void {
   markTutorialDone();
   setTutorialActive(false);
   setCurrentProblem(null);

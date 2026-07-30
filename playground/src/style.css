@@ -56,7 +56,10 @@ h1 {
 .card h2 {
   font-size: 16px;
   margin: 0 0 8px;
-  color: var(--heading, var(--accent));
+  /* 旧ライトテーマ時代は --heading を上書きしていたが、テーマはダーク固定に
+     なり --heading を定義する箇所が無くなったため、常に効いていた
+     フォールバック側 (--accent) をそのまま書く。実効スタイルは変わらない。 */
+  color: var(--accent);
 }
 
 .hint {

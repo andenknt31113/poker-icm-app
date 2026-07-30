@@ -28,24 +28,19 @@ export function getLang(): Lang {
   return currentLang;
 }
 
-const languageChangeCbs = new Set<(lang: Lang) => void>();
-
-/** 言語切替時に呼ばれるコールバックを購読する。 */
-export function onLanguageChange(cb: (lang: Lang) => void): () => void {
-  languageChangeCbs.add(cb);
-  return () => languageChangeCbs.delete(cb);
-}
-
 /**
  * 言語を切り替えて localStorage に永続化する。
  *
- * 実装方針: この関数自体は状態の永続化と <html lang> の更新、購読者通知
- * だけを行う。実際の画面反映は呼び出し側 (ヘッダーの言語トグル) が
- * location.reload() で行う。全モジュール (setup / calculator / handRange /
- * nashUI / practice/*) が初期化時に t() で文言を焼き込む設計のため、動的に
- * 全再描画するより、リロードで全モジュールを DEFAULT_LANG=新言語 の状態から
- * 描き直す方が確実かつ単純だと判断した (状態は localStorage 永続なので
- * リロードしてもユーザーのシナリオ・成績は失われない)。
+ * 実装方針: この関数自体は状態の永続化と <html lang> の更新だけを行う。
+ * 実際の画面反映は呼び出し側 (ヘッダーの言語トグル) が location.reload() で行う。
+ * 全モジュール (setup / calculator / handRange / nashUI / practice/*) が
+ * 初期化時に t() で文言を焼き込む設計のため、動的に全再描画するより、
+ * リロードで全モジュールを新言語の状態から描き直す方が確実かつ単純だと判断した
+ * (状態は localStorage 永続なのでリロードしてもユーザーのシナリオ・成績は失われない)。
+ *
+ * 補足: 以前は言語変更を購読する onLanguageChange() を用意していたが、
+ * 上記のリロード方式を採った結果 購読者が 1 つも無い状態だったため削除した。
+ * 動的再描画に切り替えたくなった時点で改めて導入する。
  */
 export function setLang(lang: Lang): void {
   if (lang === currentLang) return;
@@ -56,7 +51,6 @@ export function setLang(lang: Lang): void {
   } catch {
     /* SSR/非 DOM 環境では無視 */
   }
-  for (const cb of languageChangeCbs) cb(lang);
 }
 
 /**
