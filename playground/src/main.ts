@@ -7,6 +7,30 @@ import "@fontsource/jetbrains-mono/latin-500.css";
 import "@fontsource/jetbrains-mono/latin-600.css";
 import "@fontsource/jetbrains-mono/latin-700.css";
 
+// ===== モジュール構成 (依存の向き) =====
+//
+// このアプリはフレームワーク非依存の素の TS モジュール群で、依存は下向き一方向。
+// 現在 48 モジュールで循環 import は 0 件。追加時もこの層を跨がないこと。
+//
+//   L0 基盤 (依存ゼロ・DOM 非依存)
+//        storage.ts (localStorage の唯一の窓口) / html.ts / format.ts /
+//        handRanking.ts / equity*.ts / huEquityMatrix.ts / rangeEquity.ts /
+//        i18n.ts + locales / capacitorEnv.ts / iapConfig.ts / legalContent.ts
+//   L1 共有状態
+//        appState.ts (DOM 非依存: players / パース / ポジション表)
+//        domRefs.ts  (DOM を伴う共有参照・saveState・アンティモード)
+//        dom.ts / grid.ts / entitlement.ts
+//   L2 機能モジュール (タブ単位)
+//        setup* (players/scenarios/payouts) / calculator + heroSummary /
+//        bfMatrix / warnings / infoModal / handRange / nashUI / practice/* /
+//        guide / paywall / pwa / tabs
+//   L3 起動 (このファイル)
+//
+// 例外的に L2 内で相互参照が必要な箇所は「呼び出し元からの注入」で断ち切る:
+//   handRange は再計算のために calculator.recompute が必要だが、calculator も
+//   handRange の描画関数を呼ぶため素直に import すると循環する。そこで
+//   initHandRange(recompute) として main.ts から関数を渡している (下記参照)。
+
 // ===== 共有状態・基盤 (import するだけで players / payouts / DOM 参照が初期化される) =====
 import "./appState.js";
 import "./domRefs.js";
