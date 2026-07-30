@@ -11,7 +11,16 @@ import {
   persistedState,
   actionOrderIdx,
 } from "./appState.js";
-import { payoutsInput, nashSbInput, nashBbInput, nashAnteInput, saveState } from "./domRefs.js";
+import {
+  payoutsInput,
+  nashSbInput,
+  nashBbInput,
+  nashAnteInput,
+  saveState,
+  readAnteMode,
+  setAnteMode,
+  anteModeRadios,
+} from "./domRefs.js";
 
 const nashSolveBtn = $<HTMLButtonElement>("nash-solve");
 const nashStatus = $<HTMLParagraphElement>("nash-status");
@@ -171,10 +180,7 @@ function runNash(): void {
     return;
   }
   // ante モード判定: total なら人数で割る、perPlayer ならそのまま
-  const anteMode =
-    (document.querySelector<HTMLInputElement>(
-      'input[name="ante-mode"]:checked',
-    )?.value ?? "total") as "total" | "perPlayer";
+  const anteMode = readAnteMode();
   const ante =
     anteMode === "perPlayer" ? anteRaw : anteRaw / Math.max(1, stacks.length);
 
@@ -252,16 +258,13 @@ export function initNashUI(): void {
     nashBbInput.value = String(persistedState.nash.bb);
     nashAnteInput.value = String(persistedState.nash.ante);
   }
-  const totalRadio = document.querySelector<HTMLInputElement>(
-    'input[name="ante-mode"][value="total"]',
-  );
-  if (totalRadio) totalRadio.checked = true;
+  setAnteMode("total");
 
   // Nash 入力変更時に状態保存
   [nashSbInput, nashBbInput, nashAnteInput].forEach((el) => {
     el.addEventListener("input", saveState);
   });
-  document.querySelectorAll<HTMLInputElement>('input[name="ante-mode"]').forEach((el) => {
+  anteModeRadios().forEach((el) => {
     el.addEventListener("change", saveState);
   });
 

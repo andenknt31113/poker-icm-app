@@ -3,19 +3,26 @@ import { renderPracticeProblem, getCurrentProblem, setCurrentProblem } from "./p
 import { updatePracticeProgress } from "./practice/progress.js";
 import { isTutorialActive, isTutorialDone, isTutorialSkippedSession } from "./practice/tutorialState.js";
 import { renderTutorialNarrationStep, renderTutorialIntroCard } from "./practice/tutorial.js";
+import { STORAGE_KEYS, readRaw, writeRaw } from "./storage.js";
 
 // ===== タブナビ =====
-export type TabId = "setup" | "result" | "hand" | "nash" | "practice";
-const TAB_KEY = "poker-icm-active-tab";
-let activeTab: TabId = "setup";
-try {
-  const saved = localStorage.getItem(TAB_KEY) as TabId | null;
-  if (saved && ["setup", "result", "hand", "nash", "practice"].includes(saved)) {
-    activeTab = saved;
-  }
-} catch {
-  /* ignore */
+//
+// タブ ID の単一情報源。この配列が
+//   - TabId 型
+//   - 保存値の検証 (isTabId)
+//   - スワイプジェスチャーの並び順 (index ± 1 で隣のタブへ)
+// をすべて兼ねる。表示順は index.html の .tab-btn の並びと一致させること。
+export const TAB_IDS = ["setup", "result", "hand", "nash", "practice"] as const;
+export type TabId = (typeof TAB_IDS)[number];
+
+const DEFAULT_TAB: TabId = "setup";
+
+function isTabId(v: unknown): v is TabId {
+  return typeof v === "string" && (TAB_IDS as readonly string[]).includes(v);
 }
+
+const savedTab = readRaw(STORAGE_KEYS.activeTab);
+let activeTab: TabId = isTabId(savedTab) ? savedTab : DEFAULT_TAB;
 
 export function getActiveTab(): TabId {
   return activeTab;
@@ -23,7 +30,7 @@ export function getActiveTab(): TabId {
 
 export function applyTab(tab: TabId): void {
   activeTab = tab;
-  try { localStorage.setItem(TAB_KEY, tab); } catch { /* ignore */ }
+  writeRaw(STORAGE_KEYS.activeTab, tab);
   document.querySelectorAll<HTMLButtonElement>(".tab-btn").forEach((b) => {
     b.classList.toggle("active", b.dataset.tab === tab);
   });
@@ -72,7 +79,7 @@ export function initTabs(): void {
   });
 
   // ===== タブ切替のスワイプ ジェスチャー =====
-  const TABS: TabId[] = ["setup", "result", "hand", "nash", "practice"];
+  const TABS = TAB_IDS;
   let touchStartX = 0;
   let touchStartY = 0;
   let touchStartT = 0;

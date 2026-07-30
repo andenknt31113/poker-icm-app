@@ -1,11 +1,11 @@
 import { DEFAULT_SB, DEFAULT_BB, DEFAULT_ANTE } from "../appState.js";
 import { t } from "../i18n.js";
+import { STORAGE_KEYS, readFlag, writeFlag } from "../storage.js";
 import type { PracticeProblemBase } from "./types.js";
 
 // ===== 🎓 導入コース (固定5問チュートリアル) =====
 // 初心者が ICM の核心を5問で体感する固定カリキュラム。
 // スコア/streak/復習リストには一切記録しない (recordPracticeResult を呼ばない)。
-const TUTORIAL_DONE_KEY = "poker-icm-tutorial-done";
 
 export interface TutorialProblemDef {
   title: string;
@@ -124,19 +124,11 @@ let tutorialStep = 0;
 let tutorialSkippedSession = false;
 
 export function isTutorialDone(): boolean {
-  try {
-    return localStorage.getItem(TUTORIAL_DONE_KEY) === "1";
-  } catch {
-    return false;
-  }
+  return readFlag(STORAGE_KEYS.tutorialDone);
 }
 
 export function markTutorialDone(): void {
-  try {
-    localStorage.setItem(TUTORIAL_DONE_KEY, "1");
-  } catch {
-    /* ignore */
-  }
+  writeFlag(STORAGE_KEYS.tutorialDone, true);
 }
 
 export function isTutorialActive(): boolean {

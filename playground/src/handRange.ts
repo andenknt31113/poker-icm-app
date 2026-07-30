@@ -17,7 +17,14 @@ import {
   DEFAULT_BB,
   actionOrderIdx,
 } from "./appState.js";
-import { payoutsInput, nashSbInput, nashBbInput, nashAnteInput } from "./domRefs.js";
+import {
+  payoutsInput,
+  nashSbInput,
+  nashBbInput,
+  nashAnteInput,
+  readAnteMode,
+} from "./domRefs.js";
+import { STORAGE_KEYS, readJson, writeJson } from "./storage.js";
 
 // ===== DOM 参照 (ハンド比較タブ) =====
 const pushRangeInput = $<HTMLInputElement>("push-range");
@@ -39,28 +46,22 @@ type Direction = "callBack" | "pushBack";
 let direction: Direction = "callBack";
 const customVillainRange = new Set<HandNotation>();
 
-const STORAGE_KEY = "poker-icm-custom-range";
+function isStringArray(v: unknown): v is string[] {
+  return Array.isArray(v) && v.every((x) => typeof x === "string");
+}
+
+/**
+ * 保存済みカスタムレンジを読み込む。壊れた値・未設定時は空配列扱い。
+ * initHandRange から一度だけ呼ばれ、その時点で customVillainRange は必ず空
+ * (この関数以外に集合を初期化する経路が無い) ため、clear() は形式上の防御。
+ */
 function loadCustomRange(): void {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const arr = JSON.parse(raw) as string[];
-      customVillainRange.clear();
-      for (const h of arr) customVillainRange.add(h);
-    }
-  } catch {
-    // ignore parse error
-  }
+  const arr = readJson<string[]>(STORAGE_KEYS.customRange, [], isStringArray);
+  customVillainRange.clear();
+  for (const h of arr) customVillainRange.add(h);
 }
 function saveCustomRange(): void {
-  try {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(Array.from(customVillainRange)),
-    );
-  } catch {
-    // ignore quota error
-  }
+  writeJson(STORAGE_KEYS.customRange, Array.from(customVillainRange));
 }
 
 function getCurrentVillainRange(): Set<HandNotation> {
@@ -89,10 +90,7 @@ function computePushBackRange(villainCallRange: Set<HandNotation>): PushBackResu
   const sb = Number(nashSbInput.value) || DEFAULT_SB;
   const bb = Number(nashBbInput.value) || DEFAULT_BB;
   const anteRaw = Number(nashAnteInput.value) || 0;
-  const anteMode =
-    (document.querySelector<HTMLInputElement>(
-      'input[name="ante-mode"]:checked',
-    )?.value ?? "total") as "total" | "perPlayer";
+  const anteMode = readAnteMode();
   const ante =
     anteMode === "perPlayer" ? anteRaw : anteRaw / Math.max(1, stacks.length);
   const totalAnte = ante * stacks.length;

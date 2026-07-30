@@ -17,7 +17,15 @@ import {
   posToPotOddsPos,
   actionOrderIdx,
 } from "./appState.js";
-import { payoutsInput, nashSbInput, nashBbInput, nashAnteInput, saveState } from "./domRefs.js";
+import {
+  payoutsInput,
+  nashSbInput,
+  nashBbInput,
+  nashAnteInput,
+  saveState,
+  readAnteMode,
+} from "./domRefs.js";
+import { STORAGE_KEYS, readFlag, writeFlag } from "./storage.js";
 
 // ===== DOM参照 (計算結果タブ) =====
 const callInput = $<HTMLInputElement>("call");
@@ -127,9 +135,10 @@ export function recompute(): void {
       stacks[heroIndex]! > 0 &&
       stacks[villainIndex]! > 0
     ) {
-      const sbV = Number(nashSbInput?.value) || DEFAULT_SB;
-      const bbV = Number(nashBbInput?.value) || DEFAULT_BB;
-      const totalAnteV = Number(nashAnteInput?.value) || 0;
+      // nashSbInput 等は $() 取得済みで必ず存在するため optional chaining は不要。
+      const sbV = Number(nashSbInput.value) || DEFAULT_SB;
+      const bbV = Number(nashBbInput.value) || DEFAULT_BB;
+      const totalAnteV = Number(nashAnteInput.value) || 0;
       const heroPos = players[heroIndex]?.position;
       const villainPos = players[villainIndex]?.position;
       const r = calculatePotOdds({
@@ -258,20 +267,11 @@ export function recompute(): void {
 // ===== Hero サマリーカード =====
 const heroSummaryEl = $<HTMLDivElement>("hero-summary");
 
-const HERO_SUMMARY_COLLAPSED_KEY = "poker-icm-hero-summary-collapsed";
 function isHeroSummaryCollapsed(): boolean {
-  try {
-    return localStorage.getItem(HERO_SUMMARY_COLLAPSED_KEY) === "1";
-  } catch {
-    return false;
-  }
+  return readFlag(STORAGE_KEYS.heroSummaryCollapsed);
 }
 function setHeroSummaryCollapsed(v: boolean): void {
-  try {
-    localStorage.setItem(HERO_SUMMARY_COLLAPSED_KEY, v ? "1" : "0");
-  } catch {
-    /* ignore */
-  }
+  writeFlag(STORAGE_KEYS.heroSummaryCollapsed, v);
 }
 
 interface HeroSummaryArg {
@@ -624,16 +624,14 @@ export function initCalculator(): void {
       return;
     }
 
-    const sbEl = document.getElementById("nash-sb") as HTMLInputElement | null;
-    const bbEl = document.getElementById("nash-bb") as HTMLInputElement | null;
-    const anteEl = document.getElementById("nash-ante") as HTMLInputElement | null;
-    const sb = sbEl ? Number(sbEl.value) || 0 : DEFAULT_SB;
-    const bb = bbEl ? Number(bbEl.value) || 0 : DEFAULT_BB;
-    const anteRawV = anteEl ? Number(anteEl.value) || 0 : 0;
-    const anteMode =
-      (document.querySelector<HTMLInputElement>(
-        'input[name="ante-mode"]:checked',
-      )?.value ?? "total") as "total" | "perPlayer";
+    // 注意: ここのフォールバックは recompute() 側と意図的に異なる。
+    // autofill は「入力欄が空/0 ならブラインド 0 として計算する」= `|| 0`、
+    // recompute の自動追従は「空なら標準ブラインドで概算を出す」= `|| DEFAULT_SB`。
+    // 表示される数値が変わるため統一しないこと。
+    const sb = Number(nashSbInput.value) || 0;
+    const bb = Number(nashBbInput.value) || 0;
+    const anteRawV = Number(nashAnteInput.value) || 0;
+    const anteMode = readAnteMode();
     const totalAnte =
       anteMode === "perPlayer" ? anteRawV * players.length : anteRawV;
     const dead = sb + bb + totalAnte;

@@ -1,5 +1,6 @@
 import { t } from "./i18n.js";
 import { isCapacitorNative } from "./capacitorEnv.js";
+import { STORAGE_KEYS, readFlag, writeFlag } from "./storage.js";
 
 // ===== テーマ (ダーク固定) =====
 // ライトテーマと切替ボタンは製品判断で廃止し、ダーク配色のみにした。
@@ -195,15 +196,9 @@ function initInstallPrompt(): void {
   });
 
   // iOS Safari は beforeinstallprompt 非対応 → 初回訪問時のみ案内バナーを表示
-  const IOS_INSTALL_HINT_KEY = "poker-icm-ios-install-hint";
   const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
   if (isIOS) {
-    let alreadyShown = false;
-    try {
-      alreadyShown = localStorage.getItem(IOS_INSTALL_HINT_KEY) === "1";
-    } catch {
-      /* ignore */
-    }
+    const alreadyShown = readFlag(STORAGE_KEYS.iosInstallHint);
     if (!alreadyShown) {
       const banner = document.createElement("div");
       banner.className = "ios-install-banner";
@@ -216,11 +211,7 @@ function initInstallPrompt(): void {
       closeBtn.textContent = "✕";
       const dismiss = (): void => {
         banner.remove();
-        try {
-          localStorage.setItem(IOS_INSTALL_HINT_KEY, "1");
-        } catch {
-          /* ignore */
-        }
+        writeFlag(STORAGE_KEYS.iosInstallHint, true);
       };
       closeBtn.addEventListener("click", dismiss);
       banner.appendChild(text);

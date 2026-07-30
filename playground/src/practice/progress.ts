@@ -1,6 +1,6 @@
 import type { Difficulty, PracticeMode } from "./types.js";
 import { t } from "../i18n.js";
-import { loadHistory, loadStats, HISTORY_KEY, type PracticeHistoryEntry } from "./store.js";
+import { loadHistory, loadStats, clearHistory, type PracticeHistoryEntry } from "./store.js";
 
 export { appendHistory } from "./store.js";
 
@@ -127,7 +127,7 @@ export function initProgress(): void {
     const target = e.target as HTMLElement;
     if (!target.closest("#practice-history-reset-btn")) return;
     if (confirm(t("practice.progress.resetConfirm"))) {
-      try { localStorage.removeItem(HISTORY_KEY); } catch { /* ignore */ }
+      clearHistory();
       updatePracticeProgress();
     }
   });

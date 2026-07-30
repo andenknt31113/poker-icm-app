@@ -15,6 +15,7 @@ import {
   DEFAULT_ANTE,
   posToPotOddsPos,
 } from "../appState.js";
+import { isPracticeMode, isDifficulty } from "./types.js";
 import type {
   PracticeProblem,
   PracticeProblemBase,
@@ -22,6 +23,7 @@ import type {
   PracticeMode,
   Difficulty,
 } from "./types.js";
+import { STORAGE_KEYS, readRaw, writeRaw } from "../storage.js";
 
 /**
  * PracticeProblemBase から判定/表示に必要な派生値をすべて計算する。
@@ -268,18 +270,18 @@ const DIFF_BANDS: Record<Difficulty, number> = {
   normal: 0.05,
   hard: 0.02,
 };
-let practiceDifficulty: Difficulty = "normal";
-try {
-  const v = localStorage.getItem("poker-icm-practice-diff") as Difficulty | null;
-  if (v && (v === "easy" || v === "normal" || v === "hard")) practiceDifficulty = v;
-} catch { /* ignore */ }
+const DEFAULT_DIFFICULTY: Difficulty = "normal";
+const savedDifficulty = readRaw(STORAGE_KEYS.practiceDifficulty);
+let practiceDifficulty: Difficulty = isDifficulty(savedDifficulty)
+  ? savedDifficulty
+  : DEFAULT_DIFFICULTY;
 
 export function getPracticeDifficulty(): Difficulty {
   return practiceDifficulty;
 }
 export function setPracticeDifficulty(d: Difficulty): void {
   practiceDifficulty = d;
-  try { localStorage.setItem("poker-icm-practice-diff", practiceDifficulty); } catch { /* ignore */ }
+  writeRaw(STORAGE_KEYS.practiceDifficulty, practiceDifficulty);
 }
 
 // RP モードのスライダー回答の許容誤差 (±%)
@@ -288,18 +290,16 @@ export const RP_TOLERANCE: Record<Difficulty, number> = {
   normal: 2.5,
   hard: 1.5,
 };
-let practiceMode: PracticeMode = "callfold";
-try {
-  const v = localStorage.getItem("poker-icm-practice-mode") as PracticeMode | null;
-  if (v === "callfold" || v === "rp" || v === "push") practiceMode = v;
-} catch { /* ignore */ }
+const DEFAULT_PRACTICE_MODE: PracticeMode = "callfold";
+const savedMode = readRaw(STORAGE_KEYS.practiceMode);
+let practiceMode: PracticeMode = isPracticeMode(savedMode) ? savedMode : DEFAULT_PRACTICE_MODE;
 
 export function getPracticeMode(): PracticeMode {
   return practiceMode;
 }
 export function setPracticeMode(m: PracticeMode): void {
   practiceMode = m;
-  try { localStorage.setItem("poker-icm-practice-mode", practiceMode); } catch { /* ignore */ }
+  writeRaw(STORAGE_KEYS.practiceMode, practiceMode);
 }
 /** localStorage に書かず、一時的にモードを差し替えるだけ (導入コースの固定 callfold 表示用)。 */
 export function setPracticeModeSilent(m: PracticeMode): void {

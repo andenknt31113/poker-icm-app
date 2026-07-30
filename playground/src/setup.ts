@@ -15,6 +15,7 @@ import {
   DEFAULT_SB,
   DEFAULT_BB,
   DEFAULT_ANTE,
+  type AnteMode,
 } from "./appState.js";
 import {
   payoutsInput,
@@ -23,7 +24,18 @@ import {
   nashSbInput,
   nashBbInput,
   nashAnteInput,
+  readAnteMode,
+  setAnteMode,
 } from "./domRefs.js";
+import { escapeHtml } from "./html.js";
+import {
+  STORAGE_KEYS,
+  readJson,
+  writeJson,
+  readRaw,
+  writeRaw,
+  type StorageKey,
+} from "./storage.js";
 
 // ===== DOM参照 =====
 const playersList = $<HTMLDivElement>("players-list");
@@ -172,7 +184,7 @@ interface Scenario {
   sb: number;
   bb: number;
   ante: number; // テーブル合計
-  anteMode?: "total" | "perPlayer"; // 省略時は "total" 扱い (組み込みプリセット)
+  anteMode?: AnteMode; // 省略時は "total" 扱い (組み込みプリセット)
 }
 
 // 各プリセットは call 分析として成立する構成 (hero=BB、villain はそれより先に行動するポジション)
@@ -267,71 +279,65 @@ const SCENARIOS: Record<string, Scenario> = {
   },
 };
 
+/**
+ * シナリオの Nash パラメータ (SB/BB/アンティ/アンティモード) を入力欄へ反映する。
+ * 組み込みプリセット適用とユーザー定義シナリオ復元の両方から使う共通処理。
+ */
+function applyNashParams(s: Scenario): void {
+  nashSbInput.value = String(s.sb);
+  nashBbInput.value = String(s.bb);
+  nashAnteInput.value = String(s.ante);
+  setAnteMode(s.anteMode ?? "total");
+}
+
+/** プレイヤー配列を丸ごと置き換える (プリセット適用・ユーザーシナリオ復元の共通処理)。 */
+function replacePlayers(next: readonly { stack: number; role: Role; position: Position }[]): void {
+  players.length = 0;
+  for (const p of next) {
+    players.push({ id: allocPlayerId(), stack: p.stack, role: p.role, position: p.position });
+  }
+}
+
 function applyScenario(scenarioId: string): void {
   const scenario = SCENARIOS[scenarioId];
   if (!scenario) return;
   // プレイヤーリスト置換
-  players.length = 0;
-  for (const p of scenario.players) {
-    players.push({ id: allocPlayerId(), stack: p.stack, role: p.role, position: p.position });
-  }
+  replacePlayers(scenario.players);
   renderPlayers();
   // ペイアウト
   setPayouts(scenario.payouts);
   // Nash パラメータ
-  const sbEl = document.getElementById("nash-sb") as HTMLInputElement | null;
-  const bbEl = document.getElementById("nash-bb") as HTMLInputElement | null;
-  const anteEl = document.getElementById("nash-ante") as HTMLInputElement | null;
-  if (sbEl) sbEl.value = String(scenario.sb);
-  if (bbEl) bbEl.value = String(scenario.bb);
-  if (anteEl) anteEl.value = String(scenario.ante);
-  const radio = document.querySelector<HTMLInputElement>(
-    `input[name="ante-mode"][value="${scenario.anteMode ?? "total"}"]`,
-  );
-  if (radio) radio.checked = true;
+  applyNashParams(scenario);
   // コール額/純利得を自動追従モードに戻す
   setCallManualOverride(false);
   recompute();
 }
 
 // ===== ユーザー定義シナリオ (保存・呼び出し・削除) =====
-const USER_SCENARIOS_KEY = "poker-icm-user-scenarios";
 interface UserScenario {
   name: string;
   s: Scenario;
 }
 
+/** 保存名だけ検証する緩い判定 (中身の Scenario は読み出し側の ?? で防御)。 */
+function isUserScenario(x: unknown): x is UserScenario {
+  return typeof x === "object" && x !== null && typeof (x as UserScenario).name === "string";
+}
+
 function loadUserScenarios(): UserScenario[] {
-  try {
-    const raw = localStorage.getItem(USER_SCENARIOS_KEY);
-    if (!raw) return [];
-    const arr = JSON.parse(raw) as unknown;
-    if (!Array.isArray(arr)) return [];
-    return arr.filter(
-      (x): x is UserScenario =>
-        typeof x === "object" && x !== null && typeof (x as UserScenario).name === "string",
-    );
-  } catch {
-    return [];
-  }
+  const arr = readJson<unknown[]>(STORAGE_KEYS.userScenarios, [], Array.isArray);
+  return arr.filter(isUserScenario);
 }
 
 function saveUserScenarios(list: UserScenario[]): void {
-  try {
-    localStorage.setItem(USER_SCENARIOS_KEY, JSON.stringify(list));
-  } catch {
-    /* quota error は無視 */
-  }
+  writeJson(STORAGE_KEYS.userScenarios, list);
 }
 
 function captureCurrentScenario(): Scenario {
   const sbV = Number(nashSbInput.value) || DEFAULT_SB;
   const bbV = Number(nashBbInput.value) || DEFAULT_BB;
   const anteV = Number(nashAnteInput.value) || 0;
-  const anteMode =
-    (document.querySelector<HTMLInputElement>(
-      'input[name="ante-mode"]:checked',
-    )?.value ?? "total") as "total" | "perPlayer";
+  const anteMode = readAnteMode();
   return {
     players: players.map((p) => ({
       stack: p.stack,
@@ -346,14 +352,6 @@ function captureCurrentScenario(): Scenario {
   };
 }
 
-function escapeAttr(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
 function renderUserScenarios(): void {
   const container = document.getElementById("user-scenarios");
   if (!container) return;
@@ -366,7 +364,7 @@ function renderUserScenarios(): void {
     .map(
       (s, i) => `
       <span class="user-scenario-item" data-i="${i}">
-        <button type="button" class="scenario-btn user-load">${escapeAttr(s.name)}</button>
+        <button type="button" class="scenario-btn user-load">${escapeHtml(s.name)}</button>
         <button type="button" class="user-del" title="${tr("setup.common.delete")}">✕</button>
       </span>
     `,
@@ -427,48 +425,31 @@ export function setPayouts(values: number[]): void {
 
 // ===== ペイ構造の保存・復元 =====
 
-const PAYOUTS_KEY = "poker-icm-saved-payouts";
 interface SavedPayout {
   name: string;
   value: string;
 }
 
+function isSavedPayout(x: unknown): x is SavedPayout {
+  return (
+    typeof x === "object" &&
+    x !== null &&
+    typeof (x as SavedPayout).name === "string" &&
+    typeof (x as SavedPayout).value === "string"
+  );
+}
+
 function loadSavedPayouts(): SavedPayout[] {
-  try {
-    const raw = localStorage.getItem(PAYOUTS_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (x): x is SavedPayout =>
-        typeof x === "object" &&
-        x !== null &&
-        typeof (x as SavedPayout).name === "string" &&
-        typeof (x as SavedPayout).value === "string",
-    );
-  } catch {
-    return [];
-  }
+  const arr = readJson<unknown[]>(STORAGE_KEYS.savedPayouts, [], Array.isArray);
+  return arr.filter(isSavedPayout);
 }
 
 function persistSavedPayouts(list: SavedPayout[]): void {
-  try {
-    localStorage.setItem(PAYOUTS_KEY, JSON.stringify(list));
-  } catch {
-    /* quota error は無視 */
-  }
+  writeJson(STORAGE_KEYS.savedPayouts, list);
 }
 
 const savedPayoutsContainer = $<HTMLDivElement>("saved-payouts");
 const savePayoutBtn = $<HTMLButtonElement>("save-payout");
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
 
 function renderSavedPayouts(): void {
   const list = loadSavedPayouts();
@@ -490,21 +471,18 @@ function renderSavedPayouts(): void {
 // 過去のメモを引き継げるようにするための措置。読み書きするコードはもう無い。
 
 // ===== 折りたたみセクションの開閉状態を localStorage に永続化 =====
-function initCollapsibleSection(detailsId: string, storageKey: string): void {
+// 値は "open" / "closed" の文字列。真偽フラグ ("1"/"0") ではなく、
+// 「キー未設定 (初回起動) = 開いた状態」を既定にしたいため
+// `!== "closed"` という判定にしている (readFlag では表現できない既定値)。
+const COLLAPSE_CLOSED = "closed";
+const COLLAPSE_OPEN = "open";
+
+function initCollapsibleSection(detailsId: string, storageKey: StorageKey): void {
   const details = document.getElementById(detailsId) as HTMLDetailsElement | null;
   if (!details) return;
-  try {
-    // キー未設定 (初回起動) はデフォルトで開いた状態にする
-    details.open = localStorage.getItem(storageKey) !== "closed";
-  } catch {
-    /* localStorage が使えない環境ではデフォルト (開) のまま */
-  }
+  details.open = readRaw(storageKey) !== COLLAPSE_CLOSED;
   details.addEventListener("toggle", () => {
-    try {
-      localStorage.setItem(storageKey, details.open ? "open" : "closed");
-    } catch {
-      /* quota error 等は無視 */
-    }
+    writeRaw(storageKey, details.open ? COLLAPSE_OPEN : COLLAPSE_CLOSED);
   });
 }
 
@@ -612,19 +590,10 @@ export function initSetup(): void {
     if (t.classList.contains("user-load")) {
       const s = list[idx]?.s;
       if (s) {
-        players.length = 0;
-        for (const p of s.players) {
-          players.push({ id: allocPlayerId(), stack: p.stack, role: p.role, position: p.position });
-        }
+        replacePlayers(s.players);
         renderPlayers();
         setPayouts(s.payouts);
-        nashSbInput.value = String(s.sb);
-        nashBbInput.value = String(s.bb);
-        nashAnteInput.value = String(s.ante);
-        const radio = document.querySelector<HTMLInputElement>(
-          `input[name="ante-mode"][value="${s.anteMode ?? "total"}"]`,
-        );
-        if (radio) radio.checked = true;
+        applyNashParams(s);
         setCallManualOverride(false);
         recompute();
       }
@@ -747,7 +716,7 @@ export function initSetup(): void {
 
   payoutsInput.addEventListener("input", recompute);
 
-  initCollapsibleSection("scenario-presets-toggle", "poker-icm-collapse-scenario-presets");
-  initCollapsibleSection("payout-presets-toggle", "poker-icm-collapse-payout-presets");
+  initCollapsibleSection("scenario-presets-toggle", STORAGE_KEYS.collapseScenarioPresets);
+  initCollapsibleSection("payout-presets-toggle", STORAGE_KEYS.collapsePayoutPresets);
 
 }

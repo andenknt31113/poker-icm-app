@@ -1,4 +1,5 @@
 import type { PotOddsPosition } from "@poker-icm/core";
+import { STORAGE_KEYS, readJson } from "./storage.js";
 
 // ===== プレイヤー状態管理 =====
 //
@@ -53,12 +54,13 @@ export function allocPlayerId(): number {
 
 export const players: Player[] = [];
 
-// localStorage 永続化キー
-export const STATE_KEY = "poker-icm-app-state-v1";
+/** アンティ入力の解釈モード: テーブル合計 か 1人あたり。 */
+export type AnteMode = "total" | "perPlayer";
+
 export interface PersistedState {
   players: { stack: number; role: Role; position: Position }[];
   payouts: number[];
-  nash: { sb: number; bb: number; ante: number; anteMode: "total" | "perPlayer" };
+  nash: { sb: number; bb: number; ante: number; anteMode: AnteMode };
 }
 
 /**
@@ -74,18 +76,24 @@ export function sanitizePayoutsArray(values: unknown): number[] {
   );
 }
 
-export function loadState(): PersistedState | null {
-  try {
-    const raw = localStorage.getItem(STATE_KEY);
-    if (!raw) return null;
-    const obj = JSON.parse(raw) as PersistedState;
-    if (!Array.isArray(obj.players) || !Array.isArray(obj.payouts) || !obj.nash) {
-      return null;
-    }
-    return { ...obj, payouts: sanitizePayoutsArray(obj.payouts) };
-  } catch {
-    return null;
-  }
+/**
+ * 保存済み state が最低限の形 (players / payouts が配列で nash が存在) を
+ * 満たすか。個々の値の妥当性は各利用箇所とサニタイズに委ねる。
+ */
+function isPersistedStateShape(v: unknown): v is PersistedState {
+  if (typeof v !== "object" || v === null) return false;
+  const o = v as Partial<PersistedState>;
+  return Array.isArray(o.players) && Array.isArray(o.payouts) && !!o.nash;
+}
+
+function loadState(): PersistedState | null {
+  const obj = readJson<PersistedState | null>(
+    STORAGE_KEYS.appState,
+    null,
+    (v): v is PersistedState | null => v === null || isPersistedStateShape(v),
+  );
+  if (obj === null) return null;
+  return { ...obj, payouts: sanitizePayoutsArray(obj.payouts) };
 }
 
 // デフォルト状態（初回起動時）

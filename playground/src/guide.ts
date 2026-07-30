@@ -2,38 +2,21 @@ import { applyTab, getActiveTab } from "./tabs.js";
 import { t, getLang } from "./i18n.js";
 import { isCapacitorNative } from "./capacitorEnv.js";
 import { LEGAL_CONTENT_HTML, LEGAL_CONTENT_TITLE } from "./legalContent.js";
+import { STORAGE_KEYS, readFlag, writeFlag } from "./storage.js";
 
 // ===== オンボーディング（初回ガイド）& 使い方ガイド =====
-const ONBOARDING_DONE_KEY = "poker-icm-onboarding-done";
-const FIRST_HINT_DISMISSED_KEY = "poker-icm-first-hint-dismissed";
 
 export function isOnboardingDone(): boolean {
-  try {
-    return localStorage.getItem(ONBOARDING_DONE_KEY) === "1";
-  } catch {
-    return false;
-  }
+  return readFlag(STORAGE_KEYS.onboardingDone);
 }
 function markOnboardingDone(): void {
-  try {
-    localStorage.setItem(ONBOARDING_DONE_KEY, "1");
-  } catch {
-    /* ignore */
-  }
+  writeFlag(STORAGE_KEYS.onboardingDone, true);
 }
 function isFirstHintDismissed(): boolean {
-  try {
-    return localStorage.getItem(FIRST_HINT_DISMISSED_KEY) === "1";
-  } catch {
-    return false;
-  }
+  return readFlag(STORAGE_KEYS.firstHintDismissed);
 }
 function markFirstHintDismissed(): void {
-  try {
-    localStorage.setItem(FIRST_HINT_DISMISSED_KEY, "1");
-  } catch {
-    /* ignore */
-  }
+  writeFlag(STORAGE_KEYS.firstHintDismissed, true);
 }
 
 // 初回ヒントバーを出すかどうかは起動時点で確定させる。

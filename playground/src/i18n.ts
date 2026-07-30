@@ -4,26 +4,22 @@
 //   切替時は location.reload() で全モジュールを描き直す (下記 setLang 参照)。
 import { ja } from "./locales/ja.js";
 import { en } from "./locales/en.js";
+import { STORAGE_KEYS, readRaw, writeRaw } from "./storage.js";
 
 export type Lang = "ja" | "en";
 type Dict = Record<string, string>;
 
 const DICTIONARIES: Record<Lang, Dict> = { ja, en };
-const LANG_KEY = "poker-icm-lang";
 const DEFAULT_LANG: Lang = "ja";
 
 function isLang(v: unknown): v is Lang {
   return v === "ja" || v === "en";
 }
 
+/** 保存済み言語を読む。未設定・不正値・localStorage 不可環境では既定言語。 */
 function readLang(): Lang {
-  try {
-    const v = localStorage.getItem(LANG_KEY);
-    if (isLang(v)) return v;
-  } catch {
-    /* localStorage 不可環境では既定言語 */
-  }
-  return DEFAULT_LANG;
+  const v = readRaw(STORAGE_KEYS.lang);
+  return isLang(v) ? v : DEFAULT_LANG;
 }
 
 let currentLang: Lang = readLang();
@@ -54,11 +50,7 @@ export function onLanguageChange(cb: (lang: Lang) => void): () => void {
 export function setLang(lang: Lang): void {
   if (lang === currentLang) return;
   currentLang = lang;
-  try {
-    localStorage.setItem(LANG_KEY, lang);
-  } catch {
-    /* quota error 等は無視 */
-  }
+  writeRaw(STORAGE_KEYS.lang, lang);
   try {
     document.documentElement.setAttribute("lang", lang);
   } catch {
