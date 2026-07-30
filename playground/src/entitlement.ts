@@ -20,11 +20,7 @@
 
 import { isCapacitorNative } from "./capacitorEnv.js";
 import { PRO_ENTITLEMENT_ID, REVENUECAT_IOS_API_KEY, isIapConfigured } from "./iapConfig.js";
-
-const PRO_KEY = "poker-icm-pro";
-// RevenueCat 判定のキャッシュ (開発用裏口 PRO_KEY とは別キー)。
-// オフライン起動時でも直近の Pro 状態を復元できるようにする。
-const PRO_RC_CACHE_KEY = "poker-icm-pro-rc";
+import { STORAGE_KEYS, readFlag, writeRaw, removeRaw } from "./storage.js";
 
 // RevenueCat 由来の Pro 判定 (ランタイム)。localStorage が使えない環境でも
 // セッション中の判定を保持するためのメモリ上フラグ。
@@ -43,15 +39,11 @@ export function isPro(): boolean {
   // web はデモ・宣伝を兼ねた完全版という位置づけ。
   if (!isCapacitorNative()) return true;
   if (rcRuntimePro) return true;
-  try {
-    if (localStorage.getItem(PRO_KEY) === "1") return true;
-    if (localStorage.getItem(PRO_RC_CACHE_KEY) === "1") return true;
-    return false;
-  } catch {
-    // localStorage 不可環境 (プライベートモード等) では裏口/キャッシュは読めないが、
-    // メモリ上の rcRuntimePro は既にチェック済み。
-    return false;
-  }
+  // localStorage 不可環境 (プライベートモード等) では裏口/キャッシュは読めず
+  // readFlag が false を返すが、メモリ上の rcRuntimePro は既にチェック済み。
+  if (readFlag(STORAGE_KEYS.pro)) return true;
+  if (readFlag(STORAGE_KEYS.proRcCache)) return true;
+  return false;
 }
 
 // ===== 権限変更の購読機構 =====
@@ -81,12 +73,10 @@ export function notifyEntitlementChange(): void {
 function setRcPro(active: boolean): void {
   const before = isPro();
   rcRuntimePro = active;
-  try {
-    if (active) localStorage.setItem(PRO_RC_CACHE_KEY, "1");
-    else localStorage.removeItem(PRO_RC_CACHE_KEY);
-  } catch {
-    /* localStorage 不可環境ではメモリ上フラグのみで運用 */
-  }
+  // 非 active は "0" ではなくキー削除で表す (キャッシュ無し状態に戻す)。
+  // localStorage 不可環境では書き込みが無視され、メモリ上フラグのみで運用される。
+  if (active) writeRaw(STORAGE_KEYS.proRcCache, "1");
+  else removeRaw(STORAGE_KEYS.proRcCache);
   if (isPro() !== before) notifyEntitlementChange();
 }
 

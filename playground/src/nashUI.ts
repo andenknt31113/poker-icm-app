@@ -1,5 +1,5 @@
 import { solveHUNash } from "@poker-icm/core";
-import { ALL_169_HANDS, handAt, type HandNotation } from "./handRanking.js";
+import { ALL_169_HANDS, type HandNotation } from "./handRanking.js";
 import { huEquity, hasHUMatrix } from "./huEquityMatrix.js";
 import { comboCountVsHero } from "./rangeEquity.js";
 import { renderGrid } from "./grid.js";
@@ -11,7 +11,16 @@ import {
   persistedState,
   actionOrderIdx,
 } from "./appState.js";
-import { payoutsInput, nashSbInput, nashBbInput, nashAnteInput, saveState } from "./domRefs.js";
+import {
+  payoutsInput,
+  nashSbInput,
+  nashBbInput,
+  nashAnteInput,
+  saveState,
+  readAnteMode,
+  setAnteMode,
+  anteModeRadios,
+} from "./domRefs.js";
 
 const nashSolveBtn = $<HTMLButtonElement>("nash-solve");
 const nashStatus = $<HTMLParagraphElement>("nash-status");
@@ -20,34 +29,39 @@ const nashBbStats = $<HTMLParagraphElement>("nash-bb-stats");
 const nashSbGrid = $<HTMLDivElement>("nash-sb-grid");
 const nashBbGrid = $<HTMLDivElement>("nash-bb-grid");
 
-// Nash の frequency マップで描画。既存のレンジ表示と同じ class を使い、
-// pure (>0.5) なら solid、mixed (0.05-0.5) は marginal 扱いで色の濃淡区別。
-// frequency の値は title 属性 (long-press tooltip) でのみ確認可。
+// mixed strategy の濃淡しきい値。
+// pure (>= 0.5) は solid、mixed (0.05..0.5) は marginal 扱い、
+// それ未満は無色 (ほぼ打たないハンド)。
+const NASH_FREQ_SOLID = 0.5;
+const NASH_FREQ_MARGINAL = 0.05;
+
+/** 「push/fold 前提の注意」を出す実効スタック閾値 (BB)。 */
+const NASH_DEPTH_NOTE_THRESHOLD_BB = 12;
+
+// solveHUNash の収束条件。反復上限に達しても収束しなければ「未収束」と表示する。
+const NASH_MAX_ITERATIONS = 500;
+const NASH_CONVERGENCE_TOLERANCE = 0.001;
+
+// Nash の frequency マップで描画。既存のレンジ表示と同じ class / 同じ 13x13
+// マークアップを使うため、セル生成は grid.renderGrid に委ね、
+// frequency 依存の class 判定と title (long-press tooltip) だけを渡す。
 function renderNashGridWithFreq(
   container: HTMLDivElement,
   freqMap: ReadonlyMap<HandNotation, number>,
   type: "push" | "call",
 ): void {
   const solidClass = type === "push" ? "in-range-villain" : "in-range-hero";
-  const cells: string[] = [];
-  for (let row = 0; row < 13; row++) {
-    for (let col = 0; col < 13; col++) {
-      const hand = handAt(row, col);
-      const freq = freqMap.get(hand) ?? 0;
-      const isPair = row === col;
-      let cls = "";
-      if (freq >= 0.5) {
-        cls = solidClass;
-      } else if (freq >= 0.05) {
-        cls = "marginal";
-      }
-      const pct = Math.round(freq * 100);
-      cells.push(
-        `<div class="hand-cell ${isPair ? "pair" : ""} ${cls}" title="${hand} (${pct}%)">${hand}</div>`,
-      );
-    }
-  }
-  container.innerHTML = cells.join("");
+  const freqOf = (hand: HandNotation): number => freqMap.get(hand) ?? 0;
+  renderGrid(
+    container,
+    (hand) => {
+      const freq = freqOf(hand);
+      if (freq >= NASH_FREQ_SOLID) return solidClass;
+      if (freq >= NASH_FREQ_MARGINAL) return "marginal";
+      return "";
+    },
+    (hand) => `${hand} (${Math.round(freqOf(hand) * 100)}%)`,
+  );
 }
 
 // HU 限界に関する警告ボックス更新
@@ -171,10 +185,7 @@ function runNash(): void {
     return;
   }
   // ante モード判定: total なら人数で割る、perPlayer ならそのまま
-  const anteMode =
-    (document.querySelector<HTMLInputElement>(
-      'input[name="ante-mode"]:checked',
-    )?.value ?? "total") as "total" | "perPlayer";
+  const anteMode = readAnteMode();
   const ante =
     anteMode === "perPlayer" ? anteRaw : anteRaw / Math.max(1, stacks.length);
 
@@ -200,8 +211,8 @@ function runNash(): void {
         allHands: ALL_169_HANDS,
         // カードリムーバル込みのコンボ重みで best response を厳密化（被搾取度を低減）。
         comboWeight: comboCountVsHero,
-        maxIterations: 500,
-        convergenceTolerance: 0.001,
+        maxIterations: NASH_MAX_ITERATIONS,
+        convergenceTolerance: NASH_CONVERGENCE_TOLERANCE,
       });
       const elapsedMs = performance.now() - t0;
 
@@ -219,13 +230,15 @@ function runNash(): void {
         : `<span style="color: var(--warn)">${t("nash.notConverged")}</span>`;
       nashStatus.innerHTML = `${convStr}${t("nash.statusSuffix", { iter: result.iterations, ms: elapsedMs.toFixed(0) })}`;
 
-      // push/fold 前提の注意: 実効スタックが深い (>12BB) 場合のみ表示。
+      // push/fold 前提の注意: 実効スタックが深い場合のみ表示。
       // 深くなるほど実戦には小さなレイズ等の選択肢があり、push/fold 2択の
       // 均衡は真の GTO よりプッシュ寄りに出るため「上限」として読ませる。
+      // 計算結果タブ側の注意書き (warnings.ts の 20BB) より低いのは、Nash の
+      // 均衡レンジは 12BB あたりから乖離が実務上気になり始めるため。
       const depthNote = document.getElementById("nash-depth-note");
       if (depthNote) {
         const effStack = Math.min(stacks[heroIndex] ?? 0, stacks[villainIndex] ?? 0);
-        if (effStack > 12) {
+        if (effStack > NASH_DEPTH_NOTE_THRESHOLD_BB) {
           depthNote.innerHTML = t("nash.depthNote.html", { eff: String(effStack) });
           depthNote.classList.remove("hidden");
         } else {
@@ -252,16 +265,13 @@ export function initNashUI(): void {
     nashBbInput.value = String(persistedState.nash.bb);
     nashAnteInput.value = String(persistedState.nash.ante);
   }
-  const totalRadio = document.querySelector<HTMLInputElement>(
-    'input[name="ante-mode"][value="total"]',
-  );
-  if (totalRadio) totalRadio.checked = true;
+  setAnteMode("total");
 
   // Nash 入力変更時に状態保存
   [nashSbInput, nashBbInput, nashAnteInput].forEach((el) => {
     el.addEventListener("input", saveState);
   });
-  document.querySelectorAll<HTMLInputElement>('input[name="ante-mode"]').forEach((el) => {
+  anteModeRadios().forEach((el) => {
     el.addEventListener("change", saveState);
   });
 

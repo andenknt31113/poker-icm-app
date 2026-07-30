@@ -5,9 +5,23 @@ import type { HandNotation } from "../handRanking.js";
 // PracticeProblem のうち「問題そのもの」を定義する部分。
 // localStorage の復習リストにもこの形のまま保存される (スキーマ不変)。
 
+// モード・難易度の単一情報源。型と「保存値の検証」を同じ配列から導く
+// (従来は型定義と localStorage 復元時の `v === "..." ||` 列挙が二重管理だった)。
+
 /** 練習モード: call/fold 判定 か RP 当て か push 判定 か */
-export type PracticeMode = "callfold" | "rp" | "push";
-export type Difficulty = "easy" | "normal" | "hard";
+export const PRACTICE_MODES = ["callfold", "rp", "push"] as const;
+export type PracticeMode = (typeof PRACTICE_MODES)[number];
+
+export const DIFFICULTIES = ["easy", "normal", "hard"] as const;
+export type Difficulty = (typeof DIFFICULTIES)[number];
+
+export function isPracticeMode(v: unknown): v is PracticeMode {
+  return typeof v === "string" && (PRACTICE_MODES as readonly string[]).includes(v);
+}
+
+export function isDifficulty(v: unknown): v is Difficulty {
+  return typeof v === "string" && (DIFFICULTIES as readonly string[]).includes(v);
+}
 
 export interface PracticeProblemBase {
   scenarioPlayers: { stack: number; role: Role; position: Position }[];

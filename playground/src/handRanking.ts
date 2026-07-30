@@ -10,6 +10,15 @@ export type HandNotation = string; // 例: "AA", "AKs", "AKo"
 
 const RANKS = ["A", "K", "Q", "J", "T", "9", "8", "7", "6", "5", "4", "3", "2"] as const;
 
+/** ハンドグリッドの一辺 (= ランク数 13)。grid.ts の描画ループもこれを使う。 */
+export const GRID_SIZE = RANKS.length;
+
+/** スターティングハンドの総数 (13x13 = ペア13 + スーテッド78 + オフスート78)。 */
+export const HAND_COUNT = GRID_SIZE * GRID_SIZE;
+
+/** 最弱ランクの index。未知のハンドはここに落とす。 */
+const WORST_RANK = HAND_COUNT - 1;
+
 /** グリッド座標 (row, col) → ハンド表記。row/col は 0-12 (A=0, 2=12)。 */
 export function handAt(row: number, col: number): HandNotation {
   const r1 = RANKS[row]!;
@@ -59,8 +68,8 @@ const uniqueRanking = Array.from(new Set(HAND_RANKING));
 // もし 169 に満たない場合の補完（全パターンと差分を取って末尾に追加）
 function generateAllHands(): HandNotation[] {
   const all: HandNotation[] = [];
-  for (let i = 0; i < 13; i++) {
-    for (let j = 0; j < 13; j++) {
+  for (let i = 0; i < GRID_SIZE; i++) {
+    for (let j = 0; j < GRID_SIZE; j++) {
       all.push(handAt(i, j));
     }
   }
@@ -68,28 +77,35 @@ function generateAllHands(): HandNotation[] {
 }
 const ALL_HANDS = generateAllHands();
 const missing = ALL_HANDS.filter((h) => !uniqueRanking.includes(h));
-const FINAL_RANKING: HandNotation[] = [...uniqueRanking, ...missing].slice(0, 169);
+const FINAL_RANKING: HandNotation[] = [...uniqueRanking, ...missing].slice(0, HAND_COUNT);
 
 export const HAND_RANK_MAP: ReadonlyMap<HandNotation, number> = new Map(
   FINAL_RANKING.map((h, i) => [h, i] as const),
 );
 
-/** あるハンドのランク (0=最強, 168=最弱)。未知なら 168。 */
+/** あるハンドのランク (0=最強, 168=最弱)。未知なら最弱扱い。 */
 export function rankOf(hand: HandNotation): number {
-  return HAND_RANK_MAP.get(hand) ?? 168;
+  return HAND_RANK_MAP.get(hand) ?? WORST_RANK;
 }
 
-/** Top X% に含まれるハンド集合。 */
+/** Top X% に含まれるハンド集合。percent は 0..100 に丸める。 */
 export function topRange(percent: number): Set<HandNotation> {
   const clamped = Math.max(0, Math.min(100, percent));
-  const count = Math.round((169 * clamped) / 100);
+  const count = Math.round((HAND_COUNT * clamped) / 100);
   return new Set(FINAL_RANKING.slice(0, count));
 }
 
 export const ALL_169_HANDS = ALL_HANDS;
 
+// ハンド表記1つが表す実際のコンボ数。
+// ペア: C(4,2)=6、スーテッド: 4スート分=4、オフスート: 4*3=12。
+const COMBOS_PAIR = 6;
+const COMBOS_SUITED = 4;
+const COMBOS_OFFSUIT = 12;
+
 /** ハンド表記1つが表す実際のコンボ数 (ペア=6, スーテッド=4, オフスート=12)。 */
 export function comboCount(hand: HandNotation): number {
-  if (hand.length === 2) return 6;
-  return hand[2] === "s" ? 4 : 12;
+  // 表記の長さ 2 ("AA") はペア、3 文字目が "s" ならスーテッド。
+  if (hand.length === 2) return COMBOS_PAIR;
+  return hand[2] === "s" ? COMBOS_SUITED : COMBOS_OFFSUIT;
 }

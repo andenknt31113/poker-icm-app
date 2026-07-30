@@ -1,13 +1,13 @@
 // 練習モードの localStorage 永続化をまとめる、依存の無い最下層モジュール。
 // judge.ts (記録) と progress.ts (推移表示) の両方がこれを参照するため、
 // 循環 import を避けるためにストレージ処理だけを切り出している。
+import { STORAGE_KEYS, readRaw, writeRaw, removeRaw, readJson, writeJson } from "../storage.js";
 import type { PracticeProblem, PracticeMode, Difficulty } from "./types.js";
 
-const STREAK_KEY = "poker-icm-practice-streak";
-const STATS_KEY = "poker-icm-practice-stats";
-const REVIEW_KEY = "poker-icm-practice-review";
-const HISTORY_KEY = "poker-icm-practice-history";
+/** 解答履歴の保持上限 (成績の推移グラフ用。超過分は古いものから捨てる)。 */
 const HISTORY_MAX = 500;
+/** 復習リストの保持上限。 */
+const REVIEW_MAX = 50;
 
 export interface PracticeStats {
   total: number;
@@ -21,47 +21,47 @@ export interface PracticeHistoryEntry {
   ok: boolean;
 }
 
+/** 連続正解数。未設定・不正値は 0。 */
 export function loadStreak(): number {
-  try { return Number(localStorage.getItem(STREAK_KEY)) || 0; } catch { return 0; }
+  return Number(readRaw(STORAGE_KEYS.practiceStreak)) || 0;
 }
 export function saveStreak(n: number): void {
-  try { localStorage.setItem(STREAK_KEY, String(n)); } catch { /* ignore */ }
+  writeRaw(STORAGE_KEYS.practiceStreak, String(n));
+}
+
+function isPracticeStats(v: unknown): v is PracticeStats {
+  if (typeof v !== "object" || v === null) return false;
+  const o = v as Partial<PracticeStats>;
+  return typeof o.total === "number" && typeof o.correct === "number";
 }
 
 export function loadStats(): PracticeStats {
-  try {
-    const v = JSON.parse(localStorage.getItem(STATS_KEY) ?? '{"total":0,"correct":0}');
-    if (typeof v.total === "number" && typeof v.correct === "number") return v;
-  } catch { /* ignore */ }
-  return { total: 0, correct: 0 };
+  return readJson<PracticeStats>(
+    STORAGE_KEYS.practiceStats,
+    { total: 0, correct: 0 },
+    isPracticeStats,
+  );
 }
 export function saveStats(s: PracticeStats): void {
-  try { localStorage.setItem(STATS_KEY, JSON.stringify(s)); } catch { /* ignore */ }
+  writeJson(STORAGE_KEYS.practiceStats, s);
 }
 
+// 復習リスト / 履歴は「配列であること」だけを検証し、要素の形は信用する。
+// 自アプリが書いた値しか入らない前提で、要素ごとの検証コストは払わない
+// (壊れた要素があっても描画側が ?? / 型ガードで防御する)。
 export function loadReviewList(): PracticeProblem[] {
-  try {
-    const v = JSON.parse(localStorage.getItem(REVIEW_KEY) ?? "[]");
-    if (Array.isArray(v)) return v as PracticeProblem[];
-  } catch { /* ignore */ }
-  return [];
+  return readJson<PracticeProblem[]>(STORAGE_KEYS.practiceReview, [], Array.isArray);
 }
 export function saveReviewList(list: PracticeProblem[]): void {
-  try { localStorage.setItem(REVIEW_KEY, JSON.stringify(list.slice(0, 50))); } catch { /* ignore */ }
+  writeJson(STORAGE_KEYS.practiceReview, list.slice(0, REVIEW_MAX));
 }
 
 export function loadHistory(): PracticeHistoryEntry[] {
-  try {
-    const v = JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]");
-    if (Array.isArray(v)) return v as PracticeHistoryEntry[];
-  } catch { /* ignore */ }
-  return [];
+  return readJson<PracticeHistoryEntry[]>(STORAGE_KEYS.practiceHistory, [], Array.isArray);
 }
-export function saveHistory(list: PracticeHistoryEntry[]): void {
-  try {
-    // 上限を超えたら古いものから捨てる (末尾が最新)
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(-HISTORY_MAX)));
-  } catch { /* ignore */ }
+/** 上限を超えたら古いものから捨てて保存する (末尾が最新)。 */
+function saveHistory(list: PracticeHistoryEntry[]): void {
+  writeJson(STORAGE_KEYS.practiceHistory, list.slice(-HISTORY_MAX));
 }
 export function appendHistory(entry: PracticeHistoryEntry): void {
   const list = loadHistory();
@@ -69,4 +69,7 @@ export function appendHistory(entry: PracticeHistoryEntry): void {
   saveHistory(list);
 }
 
-export { HISTORY_KEY };
+/** 解答履歴を全消去する (成績の推移パネルのリセットボタン用)。 */
+export function clearHistory(): void {
+  removeRaw(STORAGE_KEYS.practiceHistory);
+}

@@ -226,11 +226,14 @@ function showComingSoonToast(): void {
   showToast(t("paywall.comingSoon"));
 }
 
-/** Escape キーでペイウォールも閉じられるよう main/guide のキーハンドラから使う想定の補助。 */
-export function isPaywallOpen(): boolean {
+// ===== Escape キーでの閉じ操作 =====
+// ペイウォール自身が ensurePaywallModal 内で keydown を張っており、他モジュール
+// (main / guide) からは呼ばれないため非公開にしてある。
+// guide.ts 側の Escape ハンドラは自分のモーダルだけを閉じる (相互に干渉しない)。
+function isPaywallOpen(): boolean {
   return !!paywallEl && !paywallEl.classList.contains("hidden");
 }
 
-export function closePaywallIfOpen(): void {
+function closePaywallIfOpen(): void {
   if (isPaywallOpen()) closePaywall();
 }
