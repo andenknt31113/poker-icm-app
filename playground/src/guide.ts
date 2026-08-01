@@ -1,6 +1,5 @@
 import { applyTab, getActiveTab } from "./tabs.js";
 import { t, getLang } from "./i18n.js";
-import { isCapacitorNative } from "./capacitorEnv.js";
 import { LEGAL_CONTENT_HTML, LEGAL_CONTENT_TITLE } from "./legalContent.js";
 import { STORAGE_KEYS, readFlag, writeFlag } from "./storage.js";
 
@@ -132,11 +131,10 @@ let guideModalEl: HTMLDivElement | null = null;
  * ガイドの手順は「スタックを調整」「全員のスタックを入力」など編集操作を前提に
  * 書かれているが、アプリ版では編集系が Pro 買い切りゲートの内側にある。
  * 無料ユーザーが手順どおり進むとペイウォールに当たるため、先に線引きを示す。
- * web は全機能無料なので出さない (isCapacitorNative() で分岐)。
+ * ゲートは web/アプリ共通のため、常に表示する。
  * 価格はここに書かない (ストア/offerings 由来の表示に一元化する)。
  */
 function proNoteHtml(): string {
-  if (!isCapacitorNative()) return "";
   return `<p class="guide-pro-note">${t("guide.proNote.html")}</p>`;
 }
 

@@ -1,52 +1,73 @@
-// 9. web 全機能無料開放: 通常ブラウザでは pro フラグなしでも
-//    スタック編集・プレイヤー追加・ペイ編集がすべて使え、ペイウォールが出ない。
+// 9. freemium ゲート (3人ルール): 3人以下は自由編集 / 4人以上の編集と
+//    プレイヤー追加 (3人到達後) は Pro ゲート / プリセット閲覧は常に無料。
 //
-// freemium の Pro ゲートはアプリ版 (Capacitor ネイティブ) のみで有効。
-// ネイティブ時のゲート判定 (isPro の OR ロジック・RevenueCat 連携) は
-// ユニットテスト (test/entitlement.test.ts) が担保する。
+// ネイティブ判定に依存しないゲート (isPro + 人数) は web でも同一挙動のため
+// ブラウザ E2E で検証できる。RevenueCat 連携はユニットテストが担保。
 import { attachErrorCollector, assertNoErrors } from "../lib/context.mjs";
 
-export default async function testWebFullyFree({ baseURL, createContext }) {
-  const context = await createContext({ tutorialDone: true }); // pro フラグ無し
+export default async function testFreemiumGate({ baseURL, createContext }) {
+  const context = await createContext({ tutorialDone: true }); // pro フラグ無し = 無料
   try {
     const page = await context.newPage();
-    const errors = attachErrorCollector(page, "web-fully-free");
+    const errors = attachErrorCollector(page, "freemium-3max");
 
     await page.goto(baseURL, { waitUntil: "load" });
     await page.waitForSelector("#players-list .player-row", { state: "visible" });
 
-    // ① スタック入力が編集可能 (readonly でも 🔒 でもない)
-    const stackReadonly = await page.$eval("#players-list .player-stack", (el) =>
-      el.hasAttribute("readonly"),
-    );
-    if (stackReadonly) throw new Error("web でスタック入力が readonly になっている");
+    const rowCount = () => page.$$eval("#players-list .player-row", (els) => els.length);
+    const stackReadonly = () =>
+      page.$eval("#players-list .player-stack", (el) => el.hasAttribute("readonly"));
+    const paywallVisible = () =>
+      page.evaluate(() => {
+        const m = document.getElementById("paywall-modal");
+        return !!m && !m.classList.contains("hidden");
+      });
+
+    // ① 初期状態 (デフォルト6人) → 編集ロック (readonly + 🔒)
+    if ((await rowCount()) <= 3) throw new Error("前提: デフォルトは4人以上のはず");
+    if (!(await stackReadonly())) throw new Error("4人以上で無料なのにスタックが編集可能");
     const lockBadge = await page.$("#players-list .lock-badge");
-    if (lockBadge) throw new Error("web で 🔒 バッジが表示されている");
+    if (!lockBadge) throw new Error("4人以上で 🔒 バッジが表示されていない");
 
-    // ② スタックを実際に編集できる
-    await page.fill("#players-list .player-stack", "42");
-    const applied = await page.$eval("#players-list .player-stack", (el) => el.value);
-    if (applied !== "42") throw new Error(`スタック編集が反映されない: "${applied}"`);
+    // ② プリセット閲覧は無料 (ftBubble=4人 → 計算結果が見られる)
+    await page.click('.scenario-btn[data-scenario="ftBubble"]');
+    await page.click('.tab-btn[data-tab="result"]');
+    await page.waitForSelector("#bf-matrix .bf-cell", { state: "visible" });
 
-    // ③ プレイヤー追加でペイウォールが出ず、実際に増える
-    const before = await page.$$eval("#players-list .player-row", (els) => els.length);
-    await page.click("#add-player");
+    // ③ 3-handed プリセット (3人) → 編集可能になり、実際に編集できる
+    await page.click('.tab-btn[data-tab="setup"]');
+    await page.click('.scenario-btn[data-scenario="ft3"]');
     await page.waitForFunction(
-      (n) => document.querySelectorAll("#players-list .player-row").length === n + 1,
-      before,
-      { timeout: 5_000 },
+      () => document.querySelectorAll("#players-list .player-row").length === 3,
     );
-    const paywallVisible = await page.evaluate(() => {
-      const m = document.getElementById("paywall-modal");
-      return !!m && !m.classList.contains("hidden");
-    });
-    if (paywallVisible) throw new Error("web でペイウォールが表示された");
-
-    // ④ ペイ金額も編集できる
+    if (await stackReadonly()) throw new Error("3人なのにスタックが readonly");
+    await page.fill("#players-list .player-stack", "42");
+    const v = await page.$eval("#players-list .player-stack", (el) => el.value);
+    if (v !== "42") throw new Error(`3人での編集が反映されない: "${v}"`);
     const payoutReadonly = await page.$eval(".payout-amount", (el) => el.hasAttribute("readonly"));
-    if (payoutReadonly) throw new Error("web でペイ金額入力が readonly になっている");
+    if (payoutReadonly) throw new Error("3人なのにペイ金額が readonly");
 
-    assertNoErrors(errors, "web 全機能無料開放フロー");
+    // ④ 3人から追加しようとする → ペイウォール表示 + 人数は増えない
+    await page.click("#add-player");
+    await page.waitForSelector("#paywall-modal:not(.hidden)", { state: "visible" });
+    if ((await rowCount()) !== 3) throw new Error("ペイウォール表示中に人数が増えた");
+    await page.click("#paywall-close");
+    await page.waitForSelector("#paywall-modal.hidden", { state: "hidden" });
+
+    // ⑤ 4人プリセット → ロック / 1人削除して3人 → 再び編集可能 (削除は無料)
+    await page.click('.scenario-btn[data-scenario="ft4"]');
+    await page.waitForFunction(
+      () => document.querySelectorAll("#players-list .player-row").length === 4,
+    );
+    if (!(await stackReadonly())) throw new Error("4人で編集可能になっている");
+    await page.click("#players-list .player-remove");
+    await page.waitForFunction(
+      () => document.querySelectorAll("#players-list .player-row").length === 3,
+    );
+    if (await paywallVisible()) throw new Error("削除でペイウォールが出た (削除は無料のはず)");
+    if (await stackReadonly()) throw new Error("3人に減らしたのに編集できない");
+
+    assertNoErrors(errors, "freemium 3人ルールのフロー");
   } finally {
     await context.close();
   }

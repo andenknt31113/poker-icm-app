@@ -242,7 +242,7 @@ export const ja: Record<string, string> = {
   "guide.legalLink": "📄 利用規約・プライバシーポリシー",
   // アプリ版のみ表示 (guide.ts proNoteHtml)。価格は書かない。
   "guide.proNote.html":
-    "ℹ️ シナリオプリセット・計算結果・ナッシュ均衡・練習はすべて無料でお使いいただけます。スタックとペイ構造の<strong>編集（ペイ構造のプリセット適用を含む）・シナリオ保存</strong>は 🔒 Pro（買い切り）機能です。",
+    "ℹ️ シナリオプリセット・計算結果・ナッシュ均衡・練習はすべて無料。<strong>3人までのテーブルはスタック・ペイ構造とも自由に編集できます</strong>。4人以上のテーブルの編集とシナリオ保存は 🔒 Pro（買い切り）機能です。",
   "guide.body.html": `
         <p class="guide-intro">
           このツールはショートスタック（〜20bb）のオールイン局面に特化しています。
@@ -717,7 +717,7 @@ export const ja: Record<string, string> = {
   // ===== ペイウォール (freemium ゲート, paywall.ts) =====
   "paywall.title": "🔓 自分のテーブルを再現しよう",
   "paywall.lead": "Pro なら、自分の卓をそのまま再現して分析できます。",
-  "paywall.feature.editStacks": "スタックを自由に編集",
+  "paywall.feature.editStacks": "4人以上のテーブルを自由に再現 (スタック・ペイ構造)",
   "paywall.feature.replay": "実戦のハンドを再現して分析",
   "paywall.feature.save": "シナリオを保存していつでも呼び出し",
   "paywall.price": "価格: {price}",

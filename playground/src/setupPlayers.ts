@@ -5,9 +5,10 @@
 import { MAX_PLAYERS } from "@poker-icm/core";
 import { t as tr } from "./i18n.js";
 import { $ } from "./dom.js";
-import { isPro } from "./entitlement.js";
+import { isPro, FREE_MAX_PLAYERS } from "./entitlement.js";
 import { openPaywall } from "./paywall.js";
 import { recompute } from "./calculator.js";
+import { renderPayouts } from "./setupPayouts.js";
 import {
   players,
   allocPlayerId,
@@ -31,7 +32,8 @@ const RANDOM_STACK_MAX_BB = 30;
 export function renderPlayers(): void {
   playersList.innerHTML = "";
   // freemium: 無料時はスタック編集をロック (readonly + 🔒)。役割/ポジションは無料のまま。
-  const locked = !isPro();
+  // 3人以下のテーブルは無料でも自由編集。4人以上は Pro のみ。
+  const locked = !isPro() && players.length > FREE_MAX_PLAYERS;
   const validPositions: Position[] = ["", ...positionsForN(players.length)];
   players.forEach((p, i) => {
     const row = document.createElement("div");
@@ -57,10 +59,11 @@ export function renderPlayers(): void {
     playersList.appendChild(row);
   });
 
-  addPlayerBtn.classList.toggle("locked-pro", locked);
+  // 追加ボタンは「無料で上限 (3人) に達している」ときにロック表示 (タップでペイウォール)。
+  addPlayerBtn.classList.toggle("locked-pro", !isPro() && players.length >= FREE_MAX_PLAYERS);
   randomizeStacksBtn.classList.toggle("locked-pro", locked);
   // Pro 時のみ MAX で disable。無料時は disable せず、押下でペイウォールを出す。
-  addPlayerBtn.disabled = !locked && players.length >= MAX_PLAYERS;
+  addPlayerBtn.disabled = isPro() && players.length >= MAX_PLAYERS;
   addPlayerBtn.textContent =
     players.length >= MAX_PLAYERS
       ? tr("setup.players.addMax", { n: MAX_PLAYERS })
@@ -114,6 +117,7 @@ function removePlayer(playerId: number): void {
     if (replacement) replacement.role = removed.role;
   }
   renderPlayers();
+  renderPayouts(); // 3人境界を跨ぐとペイ構造側のロック表示も変わる
   recompute();
 }
 
@@ -128,6 +132,7 @@ function addPlayer(): void {
     position: "",
   });
   renderPlayers();
+  renderPayouts(); // 3人境界を跨ぐとペイ構造側のロック表示も変わる
   recompute();
 }
 
@@ -186,10 +191,7 @@ export function initPlayersUI(): void {
     }
     const remove = target.closest<HTMLButtonElement>(".player-remove");
     if (remove) {
-      if (!isPro()) {
-        openPaywall();
-        return;
-      }
+      // 削除 (人数を減らす方向) は無料でも可能。3人以下にすれば自由編集できる。
       const id = Number(remove.dataset.id);
       if (Number.isFinite(id)) removePlayer(id);
     }
@@ -202,14 +204,14 @@ export function initPlayersUI(): void {
   // キーボード操作 (Tab 移動) 向けのフォールバック。
   playersList.addEventListener("pointerdown", (e) => {
     const el = e.target as HTMLElement;
-    if (el.classList.contains("player-stack") && !isPro()) {
+    if (el.classList.contains("player-stack") && !isPro() && players.length > FREE_MAX_PLAYERS) {
       e.preventDefault();
       openPaywall();
     }
   });
   playersList.addEventListener("focusin", (e) => {
     const el = e.target as HTMLElement;
-    if (el.classList.contains("player-stack") && !isPro()) {
+    if (el.classList.contains("player-stack") && !isPro() && players.length > FREE_MAX_PLAYERS) {
       (el as HTMLInputElement).blur();
       openPaywall();
     }
@@ -218,7 +220,7 @@ export function initPlayersUI(): void {
   playersList.addEventListener("input", (e) => {
     const target = e.target as HTMLInputElement;
     if (!target.classList.contains("player-stack")) return;
-    if (!isPro()) return; // readonly のはずだが二重ガード
+    if (!isPro() && players.length > FREE_MAX_PLAYERS) return; // readonly のはずだが二重ガード
     const id = Number(target.dataset.id);
     if (Number.isFinite(id)) updateStack(id, Number(target.value));
   });
@@ -231,11 +233,11 @@ export function initPlayersUI(): void {
   });
 
   addPlayerBtn.addEventListener("click", () => {
-    if (!isPro()) return openPaywall();
+    if (!isPro() && players.length >= FREE_MAX_PLAYERS) return openPaywall();
     addPlayer();
   });
   randomizeStacksBtn.addEventListener("click", () => {
-    if (!isPro()) return openPaywall();
+    if (!isPro() && players.length > FREE_MAX_PLAYERS) return openPaywall();
     randomizeStacks();
   });
 }

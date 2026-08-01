@@ -22,7 +22,7 @@ import testFooterVersion from "./tests/06-footer-version.mjs";
 import testPositionWarnZero from "./tests/06-position-warn-zero.mjs";
 import testPracticeCtaConsolidation from "./tests/07-practice-cta-consolidation.mjs";
 import testLangSwitch from "./tests/08-lang-switch.mjs";
-import testWebFullyFree from "./tests/09-freemium-gate.mjs";
+import testFreemiumGate from "./tests/09-freemium-gate.mjs";
 
 async function main() {
   const t0 = Date.now();
@@ -70,8 +70,8 @@ async function main() {
       run: () => testLangSwitch({ baseURL, createContext }),
     },
     {
-      name: "web 全機能無料開放: 編集可・ペイウォール非表示 (Proゲートはアプリ版のみ)",
-      run: () => testWebFullyFree({ baseURL, createContext }),
+      name: "freemium 3人ルール: 3人以下は編集可 / 4人以上と追加はPro / プリセット閲覧無料",
+      run: () => testFreemiumGate({ baseURL, createContext }),
     },
   ];
 

@@ -4,10 +4,10 @@
 // (シナリオプリセット経由の setPayouts はプログラム的な差し替えなので許可。)
 import { t as tr } from "./i18n.js";
 import { $ } from "./dom.js";
-import { isPro } from "./entitlement.js";
+import { isPro, FREE_MAX_PLAYERS } from "./entitlement.js";
 import { openPaywall } from "./paywall.js";
 import { recompute } from "./calculator.js";
-import { parseList, sanitizePayoutsArray } from "./appState.js";
+import { parseList, sanitizePayoutsArray, players } from "./appState.js";
 import { payoutsInput, payoutsArr, replacePayouts } from "./domRefs.js";
 import { escapeHtml } from "./html.js";
 import { STORAGE_KEYS, readJson, writeJson } from "./storage.js";
@@ -32,7 +32,8 @@ export function renderPayouts(): void {
   payoutsList.innerHTML = "";
   // freemium: 無料時はペイ構造の手編集をロック (readonly + 🔒)。
   // シナリオプリセット適用によるペイ変更 (setPayouts 経由) は許可 (プログラム的な差し替え)。
-  const locked = !isPro();
+  // ペイ構造の編集ロックはプレイヤー数と連動 (3人以下は無料で編集可)。
+  const locked = !isPro() && players.length > FREE_MAX_PLAYERS;
   payoutsArr.forEach((amt, i) => {
     const row = document.createElement("div");
     row.className = "payout-row";
@@ -45,6 +46,9 @@ export function renderPayouts(): void {
     payoutsList.appendChild(row);
   });
   addPayoutBtn.classList.toggle("locked-pro", locked);
+  document
+    .querySelectorAll<HTMLButtonElement>(".presets:not(.saved) button")
+    .forEach((btn) => btn.classList.toggle("locked-pro", locked));
   addPayoutBtn.disabled = !locked && payoutsArr.length >= MAX_PAYOUTS;
 }
 
@@ -106,14 +110,14 @@ export function initPayoutsUI(): void {
   // (スタック入力と同じく pointerdown で先取りし、focusin はフォールバック。)
   payoutsList.addEventListener("pointerdown", (e) => {
     const el = e.target as HTMLElement;
-    if (el.classList.contains("payout-amount") && !isPro()) {
+    if (el.classList.contains("payout-amount") && !isPro() && players.length > FREE_MAX_PLAYERS) {
       e.preventDefault();
       openPaywall();
     }
   });
   payoutsList.addEventListener("focusin", (e) => {
     const el = e.target as HTMLElement;
-    if (el.classList.contains("payout-amount") && !isPro()) {
+    if (el.classList.contains("payout-amount") && !isPro() && players.length > FREE_MAX_PLAYERS) {
       (el as HTMLInputElement).blur();
       openPaywall();
     }
@@ -122,7 +126,7 @@ export function initPayoutsUI(): void {
   payoutsList.addEventListener("input", (e) => {
     const target = e.target as HTMLInputElement;
     if (!target.classList.contains("payout-amount")) return;
-    if (!isPro()) return; // readonly のはずだが二重ガード
+    if (!isPro() && players.length > FREE_MAX_PLAYERS) return; // readonly のはずだが二重ガード
     const i = Number(target.dataset.i);
     const v = Number(target.value);
     if (Number.isFinite(i) && i >= 0 && i < payoutsArr.length) {
@@ -136,7 +140,7 @@ export function initPayoutsUI(): void {
     const target = e.target as HTMLElement;
     const remove = target.closest<HTMLButtonElement>(".payout-remove");
     if (!remove) return;
-    if (!isPro()) {
+    if (!isPro() && players.length > FREE_MAX_PLAYERS) {
       openPaywall();
       return;
     }
@@ -152,7 +156,7 @@ export function initPayoutsUI(): void {
   });
 
   addPayoutBtn.addEventListener("click", () => {
-    if (!isPro()) return openPaywall();
+    if (!isPro() && players.length > FREE_MAX_PLAYERS) return openPaywall();
     if (payoutsArr.length >= MAX_PAYOUTS) return;
     payoutsArr.push(0);
     syncPayoutsInput();
@@ -167,9 +171,8 @@ export function initPayoutsUI(): void {
   document
     .querySelectorAll<HTMLButtonElement>(".presets:not(.saved) button")
     .forEach((btn) => {
-      btn.classList.toggle("locked-pro", !isPro());
       btn.addEventListener("click", () => {
-        if (!isPro()) return openPaywall();
+        if (!isPro() && players.length > FREE_MAX_PLAYERS) return openPaywall();
         const v = btn.dataset.preset;
         if (v) setPayouts(parseList(v));
       });
