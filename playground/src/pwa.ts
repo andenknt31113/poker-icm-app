@@ -102,6 +102,16 @@ function initServiceWorker(): void {
         navigator.serviceWorker
           .register("/sw.js")
           .then((registration) => {
+            // ページ読み込み直後に「待機中の新バージョン」が既にある場合は、
+            // ユーザー操作を待たずに即時適用する (読み込み直後なので失われる
+            // 作業状態がない)。これが無いと、旧バンドルを掴んだクライアントは
+            // トーストをタップするまで古いまま使い続けてしまう
+            // (freemium ゲート変更などが行き渡らない)。
+            // セッション中に見つかった更新は従来どおりトースト通知に任せる。
+            if (registration.waiting && navigator.serviceWorker.controller) {
+              swUpdateRequested = true;
+              registration.waiting.postMessage({ type: "SKIP_WAITING" });
+            }
             registration.onupdatefound = () => {
               const newWorker = registration.installing;
               if (!newWorker) return;
