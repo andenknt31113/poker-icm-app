@@ -23,11 +23,9 @@ export default async function testFreemiumGate({ baseURL, createContext }) {
         return !!m && !m.classList.contains("hidden");
       });
 
-    // ① 初期状態 (デフォルト6人) → 編集ロック (readonly + 🔒)
-    if ((await rowCount()) <= 3) throw new Error("前提: デフォルトは4人以上のはず");
-    if (!(await stackReadonly())) throw new Error("4人以上で無料なのにスタックが編集可能");
-    const lockBadge = await page.$("#players-list .lock-badge");
-    if (!lockBadge) throw new Error("4人以上で 🔒 バッジが表示されていない");
+    // ① 初期状態はデフォルト3人 (ft3相当) → 無料でも編集可能な状態で始まる
+    if ((await rowCount()) !== 3) throw new Error("デフォルトが3人になっていない");
+    if (await stackReadonly()) throw new Error("初期3人なのにスタックが readonly");
 
     // ② プリセット閲覧は無料 (ftBubble=4人 → 計算結果が見られる)
     await page.click('.scenario-btn[data-scenario="ftBubble"]');

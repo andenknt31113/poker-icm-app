@@ -100,13 +100,12 @@ function loadState(): PersistedState | null {
 // コール分析として成立する構成 (hero=BB、villain はそれより先に行動する SB) にしてある。
 // #6 は 6-max のポジションセット (BTN/SB/BB/UTG/HJ/CO) に無い "LJ" だと選択肢に無いポジションとして
 // 「—」(未割当) 表示になってしまうため、有効な UTG に修正。
+// 初期状態は 3-handed (ft3 プリセット相当)。freemium の無料枠が「3人まで自由編集」
+// のため、初回起動をロックされた画面ではなく「触って編集できる卓」から始める。
 const DEFAULT_PLAYERS: { stack: number; role: Role; position: Position }[] = [
-  { stack: 14, role: "hero", position: "BB" },
-  { stack: 23, role: "villain", position: "SB" },
-  { stack: 8, role: "other", position: "BTN" },
-  { stack: 8, role: "other", position: "CO" },
-  { stack: 8, role: "other", position: "HJ" },
-  { stack: 8, role: "other", position: "UTG" },
+  { stack: 18, role: "hero", position: "BB" },
+  { stack: 14, role: "villain", position: "SB" },
+  { stack: 20, role: "other", position: "BTN" },
 ];
 
 // 起動時に state を復元
