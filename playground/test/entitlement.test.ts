@@ -52,9 +52,9 @@ beforeEach(() => {
 });
 
 describe("isPro の OR 判定", () => {
-  it("web (非ネイティブ) では常に Pro (全機能無料開放)", async () => {
+  it("web (非ネイティブ) でもフラグ無しは無料 (freemium ゲートは全プラットフォーム共通)", async () => {
     const { isPro } = await loadEntitlement();
-    expect(isPro()).toBe(true);
+    expect(isPro()).toBe(false);
   });
 
   it("開発用裏口 poker-icm-pro==='1' で Pro", async () => {

@@ -22,6 +22,14 @@ import { isCapacitorNative } from "./capacitorEnv.js";
 import { PRO_ENTITLEMENT_ID, REVENUECAT_IOS_API_KEY, isIapConfigured } from "./iapConfig.js";
 import { STORAGE_KEYS, readFlag, writeRaw, removeRaw } from "./storage.js";
 
+/**
+ * 無料プランで自由編集できる最大プレイヤー数。
+ * 3人以下 (HU〜3-handed) はスタック・ペイ構造とも自由に編集でき、
+ * 4人以上のテーブルの編集とシナリオ保存が Pro (買い切り)。
+ * シナリオプリセットの閲覧・計算は人数によらず無料。
+ */
+export const FREE_MAX_PLAYERS = 3;
+
 // RevenueCat 由来の Pro 判定 (ランタイム)。localStorage が使えない環境でも
 // セッション中の判定を保持するためのメモリ上フラグ。
 let rcRuntimePro = false;
@@ -34,10 +42,6 @@ let rcRuntimePro = false;
  *   3. RevenueCat ランタイム判定 (当セッションで active を確認済み)
  */
 export function isPro(): boolean {
-  // 通常ブラウザ (web) では全機能を無料開放する (誰でも完全版)。
-  // Pro ゲートが効くのはアプリ版 (Capacitor ネイティブ) のみで、
-  // web はデモ・宣伝を兼ねた完全版という位置づけ。
-  if (!isCapacitorNative()) return true;
   if (rcRuntimePro) return true;
   // localStorage 不可環境 (プライベートモード等) では裏口/キャッシュは読めず
   // readFlag が false を返すが、メモリ上の rcRuntimePro は既にチェック済み。
