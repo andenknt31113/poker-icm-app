@@ -3212,3 +3212,33 @@ footer a {
 .hand-cell-detail.hidden {
   display: none;
 }
+
+/* ===== ハンド比較: ポジション注意書き (折りたたみ) ===== */
+/* 本題 (どこまで call できるか) を主役にするため、注意書きは 1 行に畳む。
+   詳細はタップで開く。 */
+.hand-caveat summary {
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+  list-style: none;
+}
+.hand-caveat summary::-webkit-details-marker {
+  display: none;
+}
+.hand-caveat summary::before {
+  content: "▸ ";
+  color: var(--muted);
+}
+.hand-caveat[open] summary::before {
+  content: "▾ ";
+}
+.hand-caveat summary strong {
+  color: var(--text);
+}
+.hand-caveat-body {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+}
