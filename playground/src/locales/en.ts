@@ -113,7 +113,7 @@ export const en: Record<string, string> = {
 
   // ===== index.html: ハンド比較 =====
   "hand.h2": "Hand range comparison",
-  "hand.hint.html": "\n          Assumes HU all-in. Fully valid when <strong>hero = BB</strong> (last actor).\n          For other positions, treat it as a rough estimate assuming everyone behind folds.\n        ",
+  "hand.hint.html": "\n          <strong>“If the opponent shoves this wide, how wide can I call?”</strong> — that is what this screen shows.\n          It is computed as a 1-vs-1 all-in, so the answer comes from <strong>the two stacks</strong>, not from position.\n        ",
   "hand.direction.callBack": "\n            Find my call range\n          ",
   "hand.direction.pushBack": "\n            Find my push range\n          ",
   "hand.mode.preset": "\n            Preset (Top X%)\n          ",
@@ -139,8 +139,8 @@ export const en: Record<string, string> = {
   "hand.callStats.pushBack": "Assuming the villain calls <strong>{villainPct}%</strong>, hands where your shove is +EV: <strong>{n}</strong> ({pPct}%) / borderline: {marginal}.<br />If the villain calls wider, you should shove tighter.",
   "hand.banner.callerLabel.hero": "hero (you)",
   "hand.banner.callerLabel.villain": "villain",
-  "hand.banner.noBehind.html": "\n      ℹ️ {label} = <strong>{pos}</strong>. No players left to act, so the\n      HU all-in model is exactly valid.\n    ",
-  "hand.banner.behind.html": "\n      ⚠ {label} = <strong>{pos}</strong>. This section assumes the\n      <strong>caller = BB (last actor)</strong> HU all-in model.\n      The <strong>over-call risk</strong> from the {n} players ({list}) behind {label}\n      is not reflected.\n      {note}\n    ",
+  "hand.banner.noBehind.html": "\n      ✅ {label} = <strong>{pos}</strong>: nobody left to act, so this 1-vs-1 model applies exactly.\n    ",
+  "hand.banner.behind.html": "\n      <details class=\"hand-caveat\">\n        <summary>⚠ {label} = <strong>{pos}</strong>: over-calls from {n} player(s) behind are not reflected — play a bit tighter</summary>\n        <div class=\"hand-caveat-body\">\n          This is a 1-vs-1 all-in model. It does not include the risk of the {n} players ({list}) behind {label} coming over the top. {note}\n        </div>\n      </details>\n    ",
   "hand.banner.note.callBack": "Even if it says “call OK” here, defend with a tighter range in practice.",
   "hand.banner.note.pushBack": "Even if it says “push OK” here, account for over-calls and shove a tighter range in practice.",
 

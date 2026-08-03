@@ -107,7 +107,7 @@ export const ja: Record<string, string> = {
 
   // ===== index.html: ハンド比較 =====
   "hand.h2": "ハンドレンジ比較",
-  "hand.hint.html": "\n          HU all-in 想定。<strong>hero=BB</strong>（最終 actor）のときに完全に有効。\n          他ポジションは「後ろのプレイヤーが全員 fold した」想定の概算として参考程度に。\n        ",
+  "hand.hint.html": "\n          <strong>「相手がこのくらいのレンジで push してきたら、自分はどこまで call できるか」</strong>を見る画面です。\n          スタック同士の 1 対 1 (all-in) で計算するので、ポジションではなく<strong>お互いのスタック</strong>で決まります。\n        ",
   "hand.direction.callBack": "\n            自分の call レンジを求める\n          ",
   "hand.direction.pushBack": "\n            自分の push レンジを求める\n          ",
   "hand.mode.preset": "\n            プリセット (Top X%)\n          ",
@@ -134,8 +134,8 @@ export const ja: Record<string, string> = {
   "hand.callStats.pushBack": "相手が call <strong>{villainPct}%</strong> してくる前提で、自分が push +EV のハンド: <strong>{n}</strong>個 ({pPct}%) ／ ボーダー: {marginal}個。<br />相手が call ワイドだと push を狭めるべき方向に動きます。",
   "hand.banner.callerLabel.hero": "hero (自分)",
   "hand.banner.callerLabel.villain": "villain (相手)",
-  "hand.banner.noBehind.html": "\n      ℹ️ {label}=<strong>{pos}</strong>。後ろにプレイヤーがいないので\n      HU all-in モデルは厳密に有効です。\n    ",
-  "hand.banner.behind.html": "\n      ⚠ {label}=<strong>{pos}</strong>。このセクションは\n      <strong>caller=BB (最終 actor)</strong> 想定の HU all-in モデルです。\n      {label} の後ろに残ってる {n} 人 ({list}) の\n      <strong>over-call リスク</strong>は反映されません。\n      {note}\n    ",
+  "hand.banner.noBehind.html": "\n      ✅ {label}=<strong>{pos}</strong>: 後ろにプレイヤーがいないので、この 1 対 1 モデルがそのまま当てはまります。\n    ",
+  "hand.banner.behind.html": "\n      <details class=\"hand-caveat\">\n        <summary>⚠ {label}=<strong>{pos}</strong>: 後ろの {n} 人ぶんの over-call は未反映 — 実戦はもう少し硬めに</summary>\n        <div class=\"hand-caveat-body\">\n          この計算は「1 対 1 のオールイン」モデルです。{label} の後ろに残っている {n} 人 ({list}) が\n          割り込んでくるリスクは含まれていません。{note}\n        </div>\n      </details>\n    ",
   "hand.banner.note.callBack": "ここで「call OK」と出ても実戦ではより硬い range で受けるべきです。",
   "hand.banner.note.pushBack": "ここで「push OK」と出ても実戦では over-call の可能性を加味してより硬い range で push するべきです。",
 
