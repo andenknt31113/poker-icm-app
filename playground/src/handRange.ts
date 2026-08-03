@@ -3,6 +3,8 @@ import {
   ALL_169_HANDS,
   topRange,
   type HandNotation,
+  comboCountOfRange,
+  comboPctOfRange,
 } from "./handRanking.js";
 import { huEquity } from "./huEquityMatrix.js";
 import { comboCountVsHero } from "./rangeEquity.js";
@@ -227,12 +229,14 @@ export function renderRangeComparison(requiredEquity: number): void {
     //   margin <= -0.1pt   → 無色 (フォールド)
     let callable = 0;
     let marginal = 0;
+    const callableHands = new Set<HandNotation>();
     renderGrid(heroGrid, (hand) => {
       const eq = equity(hand, villainRange);
       const margin = eq - requiredEquity;
       let cls = "";
       if (margin >= MARGINAL_BAND) {
         callable++;
+        callableHands.add(hand);
         cls = heroPushClass;
       } else if (margin > -MARGINAL_BAND) {
         marginal++;
@@ -241,10 +245,12 @@ export function renderRangeComparison(requiredEquity: number): void {
       if (hand === inspectedHand) cls += " picked";
       return cls;
     });
-    const callPct = ((callable / totalHands) * 100).toFixed(0);
+    // 割合はコンボベース (ポーカーで「レンジ○%」と言うときの標準)。
+    const callPct = comboPctOfRange(callableHands).toFixed(0);
     callStats.innerHTML = t("hand.callStats.callBack", {
       req: (requiredEquity * 100).toFixed(1),
       callable,
+      callCombos: comboCountOfRange(callableHands),
       callPct,
       marginal,
     });
@@ -257,10 +263,11 @@ export function renderRangeComparison(requiredEquity: number): void {
       if (result.marginal.has(hand)) return "marginal";
       return "";
     });
-    const pPct = ((result.pushRange.size / totalHands) * 100).toFixed(1);
+    const pPct = comboPctOfRange(result.pushRange).toFixed(1);
     callStats.innerHTML = t("hand.callStats.pushBack", {
-      villainPct: ((villainRange.size / totalHands) * 100).toFixed(0),
+      villainPct: comboPctOfRange(villainRange).toFixed(0),
       n: result.pushRange.size,
+      pushCombos: comboCountOfRange(result.pushRange),
       pPct,
       marginal: result.marginal.size,
     });
@@ -271,7 +278,8 @@ export function renderRangeComparison(requiredEquity: number): void {
     const c = customVillainRange.size;
     customSelected.innerHTML = t("hand.custom.selected.html", {
       n: c,
-      pct: ((c / totalHands) * 100).toFixed(0),
+      combos: comboCountOfRange(customVillainRange),
+      pct: comboPctOfRange(customVillainRange).toFixed(0),
     });
   }
 }

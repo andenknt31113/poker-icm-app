@@ -109,3 +109,22 @@ export function comboCount(hand: HandNotation): number {
   if (hand.length === 2) return COMBOS_PAIR;
   return hand[2] === "s" ? COMBOS_SUITED : COMBOS_OFFSUIT;
 }
+
+/** 全 169 ハンドクラスの総コンボ数 (= C(52,2) = 1326)。 */
+export const TOTAL_COMBOS = 1326;
+
+/**
+ * ハンドクラス集合の総コンボ数。ポーカーで「レンジ○%」と言う場合の
+ * 標準はコンボベースなので、表示用の割合はこちらから算出する
+ * (種類ベースの割合は suited/offsuit の偏りで実頻度とズレるため)。
+ */
+export function comboCountOfRange(range: Iterable<HandNotation>): number {
+  let total = 0;
+  for (const h of range) total += comboCount(h);
+  return total;
+}
+
+/** レンジのコンボ比率 (0..100)。 */
+export function comboPctOfRange(range: Iterable<HandNotation>): number {
+  return (comboCountOfRange(range) / TOTAL_COMBOS) * 100;
+}
