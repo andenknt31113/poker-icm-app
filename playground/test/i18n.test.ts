@@ -15,8 +15,10 @@ describe("i18n t()", () => {
 
   it("{name} プレースホルダを params で置換する", () => {
     expect(t("setup.players.addMax", { n: 9 })).toBe("(最大 9 人)");
-    expect(t("hand.callStats.callBack", { req: 37.8, callable: 68, callPct: 40, marginal: 39 })).toBe(
-      "必要勝率 <strong>37.8%</strong> 以上のハンド: <strong>68</strong>個 (Top 40%) ／ ボーダーライン: 39個",
+    expect(
+      t("hand.callStats.callBack", { req: 37.8, callable: 68, callCombos: 520, callPct: 39, marginal: 2 }),
+    ).toBe(
+      "必要勝率 <strong>37.8%</strong> 以上のハンド: <strong>68</strong> 種類 / 520 コンボ (<strong>39%</strong>) ／ ボーダーライン: 2 種類",
     );
   });
 

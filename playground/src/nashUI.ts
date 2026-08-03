@@ -1,5 +1,8 @@
 import { solveHUNash } from "@poker-icm/core";
-import { ALL_169_HANDS, type HandNotation } from "./handRanking.js";
+import { ALL_169_HANDS, type HandNotation,
+  comboCountOfRange,
+  comboPctOfRange,
+} from "./handRanking.js";
 import { huEquity, hasHUMatrix } from "./huEquityMatrix.js";
 import { comboCountVsHero } from "./rangeEquity.js";
 import { renderGrid } from "./grid.js";
@@ -222,8 +225,17 @@ function runNash(): void {
 
       const sbCount = result.sbPushRange.size;
       const bbCount = result.bbCallRange.size;
-      nashSbStats.innerHTML = t("nash.stats", { n: sbCount, pct: (result.sbPushPct * 100).toFixed(1) });
-      nashBbStats.innerHTML = t("nash.stats", { n: bbCount, pct: (result.bbCallPct * 100).toFixed(1) });
+      // 割合はコンボベース (ポーカー標準)。件数は「種類 / コンボ」を併記する。
+      nashSbStats.innerHTML = t("nash.stats", {
+        n: sbCount,
+        combos: comboCountOfRange(result.sbPushRange),
+        pct: comboPctOfRange(result.sbPushRange).toFixed(1),
+      });
+      nashBbStats.innerHTML = t("nash.stats", {
+        n: bbCount,
+        combos: comboCountOfRange(result.bbCallRange),
+        pct: comboPctOfRange(result.bbCallRange).toFixed(1),
+      });
 
       const convStr = result.converged
         ? `<span style="color: var(--good)">${t("nash.converged")}</span>`
