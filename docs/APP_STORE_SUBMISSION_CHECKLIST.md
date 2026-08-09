@@ -1,7 +1,10 @@
 # App Store 提出チェックリスト (このまま上から実行)
 
-最終更新: 2026-07-23。素材の本文は `APP_STORE_LISTING.md`、ビルド手順の詳細は
+最終更新: 2026-08-09。素材の本文は `APP_STORE_LISTING.md`、ビルド手順の詳細は
 `APP_STORE_BUILD.md` を参照。ここは「提出当日に上から順に潰す」ための実行リスト。
+
+**いま残っているのは §8 (iPad スクショ登録 → 審査用に追加 → 提出) だけ。**
+画像は生成済みで `screenshots/` にコミットしてある。
 
 ## 0. 済んでいるもの (再作業不要)
 
@@ -12,6 +15,9 @@
 - [x] アプリに公開 SDK キー組み込み済み (`playground/src/iapConfig.ts`)
 - [x] スクリーンショット 7枚 (1290×2796) 生成済み (チャットで受領した zip)
 - [x] 利用規約・プライバシーポリシーの課金対応 (アプリ内表示・デプロイ済み)
+- [x] ビルド 1.0(1) を ASC にアップロード済み
+- [x] メタデータ・価格・App Privacy・年齢制限・審査メモ 入力済み (§2〜§4)
+- [x] iPad 13" スクショ (2064×2752) 生成済み → `screenshots/ipad13-{ja,en}/`
 
 ## 1. Mac: ビルド → 実機確認 → アップロード
 
@@ -66,6 +72,55 @@ npm install && npm run build && npx cap sync ios && npx cap open ios
 
 - [ ] ビルドをバージョンに添付 → 審査へ提出
 - [ ] 審査ステータスはメール通知。リジェクト時は本文を Claude に貼れば対応案を出します
+
+## 7.5 スクリーンショットの作り直し
+
+`playground/e2e/store-screenshots.mjs` が全画面を撮り直す。乱数は seed 固定なので
+同じビルドなら何度実行しても同じ画像が出る。
+
+```bash
+npm install && npm run build
+cd playground
+node e2e/store-screenshots.mjs --device ipad13   --lang ja --out ../screenshots/ipad13-ja
+node e2e/store-screenshots.mjs --device ipad13   --lang en --out ../screenshots/ipad13-en
+node e2e/store-screenshots.mjs --device iphone67 --lang ja --out ../screenshots/iphone67-ja
+```
+
+出力は 6 枚。`01`〜`05` がストア掲載用 (`APP_STORE_LISTING.md` §8 の構成案に対応)、
+`06-paywall.png` は IAP の「審査に関する情報」用。
+
+- サイズは viewport × deviceScaleFactor で作る (iPad13 = 1032×1376 @2x = 2064×2752)。
+  ASC は 1px でも違うと弾くので、`--device` の定義を勝手に変えないこと。
+- `06` は `window.webkit.messageHandlers.bridge` を注入してネイティブ判定を通し、
+  実機と同じ「Proにアップグレード / 購入を復元」入りのシートを撮っている。
+  `window.Capacitor` を差し替えるだけでは足りない (@capacitor/core が後から上書きする)。
+- `06` の価格 `¥3,480` はスクリプト内の `STORE_PRICE` 定数。実機では RevenueCat の
+  `product.priceString` が入る位置。ASC 側で価格を変えたらこの定数も直す。
+
+## 8. 残作業: iPad スクショ登録 → 審査用に追加 → 提出
+
+`scripts/asc-submit.mjs` が App Store Connect API を叩く (依存パッケージなし)。
+**Mac 側で実行すること** — Claude Code on the web のコンテナからは
+`api.appstoreconnect.apple.com` が egress ポリシーで遮断されていて到達できない。
+
+```bash
+export ASC_KEY_PATH=~/Downloads/AuthKey_XUG3J47FGA.p8   # ASC の .p8 秘密鍵
+
+node scripts/asc-submit.mjs status                      # まず現状確認
+node scripts/asc-submit.mjs upload-screenshots --dir screenshots/ipad13-ja --locale ja
+node scripts/asc-submit.mjs upload-screenshots --dir screenshots/ipad13-en --locale en-US
+node scripts/asc-submit.mjs upload-iap-screenshot --file screenshots/ipad13-ja/06-paywall.png
+node scripts/asc-submit.mjs prepare-submission          # 「審査用に追加」まで
+```
+
+- [ ] `status` で iPad13 未登録のロケールを確認 (en-US が無ければ ja だけでよい)
+- [ ] `upload-screenshots` を必要なロケール分だけ実行
+- [ ] `upload-iap-screenshot` で `pro_lifetime` の審査用スクショを登録
+- [ ] `prepare-submission` でバージョン 1.0 と IAP を審査サブミッションに載せる
+- [ ] **ASC の画面で内容を確認して「審査へ提出」を押す** (スクリプトは提出しない)
+
+`.p8` は再ダウンロードできない。無ければ ASC → ユーザとアクセス → 統合 →
+App Store Connect API で再発行し、`KEY_ID` を `scripts/asc-submit.mjs` 側も直す。
 
 ## 7. 承認後
 
