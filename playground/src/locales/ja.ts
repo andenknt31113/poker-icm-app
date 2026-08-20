@@ -220,15 +220,10 @@ export const ja: Record<string, string> = {
           <strong>🎲 練習</strong>タブでクイズに答えながら感覚を掴む
         </li>
       </ol>
-      <p class="hint">どちらから始めても OK。行き来しながら覚えられます。</p>
-    `,
-  "onboarding.step3.title": "📖 困ったら",
-  "onboarding.step3.body": `
-      <p>
-        ヘッダー右上の <strong>❓</strong> ボタンから、いつでもこの使い方ガイドと
-        ICM / Bubble Factor などの用語解説を開けます。
+      <p class="hint">
+        どちらから始めても OK。困ったときはヘッダー右上の <strong>❓</strong> から、
+        いつでも使い方ガイドと用語解説を開けます。
       </p>
-      <p class="hint">さっそく始めましょう。</p>
     `,
   "onboarding.skip": "スキップ",
   "onboarding.next": "次へ →",

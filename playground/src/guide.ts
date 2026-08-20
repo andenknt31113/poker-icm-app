@@ -32,10 +32,6 @@ const ONBOARDING_STEPS: { title: string; body: string }[] = [
     title: t("onboarding.step2.title"),
     body: t("onboarding.step2.body"),
   },
-  {
-    title: t("onboarding.step3.title"),
-    body: t("onboarding.step3.body"),
-  },
 ];
 
 let onboardingStep = 0;
