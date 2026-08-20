@@ -16,6 +16,18 @@ export default async function testTutorialIntro({ baseURL, createContext }) {
     await page.click('.tab-btn[data-tab="practice"]');
 
     await page.waitForSelector("#tutorial-intro-start-btn", { state: "visible" });
+
+    // 初回 (案内カード表示中) はモード切替・成績/難易度・成績の推移が隠れている
+    const chromeHidden = await page.evaluate(() =>
+      [".practice-mode", ".practice-controls", "#practice-progress"].every((sel) => {
+        const el = document.querySelector(sel);
+        return !!el && el.offsetParent === null;
+      }),
+    );
+    if (!chromeHidden) {
+      throw new Error("案内カード表示中に練習タブのモード切替/成績/難易度が表示されている");
+    }
+
     await page.click("#tutorial-intro-start-btn");
 
     await page.waitForSelector(".tutorial-narration-title", { state: "visible" });

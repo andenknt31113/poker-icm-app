@@ -3271,3 +3271,15 @@ footer a {
     max-width: 560px;
   }
 }
+
+/* 練習タブ初回 (導入コース案内カード表示中) と導入コース進行中は、
+   モード切替・連続正解/難易度・成績の推移を隠して案内に集中させる。
+   案内カードの有無は DOM から :has() で導出するため JS の状態管理は不要。 */
+body.tutorial-active .practice-mode,
+body.tutorial-active .practice-controls,
+body.tutorial-active #practice-progress,
+body:has(.tutorial-intro-card) .practice-mode,
+body:has(.tutorial-intro-card) .practice-controls,
+body:has(.tutorial-intro-card) #practice-progress {
+  display: none;
+}
