@@ -23,6 +23,7 @@ import testPositionWarnZero from "./tests/06-position-warn-zero.mjs";
 import testPracticeCtaConsolidation from "./tests/07-practice-cta-consolidation.mjs";
 import testLangSwitch from "./tests/08-lang-switch.mjs";
 import testFreemiumGate from "./tests/09-freemium-gate.mjs";
+import testAddPlayerAutoPosition from "./tests/10-add-player-auto-position.mjs";
 
 async function main() {
   const t0 = Date.now();
@@ -72,6 +73,10 @@ async function main() {
     {
       name: "freemium 3人ルール: 3人以下は編集可 / 4人以上と追加はPro / プリセット閲覧無料",
       run: () => testFreemiumGate({ baseURL, createContext }),
+    },
+    {
+      name: "プレイヤー追加のポジション自動採番 (4人→5人=UTG, →6人=HJ)",
+      run: () => testAddPlayerAutoPosition({ baseURL, createContext }),
     },
   ];
 

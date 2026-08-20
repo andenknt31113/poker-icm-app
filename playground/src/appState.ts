@@ -39,6 +39,20 @@ export function positionsForN(n: number): Position[] {
   return POSITION_SETS[n] ?? [];
 }
 
+/**
+ * N人テーブルで未使用のポジションを1つ返す (プレイヤー追加時の自動採番用)。
+ *
+ * 既存プレイヤーのポジションは動かさない前提で、「N人の正規セットのうち
+ * まだ誰も使っていない最初のポジション」を返す (例: 4人 BB/SB/BTN/CO に
+ * 5人目を追加 → UTG)。誰もポジションを設定していないテーブルでは、勝手に
+ * 採番を始めず "" を返す (ポジションを使わない運用を尊重する)。
+ */
+export function nextFreePosition(n: number, used: readonly Position[]): Position {
+  const usedSet = new Set<Position>(used.filter((p) => p !== ""));
+  if (usedSet.size === 0) return "";
+  return positionsForN(n).find((p) => !usedSet.has(p)) ?? "";
+}
+
 export interface Player {
   id: number;
   stack: number;
