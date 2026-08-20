@@ -235,8 +235,8 @@ export function recompute(): void {
       </div>
     `;
 
-    // レンジ比較
-    renderRangeComparison(eq.dollarEV);
+    // レンジ比較 (戻り値の要約は状況サマリーの一行判定に使う)
+    const rangeVerdict = renderRangeComparison(eq.dollarEV);
 
     // Hero サマリー
     renderHeroSummary({
@@ -250,6 +250,7 @@ export function recompute(): void {
       bf,
       requiredEq: eq.dollarEV,
       rp: eq.riskPremium,
+      rangeVerdict,
     });
 
     // 状態を保存

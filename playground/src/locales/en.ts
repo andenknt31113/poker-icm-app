@@ -501,6 +501,11 @@ export const en: Record<string, string> = {
   "calc.summary.bfLabel": "BF ⓘ",
   "calc.summary.reqLabel": "Req. eq ⓘ", // fable レビュー済: ピル幅優先の短縮形
   "calc.summary.rpLabel": "RP ⓘ",
+  "calc.summary.verdict.call": "⚖️ vs their {villain}% shove range: call your top <strong>{hero}%</strong> of hands",
+  "calc.summary.verdict.callNone": "⚖️ vs their {villain}% shove range: almost no hands can call",
+  "calc.summary.verdict.push": "⚖️ vs their {villain}% calling range: shove your top <strong>{hero}%</strong> of hands",
+  "calc.summary.verdict.pushNone": "⚖️ vs their {villain}% calling range: almost no hands can shove",
+  "calc.summary.verdict.link": "Hand ranges ›",
 
   // ===== 警告 (calculator.ts) =====
   "calc.warn.position.html": "\n      ⚠ <strong>Position reversed</strong>: action order is <code>{heroPos}({heroAct}) → {villainPos}({villainAct})</code>.\n      In practice <strong>hero ({heroPos}) acts first</strong>, so calling a villain ({villainPos}) open shove can’t happen.\n      (The call math still runs, but swapping positions is more realistic.)\n    ",

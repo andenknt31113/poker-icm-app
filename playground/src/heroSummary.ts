@@ -6,7 +6,9 @@ import { t } from "./i18n.js";
 import { players } from "./appState.js";
 import { isOnboardingDone } from "./guide.js";
 import { openInfoModal } from "./infoModal.js";
+import { applyTab } from "./tabs.js";
 import { STORAGE_KEYS, readFlag, writeFlag } from "./storage.js";
+import type { RangeVerdictSummary } from "./handRange.js";
 
 const heroSummaryEl = $<HTMLDivElement>("hero-summary");
 
@@ -43,6 +45,33 @@ export interface HeroSummaryArg {
   bf: number;
   requiredEq: number;
   rp: number;
+  rangeVerdict: RangeVerdictSummary;
+}
+
+// 一行判定で「ほぼ無し」表示に切り替えるコンボ%の下限。
+const VERDICT_NONE_BELOW_PCT = 0.5;
+
+/** 「結局コール(push)していいか」の一行判定 HTML。villain 未指定時は空文字。 */
+function verdictLineHtml(hasVillain: boolean, v: RangeVerdictSummary): string {
+  if (!hasVillain) return "";
+  const none = v.heroPct < VERDICT_NONE_BELOW_PCT;
+  const key =
+    v.direction === "callBack"
+      ? none
+        ? "calc.summary.verdict.callNone"
+        : "calc.summary.verdict.call"
+      : none
+        ? "calc.summary.verdict.pushNone"
+        : "calc.summary.verdict.push";
+  const text = t(key, {
+    villain: v.villainPct.toFixed(0),
+    hero: v.heroPct.toFixed(0),
+  });
+  return `
+      <button type="button" class="hero-summary-verdict" id="hero-summary-verdict-btn">
+        <span>${text}</span>
+        <span class="hero-summary-verdict-link">${t("calc.summary.verdict.link")}</span>
+      </button>`;
 }
 
 /** BF 値 → 色クラス。 */
@@ -132,6 +161,7 @@ export function renderHeroSummary(a: HeroSummaryArg): void {
           <div class="hero-summary-value warn">+${(a.rp * 100).toFixed(1)}<span class="unit">%</span></div>
         </div>
       </div>
+      ${verdictLineHtml(hasVillain, a.rangeVerdict)}
     </div>
   `;
 }
@@ -158,6 +188,12 @@ export function initHeroSummary(): void {
         "aria-label",
         nextCollapsed ? t("calc.summary.expand") : t("calc.summary.collapse"),
       );
+      return;
+    }
+    // 一行判定タップ → ハンド比較タブへ (根拠のレンジグリッドを見せる)
+    const verdictBtn = target.closest<HTMLButtonElement>("#hero-summary-verdict-btn");
+    if (verdictBtn) {
+      applyTab("hand");
       return;
     }
     const infoEl = target.closest<HTMLElement>("[data-info]");
