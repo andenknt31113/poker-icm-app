@@ -788,6 +788,36 @@ body {
   color: var(--bad);
 }
 
+/* 一行判定 (「結局コールしていいか」)。タップでハンド比較タブへ飛ぶボタン。 */
+.hero-summary-verdict {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  margin-top: 6px;
+  padding: 7px 8px;
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+}
+.hero-summary-verdict strong {
+  color: var(--accent);
+  font-family: var(--mono);
+}
+.hero-summary-verdict-link {
+  flex-shrink: 0;
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
 /* ===== シナリオプリセット ===== */
 .scenario-presets {
   display: flex;

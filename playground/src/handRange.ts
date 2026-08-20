@@ -182,7 +182,18 @@ function renderInspectDetail(villainRange: Set<HandNotation>, requiredEquity: nu
   });
 }
 
-export function renderRangeComparison(requiredEquity: number): void {
+/**
+ * レンジ比較の要約 (状況サマリーの一行判定用)。
+ * direction が callBack なら heroPct は「コール可ハンドのコンボ%」、
+ * pushBack なら「push +EV ハンドのコンボ%」。villainPct は相手レンジのコンボ%。
+ */
+export interface RangeVerdictSummary {
+  direction: "callBack" | "pushBack";
+  villainPct: number;
+  heroPct: number;
+}
+
+export function renderRangeComparison(requiredEquity: number): RangeVerdictSummary {
   const pushPct = Number(pushRangeInput.value);
   pushPctLabel.textContent = String(pushPct);
 
@@ -220,6 +231,8 @@ export function renderRangeComparison(requiredEquity: number): void {
   );
 
   const totalHands = ALL_169_HANDS.length;
+  const villainPct = comboPctOfRange(villainRange);
+  let verdict: RangeVerdictSummary;
 
   if (direction === "callBack") {
     // 相手 push に対し自分 call できるハンド。
@@ -246,15 +259,16 @@ export function renderRangeComparison(requiredEquity: number): void {
       return cls;
     });
     // 割合はコンボベース (ポーカーで「レンジ○%」と言うときの標準)。
-    const callPct = comboPctOfRange(callableHands).toFixed(0);
+    const callComboPct = comboPctOfRange(callableHands);
     callStats.innerHTML = t("hand.callStats.callBack", {
       req: (requiredEquity * 100).toFixed(1),
       callable,
       callCombos: comboCountOfRange(callableHands),
-      callPct,
+      callPct: callComboPct.toFixed(0),
       marginal,
     });
     renderInspectDetail(villainRange, requiredEquity);
+    verdict = { direction, villainPct, heroPct: callComboPct };
   } else {
     // 逆算: 相手 call (villainRange) に対し自分が push +EV になるハンド
     const result = computePushBackRange(villainRange);
@@ -263,14 +277,15 @@ export function renderRangeComparison(requiredEquity: number): void {
       if (result.marginal.has(hand)) return "marginal";
       return "";
     });
-    const pPct = comboPctOfRange(result.pushRange).toFixed(1);
+    const pushComboPct = comboPctOfRange(result.pushRange);
     callStats.innerHTML = t("hand.callStats.pushBack", {
-      villainPct: comboPctOfRange(villainRange).toFixed(0),
+      villainPct: villainPct.toFixed(0),
       n: result.pushRange.size,
       pushCombos: comboCountOfRange(result.pushRange),
-      pPct,
+      pPct: pushComboPct.toFixed(1),
       marginal: result.marginal.size,
     });
+    verdict = { direction, villainPct, heroPct: pushComboPct };
   }
 
   // カスタムモードのカウント表示
@@ -282,6 +297,8 @@ export function renderRangeComparison(requiredEquity: number): void {
       pct: comboPctOfRange(customVillainRange).toFixed(0),
     });
   }
+
+  return verdict;
 }
 
 // ハンドレンジ比較セクションの hero ポジション バナー

@@ -24,6 +24,7 @@ import testPracticeCtaConsolidation from "./tests/07-practice-cta-consolidation.
 import testLangSwitch from "./tests/08-lang-switch.mjs";
 import testFreemiumGate from "./tests/09-freemium-gate.mjs";
 import testAddPlayerAutoPosition from "./tests/10-add-player-auto-position.mjs";
+import testSummaryCallVerdict from "./tests/11-summary-call-verdict.mjs";
 
 async function main() {
   const t0 = Date.now();
@@ -77,6 +78,10 @@ async function main() {
     {
       name: "プレイヤー追加のポジション自動採番 (4人→5人=UTG, →6人=HJ)",
       run: () => testAddPlayerAutoPosition({ baseURL, createContext }),
+    },
+    {
+      name: "状況サマリー一行判定 (コール可%表示 → タップでハンド比較へ)",
+      run: () => testSummaryCallVerdict({ baseURL, createContext }),
     },
   ];
 

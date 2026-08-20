@@ -498,6 +498,11 @@ export const ja: Record<string, string> = {
   "calc.summary.bfLabel": "BF ⓘ",
   "calc.summary.reqLabel": "必要勝率 ⓘ",
   "calc.summary.rpLabel": "RP ⓘ",
+  "calc.summary.verdict.call": "⚖️ 相手のpushレンジ ({villain}%) には、上位 <strong>{hero}%</strong> のハンドでコール可",
+  "calc.summary.verdict.callNone": "⚖️ 相手のpushレンジ ({villain}%) にコールできるハンドはほぼ無し",
+  "calc.summary.verdict.push": "⚖️ 相手のcallレンジ ({villain}%) には、上位 <strong>{hero}%</strong> のハンドでpush可",
+  "calc.summary.verdict.pushNone": "⚖️ 相手のcallレンジ ({villain}%) にpushできるハンドはほぼ無し",
+  "calc.summary.verdict.link": "ハンド比較 ›",
 
   // ===== 警告 (calculator.ts) =====
   "calc.warn.position.html": "\n      ⚠ <strong>ポジション逆転</strong>: 行動順は <code>{heroPos}({heroAct}) → {villainPos}({villainAct})</code>。\n      実戦では <strong>hero ({heroPos}) が先に行動</strong>するため、villain ({villainPos}) の open push に対して call することはあり得ません。\n      (call 計算は math 上は動きますが、ポジを入れ替える方が現実的)\n    ",
