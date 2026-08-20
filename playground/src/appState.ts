@@ -68,13 +68,11 @@ export function allocPlayerId(): number {
 
 export const players: Player[] = [];
 
-/** アンティ入力の解釈モード: テーブル合計 か 1人あたり。 */
-export type AnteMode = "total" | "perPlayer";
-
 export interface PersistedState {
   players: { stack: number; role: Role; position: Position }[];
   payouts: number[];
-  nash: { sb: number; bb: number; ante: number; anteMode: AnteMode };
+  // ante は常にテーブル合計 (アンティ入力は「アンティ合計」1つだけ)
+  nash: { sb: number; bb: number; ante: number };
 }
 
 /**

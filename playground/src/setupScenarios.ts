@@ -13,15 +13,12 @@ import {
   DEFAULT_SB,
   DEFAULT_BB,
   DEFAULT_ANTE,
-  type AnteMode,
 } from "./appState.js";
 import {
   payoutsArr,
   nashSbInput,
   nashBbInput,
   nashAnteInput,
-  readAnteMode,
-  setAnteMode,
 } from "./domRefs.js";
 import { renderPlayers, replacePlayers } from "./setupPlayers.js";
 import { setPayouts } from "./setupPayouts.js";
@@ -39,7 +36,6 @@ interface Scenario {
   sb: number;
   bb: number;
   ante: number; // テーブル合計
-  anteMode?: AnteMode; // 省略時は "total" 扱い (組み込みプリセット)
 }
 
 // 各プリセットは call 分析として成立する構成 (hero=BB、villain はそれより先に行動するポジション)
@@ -142,7 +138,6 @@ function applyNashParams(s: Scenario): void {
   nashSbInput.value = String(s.sb);
   nashBbInput.value = String(s.bb);
   nashAnteInput.value = String(s.ante);
-  setAnteMode(s.anteMode ?? "total");
 }
 
 function applyScenario(scenarioId: string): void {
@@ -184,7 +179,6 @@ function captureCurrentScenario(): Scenario {
   const sbV = Number(nashSbInput.value) || DEFAULT_SB;
   const bbV = Number(nashBbInput.value) || DEFAULT_BB;
   const anteV = Number(nashAnteInput.value) || 0;
-  const anteMode = readAnteMode();
   return {
     players: players.map((p) => ({
       stack: p.stack,
@@ -195,7 +189,6 @@ function captureCurrentScenario(): Scenario {
     sb: sbV,
     bb: bbV,
     ante: anteV,
-    anteMode,
   };
 }
 

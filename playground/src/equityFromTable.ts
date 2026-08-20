@@ -22,7 +22,6 @@ type EquityTableShape = {
 };
 
 const TABLE = equityTableJson as EquityTableShape;
-export const EQUITY_TABLE_META = TABLE._meta;
 
 /** 169 ハンドの総数（topRange と同じ）。 */
 const TOTAL_HANDS = 169;
@@ -80,15 +79,4 @@ export function tableEquityVsRange(
   }
 
   return tableEquityVsTop(hand, bestX);
-}
-
-/** テーブルが正常にロードできているか（簡易チェック）。 */
-export function hasEquityTable(): boolean {
-  // _meta 以外に hand キーが存在することを確認
-  let count = 0;
-  for (const k of Object.keys(TABLE)) {
-    if (k !== "_meta") count++;
-    if (count > 0) break;
-  }
-  return count > 0;
 }

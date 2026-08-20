@@ -32,7 +32,6 @@ import {
   nashBbInput,
   nashAnteInput,
   saveState,
-  readAnteMode,
 } from "./domRefs.js";
 import { fmt, fmtPct, fmtSigned } from "./format.js";
 import { renderHeroSummary, hideHeroSummary, initHeroSummary } from "./heroSummary.js";
@@ -300,17 +299,13 @@ export function initCalculator(): void {
     // 表示される数値が変わるため統一しないこと。
     const sb = Number(nashSbInput.value) || 0;
     const bb = Number(nashBbInput.value) || 0;
-    const anteRawV = Number(nashAnteInput.value) || 0;
-    const anteMode = readAnteMode();
-    const totalAnte =
-      anteMode === "perPlayer" ? anteRawV * players.length : anteRawV;
+    const totalAnte = Number(nashAnteInput.value) || 0; // アンティ入力は常にテーブル合計
     const dead = sb + bb + totalAnte;
 
     callInput.value = risk.toFixed(1);
     potWinInput.value = (risk + dead).toFixed(1);
     callManualOverride = false; // autofill 押したら自動追従モードに戻す
 
-    const modeLabel = anteMode === "perPlayer" ? t("calc.autofill.modePerPlayer", { ante: anteRawV, n: players.length }) : t("calc.autofill.modeTotal");
     autofillHint.innerHTML = t("calc.autofill.result", {
       risk,
       pot: (risk + dead).toFixed(1),
@@ -319,7 +314,6 @@ export function initCalculator(): void {
       sb,
       bb,
       ante: totalAnte.toFixed(1),
-      mode: modeLabel,
     });
     recompute();
   });
