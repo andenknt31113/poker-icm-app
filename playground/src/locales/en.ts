@@ -224,15 +224,10 @@ export const en: Record<string, string> = {
           Answer quizzes in the <strong>🎲 Practice</strong> tab to build a feel
         </li>
       </ol>
-      <p class="hint">Start from either one — you learn by going back and forth.</p>
-    `,
-  "onboarding.step3.title": "📖 If you get stuck",
-  "onboarding.step3.body": `
-      <p>
-        The <strong>❓</strong> button at the top right opens this how-to guide and
-        term explanations (ICM, Bubble Factor, and more) anytime.
+      <p class="hint">
+        Start from either one — and if you get stuck, the <strong>❓</strong> at the
+        top right opens the how-to guide and term explanations anytime.
       </p>
-      <p class="hint">Let’s get started.</p>
     `,
   "onboarding.skip": "Skip",
   "onboarding.next": "Next →",
