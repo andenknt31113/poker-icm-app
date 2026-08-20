@@ -8,7 +8,6 @@ import {
   players,
   DEFAULT_SB,
   DEFAULT_BB,
-  type AnteMode,
   type PersistedState,
 } from "./appState.js";
 import { STORAGE_KEYS, writeJson } from "./storage.js";
@@ -36,43 +35,6 @@ export const nashSbInput = $<HTMLInputElement>("nash-sb");
 export const nashBbInput = $<HTMLInputElement>("nash-bb");
 export const nashAnteInput = $<HTMLInputElement>("nash-ante");
 
-// ===== アンティモード (合計 / 1人あたり) =====
-//
-// 重要な現状の不変条件: index.html には input[name="ante-mode"] のラジオが存在しない
-// (アンティ入力は #nash-ante の「アンティ合計」1つだけ)。したがって
-//   - readAnteMode() は常に "total" を返す
-//   - setAnteMode() は常に何もしない
-//   - anteModeRadios() は常に空
-// となり、各計算側の anteMode === "perPlayer" 分岐は現行 UI では到達しない。
-// ラジオを再導入すれば分岐がそのまま生き返る設計として意図的に残している
-// (HRC 互換の「1人あたり」入力を将来復活させるための受け口)。
-// この 3 関数が DOM を触る唯一の口なので、復活時に変更するのはここと index.html だけ。
-const ANTE_MODE_SELECTOR = 'input[name="ante-mode"]';
-const DEFAULT_ANTE_MODE: AnteMode = "total";
-
-/**
- * 選択中のアンティモードを読む。未選択・ラジオ不在時は "total"。
- * 従来は 5 箇所 (saveState / autofill / シナリオ保存 / pushBack 逆算 / Nash solve) が
- * 同じ querySelector + `as` キャストを重複して書いていたため、唯一の読み取り口に集約した。
- */
-export function readAnteMode(): AnteMode {
-  const checked = document.querySelector<HTMLInputElement>(`${ANTE_MODE_SELECTOR}:checked`);
-  return checked?.value === "perPlayer" ? "perPlayer" : DEFAULT_ANTE_MODE;
-}
-
-/** 指定モードのラジオを選択状態にする (シナリオ適用・復元時)。ラジオ不在なら何もしない。 */
-export function setAnteMode(mode: AnteMode): void {
-  const radio = document.querySelector<HTMLInputElement>(
-    `${ANTE_MODE_SELECTOR}[value="${mode}"]`,
-  );
-  if (radio) radio.checked = true;
-}
-
-/** アンティモードのラジオすべて (change 配線用)。現行 HTML では空。 */
-export function anteModeRadios(): NodeListOf<HTMLInputElement> {
-  return document.querySelectorAll<HTMLInputElement>(ANTE_MODE_SELECTOR);
-}
-
 export function saveState(): void {
   const state: PersistedState = {
     players: players.map((p) => ({
@@ -85,7 +47,6 @@ export function saveState(): void {
       sb: Number(nashSbInput.value) || DEFAULT_SB,
       bb: Number(nashBbInput.value) || DEFAULT_BB,
       ante: Number(nashAnteInput.value) || 0,
-      anteMode: readAnteMode(),
     },
   };
   writeJson(STORAGE_KEYS.appState, state);

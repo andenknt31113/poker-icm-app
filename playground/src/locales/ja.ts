@@ -238,8 +238,6 @@ export const ja: Record<string, string> = {
   // ===== 使い方ガイド (guide.ts) =====
   "guide.title": "📖 使い方ガイド",
   "guide.close.aria": "閉じる",
-  "guide.reopenBtn": "🔄 もう一度はじめのガイドを見る",
-  "guide.legalLink": "📄 利用規約・プライバシーポリシー",
   // アプリ版のみ表示 (guide.ts proNoteHtml)。価格は書かない。
   "guide.proNote.html":
     "ℹ️ シナリオプリセット・計算結果・ナッシュ均衡・練習はすべて無料。<strong>3人までのテーブルはスタック・ペイ構造とも自由に編集できます</strong>。4人以上のテーブルの編集とシナリオ保存は 🔒 Pro（買い切り）機能です。",
@@ -469,9 +467,7 @@ export const ja: Record<string, string> = {
   "calc.autofill.detailsSummary": "▸ 計算の内訳",
   "calc.autofill.err.needHV": "⚠ 🎯自分と⚔️相手を1人ずつ指定してください",
   "calc.autofill.err.zeroStack": "⚠ スタックが0です",
-  "calc.autofill.modeTotal": "合計",
-  "calc.autofill.modePerPlayer": "1人{ante}×{n}人",
-  "calc.autofill.result": "✓ コール <strong>{risk}</strong>, 純利得 <strong>{pot}</strong> = リスク {risk2} + 死に金 {dead} (SB {sb} + BB {bb} + アンティ {ante} [{mode}])",
+  "calc.autofill.result": "✓ コール <strong>{risk}</strong>, 純利得 <strong>{pot}</strong> = リスク {risk2} + 死に金 {dead} (SB {sb} + BB {bb} + アンティ {ante})",
   // 「▸ 計算の内訳」details 本体 (Phase B 抽出)
   "calc.autofill.potComp": "📊 ポット構成",
   "calc.autofill.heroBlind": "自分({pos}) blind: <code>{v}</code> <span class=\"muted\">(sunk)</span>",

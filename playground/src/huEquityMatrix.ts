@@ -24,7 +24,6 @@ interface HUMatrixShape {
 }
 
 const TABLE = huMatrixJson as HUMatrixShape;
-export const HU_MATRIX_META = TABLE._meta;
 
 /**
  * ヒューリスティック equity 近似（テーブル欠損時の fallback）。

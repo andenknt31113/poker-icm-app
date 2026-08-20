@@ -20,9 +20,6 @@ import {
   nashBbInput,
   nashAnteInput,
   saveState,
-  readAnteMode,
-  setAnteMode,
-  anteModeRadios,
 } from "./domRefs.js";
 
 const nashSolveBtn = $<HTMLButtonElement>("nash-solve");
@@ -187,10 +184,8 @@ function runNash(): void {
     nashStatus.innerHTML = `<span class="error">${t("nash.err.ante")}</span>`;
     return;
   }
-  // ante モード判定: total なら人数で割る、perPlayer ならそのまま
-  const anteMode = readAnteMode();
-  const ante =
-    anteMode === "perPlayer" ? anteRaw : anteRaw / Math.max(1, stacks.length);
+  // アンティ入力はテーブル合計なので1人あたりに換算
+  const ante = anteRaw / Math.max(1, stacks.length);
 
   // ボタンを「計算中…」に
   nashSolveBtn.disabled = true;
@@ -277,14 +272,9 @@ export function initNashUI(): void {
     nashBbInput.value = String(persistedState.nash.bb);
     nashAnteInput.value = String(persistedState.nash.ante);
   }
-  setAnteMode("total");
-
   // Nash 入力変更時に状態保存
   [nashSbInput, nashBbInput, nashAnteInput].forEach((el) => {
     el.addEventListener("input", saveState);
-  });
-  anteModeRadios().forEach((el) => {
-    el.addEventListener("change", saveState);
   });
 
   // 初期描画（空のグリッド）

@@ -848,40 +848,6 @@ body {
   color: #000;
 }
 
-.ante-mode-row {
-  display: flex;
-  margin-top: 6px;
-  font-size: 11px;
-  font-weight: normal;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  overflow: hidden;
-  background: var(--bg);
-}
-.ante-mode-opt {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 8px 6px;
-  color: var(--muted);
-  text-align: center;
-  border-right: 1px solid var(--border);
-  transition: background 0.1s;
-}
-.ante-mode-opt:last-child {
-  border-right: none;
-}
-.ante-mode-opt input[type="radio"] {
-  display: none;
-}
-.ante-mode-opt:has(input:checked) {
-  background: var(--accent);
-  color: #000;
-  font-weight: bold;
-}
-
 .players-actions {
   display: flex;
   gap: 8px;
@@ -1638,15 +1604,6 @@ input[type="range"]::-moz-range-thumb {
   font-weight: normal;
   color: var(--muted);
 }
-.round-table-center {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  color: var(--muted);
-  font-size: 11px;
-}
 .round-table-pot {
   position: absolute;
   top: 50%;
@@ -2028,9 +1985,6 @@ input[type="range"]::-moz-range-thumb {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
-}
-.progress-breakdown-grid-2 {
-  grid-template-columns: repeat(2, 1fr);
 }
 .progress-breakdown-cell {
   background: var(--card);

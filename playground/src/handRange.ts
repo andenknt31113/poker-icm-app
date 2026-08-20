@@ -24,7 +24,6 @@ import {
   nashSbInput,
   nashBbInput,
   nashAnteInput,
-  readAnteMode,
 } from "./domRefs.js";
 import { STORAGE_KEYS, readJson, writeJson } from "./storage.js";
 
@@ -92,9 +91,8 @@ function computePushBackRange(villainCallRange: Set<HandNotation>): PushBackResu
   const sb = Number(nashSbInput.value) || DEFAULT_SB;
   const bb = Number(nashBbInput.value) || DEFAULT_BB;
   const anteRaw = Number(nashAnteInput.value) || 0;
-  const anteMode = readAnteMode();
-  const ante =
-    anteMode === "perPlayer" ? anteRaw : anteRaw / Math.max(1, stacks.length);
+  // アンティ入力はテーブル合計なので1人あたりに換算
+  const ante = anteRaw / Math.max(1, stacks.length);
   const totalAnte = ante * stacks.length;
 
   const baseStacks = stacks.map((s) => s - ante);

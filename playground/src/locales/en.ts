@@ -242,8 +242,6 @@ export const en: Record<string, string> = {
   // ===== 使い方ガイド (guide.ts) =====
   "guide.title": "📖 How-to guide",
   "guide.close.aria": "Close",
-  "guide.reopenBtn": "🔄 See the intro guide again",
-  "guide.legalLink": "📄 Terms & Privacy Policy",
   // アプリ版のみ表示 (guide.ts proNoteHtml)。価格は書かない。
   "guide.proNote.html":
     "ℹ️ Scenario presets, results, Nash equilibrium, and practice are all free. <strong>Tables with up to 3 players are fully editable (stacks & payouts)</strong>. Editing tables with 4+ players and saving scenarios are 🔒 Pro (one-time purchase) features.",
@@ -472,9 +470,7 @@ export const en: Record<string, string> = {
   "calc.autofill.detailsSummary": "▸ Calculation breakdown",
   "calc.autofill.err.needHV": "⚠ Set exactly one 🎯 you and one ⚔️ villain",
   "calc.autofill.err.zeroStack": "⚠ Stack is 0",
-  "calc.autofill.modeTotal": "total",
-  "calc.autofill.modePerPlayer": "{ante} each × {n}",
-  "calc.autofill.result": "✓ Call <strong>{risk}</strong>, net gain <strong>{pot}</strong> = risk {risk2} + dead money {dead} (SB {sb} + BB {bb} + ante {ante} [{mode}])",
+  "calc.autofill.result": "✓ Call <strong>{risk}</strong>, net gain <strong>{pot}</strong> = risk {risk2} + dead money {dead} (SB {sb} + BB {bb} + ante {ante})",
   // 「▸ 計算の内訳」details 本体 (Phase B 抽出)
   "calc.autofill.potComp": "📊 Pot composition",
   "calc.autofill.heroBlind": "You ({pos}) blind: <code>{v}</code> <span class=\"muted\">(sunk)</span>",
