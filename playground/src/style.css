@@ -2367,8 +2367,11 @@ input[type="range"]::-moz-range-thumb {
   background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, transparent), color-mix(in srgb, var(--warn) 70%, var(--accent)));
   color: #051018;
 }
-/* チュートリアル中は設定に取り込むボタンを隠す (call/fold 判定に集中させる) */
-body.tutorial-active #practice-apply-btn {
+/* チュートリアル中は取り込みボタンと通常の「次へ/次の問題」を隠し、
+   教訓カード内の「次の問題へ →」だけを唯一の進行 CTA にする */
+body.tutorial-active #practice-apply-btn,
+body.tutorial-active #practice-next-btn,
+body.tutorial-active #practice-next-btn-top {
   display: none;
 }
 
