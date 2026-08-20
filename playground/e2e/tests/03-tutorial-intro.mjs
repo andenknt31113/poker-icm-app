@@ -29,6 +29,20 @@ export default async function testTutorialIntro({ baseURL, createContext }) {
     }
     await page.waitForSelector("#tutorial-start-problem-btn", { state: "visible" });
 
+    // 1問目に回答 → 進行 CTA は教訓カードの「次の問題へ」1つだけ
+    // (通常モードの 次へ/次の問題/取り込み は tutorial-active 中は非表示)
+    await page.click("#tutorial-start-problem-btn");
+    await page.waitForSelector('.practice-btn[data-answer="call"]', { state: "visible" });
+    await page.click('.practice-btn[data-answer="call"]');
+    await page.waitForSelector("#tutorial-next-btn", { state: "visible" });
+    for (const id of ["practice-next-btn", "practice-next-btn-top", "practice-apply-btn"]) {
+      const visible = await page.evaluate((elId) => {
+        const el = document.getElementById(elId);
+        return !!el && el.offsetParent !== null;
+      }, id);
+      if (visible) throw new Error(`導入コース中に #${id} が表示されている (CTA は1つのはず)`);
+    }
+
     assertNoErrors(errors, "導入コース開始フロー");
   } finally {
     await context.close();
