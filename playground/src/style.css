@@ -3226,3 +3226,45 @@ footer a {
   line-height: 1.6;
   color: var(--muted);
 }
+
+/* ===== ワイド画面 (iPad / デスクトップ) ===== */
+/* 900px 未満は従来の1カラムのまま。以上では横幅を活かし、独立した
+   カード同士 (プレイヤー|ペイ構造、ICM表+必要勝率|BFマップ) を
+   2カラムに並べる。タブ切替は display:none なので、非表示タブの
+   カードはグリッド配置に影響しない。 */
+@media (min-width: 900px) {
+  .container {
+    max-width: 1080px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 16px;
+    align-items: start;
+  }
+  .container > * {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+  /* セットアップ: プレイヤー(左) と ペイ構造(右)。プリセットは全幅のまま */
+  section[data-tab="setup"]:has(#players-list) {
+    grid-column: 1;
+  }
+  section[data-tab="setup"]:has(#payouts-list) {
+    grid-column: 2;
+  }
+  /* 計算結果: ICM表(左上)・必要勝率(左下) / BFマップ(右・縦長) */
+  section[data-tab="result"]:has(#icm-table) {
+    grid-column: 1;
+  }
+  section[data-tab="result"]:has(#bf-matrix) {
+    grid-column: 2;
+    grid-row: span 2;
+  }
+  section[data-tab="result"]:has(#eq-result) {
+    grid-column: 1;
+  }
+  /* 練習タブ: レンジグリッドが全幅だとセルが巨大化するため、
+     ハンド比較タブの片側グリッドと同程度の幅に抑えて左寄せ表示 */
+  section[data-tab="practice"] .hand-grid {
+    max-width: 560px;
+  }
+}
