@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { sanitizePayoutsArray, parseList, positionsForN, posToPotOddsPos } from "../src/appState.js";
+import {
+  sanitizePayoutsArray,
+  parseList,
+  positionsForN,
+  posToPotOddsPos,
+  nextFreePosition,
+} from "../src/appState.js";
 
 describe("sanitizePayoutsArray", () => {
   it("有限かつ非負の数値だけを残す", () => {
@@ -66,5 +72,39 @@ describe("posToPotOddsPos", () => {
     expect(posToPotOddsPos("BTN")).toBe("OTHER");
     expect(posToPotOddsPos("")).toBe("OTHER");
     expect(posToPotOddsPos(undefined)).toBe("OTHER");
+  });
+});
+
+describe("nextFreePosition", () => {
+  it("正規セットのうち未使用の最初のポジションを返す (4人 BB/SB/BTN/CO → 5人目は UTG)", () => {
+    expect(nextFreePosition(5, ["BB", "SB", "BTN", "CO"])).toBe("UTG");
+  });
+
+  it("2人 BTN/BB → 3人目は SB", () => {
+    expect(nextFreePosition(3, ["BTN", "BB"])).toBe("SB");
+  });
+
+  it("3人 BTN/SB/BB → 4人目は CO", () => {
+    expect(nextFreePosition(4, ["BTN", "SB", "BB"])).toBe("CO");
+  });
+
+  it("5人 BTN/SB/BB/UTG/CO → 6人目は HJ (セット順で最初の空き)", () => {
+    expect(nextFreePosition(6, ["BTN", "SB", "BB", "UTG", "CO"])).toBe("HJ");
+  });
+
+  it("未設定 (\"\") のプレイヤーが混ざっていても空きから採番する", () => {
+    expect(nextFreePosition(4, ["BTN", "", "BB"])).toBe("SB");
+  });
+
+  it("全員未設定なら勝手に採番せず \"\" を返す", () => {
+    expect(nextFreePosition(4, ["", "", ""])).toBe("");
+  });
+
+  it("空きが無ければ \"\" を返す (重複割り当てはしない)", () => {
+    expect(nextFreePosition(4, ["BTN", "SB", "BB", "CO"])).toBe("");
+  });
+
+  it("未知の人数 (正規セット無し) では \"\" を返す", () => {
+    expect(nextFreePosition(10, ["BTN"])).toBe("");
   });
 });

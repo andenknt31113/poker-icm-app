@@ -13,6 +13,7 @@ import {
   players,
   allocPlayerId,
   positionsForN,
+  nextFreePosition,
   type Role,
   type Position,
 } from "./appState.js";
@@ -125,11 +126,17 @@ function addPlayer(): void {
   if (players.length >= MAX_PLAYERS) return;
   const avg =
     players.reduce((a, p) => a + p.stack, 0) / Math.max(1, players.length);
+  // ポジション自動採番: 既存の割り当ては動かさず、新しい人数の正規セットで
+  // 未使用のポジションを新プレイヤーに与える (全員未設定なら "" のまま)。
+  const position = nextFreePosition(
+    players.length + 1,
+    players.map((p) => p.position),
+  );
   players.push({
     id: allocPlayerId(),
     stack: Math.round(avg * 10) / 10,
     role: "other",
-    position: "",
+    position,
   });
   renderPlayers();
   renderPayouts(); // 3人境界を跨ぐとペイ構造側のロック表示も変わる
