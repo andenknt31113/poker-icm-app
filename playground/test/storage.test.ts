@@ -138,7 +138,8 @@ describe("readJson / writeJson", () => {
 describe("localStorage が使えない環境", () => {
   // Safari プライベートモード等では getItem/setItem 自体が SecurityError を投げる。
   // その状況を再現し、この層が全 API で throw を吸収することを確認する。
-  let spies: ReturnType<typeof vi.spyOn>[] = [];
+  // 使うのは mockRestore だけなので、spy ごとに異なる関数シグネチャは型に持たない
+  let spies: { mockRestore(): void }[] = [];
 
   beforeEach(() => {
     const boom = (): never => {
