@@ -265,11 +265,21 @@ function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)]!;
 }
 
-const DIFF_BANDS: Record<Difficulty, number> = {
-  easy: 0.10,
-  normal: 0.05,
-  hard: 0.02,
+// 難易度バンド: 正解と不正解の差 |margin| の許容範囲。
+// easy に下限があるのは「明確な正解がある問題だけを出す」ため。上限だけだと
+// 生成器の自然分布 (ほぼ ±5pt 内) により normal と実質同じ出題になり、
+// 初心者がほぼ五分の問題ばかり解かされて正答率が5割に張り付いていた。
+const DIFF_BANDS: Record<Difficulty, { min: number; max: number }> = {
+  easy: { min: 0.03, max: 0.12 },
+  normal: { min: 0, max: 0.05 },
+  hard: { min: 0, max: 0.02 },
 };
+
+/** |margin| が難易度バンドに収まるか (callfold: equity差 / push: 正規化マージン)。 */
+export function inDifficultyBand(absMargin: number, d: Difficulty): boolean {
+  const b = DIFF_BANDS[d];
+  return absMargin >= b.min && absMargin <= b.max;
+}
 const DEFAULT_DIFFICULTY: Difficulty = "normal";
 const savedDifficulty = readRaw(STORAGE_KEYS.practiceDifficulty);
 let practiceDifficulty: Difficulty = isDifficulty(savedDifficulty)
@@ -383,11 +393,15 @@ export function generatePracticeProblem(): PracticeProblem {
   if (practiceMode === "push") {
     // push 判定モード: 縮退問題を除外し、evPush-evFold の正規化マージンを
     // 難易度バンドに合わせて絞り込む (callfold と同じスケール感で調整)
-    const band = DIFF_BANDS[practiceDifficulty];
     for (let attempt = 0; attempt < 100; attempt++) {
       const p = tryGenerateRandomPushPracticeProblem();
       if (!p) continue;
-      if (!isDegeneratePushProblem(p) && Math.abs(p.pushMarginNorm ?? 0) <= band) return p;
+      if (
+        !isDegeneratePushProblem(p) &&
+        inDifficultyBand(Math.abs(p.pushMarginNorm ?? 0), practiceDifficulty)
+      ) {
+        return p;
+      }
     }
     for (let attempt = 0; attempt < 20; attempt++) {
       const p = tryGenerateRandomPushPracticeProblem();
@@ -395,11 +409,15 @@ export function generatePracticeProblem(): PracticeProblem {
     }
     throw new Error("push 判定問題の生成に失敗しました");
   }
-  const band = DIFF_BANDS[practiceDifficulty];
   for (let attempt = 0; attempt < 100; attempt++) {
     const p = tryGenerateRandomPracticeProblem();
     if (!p) continue;
-    if (!isDegenerateProblem(p) && Math.abs(p.heroEq - p.dollarEV) <= band) return p;
+    if (
+      !isDegenerateProblem(p) &&
+      inDifficultyBand(Math.abs(p.heroEq - p.dollarEV), practiceDifficulty)
+    ) {
+      return p;
+    }
   }
   for (let attempt = 0; attempt < 20; attempt++) {
     const p = tryGenerateRandomPracticeProblem();

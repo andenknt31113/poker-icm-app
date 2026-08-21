@@ -394,7 +394,7 @@ export const en: Record<string, string> = {
   "practice.lesson.wta": "🏆 In WTA (winner-take-all), chips = prize is linear. ICM pressure is zero, so you can decide purely on cEV (chip gain/loss).",
   "practice.lesson.satellite": "🛰 In satellites, survival is everything. RP spikes hardest for the mid and big stacks close to locking up a seat, so even strong hands struggle to justify a call (the shortest stack, with little left to lose, can still call wide).",
   "practice.lesson.covered": "⚠️ Calling a player who covers you means losing = elimination. You’re risking your tournament life, so the Risk Premium spikes.",
-  "practice.lesson.covering": "When you cover the villain, losing doesn’t bust you, so RP is small. You can call close to cEV.",
+  "practice.lesson.covering": "When you cover the villain, losing doesn’t bust you, so RP is small — judge close to cEV (hands short on equity are still folds).",
   "practice.lesson.shorter": "While a shorter stack is still in, you can ladder up without forcing a spot. That’s the source of RP.",
   "practice.lesson.general": "Required equity = cEV + Risk Premium. Under ICM, always check that a “chip profit” isn’t a “prize loss.”",
   "practice.pushLesson.wta": "🏆 In WTA (winner-take-all), ICM pressure is zero. You can judge shoves on chip EV (cEV) too.",

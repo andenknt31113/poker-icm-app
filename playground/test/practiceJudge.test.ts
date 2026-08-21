@@ -33,7 +33,7 @@ describe("practiceLesson", () => {
     expect(practiceLesson(p)).toMatch(/カバーされている相手/);
   });
 
-  it("hero がカバーしていて RP が低い (<5) なら cEV に近い感覚というメッセージを返す", () => {
+  it("hero がカバーしていて RP が低い (<5) なら cEV に近い基準というメッセージを返す", () => {
     const p = makeProblem({
       payouts: [50, 30, 20],
       scenarioPlayers: [
@@ -44,7 +44,7 @@ describe("practiceLesson", () => {
       cEV: 0.3,
       dollarEV: 0.32, // rp = 2 < 5
     });
-    expect(practiceLesson(p)).toMatch(/cEV に近い感覚/);
+    expect(practiceLesson(p)).toMatch(/cEV に近い基準/);
   });
 
   it("hero より短いスタックの other プレイヤーがいれば、そのメッセージを返す", () => {
