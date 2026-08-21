@@ -49,7 +49,7 @@ export const ja: Record<string, string> = {
 
   // ===== index.html: セットアップ - プレイヤー =====
   "setup.players.h2": "プレイヤー",
-  "setup.players.hint.html": "\n          各プレイヤーのスタックを入力。<strong>🎯 自分</strong> /\n          <strong>⚔️ 相手</strong> をタップで指定。最大9人。<br />\n          ポジションは<strong>1人ぶん選べば残り全員が自動で並びます</strong>。\n        ",
+  "setup.players.hint.html": "\n          各プレイヤーのスタックを入力。<strong>🎯 自分</strong> /\n          <strong>⚔️ 相手</strong> をタップで指定。最大9人。<br />\n          ポジションは<strong>1人ぶん選べば残り全員が自動で並びます</strong>（2回目からは選んだ2人の入れ替え）。\n        ",
   // add-player ボタンのテキストは renderPlayers() (setup.ts) が制御するため JS 側で t() する
   "setup.players.add": "+ プレイヤー追加",
   "setup.players.addMax": "(最大 {n} 人)",

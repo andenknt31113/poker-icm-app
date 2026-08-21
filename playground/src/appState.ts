@@ -53,6 +53,49 @@ export function nextFreePosition(n: number, used: readonly Position[]): Position
   return positionsForN(n).find((p) => !usedSet.has(p)) ?? "";
 }
 
+/**
+ * i 番目のプレイヤーのポジションを next に変更したときの新しい配列を返す
+ * (ポジション変更規則の単一情報源)。
+ *
+ * - next = "" … その行だけクリア
+ * - 正規セット外のポジション … その行だけ変更 (他に影響しない)
+ * - autoLink = true … 入力順=席順とみなし、i を起点に全員をリングで自動連動
+ *   (プリセット適用直後などの「1人選べば残りも並ぶ」クイックセット用)
+ * - autoLink = false … 現在 next を持つプレイヤーと入れ替え (他は動かさない)。
+ *   自動連動を毎回やると「1人直すと別の人が壊れる」モグラ叩きになるため、
+ *   2回目以降の手動修正はこちら。
+ */
+export function positionsAfterChange(
+  current: readonly Position[],
+  i: number,
+  next: Position,
+  autoLink: boolean,
+): Position[] {
+  const out = [...current];
+  if (next === "") {
+    out[i] = "";
+    return out;
+  }
+  const n = current.length;
+  const set = positionsForN(n);
+  const k = set.indexOf(next);
+  if (k < 0) {
+    out[i] = next;
+    return out;
+  }
+  if (autoLink) {
+    for (let j = 0; j < n; j++) {
+      const offset = (j - i + n) % n;
+      out[j] = set[(k + offset) % set.length] ?? "";
+    }
+    return out;
+  }
+  const holder = current.findIndex((p, j) => j !== i && p === next);
+  if (holder >= 0) out[holder] = current[i] ?? "";
+  out[i] = next;
+  return out;
+}
+
 export interface Player {
   id: number;
   stack: number;
