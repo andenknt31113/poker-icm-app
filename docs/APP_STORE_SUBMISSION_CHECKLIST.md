@@ -54,8 +54,11 @@ npm install && npm run build && npx cap sync ios && npx cap open ios
 
 ## 4. ASC: 年齢制限 (§7)
 
-- [ ] Simulated Gambling (模擬ギャンブル): **Infrequent/Mild (まれ/軽度)**
-- [ ] その他の項目: すべて None → 想定レーティング 12+ (地域により 17+)
+- [x] Simulated Gambling (模擬ギャンブル): **None** → レーティング **4+**
+      (当初 Infrequent/Mild で申告 → 2026-08 に Apple から「模擬ギャンブルは
+      個人アカウント不可」の自動差し戻し → 実態に即して None に修正・再提出済み。
+      詳細は APP_STORE_LISTING.md §7)
+- [x] その他の項目: すべて None
 
 ## 5. 提出前の事務 (未完了のもの)
 
