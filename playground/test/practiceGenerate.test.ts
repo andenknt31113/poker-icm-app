@@ -5,6 +5,7 @@ import {
   isPushProblem,
   buildEasyRPChoices,
   practiceProblemDedupKey,
+  inDifficultyBand,
 } from "../src/practice/generate.js";
 import { makeProblem } from "./fixtures.js";
 
@@ -192,5 +193,25 @@ describe("practiceProblemDedupKey", () => {
       ],
     });
     expect(practiceProblemDedupKey(a)).not.toBe(practiceProblemDedupKey(b));
+  });
+});
+
+describe("inDifficultyBand (難易度バンド)", () => {
+  it("easy は下限 3pt: ほぼ五分の問題を出さない / 12pt 超の自明問題も出さない", () => {
+    expect(inDifficultyBand(0.01, "easy")).toBe(false);
+    expect(inDifficultyBand(0.03, "easy")).toBe(true);
+    expect(inDifficultyBand(0.12, "easy")).toBe(true);
+    expect(inDifficultyBand(0.13, "easy")).toBe(false);
+  });
+
+  it("normal は 5pt 以内 (下限なし)", () => {
+    expect(inDifficultyBand(0, "normal")).toBe(true);
+    expect(inDifficultyBand(0.05, "normal")).toBe(true);
+    expect(inDifficultyBand(0.06, "normal")).toBe(false);
+  });
+
+  it("hard は 2pt 以内の紙一重だけ", () => {
+    expect(inDifficultyBand(0.01, "hard")).toBe(true);
+    expect(inDifficultyBand(0.03, "hard")).toBe(false);
   });
 });
