@@ -25,6 +25,7 @@ import testLangSwitch from "./tests/08-lang-switch.mjs";
 import testFreemiumGate from "./tests/09-freemium-gate.mjs";
 import testAddPlayerAutoPosition from "./tests/10-add-player-auto-position.mjs";
 import testSummaryCallVerdict from "./tests/11-summary-call-verdict.mjs";
+import testPositionSwap from "./tests/12-position-swap.mjs";
 
 async function main() {
   const t0 = Date.now();
@@ -82,6 +83,10 @@ async function main() {
     {
       name: "状況サマリー一行判定 (コール可%表示 → タップでハンド比較へ)",
       run: () => testSummaryCallVerdict({ baseURL, createContext }),
+    },
+    {
+      name: "ポジション変更: プリセット直後は自動連動 / 2回目からは入れ替え",
+      run: () => testPositionSwap({ baseURL, createContext }),
     },
   ];
 

@@ -14,6 +14,7 @@ import {
   allocPlayerId,
   positionsForN,
   nextFreePosition,
+  positionsAfterChange,
   type Role,
   type Position,
 } from "./appState.js";
@@ -79,6 +80,8 @@ export function replacePlayers(
   for (const p of next) {
     players.push({ id: allocPlayerId(), stack: p.stack, role: p.role, position: p.position });
   }
+  // 卓を丸ごと入れ替えたので、次のポジション選択はリング自動連動に戻す
+  ringAutoLinkArmed = true;
 }
 
 function setRole(playerId: number, role: Role): void {
@@ -143,32 +146,27 @@ function addPlayer(): void {
   recompute();
 }
 
+// ポジションの自動連動 (リング一括割当) を次の変更で使うか。
+// プリセット適用・シナリオ復元・起動直後は true = 「1人選べば残りも自動で並ぶ」。
+// 一度手動で選んだら false に落とし、以降の変更は入れ替え (swap) にする。
+// 毎回リング再割当すると、席順どおりに入力しなかったときに
+// 「1人直すと別の人のポジションが壊れる」モグラ叩きになるため。
+let ringAutoLinkArmed = true;
+
 function setPosition(playerId: number, position: Position): void {
   const i = players.findIndex((p) => p.id === playerId);
   if (i < 0) return;
 
-  if (position === "") {
-    // この行だけクリア
-    players[i]!.position = "";
-    renderPlayers();
-    recompute();
-    return;
-  }
-
-  const N = players.length;
-  const set = positionsForN(N);
-  const k = set.indexOf(position);
-
-  if (k < 0) {
-    // 該当 N の正規セットに無いポジション → 単独セット（他には影響しない）
-    players[i]!.position = position;
-  } else {
-    // 自動連動: i を起点に時計回り (j-i) ぶんセットからずらして割り当て
-    for (let j = 0; j < N; j++) {
-      const offset = (j - i + N) % N;
-      players[j]!.position = (set[(k + offset) % set.length] ?? "") as Position;
-    }
-  }
+  const next = positionsAfterChange(
+    players.map((p) => p.position),
+    i,
+    position,
+    ringAutoLinkArmed,
+  );
+  players.forEach((p, j) => {
+    p.position = next[j] ?? "";
+  });
+  if (position !== "") ringAutoLinkArmed = false;
   renderPlayers();
   recompute();
 }

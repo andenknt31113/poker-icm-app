@@ -5,6 +5,7 @@ import {
   positionsForN,
   posToPotOddsPos,
   nextFreePosition,
+  positionsAfterChange,
 } from "../src/appState.js";
 
 describe("sanitizePayoutsArray", () => {
@@ -106,5 +107,48 @@ describe("nextFreePosition", () => {
 
   it("未知の人数 (正規セット無し) では \"\" を返す", () => {
     expect(nextFreePosition(10, ["BTN"])).toBe("");
+  });
+});
+
+describe("positionsAfterChange", () => {
+  it("autoLink: 空の5人卓で #1 を BB に → リング自動連動", () => {
+    expect(positionsAfterChange(["", "", "", "", ""], 0, "BB", true)).toEqual([
+      "BB", "UTG", "CO", "BTN", "SB",
+    ]);
+  });
+
+  it("autoLink: 埋まっている卓でも起点から全員リング再割当 (プリセット直後の1回目)", () => {
+    // #3 を BTN に → 入力順=席順として BTN から時計回りに SB, BB, CO が並ぶ
+    expect(positionsAfterChange(["BB", "SB", "BTN", "CO"], 2, "BTN", true)).toEqual([
+      "BB", "CO", "BTN", "SB",
+    ]);
+  });
+
+  it("swap: 保持者と入れ替え、他は動かない (モグラ叩き防止)", () => {
+    // #2 (UTG) を CO に → CO だった #3 が UTG を引き取る
+    expect(positionsAfterChange(["BB", "UTG", "CO", "BTN", "SB"], 1, "CO", false)).toEqual([
+      "BB", "CO", "UTG", "BTN", "SB",
+    ]);
+  });
+
+  it("swap: 空きポジションへの変更は自分だけ変わる", () => {
+    expect(positionsAfterChange(["BB", "", "CO", "", ""], 1, "SB", false)).toEqual([
+      "BB", "SB", "CO", "", "",
+    ]);
+  });
+
+  it("swap: 自分が未設定でも保持者は自分の旧値 (\"\") を引き取る", () => {
+    expect(positionsAfterChange(["BB", "", "CO"], 1, "BB", false)).toEqual(["", "BB", "CO"]);
+  });
+
+  it('"" は autoLink に関係なくその行だけクリア', () => {
+    expect(positionsAfterChange(["BB", "SB", "BTN"], 1, "", true)).toEqual(["BB", "", "BTN"]);
+  });
+
+  it("正規セット外のポジションは単独セット (他に影響しない)", () => {
+    // 4人卓の正規セットに HJ は無い
+    expect(positionsAfterChange(["BB", "SB", "BTN", "CO"], 1, "HJ", true)).toEqual([
+      "BB", "HJ", "BTN", "CO",
+    ]);
   });
 });

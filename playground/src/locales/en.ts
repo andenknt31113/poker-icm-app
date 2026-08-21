@@ -56,7 +56,7 @@ export const en: Record<string, string> = {
 
   // ===== index.html: セットアップ - プレイヤー =====
   "setup.players.h2": "Players",
-  "setup.players.hint.html": "\n          Enter each player’s stack. Tap to set <strong>🎯 You</strong> /\n          <strong>⚔️ Villain</strong>. Up to 9 players.<br />\n          For positions, <strong>pick just one and the rest fill in automatically</strong>.\n        ",
+  "setup.players.hint.html": "\n          Enter each player’s stack. Tap to set <strong>🎯 You</strong> /\n          <strong>⚔️ Villain</strong>. Up to 9 players.<br />\n          For positions, <strong>pick just one and the rest fill in automatically</strong> (later changes swap the two players involved).\n        ",
   "setup.players.add": "+ Add player",
   "setup.players.addMax": "(max {n})",
   "setup.players.randomize.title": "Randomize current players’ stacks to 3–30 BB",
