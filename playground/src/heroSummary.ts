@@ -171,7 +171,36 @@ export function renderHeroSummary(a: HeroSummaryArg): void {
  * カードは recompute ごとに innerHTML で作り直されるため、個々の要素ではなく
  * カード自身へ 1 つだけ listener を張って委譲する。
  */
+// ===== スクロール時のコンパクト表示 =====
+// sticky なサマリーは展開状態で画面の約3割を常時占有する (390×844 実測 31%)。
+// スクロール中は文脈行 (ペイ・周り・自分/相手行) を畳み、判断の核である
+// BF/必要勝率/RP と一行判定だけを残して占有を約半分にする。
+// ヒステリシス (入り 160px / 戻り 40px) で境界での明滅を防ぐ。
+const FLOAT_ENTER_Y = 160;
+const FLOAT_EXIT_Y = 40;
+let floating = false;
+let scrollRafPending = false;
+
+function updateFloating(): void {
+  scrollRafPending = false;
+  const y = window.scrollY;
+  const next = floating ? y > FLOAT_EXIT_Y : y > FLOAT_ENTER_Y;
+  if (next !== floating) {
+    floating = next;
+    heroSummaryEl.classList.toggle("floating", floating);
+  }
+}
+
 export function initHeroSummary(): void {
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (scrollRafPending) return;
+      scrollRafPending = true;
+      requestAnimationFrame(updateFloating);
+    },
+    { passive: true },
+  );
   heroSummaryEl.addEventListener("click", (e) => {
     const target = e.target as HTMLElement;
     // タイトル行右端の専用ボタン: 折りたたみ⇄展開 (ⓘ の用語解説タップとは別の判定にして競合を避ける)

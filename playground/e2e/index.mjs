@@ -26,6 +26,7 @@ import testFreemiumGate from "./tests/09-freemium-gate.mjs";
 import testAddPlayerAutoPosition from "./tests/10-add-player-auto-position.mjs";
 import testSummaryCallVerdict from "./tests/11-summary-call-verdict.mjs";
 import testPositionSwap from "./tests/12-position-swap.mjs";
+import testSummaryCompact from "./tests/13-summary-compact.mjs";
 
 async function main() {
   const t0 = Date.now();
@@ -87,6 +88,10 @@ async function main() {
     {
       name: "ポジション変更: プリセット直後は自動連動 / 2回目からは入れ替え",
       run: () => testPositionSwap({ baseURL, createContext }),
+    },
+    {
+      name: "サマリーのスクロール時コンパクト化 (floating で占有15%・復帰で全表示)",
+      run: () => testSummaryCompact({ baseURL, createContext }),
     },
   ];
 

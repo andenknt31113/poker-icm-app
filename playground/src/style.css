@@ -818,6 +818,24 @@ body {
   white-space: nowrap;
 }
 
+/* スクロール中のコンパクト表示: 文脈行を畳んで BF/必要勝率/RP と一行判定だけ残す
+   (sticky で画面の約3割を常時占有していたのを約半分に)。手動折りたたみ
+   (.collapsed) 中は body 全体が隠れているのでこの指定は実質無効。 */
+.hero-summary.floating .hero-summary-title-row,
+.hero-summary.floating .hero-summary-context,
+.hero-summary.floating .hero-summary-row {
+  display: none;
+}
+.hero-summary.floating .hero-summary-grid {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+.hero-summary.floating {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
 /* ===== シナリオプリセット ===== */
 .scenario-presets {
   display: flex;
