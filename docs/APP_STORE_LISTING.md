@@ -248,11 +248,12 @@ NOT REAL-MONEY GAMBLING
 - The app teaches poker tournament decision theory (similar in spirit to a
   chess puzzle trainer or a math-drill app) rather than offering a game of
   chance for stakes.
-- Because poker hands and hand rankings are shown on screen, we expect this
-  content to fall under Apple's "Simulated Gambling" age-rating question, and
-  we've answered it as "Infrequent/Mild" (no wagering loop, no purchasable
-  chips, no encouragement to gamble with real money) — see the Age Rating
-  section of this submission for details.
+- The app contains no playable gambling simulation: there are no chips or
+  credits to bet, no dealing/betting gameplay loop, and no game of chance.
+  It is an educational study tool, similar in spirit to a chess-puzzle
+  trainer, so the "Simulated Gambling" age-rating question is answered
+  "None". (2026-08-21 改訂: 当初 Infrequent/Mild → 個人アカウント制約の
+  自動差し戻しを受け None に確定。§7 参照)
 
 FULLY OFFLINE, NO ACCOUNT NEEDED
 - Every feature — all calculations, the practice quizzes, progress tracking,
@@ -326,23 +327,23 @@ RevenueCat はランダム生成の匿名 ID のみを使い、氏名・メー�
 
 ---
 
-## 7. 年齢制限（Age Rating）の設定案
+## 7. 年齢制限（Age Rating）の設定 【2026-08-21 確定: None / 4+】
 
 Apple の年齢制限アンケートには「Simulated Gambling（模擬ギャンブル）」という質問項目があり、頻度を **None / Infrequent or Mild / Frequent or Intense** の3段階で回答する。
 
-### 回答案
+### 確定した回答
 
-> **Simulated Gambling: Infrequent or Mild**
+> **Simulated Gambling: None** （→ レーティング **4+** で確定）
 
-理由:
-- 本アプリはポーカーのハンドレンジ・チップ・賞金期待値（ICM）という「トランプゲームの数学」を扱うため、Apple のガイドライン上「模擬ギャンブル表現あり」に該当しうる（実際の賭け・課金による疑似チップ購入・射幸心を煽る演出は一切ないが、ポーカーというゲーム自体とチップ/ベットの概念を画面上で扱うため "None" と言い切るのはリスクがある）。
-- 一方で、実際の賭け金のやり取り・連続プレイを煽るループ・カジノ風の演出・チップの課金購入は存在しないため、"Frequent or Intense" ではなく **"Infrequent or Mild"** が実態に即している。
+経緯:
+- 当初は安全側に倒して **Infrequent or Mild** で申告した（ポーカーというゲームとチップ/ベットの概念を画面上で扱うため）。
+- しかし 2026-08 の提出時、Apple から自動差し戻し: 「**模擬ギャンブルを含むアプリは個人開発者アカウントからは提出不可**（組織アカウントが必要）。含まないならレーティングを修正して再提出せよ」。
+- 本アプリの実態は「賭けるチップ・ベットのゲームループ・運のゲーム」が一切ない計算・学習ツール（チェスのパズルトレーナー相当）であり、**None が実態に即した回答**と判断して修正・再提出した（審査ノートにもその旨を明記済み — §5 参照）。
+- 他のカテゴリ（Violence、Sexual Content、Profanity、Alcohol/Tobacco/Drugs、Horror、Contests 等）はすべて **None** のまま。
 
-### 想定レーティング
+### 将来の注意
 
-- Apple の年齢区分（4+ / 9+ / 13+ / 16+ / 18+、2025年改定後の新区分）において、Simulated Gambling = Infrequent/Mild の回答は一般的に **13+** 相当のレーティングに寄与する（他の項目 — 暴力表現・成人向けテーマ・ギャンブル以外の項目 — はすべて「None」と回答する前提）。
-- 他のカテゴリ（Cartoon or Fantasy Violence、Realistic Violence、Sexual Content、Profanity、Alcohol/Tobacco/Drugs、Horror、Contests 等）はすべて **None** を選択する。
-- 最終的なレーティングは App Store Connect 上のアンケート回答の組み合わせで自動算出されるため、実際に申請フォームへ入力した上で表示される数値を必ず確認すること（本書はあくまで想定・推奨回答であり最終値の保証ではない）。
+- 将来「疑似チップで実際にポーカーを対戦プレイする」機能（ベット・ゲームループ）を追加する場合は Simulated Gambling の再申告が必要になり、**個人アカウントのままでは提出できなくなる**。機能追加の前にこの制約を確認すること。
 
 ---
 
