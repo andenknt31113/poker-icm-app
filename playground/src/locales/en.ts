@@ -75,6 +75,8 @@ export const en: Record<string, string> = {
   "setup.payouts.preset.satellite": "🛰 Satellite Top 3",
   "setup.payouts.savedLabel": "\n              Saved\n              ",
   "setup.payouts.saveBtn": "\n                + Save current values\n              ",
+  "setup.blinds.h2": "Blinds & ante",
+  "setup.blinds.hint": "Stacks are in BB units, so the defaults are usually fine. For ante games, enter the table total.",
 
 
   // ===== index.html: 計算結果 - ICM エクイティ =====
@@ -105,7 +107,7 @@ export const en: Record<string, string> = {
 
   // ===== index.html: ナッシュ均衡 =====
   "nash.h2": "Nash equilibrium (HU push/fold)",
-  "nash.hint.html": "\n          Computes the heads-up Nash equilibrium for 🎯 you (pusher) and ⚔️ villain (caller), ICM included.\n          <br />\n          ※ Assumes HU 2-way. A warning appears when other players sit between (e.g. BTN + BB).\n          <br />\n          ※ This equilibrium assumes a <strong>push-or-fold only</strong> game. At ~10BB or less it matches real play closely; the deeper the stacks, the wider the push range gets versus true GTO (read it as \"if your only options are shove or fold, shoving is fine\"), since real play also has small raises available.\n          <br />\n          Set 🎯/⚔️ under “Players” on the ⚙️ Setup tab, then press Solve Nash.\n        ",
+  "nash.hint.html": "\n          Computes the heads-up Nash equilibrium for 🎯 you (pusher) and ⚔️ villain (caller), ICM included.\n          <br />\n          ※ Assumes HU 2-way. A warning appears when other players sit between (e.g. BTN + BB).\n          <br />\n          ※ This equilibrium assumes a <strong>push-or-fold only</strong> game. At ~10BB or less it matches real play closely; the deeper the stacks, the wider the push range gets versus true GTO (read it as \"if your only options are shove or fold, shoving is fine\"), since real play also has small raises available.\n          <br />\n          Set 🎯/⚔️ and SB/BB/ante on the ⚙️ Setup tab, then press Solve Nash.\n        ",
   "nash.ante.label": "\n            Total ante\n            ",
   "nash.solveBtn": "Solve Nash",
   "nash.sbRange.h3": "🎯 You push range 🔴",

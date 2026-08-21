@@ -277,6 +277,12 @@ export function initCalculator(): void {
     el.addEventListener("input", recompute);
   });
 
+  // SB/BB/アンティの編集も即時再計算 (必要勝率の自動算出とサマリーが追従する)。
+  // 従来は保存のみで、他の操作が起きるまで計算結果に反映されない潜在バグだった。
+  [nashSbInput, nashBbInput, nashAnteInput].forEach((el) => {
+    el.addEventListener("input", recompute);
+  });
+
   // 🎯⚔️スタック + Nash blinds から call / potWin を自動算出
   autofillBtn.addEventListener("click", () => {
     const heroIdx = players.findIndex((p) => p.role === "hero");
