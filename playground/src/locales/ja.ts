@@ -69,6 +69,8 @@ export const ja: Record<string, string> = {
   "setup.payouts.preset.satellite": "🛰 サテライト Top3",
   "setup.payouts.savedLabel": "\n              保存済み\n              ",
   "setup.payouts.saveBtn": "\n                ＋ 現在の値を保存\n              ",
+  "setup.blinds.h2": "ブラインド・アンティ",
+  "setup.blinds.hint": "スタックは BB 単位なので通常はこのまま。アンティ有りの卓は「アンティ合計」を入力。",
 
 
   // ===== index.html: 計算結果 - ICM エクイティ =====
@@ -99,7 +101,7 @@ export const ja: Record<string, string> = {
 
   // ===== index.html: ナッシュ均衡 =====
   "nash.h2": "Nash 均衡 (HU push/fold)",
-  "nash.hint.html": "\n          🎯自分 (pusher) と ⚔️相手 (caller) のヘッズアップ Nash 均衡を計算（ICM反映済み）。\n          <br />\n          ※ HU 2-way 想定。BTN+BB のように間に他プレイヤーがいる場合は警告が出ます。\n          <br />\n          ※ <strong>プッシュ or フォールドの2択</strong>を前提にした均衡です。目安 10BB 以下ならほぼ実戦どおり。深くなるほど、実際は小さなレイズ等の選択肢があるぶん、真の GTO よりプッシュレンジは広めに出ます（「押すか降りるかなら押してよい」の意味）。\n          <br />\n          ⚙️ セットアップタブの「プレイヤー」で 🎯/⚔️ を指定してから Nash 計算を押してください。\n        ",
+  "nash.hint.html": "\n          🎯自分 (pusher) と ⚔️相手 (caller) のヘッズアップ Nash 均衡を計算（ICM反映済み）。\n          <br />\n          ※ HU 2-way 想定。BTN+BB のように間に他プレイヤーがいる場合は警告が出ます。\n          <br />\n          ※ <strong>プッシュ or フォールドの2択</strong>を前提にした均衡です。目安 10BB 以下ならほぼ実戦どおり。深くなるほど、実際は小さなレイズ等の選択肢があるぶん、真の GTO よりプッシュレンジは広めに出ます（「押すか降りるかなら押してよい」の意味）。\n          <br />\n          ⚙️ セットアップタブで 🎯/⚔️ の指定と SB/BB/アンティを設定してから Nash 計算を押してください。\n        ",
   "nash.ante.label": "\n            アンティ合計\n            ",
   "nash.solveBtn": "Nash 計算",
   "nash.sbRange.h3": "🎯自分 push レンジ 🔴",
