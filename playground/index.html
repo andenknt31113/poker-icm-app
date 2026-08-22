@@ -56,9 +56,7 @@
 
       <nav class="tab-bar" role="tablist" aria-label="セクション" data-i18n-attr="aria-label:tabs.aria">
         <button type="button" class="tab-btn active" data-tab="setup"><span class="tab-icon">⚙️</span><span class="tab-label" data-i18n="tabs.setup">セットアップ</span></button>
-        <button type="button" class="tab-btn" data-tab="result"><span class="tab-icon">📊</span><span class="tab-label" data-i18n="tabs.result">計算結果</span></button>
-        <button type="button" class="tab-btn" data-tab="hand"><span class="tab-icon">🃏</span><span class="tab-label" data-i18n="tabs.hand">ハンド比較</span></button>
-        <button type="button" class="tab-btn" data-tab="nash"><span class="tab-icon">🎯</span><span class="tab-label" data-i18n="tabs.nash">ナッシュ均衡</span></button>
+        <button type="button" class="tab-btn" data-tab="analyze"><span class="tab-icon">📊</span><span class="tab-label" data-i18n="tabs.analyze">分析</span></button>
         <button type="button" class="tab-btn" data-tab="practice"><span class="tab-icon">🎲</span><span class="tab-label" data-i18n="tabs.practice">練習</span></button>
       </nav>
 
@@ -157,7 +155,13 @@
         </div>
       </section>
 
-      <section class="card" data-tab="result">
+      <nav class="analyze-jump" data-tab="analyze" aria-label="分析セクション" data-i18n-attr="aria-label:analyze.jump.aria">
+        <button type="button" data-jump="sec-icm">📊 <span data-i18n="analyze.jump.results">計算結果</span></button>
+        <button type="button" data-jump="sec-hand">🃏 <span data-i18n="analyze.jump.hand">レンジ比較</span></button>
+        <button type="button" data-jump="sec-nash">🎯 <span data-i18n="analyze.jump.nash">Nash</span></button>
+      </nav>
+
+      <section class="card" data-tab="analyze" id="sec-icm">
         <h2 data-i18n="result.icm.h2">ICM エクイティ</h2>
         <table id="icm-table">
           <thead>
@@ -172,7 +176,7 @@
         </table>
       </section>
 
-      <section class="card" data-tab="result">
+      <section class="card" data-tab="analyze">
         <h2 data-i18n="result.bf.h2">BF マップ</h2>
         <p class="hint" data-i18n-html="result.bf.hint.html">
           🎯自分と⚔️相手のオールイン想定。リスクするチップは小さい方のスタックに自動調整されます。
@@ -252,7 +256,7 @@
         <p class="hint bf-matrix-scroll-hint hidden" id="bf-matrix-scroll-hint" data-i18n="result.bf.scrollHint">→ 横にスクロール</p>
       </section>
 
-      <section class="card" data-tab="result">
+      <section class="card" data-tab="analyze">
         <h2 data-i18n="result.eq.h2">必要勝率 (cEV / $EV / RP)</h2>
         <p class="hint" data-i18n-html="result.eq.hint.html">
           🎯と⚔️のオールイン想定で自動計算。手動入力したい場合は数値を上書きしてください。
@@ -285,38 +289,7 @@
 
       </section>
 
-      <section class="card" data-tab="nash">
-        <h2 data-i18n="nash.h2">Nash 均衡 (HU push/fold)</h2>
-        <p class="hint" data-i18n-html="nash.hint.html">
-          🎯自分 (pusher) と ⚔️相手 (caller) のヘッズアップ Nash 均衡を計算（ICM反映済み）。
-          <br />
-          ※ HU 2-way 想定。BTN+BB のように間に他プレイヤーがいる場合は警告が出ます。
-          <br />
-          ※ <strong>プッシュ or フォールドの2択</strong>を前提にした均衡です。目安 10BB 以下ならほぼ実戦どおり。深くなるほど、実際は小さなレイズ等の選択肢があるぶん、真の GTO よりプッシュレンジは広めに出ます（「押すか降りるかなら押してよい」の意味）。
-          <br />
-          ⚙️ セットアップタブの「プレイヤー」で 🎯/⚔️ を指定してから Nash 計算を押してください。
-        </p>
-
-        <button id="nash-solve" type="button" class="solve-btn" data-i18n="nash.solveBtn">Nash 計算</button>
-        <p id="nash-status" class="hint"></p>
-        <div id="nash-depth-note" class="warn-box hidden"></div>
-        <div id="nash-overcall-warn" class="warn-box hidden"></div>
-
-        <div class="range-grids">
-          <div>
-            <h3 data-i18n="nash.sbRange.h3">🎯自分 push レンジ 🔴</h3>
-            <p class="hint" id="nash-sb-stats"></p>
-            <div id="nash-sb-grid" class="hand-grid"></div>
-          </div>
-          <div>
-            <h3 data-i18n="nash.bbRange.h3">⚔️相手 call レンジ 🟢</h3>
-            <p class="hint" id="nash-bb-stats"></p>
-            <div id="nash-bb-grid" class="hand-grid"></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="card" data-tab="hand">
+      <section class="card" data-tab="analyze" id="sec-hand">
         <h2 data-i18n="hand.h2">ハンドレンジ比較</h2>
         <p class="hint" data-i18n-html="hand.hint.html">
           HU all-in 想定。<strong>hero=BB</strong>（最終 actor）のときに完全に有効。
@@ -389,6 +362,37 @@
             <div id="grid-hero" class="hand-grid"></div>
             <p class="hint hand-grid-legend" data-i18n-html="hand.legend.html">👆 <strong>セルをタップ</strong>すると、そのハンドの勝率と「コール可／フォールド」がグリッドの上に出ます。<br />「自分の call レンジを求める」時: 🟩 必要勝率+0.1pt以上 = コール可 ／ 🟨 ±0.1pt = ボーダー (ほぼ完全に五分) ／ 無色 = フォールド。<br />「自分の push レンジを求める」時: 🟩 = push が $EV でフォールドを上回るハンド ／ 🟨 = ほぼ互角のボーダー ／ 無色 = フォールド。</p>
             <p class="hint call-stats-below" id="call-stats"></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" data-tab="analyze" id="sec-nash">
+        <h2 data-i18n="nash.h2">Nash 均衡 (HU push/fold)</h2>
+        <p class="hint" data-i18n-html="nash.hint.html">
+          🎯自分 (pusher) と ⚔️相手 (caller) のヘッズアップ Nash 均衡を計算（ICM反映済み）。
+          <br />
+          ※ HU 2-way 想定。BTN+BB のように間に他プレイヤーがいる場合は警告が出ます。
+          <br />
+          ※ <strong>プッシュ or フォールドの2択</strong>を前提にした均衡です。目安 10BB 以下ならほぼ実戦どおり。深くなるほど、実際は小さなレイズ等の選択肢があるぶん、真の GTO よりプッシュレンジは広めに出ます（「押すか降りるかなら押してよい」の意味）。
+          <br />
+          ⚙️ セットアップタブの「プレイヤー」で 🎯/⚔️ を指定してから Nash 計算を押してください。
+        </p>
+
+        <button id="nash-solve" type="button" class="solve-btn" data-i18n="nash.solveBtn">Nash 計算</button>
+        <p id="nash-status" class="hint"></p>
+        <div id="nash-depth-note" class="warn-box hidden"></div>
+        <div id="nash-overcall-warn" class="warn-box hidden"></div>
+
+        <div class="range-grids">
+          <div>
+            <h3 data-i18n="nash.sbRange.h3">🎯自分 push レンジ 🔴</h3>
+            <p class="hint" id="nash-sb-stats"></p>
+            <div id="nash-sb-grid" class="hand-grid"></div>
+          </div>
+          <div>
+            <h3 data-i18n="nash.bbRange.h3">⚔️相手 call レンジ 🟢</h3>
+            <p class="hint" id="nash-bb-stats"></p>
+            <div id="nash-bb-grid" class="hand-grid"></div>
           </div>
         </div>
       </section>

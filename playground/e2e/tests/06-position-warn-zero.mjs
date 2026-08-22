@@ -31,7 +31,7 @@ export default async function testPositionWarnZero({ baseURL, createContext }) {
     await page.goto(baseURL, { waitUntil: "load" });
 
     // ---- 0. 初期状態 (DEFAULT_PLAYERS) ----
-    await page.click('.tab-btn[data-tab="result"]');
+    await page.click('.tab-btn[data-tab="analyze"]');
     await page.waitForSelector("#position-warn", { state: "attached" });
     if (!(await isPositionWarnHidden(page))) {
       throw new Error("初期状態 (デフォルトサンプル) で position-warn が表示されています");
@@ -41,7 +41,7 @@ export default async function testPositionWarnZero({ baseURL, createContext }) {
     for (const id of SCENARIO_IDS) {
       await page.click('.tab-btn[data-tab="setup"]');
       await page.click(`.scenario-btn[data-scenario="${id}"]`);
-      await page.click('.tab-btn[data-tab="result"]');
+      await page.click('.tab-btn[data-tab="analyze"]');
       const hidden = await isPositionWarnHidden(page);
       if (!hidden) {
         const html = await page.$eval("#position-warn", (el) => el.innerHTML);

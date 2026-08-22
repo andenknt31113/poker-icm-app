@@ -14,10 +14,12 @@ export const ja: Record<string, string> = {
   // ===== index.html: タブ =====
   "tabs.aria": "セクション",
   "tabs.setup": "セットアップ",
-  "tabs.result": "計算結果",
-  "tabs.hand": "ハンド比較",
-  "tabs.nash": "ナッシュ均衡",
+  "tabs.analyze": "分析",
   "tabs.practice": "練習",
+  "analyze.jump.aria": "分析セクション",
+  "analyze.jump.results": "計算結果",
+  "analyze.jump.hand": "レンジ比較",
+  "analyze.jump.nash": "Nash",
 
   // ===== index.html: セットアップ - シナリオプリセット =====
   "setup.presets.h2": "シナリオプリセット",
@@ -204,9 +206,7 @@ export const ja: Record<string, string> = {
       </p>
       <ul class="onboarding-tab-list">
         <li><span class="onboarding-tab-icon">⚙️</span> セットアップ（スタック・ペイアウトの入力）</li>
-        <li><span class="onboarding-tab-icon">📊</span> 計算結果（ICM・BF・必要勝率）</li>
-        <li><span class="onboarding-tab-icon">🃏</span> ハンド比較（レンジの見比べ）</li>
-        <li><span class="onboarding-tab-icon">🎯</span> ナッシュ均衡（push/fold の最適解）</li>
+        <li><span class="onboarding-tab-icon">📊</span> 分析（ICM・BF・必要勝率・レンジ比較・Nash）</li>
         <li><span class="onboarding-tab-icon">🎲</span> 練習（クイズで実戦感覚）</li>
       </ul>
     `,
@@ -216,7 +216,7 @@ export const ja: Record<string, string> = {
       <ol>
         <li>
           <strong>⚙️ セットアップ</strong>で<strong>シナリオプリセット</strong>をタップ →
-          <strong>📊 計算結果</strong>で ICM / BF をすぐ確認する
+          <strong>📊 分析</strong>で ICM / BF をすぐ確認する
         </li>
         <li>
           <strong>🎲 練習</strong>タブでクイズに答えながら感覚を掴む
@@ -254,7 +254,7 @@ export const ja: Record<string, string> = {
           </div>
         </details>
         <details class="howto">
-          <summary>📊 計算結果 — できること・使い方</summary>
+          <summary>📊 分析: 計算結果 — できること・使い方</summary>
           <div class="howto-body">
             <p>ICM エクイティ、Bubble Factor、必要勝率 (cEV / $EV / RP) を自動計算する画面。</p>
             <ol>
@@ -266,7 +266,7 @@ export const ja: Record<string, string> = {
           </div>
         </details>
         <details class="howto">
-          <summary>🃏 ハンド比較 — できること・使い方</summary>
+          <summary>🃏 分析: レンジ比較 — できること・使い方</summary>
           <div class="howto-body">
             <p>相手の push/call レンジと自分のレンジを Top X% やカスタム編集で比較する画面。</p>
             <ol>
@@ -277,7 +277,7 @@ export const ja: Record<string, string> = {
           </div>
         </details>
         <details class="howto">
-          <summary>🎯 ナッシュ均衡 — できること・使い方</summary>
+          <summary>🎯 分析: Nash 均衡 — できること・使い方</summary>
           <div class="howto-body">
             <p>HU push/fold の Nash 均衡（ICM 反映済み）を計算する画面。</p>
             <ol>
