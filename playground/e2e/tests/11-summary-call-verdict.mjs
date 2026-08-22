@@ -1,5 +1,5 @@
 // 11. 状況サマリーの一行判定: 「相手のpushレンジ(X%)には上位Y%のハンドでコール可」
-//     が表示され、タップするとハンド比較タブへ飛ぶ。
+//     が表示され、タップすると分析タブのレンジ比較セクションへスクロールする。
 import { attachErrorCollector, assertNoErrors } from "../lib/context.mjs";
 
 export default async function testSummaryCallVerdict({ baseURL, createContext }) {
@@ -20,11 +20,16 @@ export default async function testSummaryCallVerdict({ baseURL, createContext })
       throw new Error(`一行判定の文言が想定と異なります: "${text}"`);
     }
 
-    // タップ → ハンド比較タブへ遷移
+    // タップ → 分析タブへ遷移し、レンジ比較セクションへスクロール
     await page.click("#hero-summary-verdict-btn");
     await page.waitForFunction(() => {
-      const btn = document.querySelector('.tab-btn[data-tab="hand"]');
+      const btn = document.querySelector('.tab-btn[data-tab="analyze"]');
       return btn && btn.classList.contains("active");
+    });
+    // スムーズスクロール完了を待ち、#sec-hand がビューポート内に来ていること
+    await page.waitForFunction(() => {
+      const r = document.getElementById("sec-hand")?.getBoundingClientRect();
+      return !!r && r.top >= 0 && r.top < window.innerHeight * 0.6;
     });
 
     // 一行判定の数値がハンド比較タブの集計 (#call-stats) と同じソースを指すこと

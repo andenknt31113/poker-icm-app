@@ -42,7 +42,7 @@ async function main() {
 
   const tests = [
     {
-      name: "5タブ レンダリング・ダーク固定 (console/pageerror ゼロ)",
+      name: "3タブ レンダリング・ダーク固定 (console/pageerror ゼロ)",
       run: () => testTabsTheme({ baseURL, createContext }),
     },
     {
@@ -54,11 +54,11 @@ async function main() {
       run: () => testTutorialIntro({ baseURL, createContext }),
     },
     {
-      name: "プリセット(ftBubble) → 計算結果タブ → BFマトリクス+必要勝率",
+      name: "プリセット(ftBubble) → 分析タブ → BFマトリクス+必要勝率",
       run: () => testPresetResultFlow({ baseURL, createContext }),
     },
     {
-      name: "全8プリセット+デフォルト → 計算結果タブ → position-warn ゼロ",
+      name: "全8プリセット+デフォルト → 分析タブ → position-warn ゼロ",
       run: () => testPositionWarnZero({ baseURL, createContext }),
     },
     {
@@ -82,7 +82,7 @@ async function main() {
       run: () => testAddPlayerAutoPosition({ baseURL, createContext }),
     },
     {
-      name: "状況サマリー一行判定 (コール可%表示 → タップでハンド比較へ)",
+      name: "状況サマリー一行判定 (コール可%表示 → タップでレンジ比較セクションへ)",
       run: () => testSummaryCallVerdict({ baseURL, createContext }),
     },
     {

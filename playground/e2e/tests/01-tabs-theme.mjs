@@ -1,4 +1,4 @@
-// 1. 5タブ レンダリング (ダーク固定) + console error / pageerror ゼロ
+// 1. 3タブ レンダリング (ダーク固定) + console error / pageerror ゼロ
 //
 // 各タブのコンテンツが実際に描画される (要素が visible になる) ことを
 // waitForSelector(state:"visible") で確認しつつ、ページ全体で
@@ -7,14 +7,13 @@
 // 残っていてもダーク表示 (data-theme 属性なし) になることも併せて確認する。
 import { attachErrorCollector, assertNoErrors } from "../lib/context.mjs";
 
-const TABS = ["setup", "result", "hand", "nash", "practice"];
+const TABS = ["setup", "analyze", "practice"];
 
 // 各タブが描画済みであることを示す代表セレクタ。
 const TAB_READY_SELECTOR = {
   setup: "#players-list .player-row",
-  result: "#eq-result",
-  hand: '.card[data-tab="hand"] .hand-grid',
-  nash: "#nash-solve",
+  // 分析タブは 計算結果+レンジ比較+Nash の縦フロー。代表として必要勝率とレンジグリッドを待つ
+  analyze: "#eq-result",
   // .mode-btn は #practice-area の外 (静的マークアップ) にあるため tab セクション基準で待つ。
   // 導入コース完了扱いにしているので、練習タブは即座に問題が出題される。
   practice: '.card[data-tab="practice"] .mode-btn',
@@ -50,7 +49,7 @@ export default async function testTabsTheme({ baseURL, createContext }) {
       if (!isActive) throw new Error(`タブ "${tab}" がアクティブになりませんでした`);
     }
 
-    assertNoErrors(errors, "ダーク固定での5タブ巡回");
+    assertNoErrors(errors, "ダーク固定での3タブ巡回");
   } finally {
     await context.close();
   }

@@ -21,10 +21,12 @@ export const en: Record<string, string> = {
   // ===== index.html: タブ (幅制約: 短く) =====
   "tabs.aria": "Sections",
   "tabs.setup": "Setup",
-  "tabs.result": "Results",
-  "tabs.hand": "Ranges", // REVIEW: 「ハンド比較」。Hands/Ranges で迷い、幅優先で Ranges
-  "tabs.nash": "Nash",
+  "tabs.analyze": "Analyze",
   "tabs.practice": "Practice",
+  "analyze.jump.aria": "Analysis sections",
+  "analyze.jump.results": "Results",
+  "analyze.jump.hand": "Ranges",
+  "analyze.jump.nash": "Nash",
 
   // ===== index.html: セットアップ - シナリオプリセット =====
   "setup.presets.h2": "Scenario presets",
@@ -208,9 +210,7 @@ export const en: Record<string, string> = {
       </p>
       <ul class="onboarding-tab-list">
         <li><span class="onboarding-tab-icon">⚙️</span> Setup (enter stacks and payouts)</li>
-        <li><span class="onboarding-tab-icon">📊</span> Results (ICM, BF, required equity)</li>
-        <li><span class="onboarding-tab-icon">🃏</span> Ranges (compare hand ranges)</li>
-        <li><span class="onboarding-tab-icon">🎯</span> Nash (optimal push/fold)</li>
+        <li><span class="onboarding-tab-icon">📊</span> Analyze (ICM, BF, required equity, ranges, Nash)</li>
         <li><span class="onboarding-tab-icon">🎲</span> Practice (real-feel quizzes)</li>
       </ul>
     `,
@@ -220,7 +220,7 @@ export const en: Record<string, string> = {
       <ol>
         <li>
           Tap a <strong>scenario preset</strong> in <strong>⚙️ Setup</strong> →
-          check ICM / BF right away in <strong>📊 Results</strong>
+          check ICM / BF right away in <strong>📊 Analyze</strong>
         </li>
         <li>
           Answer quizzes in the <strong>🎲 Practice</strong> tab to build a feel
@@ -258,7 +258,7 @@ export const en: Record<string, string> = {
           </div>
         </details>
         <details class="howto">
-          <summary>📊 Results — what it does & how to use</summary>
+          <summary>📊 Analyze: Results — what it does & how to use</summary>
           <div class="howto-body">
             <p>Auto-calculates ICM equity, Bubble Factor, and required equity (cEV / $EV / RP).</p>
             <ol>
@@ -270,7 +270,7 @@ export const en: Record<string, string> = {
           </div>
         </details>
         <details class="howto">
-          <summary>🃏 Ranges — what it does & how to use</summary>
+          <summary>🃏 Analyze: Ranges — what it does & how to use</summary>
           <div class="howto-body">
             <p>Compare the villain’s push/call range with yours via Top X% or custom editing.</p>
             <ol>
@@ -281,7 +281,7 @@ export const en: Record<string, string> = {
           </div>
         </details>
         <details class="howto">
-          <summary>🎯 Nash — what it does & how to use</summary>
+          <summary>🎯 Analyze: Nash — what it does & how to use</summary>
           <div class="howto-body">
             <p>Computes the HU push/fold Nash equilibrium (ICM included).</p>
             <ol>

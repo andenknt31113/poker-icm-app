@@ -219,10 +219,14 @@ export function initHeroSummary(): void {
       );
       return;
     }
-    // 一行判定タップ → ハンド比較タブへ (根拠のレンジグリッドを見せる)
+    // 一行判定タップ → 分析タブのレンジ比較セクションへ (根拠のグリッドを見せる)
     const verdictBtn = target.closest<HTMLButtonElement>("#hero-summary-verdict-btn");
     if (verdictBtn) {
-      applyTab("hand");
+      applyTab("analyze");
+      // applyTab のスムーズトップスクロールの後に上書きしてセクションへ
+      requestAnimationFrame(() => {
+        document.getElementById("sec-hand")?.scrollIntoView({ behavior: "smooth" });
+      });
       return;
     }
     const infoEl = target.closest<HTMLElement>("[data-info]");

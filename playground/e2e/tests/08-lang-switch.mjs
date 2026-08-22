@@ -40,7 +40,7 @@ export default async function testLangSwitch({ baseURL, createContext }) {
     const checks = [
       ['.tab-btn[data-tab="practice"] .tab-label', "Practice"],
       ['.tab-btn[data-tab="setup"] .tab-label', "Setup"],
-      ['.tab-btn[data-tab="nash"] .tab-label', "Nash"],
+      ['.tab-btn[data-tab="analyze"] .tab-label', "Analyze"],
     ];
     for (const [sel, expected] of checks) {
       const actual = await textOf(page, sel);

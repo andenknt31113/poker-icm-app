@@ -12,16 +12,25 @@ import { STORAGE_KEYS, readRaw, writeRaw } from "./storage.js";
 //   - 保存値の検証 (isTabId)
 //   - スワイプジェスチャーの並び順 (index ± 1 で隣のタブへ)
 // をすべて兼ねる。表示順は index.html の .tab-btn の並びと一致させること。
-export const TAB_IDS = ["setup", "result", "hand", "nash", "practice"] as const;
+export const TAB_IDS = ["setup", "analyze", "practice"] as const;
 export type TabId = (typeof TAB_IDS)[number];
 
 const DEFAULT_TAB: TabId = "setup";
+
+// 旧5タブ構成 (result/hand/nash) の保存値は分析タブへ読み替える
+// (既存ユーザーの localStorage との互換)。
+const LEGACY_TAB_MAP: Record<string, TabId> = {
+  result: "analyze",
+  hand: "analyze",
+  nash: "analyze",
+};
 
 function isTabId(v: unknown): v is TabId {
   return typeof v === "string" && (TAB_IDS as readonly string[]).includes(v);
 }
 
-const savedTab = readRaw(STORAGE_KEYS.activeTab);
+const savedTabRaw = readRaw(STORAGE_KEYS.activeTab);
+const savedTab = (savedTabRaw && LEGACY_TAB_MAP[savedTabRaw]) || savedTabRaw;
 let activeTab: TabId = isTabId(savedTab) ? savedTab : DEFAULT_TAB;
 
 export function getActiveTab(): TabId {
@@ -75,6 +84,15 @@ export function initTabs(): void {
     btn.addEventListener("click", () => {
       const t = btn.dataset.tab as TabId | undefined;
       if (t) applyTab(t);
+    });
+  });
+
+  // 分析タブ先頭のセクションジャンプ (計算結果 / レンジ比較 / Nash)。
+  // 分析は3画面ぶんの縦フローなので、目的セクションへ1タップで飛べるようにする。
+  document.querySelectorAll<HTMLButtonElement>(".analyze-jump [data-jump]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.jump;
+      if (id) document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
     });
   });
 

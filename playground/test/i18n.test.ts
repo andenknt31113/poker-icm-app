@@ -57,9 +57,9 @@ describe("i18n t()", () => {
 
 describe("applyStaticTranslations", () => {
   it("[data-i18n] は textContent を辞書値にする", () => {
-    document.body.innerHTML = `<span data-i18n="tabs.result">X</span>`;
+    document.body.innerHTML = `<span data-i18n="tabs.analyze">X</span>`;
     applyStaticTranslations(document.body);
-    expect(document.body.querySelector("span")?.textContent).toBe("計算結果");
+    expect(document.body.querySelector("span")?.textContent).toBe("分析");
   });
 
   it("[data-i18n-html] は innerHTML を辞書値にする", () => {

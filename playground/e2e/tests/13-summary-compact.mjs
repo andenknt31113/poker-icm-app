@@ -11,7 +11,7 @@ export default async function testSummaryCompact({ baseURL, createContext }) {
 
     await page.goto(baseURL, { waitUntil: "load" });
     await page.click('.scenario-btn[data-scenario="ftBubble"]');
-    await page.click('.tab-btn[data-tab="result"]');
+    await page.click('.tab-btn[data-tab="analyze"]');
     await page.waitForSelector("#bf-matrix .bf-cell", { state: "visible" });
 
     await page.evaluate(() => window.scrollTo(0, 900));

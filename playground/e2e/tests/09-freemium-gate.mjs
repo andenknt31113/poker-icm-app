@@ -29,7 +29,7 @@ export default async function testFreemiumGate({ baseURL, createContext }) {
 
     // ② プリセット閲覧は無料 (ftBubble=4人 → 計算結果が見られる)
     await page.click('.scenario-btn[data-scenario="ftBubble"]');
-    await page.click('.tab-btn[data-tab="result"]');
+    await page.click('.tab-btn[data-tab="analyze"]');
     await page.waitForSelector("#bf-matrix .bf-cell", { state: "visible" });
 
     // ③ 3-handed プリセット (3人) → 編集可能になり、実際に編集できる

@@ -3273,14 +3273,14 @@ footer a {
     grid-column: 2;
   }
   /* 計算結果: ICM表(左上)・必要勝率(左下) / BFマップ(右・縦長) */
-  section[data-tab="result"]:has(#icm-table) {
+  section[data-tab="analyze"]:has(#icm-table) {
     grid-column: 1;
   }
-  section[data-tab="result"]:has(#bf-matrix) {
+  section[data-tab="analyze"]:has(#bf-matrix) {
     grid-column: 2;
     grid-row: span 2;
   }
-  section[data-tab="result"]:has(#eq-result) {
+  section[data-tab="analyze"]:has(#eq-result) {
     grid-column: 1;
   }
   /* 練習タブ: レンジグリッドが全幅だとセルが巨大化するため、
@@ -3300,4 +3300,33 @@ body:has(.tutorial-intro-card) .practice-mode,
 body:has(.tutorial-intro-card) .practice-controls,
 body:has(.tutorial-intro-card) #practice-progress {
   display: none;
+}
+
+/* ===== 分析タブ: セクションジャンプチップ ===== */
+.analyze-jump {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.analyze-jump button {
+  flex: 1;
+  padding: 9px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.analyze-jump button:active {
+  background: var(--accent);
+  color: #000;
+}
+/* ジャンプ先アンカー: sticky サマリー (コンパクト時 ~130px) に隠れない余白 */
+#sec-icm,
+#sec-hand,
+#sec-nash {
+  scroll-margin-top: 170px;
 }
