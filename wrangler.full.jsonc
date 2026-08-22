@@ -1,0 +1,14 @@
+// 完全版 (Pro 解放ビルド) の限定配布用 Worker。
+// デプロイ手順:
+//   FULL_VERSION=1 npm run build
+//   npx wrangler deploy --config wrangler.full.jsonc
+// URL: https://poker-icm-app-full.andenknt31113.workers.dev/
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "poker-icm-app-full",
+  "compatibility_date": "2026-01-01",
+  "assets": {
+    "directory": "./playground/dist",
+    "not_found_handling": "single-page-application"
+  }
+}

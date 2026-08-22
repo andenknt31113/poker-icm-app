@@ -23,7 +23,23 @@ export default defineConfig({
   },
   define: {
     __APP_VERSION__: JSON.stringify(resolveAppVersion()),
+    // FULL_VERSION=1 で「最初から Pro 解放」の完全版ビルドになる
+    // (別 Worker への限定配布用。通常ビルドでは false に畳まれてコードごと消える)
+    __FULL_VERSION__: JSON.stringify(process.env.FULL_VERSION === "1"),
   },
+  plugins: [
+    {
+      // 完全版は検索エンジンに載せない (公開 freemium 版の canonical を守る)
+      name: "full-version-noindex",
+      transformIndexHtml(html: string) {
+        if (process.env.FULL_VERSION !== "1") return html;
+        return html.replace(
+          "</title>",
+          '</title>\n    <meta name="robots" content="noindex" />',
+        );
+      },
+    },
+  ],
   build: {
     rollupOptions: {
       output: {
