@@ -43,7 +43,8 @@ let rcRuntimePro = false;
  */
 export function isPro(): boolean {
   // 完全版ビルド (FULL_VERSION=1 で vite build した別配布)。ロックなし。
-  if (__FULL_VERSION__) return true;
+  // typeof ガード: vitest 等 vite の define を通らない実行環境では未定義のため。
+  if (typeof __FULL_VERSION__ !== "undefined" && __FULL_VERSION__) return true;
   if (rcRuntimePro) return true;
   // localStorage 不可環境 (プライベートモード等) では裏口/キャッシュは読めず
   // readFlag が false を返すが、メモリ上の rcRuntimePro は既にチェック済み。
