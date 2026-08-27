@@ -24,11 +24,12 @@ import { STORAGE_KEYS, readFlag, writeRaw, removeRaw } from "./storage.js";
 
 /**
  * 無料プランで自由編集できる最大プレイヤー数。
- * 3人以下 (HU〜3-handed) はスタック・ペイ構造とも自由に編集でき、
- * 4人以上のテーブルの編集とシナリオ保存が Pro (買い切り)。
+ * 4人以下 (HU〜4-max。FTバブルの定番形を含む) はスタック・ペイ構造とも
+ * 自由に編集でき、5人以上のフルテーブルの編集とシナリオ保存が Pro (買い切り)。
  * シナリオプリセットの閲覧・計算は人数によらず無料。
+ * (v1.1 で 3→4 に拡大: 無料でも「編集して分析する」体験を最重要局面で試せるように)
  */
-export const FREE_MAX_PLAYERS = 3;
+export const FREE_MAX_PLAYERS = 4;
 
 // RevenueCat 由来の Pro 判定 (ランタイム)。localStorage が使えない環境でも
 // セッション中の判定を保持するためのメモリ上フラグ。

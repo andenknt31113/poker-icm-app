@@ -74,7 +74,7 @@ async function main() {
       run: () => testLangSwitch({ baseURL, createContext }),
     },
     {
-      name: "freemium 3人ルール: 3人以下は編集可 / 4人以上と追加はPro / プリセット閲覧無料",
+      name: "freemium 4人ルール: 4人以下は編集可 / 5人以上と追加はPro / プリセット閲覧無料",
       run: () => testFreemiumGate({ baseURL, createContext }),
     },
     {
