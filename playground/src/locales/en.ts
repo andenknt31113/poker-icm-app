@@ -241,7 +241,7 @@ export const en: Record<string, string> = {
   "guide.close.aria": "Close",
   // アプリ版のみ表示 (guide.ts proNoteHtml)。価格は書かない。
   "guide.proNote.html":
-    "ℹ️ Scenario presets, results, Nash equilibrium, and practice are all free. <strong>Tables with up to 3 players are fully editable (stacks & payouts)</strong>. Editing tables with 4+ players and saving scenarios are 🔒 Pro (one-time purchase) features.",
+    "ℹ️ Scenario presets, results, Nash equilibrium, and practice are all free. <strong>Tables with up to 4 players are fully editable (stacks & payouts)</strong>. Editing tables with 5+ players and saving scenarios are 🔒 Pro (one-time purchase) features.",
   "guide.body.html": `
         <p class="guide-intro">
           This tool focuses on short-stack (~20bb) all-in spots.
@@ -717,7 +717,7 @@ export const en: Record<string, string> = {
   // ===== ペイウォール (freemium ゲート, paywall.ts) =====
   "paywall.title": "🔓 Recreate your own table",
   "paywall.lead": "With Pro, recreate your exact table and analyze it.",
-  "paywall.feature.editStacks": "Recreate tables with 4+ players (stacks & payouts)",
+  "paywall.feature.editStacks": "Recreate full tables with 5+ players (stacks & payouts)",
   "paywall.feature.replay": "Recreate and analyze real hands",
   "paywall.feature.save": "Save scenarios and reload them anytime",
   "paywall.price": "Price: {price}",
