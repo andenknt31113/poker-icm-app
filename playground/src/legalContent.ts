@@ -10,7 +10,6 @@ export const LEGAL_CONTENT_TITLE = "📄 利用規約・プライバシーポリ
 export const LEGAL_CONTENT_HTML = `
   <p class="legal-meta">
     対象サービス: iOS アプリ「Poker ICM」および Web 版「Poker ICM/BF」（以下あわせて「本サービス」）<br />
-    Web 版 URL: <code>https://poker-icm-app.andenknt31113.workers.dev/</code><br />
     運営: 個人開発者
   </p>
 

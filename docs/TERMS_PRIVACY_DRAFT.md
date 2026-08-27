@@ -7,8 +7,10 @@
 # 利用規約・プライバシーポリシー（下書き）
 
 対象サービス: iOS アプリ「Poker ICM」および Web 版「Poker ICM/BF」（以下あわせて「本サービス」）
-Web 版 URL: https://poker-icm-app.andenknt31113.workers.dev/
 運営: 個人開発者（andenknt31113@gmail.com）
+
+<!-- 2026-08-27: アプリ内から外部 Web 版へ誘導して見えるのを避けるため Web 版 URL の記載を削除 -->
+
 
 ---
 
