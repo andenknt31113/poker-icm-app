@@ -41,6 +41,68 @@ const NASH_DEPTH_NOTE_THRESHOLD_BB = 12;
 // solveHUNash の収束条件。反復上限に達しても収束しなければ「未収束」と表示する。
 const NASH_MAX_ITERATIONS = 500;
 const NASH_CONVERGENCE_TOLERANCE = 0.001;
+let resultInputKey: string | null = null;
+
+export function renderNashContext(): void {
+  const context = document.getElementById("nash-context");
+  if (!context) return;
+  context.replaceChildren();
+  const heading = document.createElement("strong");
+  heading.textContent = t("nash.context");
+  context.appendChild(heading);
+  const conditions = document.createElement("p");
+  conditions.textContent = `${t("nash.prizes")}: ${payoutsInput.value} · SB ${nashSbInput.value} / BB ${nashBbInput.value} · ${t("nash.ante.label")} ${nashAnteInput.value}`;
+  const seats = document.createElement("div");
+  seats.className = "nash-context-seats";
+  const others = document.createElement("details");
+  const othersTitle = document.createElement("summary");
+  othersTitle.textContent = t("nash.details");
+  others.appendChild(othersTitle);
+  others.appendChild(conditions);
+  players.forEach((player, index) => {
+    const seat = document.createElement("span");
+    seat.className = `nash-seat ${player.role}`;
+    const role = player.role === "hero" ? t("nash.youPush") : player.role === "villain" ? t("nash.theyCall") : t("seat.number", { n: index + 1 });
+    seat.textContent = `${role} · ${player.position || "—"} · ${player.stack} BB`;
+    if (player.role === "other") others.appendChild(seat);
+    else seats.appendChild(seat);
+  });
+  context.appendChild(seats);
+  context.appendChild(others);
+  const reference = document.createElement("p");
+  const bf = document.querySelector("#bf-result .value")?.textContent;
+  reference.textContent = bf ? `${t("nash.bfReference")} ${bf}` : t("nash.err.needHV");
+  context.appendChild(reference);
+}
+
+export function ensureNashCalculated(): void {
+  if (document.body.dataset.activeTab !== "analyze" || document.body.dataset.analysisView !== "nash") return;
+  renderNashContext();
+  if (resultInputKey === currentInputKey() || nashSolveBtn.disabled || !hasHUMatrix()) return;
+  runNash();
+}
+
+function currentInputKey(): string {
+  return JSON.stringify([
+    players.map(({ stack, role, position }) => [stack, role, position]),
+    payoutsInput.value, nashSbInput.value, nashBbInput.value, nashAnteInput.value,
+  ]);
+}
+
+function clearNashResult(): void {
+  resultInputKey = null;
+  renderGrid(nashSbGrid, () => "");
+  renderGrid(nashBbGrid, () => "");
+  nashSbStats.textContent = "";
+  nashBbStats.textContent = "";
+  document.getElementById("nash-depth-note")?.classList.add("hidden");
+}
+
+export function invalidateChangedNash(): void {
+  if (resultInputKey === null || resultInputKey === currentInputKey()) return;
+  clearNashResult();
+  nashStatus.textContent = t("nash.inputsChanged");
+}
 
 // Nash の frequency マップで描画。既存のレンジ表示と同じ class / 同じ 13x13
 // マークアップを使うため、セル生成は grid.renderGrid に委ね、
@@ -84,6 +146,11 @@ export function updateNashOvercallWarn(): void {
   // hero/villain どちらかにポジ未指定があるなら判定不可 → 警告は出さない
   if (heroAct < 0 || villainAct < 0) {
     warnEl.classList.add("hidden");
+    return;
+  }
+  if (heroAct > villainAct) {
+    warnEl.textContent = t("nash.positionOrder");
+    warnEl.classList.remove("hidden");
     return;
   }
 
@@ -153,6 +220,7 @@ export function updateNashOvercallWarn(): void {
 }
 
 function runNash(): void {
+  clearNashResult();
   const stacks = players.map((p) => p.stack);
   const payouts = parseList(payoutsInput.value);
   const heroIndex = players.findIndex((p) => p.role === "hero");
@@ -192,10 +260,17 @@ function runNash(): void {
   const oldText = nashSolveBtn.textContent;
   nashSolveBtn.textContent = t("nash.calculating");
   nashStatus.textContent = "";
+  const inputKey = currentInputKey();
+  resultInputKey = inputKey;
 
   // 描画ブロックを避けるため setTimeout で処理を後回し
   setTimeout(() => {
     try {
+      if (resultInputKey !== inputKey || currentInputKey() !== inputKey) {
+        clearNashResult();
+        nashStatus.textContent = t("nash.inputsChanged");
+        return;
+      }
       const t0 = performance.now();
       const result = solveHUNash({
         stacks,
@@ -253,11 +328,13 @@ function runNash(): void {
         }
       }
     } catch (err) {
+      clearNashResult();
       const msg = err instanceof Error ? err.message : String(err);
-      nashStatus.innerHTML = `<span class="error">${msg}</span>`;
+      nashStatus.textContent = msg;
     } finally {
       nashSolveBtn.disabled = false;
       nashSolveBtn.textContent = oldText ?? t("nash.solveBtn");
+      if (currentInputKey() !== inputKey) ensureNashCalculated();
     }
   }, 10);
 }
@@ -286,4 +363,5 @@ export function initNashUI(): void {
   }
 
   nashSolveBtn.addEventListener("click", runNash);
+  document.addEventListener("analysis-view-change", ensureNashCalculated);
 }

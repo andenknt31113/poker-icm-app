@@ -13,20 +13,21 @@
 // freemium 専用の新規テストは pro を省略 (= 無料) または明示 false で使う。
 export function makeContextFactory(browser) {
   return async function createContext(opts = {}) {
-    const { theme, tutorialDone = true, onboardingDone = true, pro = false } = opts;
+    const { theme, tutorialDone = true, onboardingDone = true, pro = false, presetsOpen = true } = opts;
     const context = await browser.newContext();
     await context.addInitScript(
-      ({ theme, tutorialDone, onboardingDone, pro }) => {
+      ({ theme, tutorialDone, onboardingDone, pro, presetsOpen }) => {
         try {
           if (onboardingDone) localStorage.setItem("poker-icm-onboarding-done", "1");
           if (tutorialDone) localStorage.setItem("poker-icm-tutorial-done", "1");
           if (theme) localStorage.setItem("poker-icm-theme", theme);
           if (pro) localStorage.setItem("poker-icm-pro", "1");
+          if (presetsOpen) localStorage.setItem("poker-icm-collapse-scenario-presets", "open");
         } catch {
           /* ignore */
         }
       },
-      { theme, tutorialDone, onboardingDone, pro },
+      { theme, tutorialDone, onboardingDone, pro, presetsOpen },
     );
     return context;
   };

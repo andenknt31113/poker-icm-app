@@ -103,6 +103,40 @@ export interface Player {
   position: Position;
 }
 
+export function assignRole(table: Player[], playerId: number, role: Role): boolean {
+  const target = table.find(player => player.id === playerId);
+  if (!target || target.role === role) return false;
+  const previousRole = target.role;
+  if (role !== "other") {
+    const previous = table.find(player => player.role === role);
+    if (previous) previous.role = previousRole;
+  }
+  target.role = role;
+  return true;
+}
+
+export function swapDecisionPlayers(table: Player[]): boolean {
+  const hero = table.find(player => player.role === "hero");
+  const villain = table.find(player => player.role === "villain");
+  if (!hero || !villain) return false;
+  hero.role = "villain";
+  villain.role = "hero";
+  return true;
+}
+
+export function positionsForChangedTable(current: readonly Position[]): Position[] {
+  if (current.every(position => position === "")) return [...current];
+  const valid = positionsForN(current.length);
+  const occupied = new Set<Position>();
+  const next = current.map(position => {
+    if (!valid.includes(position) || occupied.has(position)) return "";
+    occupied.add(position);
+    return position;
+  });
+  const available = valid.filter(position => !occupied.has(position));
+  return next.map(position => position || available.shift() || "");
+}
+
 let nextId = 0;
 /** 新しい Player.id を払い出す。 */
 export function allocPlayerId(): number {

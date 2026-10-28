@@ -89,6 +89,7 @@ function showSwUpdateToast(waitingWorker: ServiceWorker): void {
 
 // ===== Service Worker 登録 (PWA) =====
 function initServiceWorker(): void {
+  if (import.meta.env.DEV) return;
   // ページ初期化時点では更新は未要求 (テストの分離にも必要)
   swUpdateRequested = false;
   // Capacitor (iOS) は capacitor:// 独自スキームで動作し、file: と同様に

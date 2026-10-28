@@ -7,6 +7,7 @@ import { players } from "./appState.js";
 import { isOnboardingDone } from "./guide.js";
 import { openInfoModal } from "./infoModal.js";
 import { applyTab } from "./tabs.js";
+import { setAnalysisView } from "./analysisView.js";
 import { STORAGE_KEYS, readFlag, writeFlag } from "./storage.js";
 import type { RangeVerdictSummary } from "./handRange.js";
 
@@ -53,7 +54,7 @@ const VERDICT_NONE_BELOW_PCT = 0.5;
 
 /** 「結局コール(push)していいか」の一行判定 HTML。villain 未指定時は空文字。 */
 function verdictLineHtml(hasVillain: boolean, v: RangeVerdictSummary): string {
-  if (!hasVillain) return "";
+  if (!hasVillain || v.available === false) return "";
   const none = v.heroPct < VERDICT_NONE_BELOW_PCT;
   const key =
     v.direction === "callBack"
@@ -90,23 +91,21 @@ export function renderHeroSummary(a: HeroSummaryArg): void {
   heroSummaryEl.classList.add("active");
   const heroStack = a.stacks[a.heroIndex]!;
   const heroPos = players[a.heroIndex]?.position || "—";
-  const heroEqPct = a.totalPrize > 0 ? (a.heroEq / a.totalPrize) * 100 : 0;
 
   const hasVillain = a.villainIndex >= 0;
   const villainStack = hasVillain ? a.stacks[a.villainIndex]! : 0;
   const villainPos = hasVillain ? players[a.villainIndex]?.position || "—" : "—";
-  const villainEqPct =
-    hasVillain && a.totalPrize > 0 ? (a.villainEq / a.totalPrize) * 100 : 0;
 
   const bfClass = bfColorClass(a.bf);
+  const heroRole = a.rangeVerdict.direction === "callBack" ? "calc.summary.considerCall" : "calc.summary.considerPush";
+  const villainRole = a.rangeVerdict.direction === "callBack" ? "calc.summary.allIn" : "calc.summary.assumedCall";
 
   const villainRow = hasVillain
     ? `
       <div class="hero-summary-row villain">
-        <div class="hero-summary-row-label">${t("calc.summary.villain")}</div>
+        <div class="hero-summary-row-label">${t("calc.summary.villain")}<span class="hero-summary-role">${t(villainRole)}</span></div>
         <div class="hero-summary-row-stat">${villainStack}<span class="unit">BB</span></div>
         <div class="hero-summary-row-stat">${villainPos}</div>
-        <div class="hero-summary-row-stat accent">${villainEqPct.toFixed(1)}<span class="unit">%</span></div>
       </div>`
     : `<div class="hero-summary-row villain muted-row">${t("calc.summary.villainUnset")}</div>`;
 
@@ -140,13 +139,13 @@ export function renderHeroSummary(a: HeroSummaryArg): void {
     </div>
     <div class="hero-summary-body${collapsed ? " collapsed" : ""}">
       ${contextLine}
+      ${villainRow}
       <div class="hero-summary-row hero">
-        <div class="hero-summary-row-label">${t("calc.summary.hero")}</div>
+        <div class="hero-summary-row-label">${t("calc.summary.hero")}${hasVillain ? `<span class="hero-summary-role">${t(heroRole)}</span>` : ""}</div>
         <div class="hero-summary-row-stat">${heroStack}<span class="unit">BB</span></div>
         <div class="hero-summary-row-stat">${heroPos}</div>
-        <div class="hero-summary-row-stat accent tappable" data-info="ICM">${heroEqPct.toFixed(1)}<span class="unit">%</span></div>
       </div>
-      ${villainRow}
+      ${a.rangeVerdict.direction === "pushBack" ? `<p class="hint hero-summary-push-note">${t("calc.summary.pushReference")}</p>` : ""}
       <div class="hero-summary-grid">
         <div class="hero-summary-item" data-info="BF">
           <div class="hero-summary-label tappable">${t("calc.summary.bfLabel")}</div>
@@ -222,6 +221,7 @@ export function initHeroSummary(): void {
     // 一行判定タップ → 分析タブのレンジ比較セクションへ (根拠のグリッドを見せる)
     const verdictBtn = target.closest<HTMLButtonElement>("#hero-summary-verdict-btn");
     if (verdictBtn) {
+      setAnalysisView("hand");
       applyTab("analyze");
       // applyTab のスムーズトップスクロールの後に上書きしてセクションへ
       requestAnimationFrame(() => {

@@ -13,7 +13,7 @@ const TABS = ["setup", "analyze", "practice"];
 const TAB_READY_SELECTOR = {
   setup: "#players-list .player-row",
   // 分析タブは 計算結果+レンジ比較+Nash の縦フロー。代表として必要勝率とレンジグリッドを待つ
-  analyze: "#eq-result",
+  analyze: "#grid-hero",
   // .mode-btn は #practice-area の外 (静的マークアップ) にあるため tab セクション基準で待つ。
   // 導入コース完了扱いにしているので、練習タブは即座に問題が出題される。
   practice: '.card[data-tab="practice"] .mode-btn',

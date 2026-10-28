@@ -639,9 +639,8 @@ body {
   margin-bottom: 14px;
   box-shadow: var(--hero-summary-shadow);
   position: sticky;
-  top: 4px;
+  top: calc(var(--safe-area-top, env(safe-area-inset-top, 0px)) + 4px);
   z-index: 50;
-  backdrop-filter: blur(8px);
 }
 .hero-summary.active {
   display: block;
@@ -706,7 +705,7 @@ body {
 }
 .hero-summary-row {
   display: grid;
-  grid-template-columns: 56px 1fr 1fr 1fr;
+  grid-template-columns: 56px 1fr 1fr;
   gap: 4px;
   align-items: center;
   padding: 4px 4px;
@@ -2274,6 +2273,13 @@ input[type="range"]::-moz-range-thumb {
   transform: translate(-50%, -50%);
   font-size: 32px;
 }
+.practice-range-details {
+  margin: 12px 0;
+}
+.practice-range-details > summary {
+  padding: 12px 0;
+  cursor: pointer;
+}
 .practice-hand {
   font-size: 12px;
   font-weight: normal;
@@ -3328,5 +3334,5 @@ body:has(.tutorial-intro-card) #practice-progress {
 #sec-icm,
 #sec-hand,
 #sec-nash {
-  scroll-margin-top: 170px;
+  scroll-margin-top: calc(170px + var(--safe-area-top, env(safe-area-inset-top, 0px)));
 }

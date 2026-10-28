@@ -3,6 +3,7 @@
 // 名前を付けて保存/復元する機能。どちらもプレイヤー配列・ペイ構造・Nash
 // パラメータをまとめて差し替える。
 import { t as tr } from "./i18n.js";
+import { checkpointSetup } from "./setupUndo.js";
 import { isPro } from "./entitlement.js";
 import { openPaywall } from "./paywall.js";
 import { recompute, setCallManualOverride } from "./calculator.js";
@@ -143,6 +144,7 @@ function applyNashParams(s: Scenario): void {
 function applyScenario(scenarioId: string): void {
   const scenario = SCENARIOS[scenarioId];
   if (!scenario) return;
+  checkpointSetup();
   // プレイヤーリスト置換
   replacePlayers(scenario.players);
   renderPlayers();
@@ -250,6 +252,7 @@ export function initScenariosUI(): void {
     if (target.classList.contains("user-load")) {
       const s = list[idx]?.s;
       if (s) {
+        checkpointSetup();
         replacePlayers(s.players);
         renderPlayers();
         setPayouts(s.payouts);

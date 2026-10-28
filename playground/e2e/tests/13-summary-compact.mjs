@@ -12,6 +12,7 @@ export default async function testSummaryCompact({ baseURL, createContext }) {
     await page.goto(baseURL, { waitUntil: "load" });
     await page.click('.scenario-btn[data-scenario="ftBubble"]');
     await page.click('.tab-btn[data-tab="analyze"]');
+    await page.click('[data-jump="sec-icm"]');
     await page.waitForSelector("#bf-matrix .bf-cell", { state: "visible" });
 
     await page.evaluate(() => window.scrollTo(0, 900));
@@ -41,6 +42,20 @@ export default async function testSummaryCompact({ baseURL, createContext }) {
     if (compact.heightPct > 0.2) {
       throw new Error(`floating 中の占有率が想定超え: ${(compact.heightPct * 100).toFixed(0)}%`);
     }
+
+    const safeAreaTop = 62;
+    const safeAreaLayout = await page.evaluate((inset) => {
+      document.documentElement.style.setProperty("--safe-area-top", `${inset}px`);
+      return {
+        summaryTop: document.getElementById("hero-summary").getBoundingClientRect().top,
+        anchorMargin: parseFloat(getComputedStyle(document.getElementById("sec-icm")).scrollMarginTop),
+        statusBarHeight: parseFloat(getComputedStyle(document.body, "::before").height),
+      };
+    }, safeAreaTop);
+    if (safeAreaLayout.summaryTop < safeAreaTop || safeAreaLayout.anchorMargin < 170 + safeAreaTop || safeAreaLayout.statusBarHeight !== safeAreaTop) {
+      throw new Error("サマリーまたはジャンプ先が上部セーフエリアを考慮していない");
+    }
+    await page.evaluate(() => document.documentElement.style.removeProperty("--safe-area-top"));
 
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForFunction(

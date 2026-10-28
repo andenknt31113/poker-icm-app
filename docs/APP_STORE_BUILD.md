@@ -1,5 +1,7 @@
 # App Store 提出ガイド (Capacitor iOS ラッパー)
 
+> 2026-09-07訂正: 現在の構成はCapacitor 8のSPM方式です。以下の旧CocoaPods / `.xcworkspace` 手順ではなく、`ios/App/App.xcodeproj`（scheme `App`）を開いてください。CocoaPodsのインストールは不要です。1.2準備状況は `RELEASE_1_2.md` を参照。
+
 対象アプリ: Poker ICM/BF (`dev.workers.andenknt31113.pokericm`)
 Web 本体: Vite + TS の PWA (`playground/`)、ネイティブラッパー: Capacitor 8 (`ios/`)
 

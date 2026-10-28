@@ -8,6 +8,7 @@ import { $ } from "./dom.js";
 import { isPro, FREE_MAX_PLAYERS } from "./entitlement.js";
 import { openPaywall } from "./paywall.js";
 import { recompute } from "./calculator.js";
+import { checkpointSetup } from "./setupUndo.js";
 import { renderPayouts } from "./setupPayouts.js";
 import {
   players,
@@ -15,6 +16,9 @@ import {
   positionsForN,
   nextFreePosition,
   positionsAfterChange,
+  positionsForChangedTable,
+  assignRole,
+  swapDecisionPlayers,
   type Role,
   type Position,
 } from "./appState.js";
@@ -36,10 +40,18 @@ export function renderPlayers(): void {
   // freemium: 無料時はスタック編集をロック (readonly + 🔒)。役割/ポジションは無料のまま。
   // 3人以下のテーブルは無料でも自由編集。4人以上は Pro のみ。
   const locked = !isPro() && players.length > FREE_MAX_PLAYERS;
+  const lockNotice = document.getElementById("players-lock-notice");
+  if (lockNotice) {
+    lockNotice.hidden = !locked;
+    lockNotice.textContent = tr("setup.players.locked", { n: FREE_MAX_PLAYERS });
+  }
+  document.querySelectorAll<HTMLButtonElement>("[data-swap-players]").forEach(button => {
+    button.disabled = !players.some(player => player.role === "hero") || !players.some(player => player.role === "villain");
+  });
   const validPositions: Position[] = ["", ...positionsForN(players.length)];
   players.forEach((p, i) => {
     const row = document.createElement("div");
-    row.className = "player-row";
+    row.className = `player-row ${p.role}`;
     const posOptions = validPositions
       .map(
         (pos) =>
@@ -48,15 +60,15 @@ export function renderPlayers(): void {
       .join("");
     row.innerHTML = `
       <span class="player-num">#${i + 1}</span>
-      <input type="number" inputmode="decimal" class="player-stack${locked ? " locked-pro" : ""}" min="0" step="1" value="${p.stack}" data-id="${p.id}"${locked ? " readonly" : ""} />
+      <input type="number" inputmode="decimal" aria-label="${tr("setup.player.stack.aria", { n: i + 1 })}" class="player-stack${locked ? " locked-pro" : ""}" min="0" step="1" value="${p.stack}" data-id="${p.id}"${locked ? " readonly" : ""} />
       ${locked ? `<span class="lock-badge" aria-hidden="true" title="${tr("paywall.lock.title")}">🔒</span>` : `<span class="player-unit">BB</span>`}
-      <select class="player-pos" data-id="${p.id}" title="${tr("setup.player.pos.title")}">${posOptions}</select>
+      <select class="player-pos" data-id="${p.id}" aria-label="${tr("setup.player.position.aria", { n: i + 1 })}" title="${tr("setup.player.pos.title")}">${posOptions}</select>
       <div class="player-roles" data-id="${p.id}">
-        <button type="button" class="role-btn ${p.role === "hero" ? "active hero" : ""}" data-role="hero" title="${tr("setup.player.role.hero")}">🎯</button>
-        <button type="button" class="role-btn ${p.role === "villain" ? "active villain" : ""}" data-role="villain" title="${tr("setup.player.role.villain")}">⚔️</button>
-        <button type="button" class="role-btn ${p.role === "other" ? "active" : ""}" data-role="other" title="${tr("setup.player.role.other")}">${tr("setup.player.role.otherText")}</button>
+        <button type="button" class="role-btn ${p.role === "hero" ? "active hero" : ""}" data-role="hero" aria-pressed="${p.role === "hero"}" aria-label="${tr("setup.player.role.hero")}" title="${tr("setup.player.role.hero")}">🎯</button>
+        <button type="button" class="role-btn ${p.role === "villain" ? "active villain" : ""}" data-role="villain" aria-pressed="${p.role === "villain"}" aria-label="${tr("setup.player.role.villain")}" title="${tr("setup.player.role.villain")}">⚔️</button>
+        <button type="button" class="role-btn ${p.role === "other" ? "active" : ""}" data-role="other" aria-pressed="${p.role === "other"}" aria-label="${tr("setup.player.role.other")}" title="${tr("setup.player.role.other")}">${tr("setup.player.role.otherText")}</button>
       </div>
-      <button type="button" class="player-remove${locked ? " locked-pro" : ""}" data-id="${p.id}" title="${tr("setup.common.delete")}" ${!locked && players.length <= MIN_PLAYERS ? "disabled" : ""}>✕</button>
+      <button type="button" class="player-remove" data-id="${p.id}" aria-label="${tr("setup.player.remove.aria", { n: i + 1 })}" title="${tr("setup.common.delete")}" ${players.length <= MIN_PLAYERS ? "disabled" : ""}>✕</button>
     `;
     playersList.appendChild(row);
   });
@@ -86,19 +98,9 @@ export function replacePlayers(
 
 function setRole(playerId: number, role: Role): void {
   const target = players.find((p) => p.id === playerId);
-  if (!target) return;
-
-  // hero/villain は同時に1人ずつだけ
-  if (role === "hero") {
-    for (const p of players) {
-      if (p.role === "hero") p.role = "other";
-    }
-  } else if (role === "villain") {
-    for (const p of players) {
-      if (p.role === "villain") p.role = "other";
-    }
-  }
-  target.role = role;
+  if (!target || target.role === role) return;
+  checkpointSetup();
+  assignRole(players, playerId, role);
   renderPlayers();
   recompute();
 }
@@ -114,12 +116,14 @@ function removePlayer(playerId: number): void {
   if (players.length <= MIN_PLAYERS) return;
   const idx = players.findIndex((p) => p.id === playerId);
   if (idx < 0) return;
+  checkpointSetup();
   const removed = players.splice(idx, 1)[0]!;
   // 削除した役割が hero/villain なら別の人に振る
   if (removed.role !== "other") {
     const replacement = players.find((p) => p.role === "other");
     if (replacement) replacement.role = removed.role;
   }
+  repairPositions();
   renderPlayers();
   renderPayouts(); // 3人境界を跨ぐとペイ構造側のロック表示も変わる
   recompute();
@@ -127,6 +131,7 @@ function removePlayer(playerId: number): void {
 
 function addPlayer(): void {
   if (players.length >= MAX_PLAYERS) return;
+  checkpointSetup();
   const avg =
     players.reduce((a, p) => a + p.stack, 0) / Math.max(1, players.length);
   // ポジション自動採番: 既存の割り当ては動かさず、新しい人数の正規セットで
@@ -141,6 +146,7 @@ function addPlayer(): void {
     role: "other",
     position,
   });
+  repairPositions();
   renderPlayers();
   renderPayouts(); // 3人境界を跨ぐとペイ構造側のロック表示も変わる
   recompute();
@@ -153,10 +159,24 @@ function addPlayer(): void {
 // 「1人直すと別の人のポジションが壊れる」モグラ叩きになるため。
 let ringAutoLinkArmed = true;
 
+export function getPositionAutoLink(): boolean {
+  return ringAutoLinkArmed;
+}
+
+export function setPositionAutoLink(armed: boolean): void {
+  ringAutoLinkArmed = armed;
+}
+
+function repairPositions(): void {
+  const positions = positionsForChangedTable(players.map(player => player.position));
+  players.forEach((player, index) => { player.position = positions[index]!; });
+}
+
 function setPosition(playerId: number, position: Position): void {
   const i = players.findIndex((p) => p.id === playerId);
-  if (i < 0) return;
+  if (i < 0 || players[i]?.position === position) return;
 
+  checkpointSetup();
   const next = positionsAfterChange(
     players.map((p) => p.position),
     i,
@@ -172,6 +192,7 @@ function setPosition(playerId: number, position: Position): void {
 }
 
 function randomizeStacks(): void {
+  checkpointSetup();
   // RANDOM_STACK_MIN_BB 〜 RANDOM_STACK_MAX_BB のランダム整数。
   const span = RANDOM_STACK_MAX_BB - RANDOM_STACK_MIN_BB + 1;
   for (const p of players) {
@@ -183,6 +204,13 @@ function randomizeStacks(): void {
 
 /** プレイヤー行のイベント配線。initSetup から一度だけ呼ぶ。 */
 export function initPlayersUI(): void {
+  document.querySelectorAll<HTMLButtonElement>("[data-swap-players]").forEach(button => button.addEventListener("click", () => {
+    if (!players.some(player => player.role === "hero") || !players.some(player => player.role === "villain")) return;
+    checkpointSetup();
+    swapDecisionPlayers(players);
+    renderPlayers();
+    recompute();
+  }));
   // イベントデリゲーション
   playersList.addEventListener("click", (e) => {
     const target = e.target as HTMLElement;

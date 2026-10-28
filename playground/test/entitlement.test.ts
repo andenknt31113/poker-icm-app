@@ -116,6 +116,40 @@ describe("applyRevenueCatCustomerInfo", () => {
 });
 
 describe("initEntitlements の dynamic import ガード", () => {
+  it.each(["configure", "addCustomerInfoUpdateListener", "getCustomerInfo"] as const)(
+    "%s が通信失敗しても既存Proキャッシュを維持する",
+    async failurePoint => {
+      localStorage.setItem("poker-icm-pro-rc", "1");
+      purchasesMock.configure.mockResolvedValue(undefined);
+      purchasesMock.addCustomerInfoUpdateListener.mockResolvedValue("cb-id");
+      purchasesMock.getCustomerInfo.mockResolvedValue({ customerInfo: makeCustomerInfo(true) });
+      purchasesMock[failurePoint].mockRejectedValue(new Error("offline"));
+      const { initEntitlements, isPro, onEntitlementChange } = await loadEntitlement({ key: "appl_test", native: true });
+      const listener = vi.fn();
+      onEntitlementChange(listener);
+      await expect(initEntitlements()).resolves.toBeUndefined();
+      expect(isPro()).toBe(true);
+      expect(localStorage.getItem("poker-icm-pro-rc")).toBe("1");
+      expect(listener).not.toHaveBeenCalled();
+      expect(purchasesMock.purchasePackage).not.toHaveBeenCalled();
+      expect(purchasesMock.restorePurchases).not.toHaveBeenCalled();
+    },
+  );
+
+  it("通信失敗した無料ユーザーをProにせず、復帰後に有効な権限を反映する", async () => {
+    purchasesMock.configure.mockResolvedValue(undefined);
+    purchasesMock.addCustomerInfoUpdateListener.mockResolvedValue("cb-id");
+    purchasesMock.getCustomerInfo.mockRejectedValue(new Error("offline"));
+    const { initEntitlements, isPro } = await loadEntitlement({ key: "appl_test", native: true });
+    await expect(initEntitlements()).resolves.toBeUndefined();
+    expect(isPro()).toBe(false);
+    expect(localStorage.getItem("poker-icm-pro-rc")).toBeNull();
+    const listener = purchasesMock.addCustomerInfoUpdateListener.mock.calls[0]![0] as (info: CustomerInfoLike) => void;
+    listener(makeCustomerInfo(true));
+    expect(isPro()).toBe(true);
+    expect(localStorage.getItem("poker-icm-pro-rc")).toBe("1");
+  });
+
   it("IAP 未設定 (キー空) なら @revenuecat を import せず configure しない", async () => {
     const { initEntitlements } = await loadEntitlement({ key: "", native: true });
     await initEntitlements();

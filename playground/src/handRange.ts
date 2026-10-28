@@ -153,6 +153,21 @@ const MARGINAL_BAND = 0.001;
 // タップで数値検分中のハンド (callBack 方向のみ)。
 let inspectedHand: HandNotation | null = null;
 
+export function setRangeUnavailable(message: string | null): void {
+  const notice = document.getElementById("range-unavailable");
+  const content = document.getElementById("range-content");
+  if (notice) {
+    notice.textContent = message ?? "";
+    notice.classList.toggle("hidden", message === null);
+  }
+  content?.classList.toggle("hidden", message !== null);
+  if (message !== null) {
+    renderGrid(heroGrid, () => "");
+    callStats.textContent = "";
+    document.getElementById("hand-cell-detail")?.classList.add("hidden");
+  }
+}
+
 /** 検分中ハンドの数値詳細 (勝率/必要勝率/差分/判定) を #hand-cell-detail に表示する。 */
 function renderInspectDetail(villainRange: Set<HandNotation>, requiredEquity: number): void {
   const el = document.getElementById("hand-cell-detail");
@@ -189,6 +204,7 @@ export interface RangeVerdictSummary {
   direction: "callBack" | "pushBack";
   villainPct: number;
   heroPct: number;
+  available?: boolean;
 }
 
 export function renderRangeComparison(requiredEquity: number): RangeVerdictSummary {
@@ -196,6 +212,13 @@ export function renderRangeComparison(requiredEquity: number): RangeVerdictSumma
   pushPctLabel.textContent = String(pushPct);
 
   const villainRange = getCurrentVillainRange();
+  const emptyRange = villainRange.size === 0;
+  const rangeNotice = document.getElementById("range-unavailable");
+  if (rangeNotice) {
+    rangeNotice.textContent = emptyRange ? t("hand.emptyRange") : "";
+    rangeNotice.classList.toggle("hidden", !emptyRange);
+  }
+  heroGrid.classList.toggle("hidden", emptyRange);
 
   // カスタム時はクリック可能スタイルを付与
   if (villainRangeMode === "custom") {
@@ -230,6 +253,10 @@ export function renderRangeComparison(requiredEquity: number): RangeVerdictSumma
 
   const totalHands = ALL_169_HANDS.length;
   const villainPct = comboPctOfRange(villainRange);
+  const comboPctLabel = document.getElementById("preset-combo-pct");
+  if (comboPctLabel) {
+    comboPctLabel.textContent = t("hand.preset.combos", { pct: villainPct.toFixed(0) });
+  }
   let verdict: RangeVerdictSummary;
 
   if (direction === "callBack") {
@@ -265,7 +292,6 @@ export function renderRangeComparison(requiredEquity: number): RangeVerdictSumma
       callPct: callComboPct.toFixed(0),
       marginal,
     });
-    renderInspectDetail(villainRange, requiredEquity);
     verdict = { direction, villainPct, heroPct: callComboPct };
   } else {
     // 逆算: 相手 call (villainRange) に対し自分が push +EV になるハンド
@@ -285,6 +311,12 @@ export function renderRangeComparison(requiredEquity: number): RangeVerdictSumma
     });
     verdict = { direction, villainPct, heroPct: pushComboPct };
   }
+  if (emptyRange) {
+    callStats.textContent = "";
+    document.getElementById("hand-cell-detail")?.classList.add("hidden");
+  } else {
+    renderInspectDetail(villainRange, requiredEquity);
+  }
 
   // カスタムモードのカウント表示
   if (villainRangeMode === "custom") {
@@ -296,7 +328,7 @@ export function renderRangeComparison(requiredEquity: number): RangeVerdictSumma
     });
   }
 
-  return verdict;
+  return { ...verdict, available: !emptyRange };
 }
 
 // ハンドレンジ比較セクションの hero ポジション バナー
@@ -365,6 +397,9 @@ export function initHandRange(onChange: () => void): void {
         .forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       villainRangeMode = btn.dataset.mode as RangeMode;
+      const rangeDetails = document.getElementById("villain-range-details") as HTMLDetailsElement | null;
+      if (rangeDetails) rangeDetails.open = villainRangeMode === "custom";
+      document.getElementById("sec-hand")?.classList.toggle("custom-range-mode", villainRangeMode === "custom");
       if (villainRangeMode === "preset") {
         presetControls.classList.remove("hidden");
         customControls.classList.add("hidden");
@@ -487,7 +522,9 @@ export function initHandRange(onChange: () => void): void {
     if (!cell || !cell.title) return;
     inspectedHand = inspectedHand === cell.title ? null : (cell.title as HandNotation);
     onChange();
+    if (inspectedHand) document.getElementById("hand-cell-detail")?.scrollIntoView({ block: "center", behavior: "smooth" });
   });
+
 
   // pushRangeInput の変更は再計算トリガー
   pushRangeInput.addEventListener("input", onChange);

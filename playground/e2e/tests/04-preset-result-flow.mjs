@@ -15,6 +15,7 @@ export default async function testPresetResultFlow({ baseURL, createContext }) {
 
     await page.click('.scenario-btn[data-scenario="ftBubble"]');
     await page.click('.tab-btn[data-tab="analyze"]');
+    await page.click('[data-jump="sec-icm"]');
 
     // BF マトリクス: ftBubble は 4 人なので 4x4 のデータセル (対角以外 12 個) が並ぶ
     await page.waitForSelector("#bf-matrix .bf-cell", { state: "visible" });

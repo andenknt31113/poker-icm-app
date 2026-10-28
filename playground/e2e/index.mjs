@@ -27,6 +27,9 @@ import testAddPlayerAutoPosition from "./tests/10-add-player-auto-position.mjs";
 import testSummaryCallVerdict from "./tests/11-summary-call-verdict.mjs";
 import testPositionSwap from "./tests/12-position-swap.mjs";
 import testSummaryCompact from "./tests/13-summary-compact.mjs";
+import testWorkspaceFlow from "./tests/14-workspace-flow.mjs";
+import testNashInvalidation from "./tests/15-nash-invalidation.mjs";
+import testCompactUsability from "./tests/16-compact-usability.mjs";
 
 async function main() {
   const t0 = Date.now();
@@ -36,11 +39,15 @@ async function main() {
   const server = await startPreviewServer();
   console.log(`[e2e] vite preview 起動: ${server.baseURL}`);
 
-  const browser = await chromium.launch();
+  const browser = await chromium.launch(process.env.E2E_BROWSER_CHANNEL ? { channel: process.env.E2E_BROWSER_CHANNEL } : {});
   const createContext = makeContextFactory(browser);
   const baseURL = server.baseURL;
 
   const tests = [
+    {
+      name: "コンパクト入力・役割交換・空入力・スマホ表示",
+      run: () => testCompactUsability({ baseURL, createContext }),
+    },
     {
       name: "3タブ レンダリング・ダーク固定 (console/pageerror ゼロ)",
       run: () => testTabsTheme({ baseURL, createContext }),
@@ -86,7 +93,7 @@ async function main() {
       run: () => testSummaryCallVerdict({ baseURL, createContext }),
     },
     {
-      name: "ポジション変更: プリセット直後は自動連動 / 2回目からは入れ替え",
+      name: "ポジション選択・取り消し・役割とスタックの保存復元",
       run: () => testPositionSwap({ baseURL, createContext }),
     },
     {
@@ -96,6 +103,8 @@ async function main() {
   ];
 
   let results = [];
+  tests.push({ name: "Nash: 条件変更で旧結果を消去して再計算", run: () => testNashInvalidation({ baseURL, createContext }) });
+  tests.push({ name: "新しい画面: 入力→レンジ確認→練習・再読み込み", run: () => testWorkspaceFlow({ baseURL, createContext }) });
   try {
     results = await runSuite(tests);
   } finally {

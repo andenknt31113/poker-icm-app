@@ -4,6 +4,7 @@ import { updatePracticeProgress } from "./practice/progress.js";
 import { isTutorialActive, isTutorialDone, isTutorialSkippedSession } from "./practice/tutorialState.js";
 import { renderTutorialNarrationStep, renderTutorialIntroCard } from "./practice/tutorial.js";
 import { STORAGE_KEYS, readRaw, writeRaw } from "./storage.js";
+import { initAnalysisView, setAnalysisView } from "./analysisView.js";
 
 // ===== タブナビ =====
 //
@@ -39,9 +40,12 @@ export function getActiveTab(): TabId {
 
 export function applyTab(tab: TabId): void {
   activeTab = tab;
+  document.body.dataset.activeTab = tab;
+  document.dispatchEvent(new Event("analysis-view-change"));
   writeRaw(STORAGE_KEYS.activeTab, tab);
   document.querySelectorAll<HTMLButtonElement>(".tab-btn").forEach((b) => {
     b.classList.toggle("active", b.dataset.tab === tab);
+    b.setAttribute("aria-pressed", String(b.dataset.tab === tab));
   });
   document.querySelectorAll<HTMLElement>("[data-tab]").forEach((el) => {
     if (el.classList.contains("tab-btn")) return; // ボタン自体は対象外
@@ -80,19 +84,18 @@ export function applyTab(tab: TabId): void {
 
 /** タブバー・スワイプジェスチャーの配線。main.ts から一度だけ呼ぶ。 */
 export function initTabs(): void {
+  initAnalysisView();
+  document.querySelectorAll<HTMLButtonElement>("[data-open-tab]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const target = button.dataset.openTab;
+      if (target === "analyze") setAnalysisView("hand");
+      if (isTabId(target)) applyTab(target);
+    });
+  });
   document.querySelectorAll<HTMLButtonElement>(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const t = btn.dataset.tab as TabId | undefined;
       if (t) applyTab(t);
-    });
-  });
-
-  // 分析タブ先頭のセクションジャンプ (計算結果 / レンジ比較 / Nash)。
-  // 分析は3画面ぶんの縦フローなので、目的セクションへ1タップで飛べるようにする。
-  document.querySelectorAll<HTMLButtonElement>(".analyze-jump [data-jump]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const id = btn.dataset.jump;
-      if (id) document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
     });
   });
 

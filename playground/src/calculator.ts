@@ -15,9 +15,10 @@ import {
   calculatePotOdds,
   calculateRequiredEquity,
 } from "@poker-icm/core";
-import { renderRangeComparison, updateHandPositionBanner } from "./handRange.js";
-import { updateNashOvercallWarn } from "./nashUI.js";
+import { renderRangeComparison, updateHandPositionBanner, setRangeUnavailable } from "./handRange.js";
+import { updateNashOvercallWarn, invalidateChangedNash, ensureNashCalculated } from "./nashUI.js";
 import { t } from "./i18n.js";
+import { checkpointSetup } from "./setupUndo.js";
 import { $ } from "./dom.js";
 import {
   players,
@@ -54,6 +55,9 @@ const NUM_STEP_MIN = 0.1;
 // セクション 5 のコール額/純利得を手動編集したかどうかのフラグ。
 // true の間は自動更新を抑制。シナリオ変更や autofill ボタンで false にリセット。
 let callManualOverride = false;
+export function getCallManualOverride(): boolean {
+  return callManualOverride;
+}
 export function setCallManualOverride(v: boolean): void {
   callManualOverride = v;
 }
@@ -61,15 +65,23 @@ export function setCallManualOverride(v: boolean): void {
 // ===== メイン計算 =====
 
 export function recompute(): void {
+  invalidateChangedNash();
   try {
     const stacks = players.map((p) => p.stack);
     const payouts = parseList(payoutsInput.value);
 
     if (stacks.length === 0) throw new Error(t("calc.err.needPlayer"));
     if (payouts.length === 0) throw new Error(t("calc.err.needPayout"));
+    if (!payouts.some(payout => payout > 0)) throw new Error(t("calc.err.positivePrize"));
 
     const heroIndex = players.findIndex((p) => p.role === "hero");
     const villainIndex = players.findIndex((p) => p.role === "villain");
+    const decisionUnavailable = heroIndex < 0 || villainIndex < 0
+      ? t("calc.bf.err.needHV")
+      : stacks[heroIndex]! <= 0 || stacks[villainIndex]! <= 0
+        ? t("calc.bf.err.zeroStack")
+        : null;
+    setRangeUnavailable(decisionUnavailable);
 
     // ICM
     const equities = calculateICM(stacks, payouts);
@@ -236,6 +248,7 @@ export function recompute(): void {
 
     // レンジ比較 (戻り値の要約は状況サマリーの一行判定に使う)
     const rangeVerdict = renderRangeComparison(eq.dollarEV);
+    if (decisionUnavailable) setRangeUnavailable(decisionUnavailable);
 
     // Hero サマリー
     renderHeroSummary({
@@ -251,6 +264,7 @@ export function recompute(): void {
       rp: eq.riskPremium,
       rangeVerdict,
     });
+    if (decisionUnavailable) hideHeroSummary();
 
     // 状態を保存
     saveState();
@@ -258,12 +272,14 @@ export function recompute(): void {
     updatePositionWarn(heroIndex, villainIndex);
     updateDepthWarn(heroIndex, villainIndex, stacks);
     updateHandPositionBanner(heroIndex);
+    ensureNashCalculated();
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     icmRows.innerHTML = `<tr><td colspan="4" class="error">${msg}</td></tr>`;
     bfResult.innerHTML = "";
     eqResult.innerHTML = "";
     hideHeroSummary();
+    setRangeUnavailable(msg);
     updateDepthWarn(-1, -1, []);
   }
 }
@@ -274,7 +290,10 @@ export function initCalculator(): void {
   initBFMatrix();
 
   [callInput, potWinInput].forEach((el) => {
-    el.addEventListener("input", recompute);
+    el.addEventListener("input", () => {
+      callManualOverride = true;
+      recompute();
+    });
   });
 
   // SB/BB/アンティの編集も即時再計算 (必要勝率の自動算出とサマリーが追従する)。
@@ -308,6 +327,7 @@ export function initCalculator(): void {
     const totalAnte = Number(nashAnteInput.value) || 0; // アンティ入力は常にテーブル合計
     const dead = sb + bb + totalAnte;
 
+    checkpointSetup();
     callInput.value = risk.toFixed(1);
     potWinInput.value = (risk + dead).toFixed(1);
     callManualOverride = false; // autofill 押したら自動追従モードに戻す
@@ -324,13 +344,6 @@ export function initCalculator(): void {
     recompute();
   });
 
-  // 手動編集を検知して override フラグを立てる
-  [callInput, potWinInput].forEach((el) => {
-    el.addEventListener("input", () => {
-      callManualOverride = true;
-    });
-  });
-
   // ===== コール額 / 純利得の +/- ステッパー =====
   document.querySelectorAll<HTMLButtonElement>(".num-step-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -341,6 +354,8 @@ export function initCalculator(): void {
       if (!input) return;
       const cur = Number(input.value) || 0;
       const next = Math.max(NUM_STEP_MIN, cur + delta);
+      if (next === cur) return;
+      checkpointSetup();
       input.value = next.toFixed(1);
       callManualOverride = true;
       recompute();

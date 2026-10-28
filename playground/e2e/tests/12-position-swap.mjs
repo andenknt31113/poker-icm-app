@@ -1,54 +1,60 @@
-// 12. ポジション変更の2段階挙動:
-//     プリセット直後の1回目 = リング自動連動 / 2回目以降 = 保持者との入れ替え。
-//     旧挙動 (毎回リング再割当) では「1人直すと別の人が壊れる」モグラ叩きに
-//     なっていた回帰を防ぐ。
 import { attachErrorCollector, assertNoErrors } from "../lib/context.mjs";
-
 export default async function testPositionSwap({ baseURL, createContext }) {
-  const context = await createContext({ tutorialDone: true, pro: true });
+  const context = await createContext({ pro: true });
   try {
     const page = await context.newPage();
-    const errors = attachErrorCollector(page, "position-swap");
-
+    const errors = attachErrorCollector(page, "seat-order");
     await page.goto(baseURL, { waitUntil: "load" });
-    await page.click('.scenario-btn[data-scenario="ftBubble"]'); // 4人 BB,SB,BTN,CO
-    await page.waitForFunction(
-      () => document.querySelectorAll("#players-list .player-row").length === 4,
-    );
-    const positions = () =>
-      page.$$eval("#players-list .player-pos", (els) => els.map((el) => el.value));
-
-    // 1回目 (プリセット直後): リング自動連動 — #1 を BTN にすると全員が並び直す
-    await page.selectOption("#players-list .player-row:nth-child(1) .player-pos", "BTN");
-    const afterLink = await positions();
-    if (afterLink.join(",") !== "BTN,SB,BB,CO") {
-      throw new Error(`1回目のリング自動連動が想定と異なります: ${afterLink.join(",")}`);
-    }
-
-    // 2回目: 入れ替え — #2 (SB) を CO にすると、CO だった #4 が SB を引き取り
-    // #1 と #3 は動かない
-    await page.selectOption("#players-list .player-row:nth-child(2) .player-pos", "CO");
-    const afterSwap = await positions();
-    if (afterSwap.join(",") !== "BTN,CO,BB,SB") {
-      throw new Error(`2回目の入れ替えが想定と異なります: ${afterSwap.join(",")}`);
-    }
-
-    // プリセットを適用し直すと自動連動に戻る
     await page.click('.scenario-btn[data-scenario="ftBubble"]');
-    await page.waitForFunction(
-      () =>
-        Array.from(document.querySelectorAll("#players-list .player-pos"))
-          .map((el) => el.value)
-          .join(",") === "BB,SB,BTN,CO",
-    );
-    await page.selectOption("#players-list .player-row:nth-child(2) .player-pos", "BTN");
-    const afterRearm = await positions();
-    if (afterRearm.join(",") !== "CO,BTN,SB,BB") {
-      throw new Error(`プリセット再適用後の自動連動が想定と異なります: ${afterRearm.join(",")}`);
-    }
-
-    assertNoErrors(errors, "ポジション変更 (自動連動→入れ替え) のフロー");
-  } finally {
-    await context.close();
-  }
+    const positions = () => page.locator(".player-pos").evaluateAll(elements => elements.map(element => element.value));
+    const originalStacks = await page.locator(".player-stack").evaluateAll(elements => elements.map(element => element.value));
+    if (await page.locator(".seat-heading, #seat-edit").count()) throw new Error("大きな席カードが残っている");
+    const originalPrizes = await page.locator("#payouts").inputValue();
+    await page.locator('.tab-btn[data-tab="analyze"]').click();
+    await page.locator('[data-jump="sec-icm"]').click();
+    await page.locator("#call").fill("2");
+    await page.locator("#potwin").fill("7");
+    if (await page.locator("#call").inputValue() !== "2") throw new Error("手入力のコール額が自動計算で上書きされた");
+    await page.locator('.num-step-btn[data-target="call"][data-delta="1"]').click();
+    if (Number(await page.locator("#call").inputValue()) !== 3) throw new Error("コール額を増やせない");
+    await page.locator('.tab-btn[data-tab="setup"]').click();
+    await page.click("#setup-undo");
+    if (await page.locator("#call").inputValue() !== "2") throw new Error("ステッパー操作を取り消せない");
+    await page.click('.scenario-btn[data-scenario="hu"]');
+    await page.click("#setup-undo");
+    if (await page.locator("#call").inputValue() !== "2" || await page.locator("#potwin").inputValue() !== "7") throw new Error("手動コール額を復元できない");
+    if ((await page.locator(".player-stack").evaluateAll(elements => elements.map(element => element.value))).join(",") !== originalStacks.join(",")) throw new Error("例題適用を取り消せない");
+    if (await page.locator("#payouts").inputValue() !== originalPrizes) throw new Error("賞金を復元できない");
+    if (!(await page.locator("#setup-undo").isDisabled())) throw new Error("取り消しが一段で止まらない");
+    await page.click("#randomize-stacks");
+    await page.locator(".player-stack").first().click();
+    await page.locator('.role-btn.hero.active').click();
+    if (await page.locator('.role-btn.hero.active').count() !== 1) throw new Error("選択中の自分が解除された");
+    await page.locator('.role-btn.villain.active').click();
+    if (await page.locator('.role-btn.villain.active').count() !== 1) throw new Error("選択中の相手が解除された");
+    await page.click("#setup-undo");
+    if ((await page.locator(".player-stack").evaluateAll(elements => elements.map(element => element.value))).join(",") !== originalStacks.join(",")) throw new Error("ランダム化を取り消せない");
+    await page.locator(".player-stack").first().fill("7");
+    await page.locator(".player-stack").first().fill("8");
+    await page.click("#setup-undo");
+    if (await page.locator(".player-stack").first().inputValue() !== originalStacks[0]) throw new Error("連続入力を取り消せない");
+    await page.locator(".player-remove").first().click();
+    await page.click("#setup-undo");
+    if (await page.locator(".player-row").count() !== originalStacks.length) throw new Error("削除を取り消せない");
+    await page.locator(".player-pos").nth(1).selectOption("BTN");
+    const changedPositions = await positions();
+    if (changedPositions[1] !== "BTN" || new Set(changedPositions).size !== originalStacks.length) throw new Error("ポジション選択に失敗");
+    await page.click("#setup-undo");
+    await page.locator(".player-pos").nth(1).selectOption("BTN");
+    const savedPositions = await positions();
+    await page.reload();
+    if ((await positions()).join(",") !== savedPositions.join(",")) throw new Error("ポジションが復元されない");
+    const restoredStacks = await page.locator(".player-stack").evaluateAll(elements => elements.map(element => element.value));
+    if (restoredStacks.join(",") !== originalStacks.join(",")) throw new Error("スタックが変わった");
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.locator("#players-list").scrollIntoViewIfNeeded();
+    if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)) throw new Error("席の画面が横にはみ出した");
+    if (process.env.QA_SCREENSHOT_DIR) await page.screenshot({ path: process.env.QA_SCREENSHOT_DIR + "/seating.png" });
+    assertNoErrors(errors, "席順とBTNの変更");
+  } finally { await context.close(); }
 }
