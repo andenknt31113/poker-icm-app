@@ -103,8 +103,9 @@ export function computeHUEquity(
 
 /**
  * hero ハンド vs レンジ(=ハンドクラス集合) の equity を MC で計算。
- * villain は「ハンドクラスを一様抽選 → そのクラスのコンボを一様抽選」で配る
- * (既存テーブルと同一のサンプリング定義: クラス等確率)。
+ * villain はレンジ内の全コンボから一様抽選で配る (ペア6・スーテッド4・オフスート12 の
+ * コンボ数どおりの頻度になる。hero とカードが被るコンボは引き直す = カードリムーバル)。
+ * 以前はクラスを等確率で選んでいて、オフスートが実際の 1/3 の頻度になっていた。
  */
 export function computeRangeEquity(
   heroCombos: ReadonlyArray<readonly [number, number]>,
@@ -112,7 +113,8 @@ export function computeRangeEquity(
   trials: number,
   rng: () => number,
 ): number {
-  if (heroCombos.length === 0 || villainCombosPerClass.length === 0) return 0.5;
+  const villainCombos = villainCombosPerClass.flat();
+  if (heroCombos.length === 0 || villainCombos.length === 0) return 0.5;
   let wins = 0;
   let actual = 0;
   for (let t = 0; t < trials; t++) {
@@ -120,8 +122,7 @@ export function computeRangeEquity(
     const h0 = h[0], h1 = h[1];
     let v0 = -1, v1 = -1, ok = false;
     for (let attempt = 0; attempt < MAX_RESAMPLE_VILLAIN; attempt++) {
-      const cls = villainCombosPerClass[(rng() * villainCombosPerClass.length) | 0]!;
-      const cand = cls[(rng() * cls.length) | 0]!;
+      const cand = villainCombos[(rng() * villainCombos.length) | 0]!;
       if (cand[0] !== h0 && cand[0] !== h1 && cand[1] !== h0 && cand[1] !== h1) {
         v0 = cand[0]; v1 = cand[1]; ok = true; break;
       }

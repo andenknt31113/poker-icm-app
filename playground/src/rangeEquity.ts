@@ -1,11 +1,10 @@
 /**
  * レンジ対レンジの equity 計算 (169 ハンドクラス抽象 + カードリムーバル)。
  *
- * 従来のカスタムレンジ equity は「レンジの平均ランクから相当する Top X% を推定して
- * テーブルを引く」という粗い近似だった (レンジの形を無視するため、二極化した
- * カスタムレンジなどで数ポイント単位のズレが出る)。ここでは
  * HU 169×169 マトリクス (各ペア MC 1,000,000 試行) を、hero の実カードを考慮した
- * コンボ数 (カードリムーバル/ブロッカー効果) で重み付き平均する方式に置き換える。
+ * コンボ数 (カードリムーバル/ブロッカー効果) で重み付き平均する。プリセット
+ * (Top X%) とカスタムレンジの両方がこの計算を使う。レンジ内のコンボを直接配る
+ * MC と比べて平均 0.07pt・最大 0.2pt 程度で一致する (test/rangeEquity.test.ts)。
  *
  * 例: hero が AKs を持つと、相手の AA は 6→3 コンボ、AKo は 12→7 コンボに減る。
  * この効果は AX/KX ブロッカーを持つハンドの対レンジ equity を体感できるレベル
@@ -15,7 +14,7 @@
  * suited: 同スート、offsuit: 異スート) を固定してコンボ数を数える。
  * これは 169 抽象での標準的な扱いで、クラス内のスート対称性から誤差は生じない。
  */
-import { rankOf, ALL_169_HANDS, type HandNotation } from "./handRanking.js";
+import type { HandNotation } from "./handRanking.js";
 import { huEquity } from "./huEquityMatrix.js";
 
 /** "AKs" → ["A","K","s"] 形式の分解。pair は suit 部が undefined。 */
@@ -100,19 +99,4 @@ export function matrixEquityVsRange(hand: HandNotation, range: Set<HandNotation>
     den += w;
   }
   return den > 0 ? num / den : 0.5;
-}
-
-/**
- * range が「本ツールの強度順の上位 k 個ちょうど」(= topRange(X) の形) かどうか。
- * この形なら Top X% 用の MC 事前計算テーブル (レンジ全体を実際に配って回した値)
- * のほうが抽象誤差が小さいため、そちらを優先させる判定に使う。
- */
-export function isTopPrefixRange(range: Set<HandNotation>): boolean {
-  if (range.size === 0 || range.size > ALL_169_HANDS.length) return false;
-  let maxRank = -1;
-  for (const h of range) {
-    const r = rankOf(h);
-    if (r > maxRank) maxRank = r;
-  }
-  return maxRank === range.size - 1;
 }

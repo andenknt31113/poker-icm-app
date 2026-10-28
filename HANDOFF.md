@@ -337,3 +337,13 @@
 - 単体321件（77+244）・型チェック・ビルド・画面操作16件・git diff --check成功。画面操作には日本語/英語・保存復元・課金境界・練習・Nash更新を含む。320/390/768/1280pxで横はみ出しなし。画像をartifacts/usability-2026-10-01に保存し、小型スマホとデスクトップを目視確認。
 - E2EはE2E_BROWSER_CHANNEL=chromiumでインストール済みChromiumを使用。前回のheadless shellタイムアウトを回避。テストランナーと画像取得スクリプトへ任意のchannel環境変数を追加。
 - docs/UX_UPDATE_2026_10_01.mdに結果、RELEASE_1_3.mdに現在の説明下書きと旧説明の注意を追記。ローカルサーバー127.0.0.1:5173を起動。新ビルド作成・ストア反映・実機確認は残る。外部提出・commit/pushは未実施。
+
+## 2026-10-28〜29: レンジ equity の重み付けバグ修正（Claude Code・未公開）
+- 見直しで発見: プリセット「上位X%」の相手レンジに対する勝率は `src/data/equity-table.json` を引いていたが、生成スクリプト（`scripts/_mc.mts` の computeRangeEquity）が相手ハンドを169クラスから等確率に選んでいた。ペア6・スーテッド4・オフスート12のコンボ数で重み付けしておらず、オフスートが実際の1/3の頻度。正しく配るMC（40万試行）と比べ平均1.03pt・最大2.08ptずれ。例: 相手上位20%・必要勝率60%でAKoが59.8%（フォールド）→正しくは61.6%（コール）。
+- アプリ内の別経路（HUマトリクスをカードリムーバル込みコンボ数で重み付け平均）は同じMCと平均0.07pt・最大0.18ptで一致。equity() を常にこちらへ切替。equity-table.json・equityFromTable.ts・build-equity-table.mts と表専用の検証スクリプト2本を削除。equity データのチャンクは約390KB→156KB。
+- HAND_RANKING（上位X%の順序）も同じ正しい vs ランダム equity で再生成（AA 85.2%/KK 82.4%/72o 34.6%で既知値と一致。旧順位は98oが98sより上などの逆転があった）。再生成用に `scripts/build-hand-ranking.mts` を追加。上位25%（42種類）のコンボ比は22%→23%。
+- computeRangeEquity もコンボ一様抽選に修正。回帰テスト追加（MCとの一致、既知値、スーテッド>オフスート、ランキング単調性）。
+- ICM・BF・必要勝率・Nash（もともとマトリクス使用）は変更なし。厳密ICMとの差は最大1.3ptで問題なしと確認。
+- 検証: 単体324件（core77+UI247）・型チェック・ビルド・E2E16件（E2E_BROWSER_CHANNEL=chromium）成功。アプリ内ブラウザで分析画面の表示を確認（このペイン固有のSW登録エラーのみ。E2EのChromiumではコンソールエラー0）。
+- 作業前の未コミット状態を artifacts/backup-2026-10-28-before-equity-fix/ に保存（tracked.patch / untracked.tar.gz / HEAD.txt）。ブランチ fix/range-equity-weighting を作成（1.2以降の未コミット変更もそのまま載っている）。commit/push・iOSビルド・ストア操作なし。
+- 見直しで出た残件（未着手）: Nash/push判定は2人・オールインかフォールドのみのモデル（リンプ・2BBオープン・後ろの複数コーラーなし）。深いスタックでの見せ方とストア説明の範囲の明確化が候補。

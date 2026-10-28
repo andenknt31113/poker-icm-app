@@ -1,9 +1,8 @@
 /**
  * 169 種類のスターティングハンドを「強さ順」に並べたランキング。
  *
- * 注意: これは Sklansky-Chubukov や Pokerstove 等のオープンデータを参考にした
- *       「およそこの順」というアプローチで、ICMIZER 等のプロツールほど厳密ではない。
- *       実エンジン（Monte Carlo）に置き換える時、この順は捨てて equity ベースで再構築する。
+ * 順位は対ランダムハンドの equity 順 (PokerStove の Top X% と同じ考え方)。
+ * プリセットの「上位 X%」はこの順の先頭から X% の種類数を取る。
  */
 
 export type HandNotation = string; // 例: "AA", "AKs", "AKo"
@@ -31,34 +30,34 @@ export function handAt(row: number, col: number): HandNotation {
 /**
  * 169ハンドを強さ順に並べたリスト（rank 0 = 最強 = AA、rank 168 = 最弱 = 32o）。
  *
- * 自動生成: `equity-table.json` の vs Top 100% (random) equity を降順ソート。
- * 全 169 ハンドを網羅し、empirical な equity 順で正確に並んでいる。
+ * 自動生成: `hu-equity-matrix.json` から、カードリムーバル込みのコンボ数で重み付けした
+ * vs 全 169 クラス (= ランダムハンド) の equity を降順ソート (AA 85.2% / KK 82.4% /
+ * 72o 34.6% など既知値と一致)。同値は旧ランキングの順で並べる。
  *
- * 再生成: `playground/scripts/build-equity-table.mts` で table 更新後、
- *         任意のスクリプトで vs random 順にソートして書き直す。
+ * 再生成: `npx tsx scripts/build-hand-ranking.mts` の出力でこの配列を置き換える。
  */
 export const HAND_RANKING: HandNotation[] = [
   "AA", "KK", "QQ", "JJ", "TT", "99", "88", "AKs",
-  "AKo", "77", "AQs", "AQo", "AJs", "AJo", "KQs", "ATs",
-  "KJs", "ATo", "66", "KQo", "A9s", "KJo", "KTs", "A8s",
-  "A7s", "K9s", "A6s", "A9o", "QJs", "55", "QTs", "A8o",
-  "A5s", "A4s", "44", "A3s", "KTo", "Q9s", "A7o", "K8s",
-  "A6o", "A5o", "A2s", "QJo", "QTo", "K9o", "JTs", "A4o",
-  "K7s", "K8o", "K6s", "A3o", "Q8s", "K7o", "J9s", "T9s",
-  "K5s", "A2o", "Q9o", "K4s", "J8s", "JTo", "Q7s", "K3s",
-  "Q8o", "Q6s", "J9o", "Q5s", "K6o", "K5o", "T8s", "T7s",
-  "K4o", "Q7o", "33", "J8o", "J7s", "Q6o", "K2s", "Q4s",
-  "K3o", "22", "Q3s", "K2o", "Q5o", "J6s", "T9o", "J7o",
-  "J5s", "J4s", "J6o", "T6s", "98o", "Q2s", "Q4o", "98s",
-  "T8o", "97s", "T7o", "96s", "J3s", "87s", "Q3o", "Q2o",
-  "J5o", "T5s", "T6o", "97o", "86s", "J2s", "95s", "76s",
-  "J4o", "96o", "J3o", "T4s", "85s", "J2o", "T5o", "T4o",
-  "75s", "87o", "T3o", "T3s", "76o", "94s", "65s", "T2s",
-  "84s", "T2o", "74s", "93s", "86o", "95o", "64s", "92s",
-  "54s", "53s", "85o", "75o", "73s", "65o", "63s", "83s",
-  "94o", "74o", "64o", "93o", "84o", "92o", "54o", "72s",
-  "43s", "82s", "62s", "83o", "52s", "42s", "73o", "53o",
-  "43o", "82o", "32s", "52o", "72o", "63o", "62o", "42o",
+  "77", "AQs", "AJs", "AKo", "ATs", "AQo", "AJo", "KQs",
+  "66", "A9s", "ATo", "KJs", "A8s", "KTs", "KQo", "A7s",
+  "A9o", "KJo", "55", "QJs", "K9s", "A5s", "A6s", "A8o",
+  "KTo", "QTs", "A4s", "A7o", "K8s", "A3s", "QJo", "K9o",
+  "A5o", "A6o", "Q9s", "K7s", "JTs", "A2s", "QTo", "44",
+  "A4o", "K6s", "K8o", "Q8s", "A3o", "K5s", "J9s", "Q9o",
+  "JTo", "K7o", "A2o", "K4s", "Q7s", "K6o", "K3s", "T9s",
+  "J8s", "33", "Q6s", "Q8o", "K5o", "J9o", "K2s", "Q5s",
+  "T8s", "K4o", "J7s", "Q4s", "Q7o", "T9o", "J8o", "K3o",
+  "Q3s", "Q6o", "98s", "T7s", "J6s", "K2o", "22", "Q2s",
+  "Q5o", "J5s", "T8o", "J7o", "Q4o", "97s", "J4s", "T6s",
+  "J3s", "Q3o", "98o", "87s", "T7o", "J6o", "96s", "J2s",
+  "Q2o", "T5s", "J5o", "T4s", "97o", "86s", "J4o", "T6o",
+  "95s", "T3s", "76s", "J3o", "87o", "T2s", "85s", "96o",
+  "J2o", "T5o", "94s", "75s", "T4o", "93s", "86o", "65s",
+  "84s", "95o", "T3o", "92s", "76o", "74s", "T2o", "54s",
+  "85o", "64s", "83s", "94o", "75o", "82s", "73s", "93o",
+  "65o", "53s", "63s", "84o", "92o", "43s", "74o", "54o",
+  "72s", "64o", "52s", "62s", "83o", "42s", "82o", "73o",
+  "53o", "63o", "32s", "43o", "72o", "52o", "62o", "42o",
   "32o",
 ];
 

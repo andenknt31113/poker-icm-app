@@ -1,12 +1,13 @@
 import { describe, it, expect } from "vitest";
-import {
-  comboCountVsHero,
-  matrixEquityVsRange,
-  isTopPrefixRange,
-} from "../src/rangeEquity.js";
-import { topRange, ALL_169_HANDS, type HandNotation } from "../src/handRanking.js";
+import { comboCountVsHero, matrixEquityVsRange } from "../src/rangeEquity.js";
+import { topRange, ALL_169_HANDS, HAND_RANKING, type HandNotation } from "../src/handRanking.js";
 import { equity } from "../src/equity.js";
-import { tableEquityVsTop } from "../src/equityFromTable.js";
+import { combosForHand, computeRangeEquity, mulberry32 } from "../scripts/_mc.mts";
+
+/** MC 1 点あたりの試行数 (標準誤差 ≈ 0.2pt)。 */
+const MC_TRIALS = 60_000;
+/** MC との許容差 (標準誤差の約 4 倍)。旧テーブルのズレ (1.5〜2pt) は検出できる。 */
+const MC_TOLERANCE = 0.008;
 
 describe("comboCountVsHero (カードリムーバル込みコンボ数)", () => {
   it("ブロッカーなしの基本値: pair=6, suited=4, offsuit=12", () => {
@@ -67,45 +68,72 @@ describe("matrixEquityVsRange", () => {
     expect(eq).toBeLessThan(0.4);
   });
 
-  it("MC テーブル (Top X% 実レンジ配布) と大きく乖離しない (代表点で ±2.5pt)", () => {
-    // 抽象の取り方が違う2系統 (クラス平均マトリクス vs 実カード MC) の
-    // クロスチェック。系統誤差がこの範囲に収まっていれば両者は整合とみなす。
+  it("レンジ内のコンボを直接配る MC と一致する (旧テーブルが 1.5〜2pt ずれていた局面)", () => {
+    // 旧 Top X% テーブルは相手ハンドを 169 クラスから等確率に選んでいた
+    // (オフスートが実際の 1/3 の頻度)。正しく重み付けした MC と比べて
+    // AKo vs Top30% で -1.9pt、AJo vs Top10% で +2.1pt などのズレがあった。
+    const rng = mulberry32(20261028);
     for (const [hand, pct] of [
-      ["43s", 54],
-      ["A9o", 30],
-      ["KQs", 40],
+      ["AKo", 30],
+      ["AJo", 10],
       ["22", 20],
+      ["55", 15],
     ] as [HandNotation, number][]) {
-      const mc = tableEquityVsTop(hand, pct);
-      expect(mc).not.toBeNull();
+      const villain = [...topRange(pct)].map((h) => combosForHand(h));
+      const mc = computeRangeEquity(combosForHand(hand), villain, MC_TRIALS, rng);
       const mx = matrixEquityVsRange(hand, topRange(pct));
-      expect(Math.abs(mx - mc!)).toBeLessThan(0.025);
+      expect(Math.abs(mx - mc)).toBeLessThan(MC_TOLERANCE);
+    }
+  });
+
+  it("vs ランダムハンドの既知値: AA 85.2% / KK 82.4% / 72o 34.6%", () => {
+    const all = new Set(ALL_169_HANDS);
+    expect(matrixEquityVsRange("AA", all)).toBeCloseTo(0.852, 2);
+    expect(matrixEquityVsRange("KK", all)).toBeCloseTo(0.824, 2);
+    expect(matrixEquityVsRange("72o", all)).toBeCloseTo(0.346, 2);
+  });
+});
+
+describe("computeRangeEquity (MC) のコンボ重み", () => {
+  it("相手のハンドをコンボ数どおりの頻度で配る (AKo vs Top30% ≈ 64.5%)", () => {
+    // クラス等確率で配ると 62.6% になる (旧テーブルの値)
+    const villain = [...topRange(30)].map((h) => combosForHand(h));
+    const eq = computeRangeEquity(combosForHand("AKo"), villain, MC_TRIALS, mulberry32(7));
+    expect(Math.abs(eq - 0.645)).toBeLessThan(MC_TOLERANCE);
+  });
+});
+
+describe("HAND_RANKING (Top X% の順序)", () => {
+  it("169 種類を重複なく含み、AA が最強・32o が最弱", () => {
+    expect(new Set(HAND_RANKING).size).toBe(169);
+    expect(HAND_RANKING[0]).toBe("AA");
+    expect(HAND_RANKING[168]).toBe("32o");
+  });
+
+  it("同じランクの組み合わせはスーテッドが必ずオフスートより上", () => {
+    // 旧ランキングは 98o が 98s より、T3o が T3s より上だった
+    for (const h of HAND_RANKING) {
+      if (!h.endsWith("o")) continue;
+      const suited = h.slice(0, 2) + "s";
+      expect(HAND_RANKING.indexOf(suited)).toBeLessThan(HAND_RANKING.indexOf(h));
+    }
+  });
+
+  it("vs ランダムの equity が降順に並んでいる", () => {
+    const all = new Set(ALL_169_HANDS);
+    const eqs = HAND_RANKING.map((h) => matrixEquityVsRange(h, all));
+    for (let i = 1; i < eqs.length; i++) {
+      expect(eqs[i]!).toBeLessThanOrEqual(eqs[i - 1]!);
     }
   });
 });
 
-describe("isTopPrefixRange / equity() の経路選択", () => {
-  it("topRange(X) は top-prefix と判定される", () => {
-    expect(isTopPrefixRange(topRange(15))).toBe(true);
-    expect(isTopPrefixRange(topRange(54))).toBe(true);
-    expect(isTopPrefixRange(topRange(100))).toBe(true);
+describe("equity() はプリセットもカスタムもマトリクス計算を使う", () => {
+  it("プリセット形 (Top X%)", () => {
+    expect(equity("43s", topRange(54))).toBe(matrixEquityVsRange("43s", topRange(54)));
   });
 
-  it("穴あきカスタムレンジは top-prefix ではない", () => {
-    const custom = new Set<HandNotation>(topRange(20));
-    // 最上位を1つ抜いて下位を1つ足す → prefix でなくなる
-    const sorted = [...custom];
-    custom.delete(sorted[0]!);
-    custom.add("72o");
-    expect(isTopPrefixRange(custom)).toBe(false);
-  });
-
-  it("equity(): プリセット形は MC テーブル値と一致する", () => {
-    const viaEquity = equity("43s", topRange(54));
-    expect(viaEquity).toBe(tableEquityVsTop("43s", 54));
-  });
-
-  it("equity(): カスタム形はマトリクス重み付き平均に切り替わる", () => {
+  it("カスタム形", () => {
     const custom = new Set<HandNotation>(["AA", "KK", "QQ", "72o"]);
     expect(equity("AKs", custom)).toBe(matrixEquityVsRange("AKs", custom));
   });

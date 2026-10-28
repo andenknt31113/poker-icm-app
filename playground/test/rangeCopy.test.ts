@@ -6,7 +6,8 @@ import { comboPctOfRange, topRange } from "../src/handRanking.js";
 describe("レンジ比率の説明", () => {
   it("既存の25%プリセットの計算を変えず、組合せ比率と区別する", () => {
     expect(topRange(25).size).toBe(42);
-    expect(comboPctOfRange(topRange(25)).toFixed(0)).toBe("22");
+    // 2026-10-28 のランキング修正 (vs ランダム equity をコンボ重みで再計算) で 22% → 23%
+    expect(comboPctOfRange(topRange(25)).toFixed(0)).toBe("23");
     expect(ja["hand.preset.scale"]).toContain("種類");
     expect(ja["hand.preset.combos"]).toContain("{pct}%");
     expect(en["hand.preset.scale"]).toContain("class");
