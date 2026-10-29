@@ -12,6 +12,8 @@ vi.mock("@poker-icm/core", () => ({ solveHUNash: solve }));
 vi.mock("../src/appState.js", () => ({
   players, persistedState: null, actionOrderIdx: (position: string) => ["BTN", "SB", "BB"].indexOf(position),
   parseList: (value: string) => value.split(",").filter(Boolean).map(Number),
+  posToPotOddsPos: (position: string, playerCount: number) =>
+    position === "SB" || (position === "BTN" && playerCount === 2) ? "SB" : position === "BB" ? "BB" : "OTHER",
 }));
 vi.mock("../src/huEquityMatrix.js", () => ({ huEquity: vi.fn(), hasHUMatrix: () => true }));
 
@@ -20,14 +22,15 @@ beforeEach(() => {
   delete document.body.dataset.analysisView;
   vi.resetModules();
   vi.useFakeTimers();
-  players[0] = { stack: 18, role: "hero", position: "SB" };
-  players[1] = { stack: 14, role: "villain", position: "BB" };
+  players.length = 0;
+  players.push({ stack: 18, role: "hero", position: "SB" }, { stack: 14, role: "villain", position: "BB" });
   document.body.innerHTML = `
     <input id="payouts" value="50,30,20"><input id="nash-sb" value="0.5">
     <input id="nash-bb" value="1"><input id="nash-ante" value="0">
     <button id="nash-solve">計算</button><p id="nash-status"></p>
     <p id="nash-sb-stats"></p><p id="nash-bb-stats"></p>
-    <div id="nash-sb-grid"></div><div id="nash-bb-grid"></div><div id="nash-depth-note"></div>`;
+    <div id="nash-sb-grid"></div><div id="nash-bb-grid"></div><div id="nash-depth-note"></div>
+    <div id="nash-results"></div>`;
   vi.doMock("../src/domRefs.js", () => ({
     payoutsInput: document.getElementById("payouts"),
     nashSbInput: document.getElementById("nash-sb"),
@@ -155,5 +158,72 @@ describe("Nashの結果と現在の入力を一致させる", () => {
     solve.mockImplementation(() => { throw new Error("invalid input"); });
     clickSolve(); vi.runAllTimers(); expectCleared();
     expect(document.getElementById("nash-status")!.textContent).toBe("invalid input");
+  });
+
+});
+
+describe("実際のポジションの blind で Nash を解く", () => {
+  async function solveOnce(): Promise<Record<string, unknown>> {
+    const { initNashUI } = await import("../src/nashUI.js");
+    initNashUI(); clickSolve(); vi.runAllTimers();
+    return solve.mock.calls[0]![0];
+  }
+
+  it("SB からのプッシュ: 自分が SB・相手が BB の blind を払う", async () => {
+    const input = await solveOnce();
+    expect(input).toMatchObject({ pusherBlind: 0.5, callerBlind: 1, deadMoney: 0, ante: 0 });
+  });
+
+  it("BTN からのプッシュ: 自分は blind なし、降りた SB と BB ante はポットに残る", async () => {
+    players.length = 0;
+    players.push(
+      { stack: 10, role: "hero", position: "BTN" },
+      { stack: 12, role: "other", position: "SB" },
+      { stack: 15, role: "villain", position: "BB" },
+    );
+    (document.getElementById("nash-ante") as HTMLInputElement).value = "1";
+    const input = await solveOnce();
+    expect(input).toMatchObject({ pusherBlind: 0, callerBlind: 1, deadMoney: 1.5 });
+    // SB は blind 0.5、BB は ante 1 をすでに払っている
+    expect(input.stacks).toEqual([10, 11.5, 14]);
+  });
+
+  it("2人卓の BTN は SB を払う", async () => {
+    players[0]!.position = "BTN";
+    const input = await solveOnce();
+    expect(input).toMatchObject({ pusherBlind: 0.5, callerBlind: 1, deadMoney: 0 });
+  });
+});
+
+describe("実効スタックの深さで Nash の見せ方を変える", () => {
+  async function solveWithStacks(hero: number, villain: number): Promise<void> {
+    players[0]!.stack = hero;
+    players[1]!.stack = villain;
+    const { initNashUI } = await import("../src/nashUI.js");
+    initNashUI(); clickSolve(); vi.runAllTimers();
+  }
+  const note = (): HTMLElement => document.getElementById("nash-depth-note")!;
+  const results = (): HTMLElement => document.getElementById("nash-results")!;
+
+  it("12BB 以下は注意なしで結果を表示", async () => {
+    await solveWithStacks(10, 30);
+    expect(note().classList.contains("hidden")).toBe(true);
+    expect(results().classList.contains("hidden")).toBe(false);
+  });
+
+  it("12〜20BB は結果の上に 2BB オープン等の注意を出す", async () => {
+    await solveWithStacks(16, 30);
+    expect(note().classList.contains("hidden")).toBe(false);
+    expect(note().textContent).toContain("2BB");
+    expect(results().classList.contains("hidden")).toBe(false);
+  });
+
+  it("20BB 超は範囲外として結果を隠し、ボタンで参考表示できる", async () => {
+    await solveWithStacks(25, 30);
+    expect(note().textContent).toContain("push/fold で判断する深さではありません");
+    expect(results().classList.contains("hidden")).toBe(true);
+    (document.getElementById("nash-show-deep") as HTMLButtonElement).click();
+    expect(results().classList.contains("hidden")).toBe(false);
+    expect(document.getElementById("nash-show-deep")).toBeNull();
   });
 });

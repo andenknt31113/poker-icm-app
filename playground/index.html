@@ -374,6 +374,7 @@
           </details>
           <div class="hero-range-result">
             <h3 id="hero-grid-title">自分のcallレンジ 🟢</h3>
+            <div id="push-depth-warn" class="warn-box hidden"></div>
             <p class="hint call-stats-below" id="call-stats"></p>
             <p class="hint hand-cell-detail hidden" id="hand-cell-detail" aria-live="polite"></p>
             <!-- タップしたセルの答えはグリッドの「上」に置く。グリッドの下に置くと
@@ -400,9 +401,9 @@
           <br />
           ※ HU 2-way 想定。BTN+BB のように間に他プレイヤーがいる場合は警告が出ます。
           <br />
-          ※ <strong>プッシュ or フォールドの2択</strong>を前提にした均衡です。目安 10BB 以下ならほぼ実戦どおり。深くなるほど、実際は小さなレイズ等の選択肢があるぶん、真の GTO よりプッシュレンジは広めに出ます（「押すか降りるかなら押してよい」の意味）。
+          ※ <strong>プッシュ or フォールドの2択</strong>を前提にした均衡です。目安は実効 12BB 以下。12〜20BB では注意を表示し、20BB を超えると範囲外として結果を折りたたみます（実戦では 2BB オープンやリンプが入るため）。
           <br />
-          ⚙️ セットアップタブの「プレイヤー」で 🎯/⚔️ を指定してから Nash 計算を押してください。
+          ブラインドとアンティは実際のポジションの人が払う前提です（BTN からのプッシュなら自分は blind なし、BB ante は BB の人）。セットアップで自分・相手と SB/BB/アンティを設定してください。この画面を開くと自動計算します。
         </p>
 
         </details>
@@ -415,7 +416,7 @@
         <div id="nash-depth-note" class="warn-box hidden"></div>
         <div id="nash-overcall-warn" class="warn-box hidden"></div>
 
-        <div class="range-grids">
+        <div id="nash-results" class="range-grids">
           <div>
             <h3 data-i18n="nash.sbRange.h3">🎯自分 push レンジ 🔴</h3>
             <p class="hint" id="nash-sb-stats"></p>

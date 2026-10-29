@@ -159,7 +159,7 @@ export const ja: Record<string, string> = {
 
   // ===== index.html: ナッシュ均衡 =====
   "nash.h2": "Nash 均衡 (HU push/fold)",
-  "nash.hint.html": "\n          🎯自分 (pusher) と ⚔️相手 (caller) のヘッズアップ Nash 均衡を計算（ICM反映済み）。\n          <br />\n          ※ HU 2-way 想定。BTN+BB のように間に他プレイヤーがいる場合は警告が出ます。\n          <br />\n          ※ <strong>プッシュ or フォールドの2択</strong>を前提にした均衡です。目安 10BB 以下ならほぼ実戦どおり。深くなるほど、実際は小さなレイズ等の選択肢があるぶん、真の GTO よりプッシュレンジは広めに出ます（「押すか降りるかなら押してよい」の意味）。\n          <br />\n          セットアップで自分・相手と SB/BB/アンティを設定してください。この画面を開くと自動計算します。条件を変えない場合は前の結果を表示します。\n        ",
+  "nash.hint.html": "\n          🎯自分 (pusher) と ⚔️相手 (caller) のヘッズアップ Nash 均衡を計算（ICM反映済み）。\n          <br />\n          ※ HU 2-way 想定。BTN+BB のように間に他プレイヤーがいる場合は警告が出ます。\n          <br />\n          ※ <strong>プッシュ or フォールドの2択</strong>を前提にした均衡です。目安は実効 12BB 以下。12〜20BB では注意を表示し、20BB を超えると範囲外として結果を折りたたみます（実戦では 2BB オープンやリンプが入るため）。\n          <br />\n          ブラインドとアンティは実際のポジションの人が払う前提です（BTN からのプッシュなら自分は blind なし、BB ante は BB の人）。セットアップで自分・相手と SB/BB/アンティを設定してください。この画面を開くと自動計算します。\n        ",
   "nash.ante.label": "\n            アンティ合計\n            ",
   "nash.solveBtn": "再計算",
   "nash.autoHint": "開くと自動計算します。プッシュ／フォールドのみを想定した結果です。",
@@ -198,7 +198,6 @@ export const ja: Record<string, string> = {
   "hand.callStats.callBack": "必要勝率 <strong>{req}%</strong> 以上のハンド: <strong>{callable}</strong> 種類 / {callCombos} コンボ (<strong>{callPct}%</strong>) ／ ボーダーライン: {marginal} 種類",
   "hand.callStats.pushBack": "相手が call <strong>{villainPct}%</strong> してくる前提で、自分が push +EV のハンド: <strong>{n}</strong> 種類 / {pushCombos} コンボ (<strong>{pPct}%</strong>) ／ ボーダー: {marginal} 種類。<br />相手が call ワイドだと push を狭めるべき方向に動きます。",
   "hand.banner.callerLabel.hero": "hero (自分)",
-  "hand.banner.callerLabel.villain": "villain (相手)",
   "hand.banner.noBehind.html": "\n      ✅ {label}=<strong>{pos}</strong>: 後ろにプレイヤーがいないので、この 1 対 1 モデルがそのまま当てはまります。\n    ",
   "hand.banner.behind.html": "\n      <details class=\"hand-caveat\">\n        <summary>⚠ {label}=<strong>{pos}</strong>: 後ろの {n} 人ぶんの over-call は未反映 — 実戦はもう少し硬めに</summary>\n        <div class=\"hand-caveat-body\">\n          この計算は「1 対 1 のオールイン」モデルです。{label} の後ろに残っている {n} 人 ({list}) が\n          割り込んでくるリスクは含まれていません。{note}\n        </div>\n      </details>\n    ",
   "hand.banner.note.callBack": "ここで「call OK」と出ても実戦ではより硬い range で受けるべきです。",
@@ -568,7 +567,7 @@ export const ja: Record<string, string> = {
 
   // ===== 警告 (calculator.ts) =====
   "calc.warn.position.html": "\n      ⚠ <strong>ポジション逆転</strong>: 行動順は <code>{heroPos}({heroAct}) → {villainPos}({villainAct})</code>。\n      実戦では <strong>hero ({heroPos}) が先に行動</strong>するため、villain ({villainPos}) の open push に対して call することはあり得ません。\n      (call 計算は math 上は動きますが、ポジを入れ替える方が現実的)\n    ",
-  "calc.warn.depth.html": "\n    ⚠️ 実効 {eff}bb: この深さでは push/fold 以外の選択肢\n    (小さいオープンやコール) が現実的です。本ツールの計算はオールイン前提です。\n  ",
+  "calc.warn.depth.html": "⚠️ 実効 {eff}bb：オールインされた後のコール判断なので、この計算はそのまま使えます。ただ、この深さでいきなりオールインしてくる相手はかなり強いハンドに絞られることが多いので、相手レンジは狭めに設定してください。",
 
   // ===== 用語解説モーダル (calculator.ts INFO_TEXTS) =====
   "info.icm.title": "ICM (Independent Chip Model)",
@@ -615,7 +614,11 @@ export const ja: Record<string, string> = {
   "nash.calculating": "計算中…",
   "nash.converged": "収束",
   "nash.notConverged": "未収束",
-  "nash.depthNote.html": "⚠ 実効スタック <strong>{eff}BB</strong> は push/fold 前提が崩れ始める深さです（目安 10BB 超）。実戦では小さなレイズ等の選択肢があるため、この push レンジは「<strong>押すか降りるかなら押してよい</strong>」の上限として読んでください。",
+  "nash.depthNote.html": "⚠ 実効 <strong>{eff}BB</strong>：実戦では 2BB オープンやリンプも普通に選ばれる深さです。この結果は「押すか降りるかの2択に限った場合」で、実際に押すべきハンドはこれより少なくなります。",
+  "nash.depthOut.html": "⚠ 実効 <strong>{eff}BB</strong> は push/fold で判断する深さではありません。この深さでは 2BB オープン・リンプ・3ベットを含めて考えるのが普通で、本アプリはそれらを計算しません。下の結果を実戦の判断にそのまま使わないでください。",
+  "nash.depthOut.reveal": "2択に限った参考値を見る",
+  "hand.pushDepth.caution.html": "⚠ 実効 <strong>{eff}BB</strong>：実戦では 2BB オープンやリンプも選ばれる深さです。ここの push 可能ハンドは「押すか降りるかの2択に限った場合」の上限です。",
+  "hand.pushDepth.out.html": "⚠ 実効 <strong>{eff}BB</strong> は push/fold の範囲外です（2BB オープン・リンプ・3ベットを計算していません）。この push 判定を実戦の判断にそのまま使わないでください。",
   "nash.statusSuffix": "（{iter} iter / {ms} ms）",
   "nash.stats": "{n} 種類 / {combos} コンボ (<strong>{pct}%</strong>)",
   "nash.matrixMissing": "⚠ HU equity matrix が未生成です（hu-equity-matrix.json）。`npx tsx scripts/build-hu-matchups.mts` を実行してください。",

@@ -46,6 +46,18 @@ export interface HUNashInput {
   readonly bb: number;
   /** ante（プレイヤー1人あたり）。0 でも可。 */
   readonly ante?: number;
+  /**
+   * プッシュ側が事前に置いている blind（既定: sb）。BTN など blind を払って
+   * いない位置からのプッシュなら 0。
+   */
+  readonly pusherBlind?: number;
+  /** コール側が事前に置いている blind（既定: bb）。SB なら sb、blind なしなら 0。 */
+  readonly callerBlind?: number;
+  /**
+   * 2 人以外がポットに残したチップ（降りた第三者の blind・BB ante など）。
+   * 勝った側が受け取る。ante（per-player）とは別枠で加算する。既定 0。
+   */
+  readonly deadMoney?: number;
   /** ハンド対決の equity 関数（hero, villain → hero の equity 0..1）。 */
   readonly huEquity: (hero: HandLabel, villain: HandLabel) => number;
   /** ハンド一覧（169個、順序は任意）。 */
@@ -141,6 +153,9 @@ function buildHUGame(input: HUNashInput): HUGame {
     sb,
     bb,
     ante = 0,
+    pusherBlind = sb,
+    callerBlind = bb,
+    deadMoney = 0,
     huEquity,
     allHands,
     comboWeight,
@@ -162,6 +177,11 @@ function buildHUGame(input: HUNashInput): HUGame {
     throw new Error(`HUNash: sb/bb が不正 (${sb}, ${bb})`);
   }
   if (ante < 0) throw new Error(`HUNash: ante が負 (${ante})`);
+  if (pusherBlind < 0 || callerBlind < 0 || deadMoney < 0) {
+    throw new Error(
+      `HUNash: pusherBlind/callerBlind/deadMoney が負 (${pusherBlind}, ${callerBlind}, ${deadMoney})`,
+    );
+  }
   if (allHands.length === 0) {
     throw new Error("HUNash: allHands が空");
   }
@@ -175,13 +195,14 @@ function buildHUGame(input: HUNashInput): HUGame {
   }
 
   const playerCount = n0;
-  const totalAnte = ante * playerCount;
+  // 勝った側が受け取る「2 人の matched 以外」のチップ = 全員の ante + 第三者の dead
+  const totalAnte = ante * playerCount + deadMoney;
 
   // 全プレイヤーから ante 控除した「ハンド開始時」のスタック
   const baseStacks: number[] = stacks.map((s) => s - ante);
 
-  const sbBaseAfterBlind = baseStacks[sbIndex]! - sb;
-  const bbBaseAfterBlind = baseStacks[bbIndex]! - bb;
+  const sbBaseAfterBlind = baseStacks[sbIndex]! - pusherBlind;
+  const bbBaseAfterBlind = baseStacks[bbIndex]! - callerBlind;
   if (sbBaseAfterBlind < 0) {
     throw new Error("HUNash: SB の支払い後スタックが負");
   }
@@ -201,12 +222,14 @@ function buildHUGame(input: HUNashInput): HUGame {
   }
 
   // ----- 各終端のスタックと ICM -----
-  const foldSbStack = baseStacks[sbIndex]! - sb;
-  const foldBbStack = baseStacks[bbIndex]! + sb + totalAnte;
+  // fold: プッシュ側は自分の blind を失う。残りのポットはコール側が取る近似
+  // (BTN 等が降りた後の SB/BB の攻防はモデル化しない)。
+  const foldSbStack = baseStacks[sbIndex]! - pusherBlind;
+  const foldBbStack = baseStacks[bbIndex]! + pusherBlind + totalAnte;
   const foldICM = icmAt(foldSbStack, foldBbStack);
 
-  const stealSbStack = baseStacks[sbIndex]! + bb + totalAnte;
-  const stealBbStack = baseStacks[bbIndex]! - bb;
+  const stealSbStack = baseStacks[sbIndex]! + callerBlind + totalAnte;
+  const stealBbStack = baseStacks[bbIndex]! - callerBlind;
   const stealICM = icmAt(stealSbStack, stealBbStack);
 
   const winSbStack = baseStacks[sbIndex]! + matched + totalAnte;

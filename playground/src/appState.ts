@@ -16,10 +16,17 @@ export const DEFAULT_SB = 0.5;
 export const DEFAULT_BB = 1.0;
 export const DEFAULT_ANTE = 1.0; // BB ante 構造の標準値
 
-/** Position → calculatePotOdds の position 種別 (SB / BB / OTHER) に変換。 */
-export function posToPotOddsPos(pos: Position | undefined): PotOddsPosition {
+/** ヘッズアップ (2人卓) の人数。この卓では BTN が SB を払う。 */
+const HEADS_UP_PLAYERS = 2;
+
+/**
+ * Position → calculatePotOdds の position 種別 (SB / BB / OTHER) に変換。
+ * 2人卓の BTN は SB を払うので "SB" として扱う (positionsForN(2) は BTN/BB)。
+ */
+export function posToPotOddsPos(pos: Position | undefined, playerCount: number): PotOddsPosition {
   if (pos === "SB") return "SB";
   if (pos === "BB") return "BB";
+  if (pos === "BTN" && playerCount === HEADS_UP_PLAYERS) return "SB";
   return "OTHER";
 }
 

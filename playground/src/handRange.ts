@@ -26,6 +26,8 @@ import {
   nashAnteInput,
 } from "./domRefs.js";
 import { STORAGE_KEYS, readJson, writeJson } from "./storage.js";
+import { buildPushSpot, pushDepthTier } from "./pushSpot.js";
+import { fmt } from "./format.js";
 
 // ===== DOM 参照 (ハンド比較タブ) =====
 const pushRangeInput = $<HTMLInputElement>("push-range");
@@ -90,13 +92,12 @@ function computePushBackRange(villainCallRange: Set<HandNotation>): PushBackResu
 
   const sb = Number(nashSbInput.value) || DEFAULT_SB;
   const bb = Number(nashBbInput.value) || DEFAULT_BB;
-  const anteRaw = Number(nashAnteInput.value) || 0;
-  // アンティ入力はテーブル合計なので1人あたりに換算
-  const ante = anteRaw / Math.max(1, stacks.length);
-  const totalAnte = ante * stacks.length;
-
-  const baseStacks = stacks.map((s) => s - ante);
-  if (baseStacks[heroIdx]! - sb < 0 || baseStacks[villainIdx]! - bb < 0) {
+  const totalAnte = Number(nashAnteInput.value) || 0; // アンティ入力はテーブル合計
+  // 実際のポジションの blind / BB ante / 第三者の dead money で局面を組む (Nash と共通)
+  const spot = buildPushSpot(players, heroIdx, villainIdx, sb, bb, totalAnte);
+  const baseStacks = spot.stacks;
+  const { pusherBlind, callerBlind, deadMoney } = spot;
+  if (baseStacks[heroIdx]! - pusherBlind < 0 || baseStacks[villainIdx]! - callerBlind < 0) {
     return empty;
   }
   const matched = Math.min(baseStacks[heroIdx]!, baseStacks[villainIdx]!);
@@ -109,10 +110,10 @@ function computePushBackRange(villainCallRange: Set<HandNotation>): PushBackResu
   }
 
   // hero(=pusher) 視点の各シナリオ ICM
-  const foldEq = icmAt(baseStacks[heroIdx]! - sb, baseStacks[villainIdx]! + sb + totalAnte);
-  const stealEq = icmAt(baseStacks[heroIdx]! + bb + totalAnte, baseStacks[villainIdx]! - bb);
-  const winEq = icmAt(baseStacks[heroIdx]! + matched + totalAnte, baseStacks[villainIdx]! - matched);
-  const loseEq = icmAt(baseStacks[heroIdx]! - matched, baseStacks[villainIdx]! + matched + totalAnte);
+  const foldEq = icmAt(baseStacks[heroIdx]! - pusherBlind, baseStacks[villainIdx]! + pusherBlind + deadMoney);
+  const stealEq = icmAt(baseStacks[heroIdx]! + callerBlind + deadMoney, baseStacks[villainIdx]! - callerBlind);
+  const winEq = icmAt(baseStacks[heroIdx]! + matched + deadMoney, baseStacks[villainIdx]! - matched);
+  const loseEq = icmAt(baseStacks[heroIdx]! - matched, baseStacks[villainIdx]! + matched + deadMoney);
 
   // コンボ重みは hero の実カードを考慮したカードリムーバル込みで数える
   // (hero が A を持てば villain の AX コンボは減る → fold 率が上がる)。
@@ -207,10 +208,29 @@ export interface RangeVerdictSummary {
   available?: boolean;
 }
 
+/** 「自分からオールイン」のときだけ、実効スタックの深さに応じた注意を出す。 */
+function updatePushDepthWarn(): void {
+  const warnEl = document.getElementById("push-depth-warn");
+  if (!warnEl) return;
+  const hero = players.find((p) => p.role === "hero");
+  const villain = players.find((p) => p.role === "villain");
+  const tier = direction === "pushBack" && hero && villain
+    ? pushDepthTier(Math.min(hero.stack, villain.stack))
+    : "ok";
+  if (tier === "ok") {
+    warnEl.classList.add("hidden");
+    return;
+  }
+  const eff = fmt(Math.min(hero!.stack, villain!.stack), 1);
+  warnEl.innerHTML = t(tier === "caution" ? "hand.pushDepth.caution.html" : "hand.pushDepth.out.html", { eff });
+  warnEl.classList.remove("hidden");
+}
+
 export function renderRangeComparison(requiredEquity: number): RangeVerdictSummary {
   const pushPct = Number(pushRangeInput.value);
   pushPctLabel.textContent = String(pushPct);
 
+  updatePushDepthWarn();
   const villainRange = getCurrentVillainRange();
   const emptyRange = villainRange.size === 0;
   const rangeNotice = document.getElementById("range-unavailable");
@@ -348,25 +368,27 @@ export function updateHandPositionBanner(heroIndex: number): void {
     banner.classList.add("hidden");
     return;
   }
-  // direction で「caller」を決める
-  const callerIndex = direction === "callBack" ? heroIndex : villainIndex;
-  const callerPos = players[callerIndex]?.position;
-  const callerLabel = direction === "callBack" ? t("hand.banner.callerLabel.hero") : t("hand.banner.callerLabel.villain");
-  if (!callerPos) {
+  // 自分より後に行動する、相手以外のプレイヤー = 割り込んでくる可能性がある人。
+  //   - 相手のオールインを受ける: 自分 (caller) の後ろの人
+  //   - 自分からオールイン: 自分 (pusher) の後ろ全員。相手との間 (例: BTN→BB の SB) も含む
+  // どちらの向きも基準は自分の位置になる。
+  const heroPos = players[heroIndex]?.position;
+  const callerLabel = t("hand.banner.callerLabel.hero");
+  if (!heroPos) {
     banner.classList.add("hidden");
     return;
   }
-  if (callerPos === "BB") {
-    banner.classList.add("hidden");
-    return;
-  }
-  // caller の後ろに残ってるプレイヤー (caller 自身を除く)
-  const callerAct = actionOrderIdx(callerPos);
+  const heroAct = actionOrderIdx(heroPos);
   const behind = players
-    .filter((_, i) => i !== callerIndex)
+    .filter((p, i) => i !== heroIndex && i !== villainIndex && p.stack > 0)
     .map((p) => ({ pos: p.position, act: actionOrderIdx(p.position), stack: p.stack }))
-    .filter((x) => x.act > callerAct && x.act >= 0)
+    .filter((x) => x.act > heroAct && x.act >= 0)
     .sort((a, b) => a.act - b.act);
+  if (behind.length === 0 && heroPos === "BB") {
+    banner.classList.add("hidden");
+    return;
+  }
+  const callerPos = heroPos;
   banner.classList.remove("hidden");
   if (behind.length === 0) {
     banner.innerHTML = t("hand.banner.noBehind.html", { label: callerLabel, pos: callerPos });

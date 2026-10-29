@@ -6,6 +6,8 @@ import { ALL_169_HANDS, type HandNotation,
 import { huEquity, hasHUMatrix } from "./huEquityMatrix.js";
 import { comboCountVsHero } from "./rangeEquity.js";
 import { renderGrid } from "./grid.js";
+import { buildPushSpot, pushDepthTier, type PushDepthTier } from "./pushSpot.js";
+import { fmt } from "./format.js";
 import { t } from "./i18n.js";
 import { $ } from "./dom.js";
 import {
@@ -28,15 +30,14 @@ const nashSbStats = $<HTMLParagraphElement>("nash-sb-stats");
 const nashBbStats = $<HTMLParagraphElement>("nash-bb-stats");
 const nashSbGrid = $<HTMLDivElement>("nash-sb-grid");
 const nashBbGrid = $<HTMLDivElement>("nash-bb-grid");
+const nashDepthNote = $<HTMLDivElement>("nash-depth-note");
+const nashResults = $<HTMLDivElement>("nash-results");
 
 // mixed strategy の濃淡しきい値。
 // pure (>= 0.5) は solid、mixed (0.05..0.5) は marginal 扱い、
 // それ未満は無色 (ほぼ打たないハンド)。
 const NASH_FREQ_SOLID = 0.5;
 const NASH_FREQ_MARGINAL = 0.05;
-
-/** 「push/fold 前提の注意」を出す実効スタック閾値 (BB)。 */
-const NASH_DEPTH_NOTE_THRESHOLD_BB = 12;
 
 // solveHUNash の収束条件。反復上限に達しても収束しなければ「未収束」と表示する。
 const NASH_MAX_ITERATIONS = 500;
@@ -95,7 +96,38 @@ function clearNashResult(): void {
   renderGrid(nashBbGrid, () => "");
   nashSbStats.textContent = "";
   nashBbStats.textContent = "";
-  document.getElementById("nash-depth-note")?.classList.add("hidden");
+  nashDepthNote.classList.add("hidden");
+  nashResults.classList.remove("hidden");
+}
+
+/** 実効スタックの深さに応じた注意表示と、範囲外のときの結果の折りたたみ。 */
+function renderNashDepth(tier: PushDepthTier, effStack: number): void {
+  if (tier === "ok") {
+    nashDepthNote.classList.add("hidden");
+    nashResults.classList.remove("hidden");
+    return;
+  }
+  const eff = fmt(effStack, 1);
+  nashDepthNote.replaceChildren();
+  const text = document.createElement("p");
+  text.innerHTML = t(tier === "caution" ? "nash.depthNote.html" : "nash.depthOut.html", { eff });
+  nashDepthNote.appendChild(text);
+  nashDepthNote.classList.remove("hidden");
+  if (tier === "caution") {
+    nashResults.classList.remove("hidden");
+    return;
+  }
+  nashResults.classList.add("hidden");
+  const reveal = document.createElement("button");
+  reveal.type = "button";
+  reveal.className = "workspace-secondary";
+  reveal.id = "nash-show-deep";
+  reveal.textContent = t("nash.depthOut.reveal");
+  reveal.addEventListener("click", () => {
+    nashResults.classList.remove("hidden");
+    reveal.remove();
+  });
+  nashDepthNote.appendChild(reveal);
 }
 
 export function invalidateChangedNash(): void {
@@ -252,8 +284,9 @@ function runNash(): void {
     nashStatus.innerHTML = `<span class="error">${t("nash.err.ante")}</span>`;
     return;
   }
-  // アンティ入力はテーブル合計なので1人あたりに換算
-  const ante = anteRaw / Math.max(1, stacks.length);
+  // 実際のポジションの blind / BB ante / 第三者の dead money で局面を組む
+  // (アンティ入力はテーブル合計。BB の人が払う)
+  const spot = buildPushSpot(players, heroIndex, villainIndex, sb, bb, anteRaw);
 
   // ボタンを「計算中…」に
   nashSolveBtn.disabled = true;
@@ -273,13 +306,16 @@ function runNash(): void {
       }
       const t0 = performance.now();
       const result = solveHUNash({
-        stacks,
+        stacks: spot.stacks,
         payouts,
         sbIndex: heroIndex,
         bbIndex: villainIndex,
         sb,
         bb,
-        ante,
+        ante: 0,
+        pusherBlind: spot.pusherBlind,
+        callerBlind: spot.callerBlind,
+        deadMoney: spot.deadMoney,
         huEquity,
         allHands: ALL_169_HANDS,
         // カードリムーバル込みのコンボ重みで best response を厳密化（被搾取度を低減）。
@@ -312,21 +348,12 @@ function runNash(): void {
         : `<span style="color: var(--warn)">${t("nash.notConverged")}</span>`;
       nashStatus.innerHTML = `${convStr}${t("nash.statusSuffix", { iter: result.iterations, ms: elapsedMs.toFixed(0) })}`;
 
-      // push/fold 前提の注意: 実効スタックが深い場合のみ表示。
-      // 深くなるほど実戦には小さなレイズ等の選択肢があり、push/fold 2択の
-      // 均衡は真の GTO よりプッシュ寄りに出るため「上限」として読ませる。
-      // 計算結果タブ側の注意書き (warnings.ts の 20BB) より低いのは、Nash の
-      // 均衡レンジは 12BB あたりから乖離が実務上気になり始めるため。
-      const depthNote = document.getElementById("nash-depth-note");
-      if (depthNote) {
-        const effStack = Math.min(stacks[heroIndex] ?? 0, stacks[villainIndex] ?? 0);
-        if (effStack > NASH_DEPTH_NOTE_THRESHOLD_BB) {
-          depthNote.innerHTML = t("nash.depthNote.html", { eff: String(effStack) });
-          depthNote.classList.remove("hidden");
-        } else {
-          depthNote.classList.add("hidden");
-        }
-      }
+      // push/fold 前提の注意。深くなるほど実戦には 2BB オープンやリンプが入り、
+      // push/fold 2択の均衡は実際より広く押す結果になる。
+      //   - caution (12〜20BB): 結果の上に「2択に限った場合の上限」と注意
+      //   - outOfRange (20BB 超): 範囲外と説明し、結果は押したときだけ表示
+      const effStack = Math.min(stacks[heroIndex] ?? 0, stacks[villainIndex] ?? 0);
+      renderNashDepth(pushDepthTier(effStack), effStack);
     } catch (err) {
       clearNashResult();
       const msg = err instanceof Error ? err.message : String(err);

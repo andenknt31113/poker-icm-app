@@ -165,7 +165,7 @@ export const en: Record<string, string> = {
 
   // ===== index.html: ナッシュ均衡 =====
   "nash.h2": "Nash equilibrium (HU push/fold)",
-  "nash.hint.html": "\n          Computes the heads-up Nash equilibrium for 🎯 you (pusher) and ⚔️ villain (caller), ICM included.\n          <br />\n          ※ Assumes HU 2-way. A warning appears when other players sit between (e.g. BTN + BB).\n          <br />\n          ※ This equilibrium assumes a <strong>push-or-fold only</strong> game. At ~10BB or less it matches real play closely; the deeper the stacks, the wider the push range gets versus true GTO (read it as \"if your only options are shove or fold, shoving is fine\"), since real play also has small raises available.\n          <br />\n          Set your role, opponent and SB/BB/ante in Setup. Opening this view calculates automatically; unchanged inputs reuse the previous result.\n        ",
+  "nash.hint.html": "\n          Computes the heads-up Nash equilibrium for 🎯 you (pusher) and ⚔️ villain (caller), ICM included.\n          <br />\n          ※ Assumes HU 2-way. A warning appears when other players sit between (e.g. BTN + BB).\n          <br />\n          ※ This equilibrium assumes a <strong>push-or-fold only</strong> game. Guide: effective 12BB or less. From 12 to 20BB a caution is shown, and above 20BB the result is folded away as out of range (real play adds min-raises and limps).\n          <br />\n          Blinds and antes are paid by the actual positions (a BTN shove posts no blind; the BB pays the BB ante). Set your role, opponent and SB/BB/ante in Setup. Opening this view calculates automatically.\n        ",
   "nash.ante.label": "\n            Total ante\n            ",
   "nash.solveBtn": "Recalculate",
   "nash.autoHint": "Calculated automatically when opened. Assumes a push-or-fold only game.",
@@ -203,7 +203,6 @@ export const en: Record<string, string> = {
   "hand.callStats.callBack": "Hands with required equity <strong>{req}%</strong> or higher: <strong>{callable}</strong> hand types / {callCombos} combos (<strong>{callPct}%</strong>) / borderline: {marginal} types",
   "hand.callStats.pushBack": "Assuming the villain calls <strong>{villainPct}%</strong>, hands where your shove is +EV: <strong>{n}</strong> hand types / {pushCombos} combos (<strong>{pPct}%</strong>) / borderline: {marginal} types.<br />If the villain calls wider, you should shove tighter.",
   "hand.banner.callerLabel.hero": "hero (you)",
-  "hand.banner.callerLabel.villain": "villain",
   "hand.banner.noBehind.html": "\n      ✅ {label} = <strong>{pos}</strong>: nobody left to act, so this 1-vs-1 model applies exactly.\n    ",
   "hand.banner.behind.html": "\n      <details class=\"hand-caveat\">\n        <summary>⚠ {label} = <strong>{pos}</strong>: over-calls from {n} player(s) behind are not reflected — play a bit tighter</summary>\n        <div class=\"hand-caveat-body\">\n          This is a 1-vs-1 all-in model. It does not include the risk of the {n} players ({list}) behind {label} coming over the top. {note}\n        </div>\n      </details>\n    ",
   "hand.banner.note.callBack": "Even if it says “call OK” here, defend with a tighter range in practice.",
@@ -571,7 +570,7 @@ export const en: Record<string, string> = {
 
   // ===== 警告 (calculator.ts) =====
   "calc.warn.position.html": "\n      ⚠ <strong>Position reversed</strong>: action order is <code>{heroPos}({heroAct}) → {villainPos}({villainAct})</code>.\n      In practice <strong>hero ({heroPos}) acts first</strong>, so calling a villain ({villainPos}) open shove can’t happen.\n      (The call math still runs, but swapping positions is more realistic.)\n    ",
-  "calc.warn.depth.html": "\n    ⚠️ Effective {eff}bb: at this depth, options other than push/fold\n    (small opens or calls) are realistic. This tool assumes all-in.\n  ",
+  "calc.warn.depth.html": "⚠️ Effective {eff}bb: this is a call decision after an all-in, so the math still applies. But players who shove this deep usually have a narrow, strong range, so set the opponent range tighter.",
 
   // ===== 用語解説モーダル (calculator.ts INFO_TEXTS) =====
   "info.icm.title": "ICM (Independent Chip Model)",
@@ -618,7 +617,11 @@ export const en: Record<string, string> = {
   "nash.calculating": "Calculating…",
   "nash.converged": "Converged",
   "nash.notConverged": "Not converged",
-  "nash.depthNote.html": "⚠ Effective stack <strong>{eff}BB</strong> is deep enough that the push/fold assumption starts to break down (guide: >10BB). Real play also has small raises available, so read this push range as an upper bound: \"if it is shove-or-fold, shoving is fine.\"",
+  "nash.depthNote.html": "⚠ Effective <strong>{eff}BB</strong>: at this depth, min-raises and limps are normal options. This result only holds if your choice is limited to shove or fold; in real play you should shove fewer hands than shown.",
+  "nash.depthOut.html": "⚠ Effective <strong>{eff}BB</strong> is too deep for push/fold. At this depth players open small, limp and 3-bet, and this app does not model those lines. Do not use the result below as a real-play decision.",
+  "nash.depthOut.reveal": "Show the shove-or-fold reference anyway",
+  "hand.pushDepth.caution.html": "⚠ Effective <strong>{eff}BB</strong>: min-raises and limps are normal at this depth. These shove hands are an upper bound for a shove-or-fold choice only.",
+  "hand.pushDepth.out.html": "⚠ Effective <strong>{eff}BB</strong> is outside push/fold range (opens, limps and 3-bets are not modeled). Do not use these shove results as a real-play decision.",
   "nash.statusSuffix": "({iter} iter / {ms} ms)",
   "nash.stats": "{n} hand types / {combos} combos (<strong>{pct}%</strong>)",
   "nash.matrixMissing": "⚠ HU equity matrix not generated (hu-equity-matrix.json). Run `npx tsx scripts/build-hu-matchups.mts`.",

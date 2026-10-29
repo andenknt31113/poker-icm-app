@@ -347,3 +347,14 @@
 - 検証: 単体324件（core77+UI247）・型チェック・ビルド・E2E16件（E2E_BROWSER_CHANNEL=chromium）成功。アプリ内ブラウザで分析画面の表示を確認（このペイン固有のSW登録エラーのみ。E2EのChromiumではコンソールエラー0）。
 - 作業前の未コミット状態を artifacts/backup-2026-10-28-before-equity-fix/ に保存（tracked.patch / untracked.tar.gz / HEAD.txt）。ブランチ fix/range-equity-weighting を作成（1.2以降の未コミット変更もそのまま載っている）。commit/push・iOSビルド・ストア操作なし。
 - 見直しで出た残件（未着手）: Nash/push判定は2人・オールインかフォールドのみのモデル（リンプ・2BBオープン・後ろの複数コーラーなし）。深いスタックでの見せ方とストア説明の範囲の明確化が候補。
+
+## 2026-10-29: Nash・自分からオールインの見せ方と blind の扱い（完了・未コミット）
+- 実装済み: core solveHUNash に pusherBlind/callerBlind/deadMoney（省略時は従来どおり）。playground/src/pushSpot.ts で実ポジションから blind・BB ante・第三者 dead money を組み立て、Nash と「自分からオールイン」逆算で共用。以前は役割だけで自分=SB・相手=BBとみなし、BTN からのプッシュでも 0.5BB 払った扱いだった。
+- 2人卓の BTN を SB 扱いに（posToPotOddsPos に人数引数）。HU プリセットでポットが 0.5BB 多く、必要勝率が約1pt低く出ていた。
+- 深さ区分 pushDepthTier: 12BB 以下は通常、12〜20BB は注意、20BB 超は範囲外。Nash は範囲外のとき結果を隠し「2択に限った参考値を見る」ボタンで表示。レンジ比較の自分からオールインにも注意枠（#push-depth-warn）。コール側の深さ注意文は「計算は有効・相手レンジを狭めに」へ変更。
+- 自分からオールインの割り込み注意を、自分と相手の間にいる人（BTN→BB の SB）も数えるよう修正。未使用キー hand.banner.callerLabel.villain を削除。
+- 効果の例: 4人50/30/20・BTN10BB→BB15BB の Nash push は 70.7%→65.6%、6人FT・BTN10→BB20 は 71.9%→65.0%（旧は BTN にも SB 0.5 を払わせていた）。
+- pushSpot の単体テスト9件追加（SB→BB / BTN→BB / CO→BTN / 2人卓 / 少額の第三者 / ポジション未設定 / チップ保存 / 深さ区分）。
+- 検証: 型チェック・単体 344 件（core81+UI263）・ビルド・E2E16件（E2E_BROWSER_CHANNEL=chromium）成功。アプリ内ブラウザ（375px）で 14BB=注意表示、25BB=範囲外で結果を隠しボタンで表示、自分からオールインの 25BB 範囲外注意を確認。
+- ストア説明の対応範囲の下書き: docs/STORE_SCOPE_2026-10-29.md（「最適解」「正解レンジ」等の差し替え案、対応している/いない場面の追加節、プロモーションテキスト案）。ASC への反映は本人の操作。
+- 残り: コミット（未指示）、1.3 の新ビルド作成・スクショ更新・審査提出（本人判断）、Web 版への反映（main への push で自動デプロイ）。

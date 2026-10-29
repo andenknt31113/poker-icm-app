@@ -160,8 +160,8 @@ export function recompute(): void {
       const r = calculatePotOdds({
         heroStack: stacks[heroIndex]!,
         villainStack: stacks[villainIndex]!,
-        heroPosition: posToPotOddsPos(heroPos),
-        villainPosition: posToPotOddsPos(villainPos),
+        heroPosition: posToPotOddsPos(heroPos, players.length),
+        villainPosition: posToPotOddsPos(villainPos, players.length),
         sb: sbV, bb: bbV, ante: totalAnteV,
       });
       if (r.matched > 0 && !callManualOverride) {
