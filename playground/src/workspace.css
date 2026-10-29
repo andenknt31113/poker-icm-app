@@ -107,11 +107,6 @@
 .nash-seat { padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
 .nash-seat.hero { border-color: var(--accent); color: var(--accent); }
 .nash-seat.villain { border-color: var(--bad); color: var(--bad); }
-.analysis-assumptions { padding: 18px; border: 1px solid #806e4f; background: #322c20; border-radius: 12px; margin-bottom: 20px; color: #f0d8a7; }
-.analysis-assumptions strong { font-size: 14px; }
-.analysis-assumptions p { margin: 8px 0 0; font-size: 13px; line-height: 1.8; }
-.workspace #sec-nash .analysis-assumptions { padding: 10px 12px; margin-bottom: 12px; background: transparent; border-color: var(--border); }
-.workspace #sec-nash .analysis-assumptions p { display: none; }
 .workspace #sec-hand { order: 3; }
 .workspace section[data-tab="analyze"]:not(#sec-hand):not(.workspace-section-head) { order: 4; }
 .workspace #sec-nash { order: 5 !important; }

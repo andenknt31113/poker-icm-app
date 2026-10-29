@@ -58,20 +58,36 @@ function expectCleared(): void {
 }
 
 describe("Nashの結果と現在の入力を一致させる", () => {
-  it("ポジション順とプッシュ役が逆なら入れ替え案内を表示する", async () => {
+  it("相手が先に動く席順なら、相手を押す側・自分を受ける側として解く", async () => {
     const warn = document.createElement("div");
     warn.id = "nash-overcall-warn";
-    document.body.appendChild(warn);
-    const { updateNashOvercallWarn } = await import("../src/nashUI.js");
+    const context = document.createElement("div");
+    context.id = "nash-context";
+    document.body.append(warn, context);
+    document.body.insertAdjacentHTML("beforeend", '<h3 id="nash-push-title"></h3><h3 id="nash-call-title"></h3>');
     players[0]!.position = "BB";
     players[1]!.position = "SB";
-    updateNashOvercallWarn();
-    expect(warn.classList.contains("hidden")).toBe(false);
-    expect(warn.textContent).toContain("自分 ⇄ 相手");
-    players[0]!.position = "SB";
-    players[1]!.position = "BB";
+    const { initNashUI, renderNashContext, updateNashOvercallWarn } = await import("../src/nashUI.js");
+    initNashUI(); clickSolve(); vi.runAllTimers();
+    // 自分 (index 0) は BB なので受ける側。押すのは SB の相手 (index 1)
+    expect(solve.mock.calls[0]![0]).toMatchObject({ sbIndex: 1, bbIndex: 0, pusherBlind: 0.5, callerBlind: 1 });
+    renderNashContext();
+    expect(context.textContent).toContain("自分：コール");
+    expect(context.textContent).toContain("相手：プッシュ");
+    expect(document.getElementById("nash-push-title")!.textContent).toContain("相手の push");
+    expect(document.getElementById("nash-call-title")!.textContent).toContain("自分の call");
+    // 席順どおりなので入れ替えの案内は出さない
     updateNashOvercallWarn();
     expect(warn.classList.contains("hidden")).toBe(true);
+  });
+  it("収束したときは反復回数や計算時間を表示しない", async () => {
+    const { initNashUI } = await import("../src/nashUI.js");
+    initNashUI(); clickSolve(); vi.runAllTimers();
+    expect(document.getElementById("nash-status")!.textContent).toBe("");
+    solve.mockReturnValue({ ...solve.mock.results[0]!.value, converged: false });
+    players[0]!.stack = 17;
+    clickSolve(); vi.runAllTimers();
+    expect(document.getElementById("nash-status")!.textContent).toBe("未収束");
   });
   it("表示中の計算待ちに条件が変わっても最新局面で自動計算を完了する", async () => {
     const { ensureNashCalculated, invalidateChangedNash } = await import("../src/nashUI.js");
@@ -215,6 +231,12 @@ describe("実効スタックの深さで Nash の見せ方を変える", () => {
     await solveWithStacks(16, 30);
     expect(note().classList.contains("hidden")).toBe(false);
     expect(note().textContent).toContain("2BB");
+    expect(results().classList.contains("hidden")).toBe(false);
+  });
+
+  it("自分が深くても相手が短ければ実効スタックで判定する (40BB vs 5BB は注意なし)", async () => {
+    await solveWithStacks(40, 5);
+    expect(note().classList.contains("hidden")).toBe(true);
     expect(results().classList.contains("hidden")).toBe(false);
   });
 

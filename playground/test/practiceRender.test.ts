@@ -28,3 +28,15 @@ describe("練習のレンジ表", () => {
     expect(details?.open).toBe(true);
   });
 });
+
+describe("練習の想定レンジの表示", () => {
+  it.each(["callfold", "push"] as const)("%s はコンボ比率の「上位 X%」で出す", (mode) => {
+    setPracticeModeSilent(mode);
+    const p = makeProblem();
+    renderPracticeProblem({ ...p, villainCallRangePct: 25 });
+    const card = document.querySelector(".scenario-warn")!.textContent!;
+    // 種類ベースの Top 25% は 42 種類 = 全コンボの約 23%
+    expect(card).toContain("上位 23%");
+    expect(card).not.toContain("Top");
+  });
+});

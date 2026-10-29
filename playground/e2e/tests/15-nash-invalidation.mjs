@@ -21,7 +21,8 @@ export default async function testNashInvalidation({ baseURL, createContext }) {
     await page.click('[data-jump="sec-nash"]');
     await page.waitForSelector("#nash-context", { state: "visible" });
     await page.waitForFunction(() => document.getElementById("nash-sb-stats")?.textContent.length > 0);
-    if (!(await page.locator("#nash-context").textContent()).includes("自分：プッシュ")) throw new Error("Nashの役割が不明");
+    // HU 例題は自分=BB・相手=BTN。BTN が先に動くので相手が押し、自分が受ける
+    if (!(await page.locator("#nash-context").textContent()).includes("自分：コール")) throw new Error("Nashの役割が不明");
     await page.setViewportSize({ width: 390, height: 844 });
     await page.locator("#nash-context").scrollIntoViewIfNeeded();
     if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)) throw new Error("Nash画面が横にはみ出した");

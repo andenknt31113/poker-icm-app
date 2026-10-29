@@ -1,17 +1,25 @@
 import { describe, expect, it } from "vitest";
 import { ja } from "../src/locales/ja.js";
 import { en } from "../src/locales/en.js";
-import { comboPctOfRange, topRange } from "../src/handRanking.js";
+import { comboPctOfRange, comboPctOfTopRange, topRange, topRangeByComboPct } from "../src/handRanking.js";
 
 describe("レンジ比率の説明", () => {
-  it("既存の25%プリセットの計算を変えず、組合せ比率と区別する", () => {
+  it("画面のスライダーはコンボ比率で上位 X% を取る", () => {
+    for (const pct of [5, 10, 25, 50, 75]) {
+      // 1 クラスは最大 12 コンボ (約0.9%) なので、それ以内で X% に合う
+      expect(Math.abs(comboPctOfRange(topRangeByComboPct(pct)) - pct)).toBeLessThanOrEqual(0.5);
+    }
+    expect(topRangeByComboPct(0).size).toBe(0);
+    expect(topRangeByComboPct(100).size).toBe(169);
+    expect(topRangeByComboPct(25).has("AA")).toBe(true);
+    expect(ja["hand.preset.top"]).toBe("上位");
+    expect(en["hand.preset.top"]).toBe("Top");
+  });
+  it("練習の Top X% (種類ベース) はコンボ比率に直して表示する", () => {
     expect(topRange(25).size).toBe(42);
     // 2026-10-28 のランキング修正 (vs ランダム equity をコンボ重みで再計算) で 22% → 23%
-    expect(comboPctOfRange(topRange(25)).toFixed(0)).toBe("23");
-    expect(ja["hand.preset.scale"]).toContain("種類");
-    expect(ja["hand.preset.combos"]).toContain("{pct}%");
-    expect(en["hand.preset.scale"]).toContain("class");
-    expect(en["hand.preset.combos"]).toContain("{pct}%");
+    expect(comboPctOfTopRange(25)).toBe(23);
+    expect(ja["practice.topPct"]).toContain("上位 {pct}%");
   });
   it.each(["call", "push"] as const)("%s 判定を単純な上位レンジと表現しない", (direction) => {
     const key = `calc.summary.verdict.${direction}` as const;

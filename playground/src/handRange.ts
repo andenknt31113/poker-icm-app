@@ -1,7 +1,7 @@
 import { calculateICM } from "@poker-icm/core";
 import {
   ALL_169_HANDS,
-  topRange,
+  topRangeByComboPct,
   type HandNotation,
   comboCountOfRange,
   comboPctOfRange,
@@ -45,7 +45,7 @@ const customFromPresetBtn = $<HTMLButtonElement>("custom-from-preset");
 type RangeMode = "preset" | "custom";
 let villainRangeMode: RangeMode = "preset";
 // 方向: callBack = 相手 push → 自分 call (従来), pushBack = 相手 call → 自分 push (逆算)
-type Direction = "callBack" | "pushBack";
+export type Direction = "callBack" | "pushBack";
 let direction: Direction = "callBack";
 const customVillainRange = new Set<HandNotation>();
 
@@ -69,7 +69,7 @@ function saveCustomRange(): void {
 
 function getCurrentVillainRange(): Set<HandNotation> {
   if (villainRangeMode === "custom") return customVillainRange;
-  return topRange(Number(pushRangeInput.value));
+  return topRangeByComboPct(Number(pushRangeInput.value));
 }
 
 // 「相手 call → 自分 push (逆算)」モード用: 相手 call レンジを所与に
@@ -208,6 +208,42 @@ export interface RangeVerdictSummary {
   available?: boolean;
 }
 
+/**
+ * 席順から決まる向き。先に動く側しか先にオールインできないので、
+ * 自分が先なら「自分からオールイン」、相手が先なら「相手のオールインを受ける」。
+ * どちらかのポジションが未設定なら null (ユーザーが選ぶ)。
+ */
+export function directionFromPositions(): Direction | null {
+  const hero = players.find((p) => p.role === "hero");
+  const villain = players.find((p) => p.role === "villain");
+  if (!hero || !villain) return null;
+  const heroAct = actionOrderIdx(hero.position);
+  const villainAct = actionOrderIdx(villain.position);
+  if (heroAct < 0 || villainAct < 0 || heroAct === villainAct) return null;
+  return heroAct < villainAct ? "pushBack" : "callBack";
+}
+
+/** 席順で向きが決まるときはそれに合わせ、ありえない側のボタンを押せなくする。 */
+function syncDirectionWithPositions(): void {
+  const forced = directionFromPositions();
+  if (forced) direction = forced;
+  document.querySelectorAll<HTMLButtonElement>(".direction-tab").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.direction === direction);
+    btn.disabled = forced !== null && btn.dataset.direction !== forced;
+  });
+  const hint = document.getElementById("direction-auto-hint");
+  if (!hint) return;
+  if (!forced) {
+    hint.classList.add("hidden");
+    return;
+  }
+  const first = players.find((p) => p.role === (forced === "pushBack" ? "hero" : "villain"));
+  hint.textContent = t(forced === "pushBack" ? "hand.direction.autoHero" : "hand.direction.autoVillain", {
+    pos: first?.position ?? "",
+  });
+  hint.classList.remove("hidden");
+}
+
 /** 「自分からオールイン」のときだけ、実効スタックの深さに応じた注意を出す。 */
 function updatePushDepthWarn(): void {
   const warnEl = document.getElementById("push-depth-warn");
@@ -230,6 +266,7 @@ export function renderRangeComparison(requiredEquity: number): RangeVerdictSumma
   const pushPct = Number(pushRangeInput.value);
   pushPctLabel.textContent = String(pushPct);
 
+  syncDirectionWithPositions();
   updatePushDepthWarn();
   const villainRange = getCurrentVillainRange();
   const emptyRange = villainRange.size === 0;
@@ -271,12 +308,7 @@ export function renderRangeComparison(requiredEquity: number): RangeVerdictSumma
     villainRange.has(hand) ? villainClass : "",
   );
 
-  const totalHands = ALL_169_HANDS.length;
   const villainPct = comboPctOfRange(villainRange);
-  const comboPctLabel = document.getElementById("preset-combo-pct");
-  if (comboPctLabel) {
-    comboPctLabel.textContent = t("hand.preset.combos", { pct: villainPct.toFixed(0) });
-  }
   let verdict: RangeVerdictSummary;
 
   if (direction === "callBack") {
@@ -517,7 +549,7 @@ export function initHandRange(onChange: () => void): void {
 
   customFromPresetBtn.addEventListener("click", () => {
     customVillainRange.clear();
-    for (const h of topRange(Number(pushRangeInput.value))) {
+    for (const h of topRangeByComboPct(Number(pushRangeInput.value))) {
       customVillainRange.add(h);
     }
     saveCustomRange();

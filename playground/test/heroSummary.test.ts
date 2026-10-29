@@ -55,7 +55,7 @@ describe("サマリーの視点と役割", () => {
     expect(rows[1]?.textContent).toContain(heroRole);
     expect(rows[1]?.textContent).toContain("18");
     const reference = document.querySelector(".hero-summary-push-note");
-    if (direction === "pushBack") expect(reference?.textContent).toContain("自分がコールする場合");
+    if (direction === "pushBack") expect(reference?.textContent).toContain("コールする場合");
     else expect(reference).toBeNull();
   });
 

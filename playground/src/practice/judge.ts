@@ -1,5 +1,6 @@
 import type { PracticeProblem } from "./types.js";
 import { t } from "../i18n.js";
+import { comboPctOfTopRange } from "../handRanking.js";
 import { ensureDerivedFields, problemRP, getPracticeDifficulty, getPracticeMode, RP_TOLERANCE, practiceProblemDedupKey } from "./generate.js";
 import { getCurrentProblem, setCurrentProblem, renderJudgeHeroGrid, renderJudgeHeroGridPush } from "./render.js";
 import { isTutorialActive, getTutorialStep, TUTORIAL_PROBLEMS } from "./tutorialState.js";
@@ -315,7 +316,7 @@ export function judgePractice(answer: "call" | "fold"): void {
     rpSign: (p.dollarEV - p.cEV) * 100 >= 0 ? "+" : "",
     rp: ((p.dollarEV - p.cEV) * 100).toFixed(2),
     heroHand: p.heroHand,
-    villainCallRangePct: p.villainCallRangePct,
+    villainCallRangePct: comboPctOfTopRange(p.villainCallRangePct),
     heroEq: (p.heroEq * 100).toFixed(1),
     verdictOp: p.heroEq >= p.dollarEV ? "≥" : "<",
     verdict: p.heroEq >= p.dollarEV ? t("practice.cfDetails.verdictCall") : t("practice.cfDetails.verdictFold"),
@@ -330,9 +331,8 @@ export function judgePractice(answer: "call" | "fold"): void {
     </div>
     ${tutorialBlockHtml}
     <div class="practice-lesson">💡 ${practiceLesson(p)}</div>
-    <div>${t("practice.cf.cevLabel")} <strong>${(p.cEV * 100).toFixed(1)}%</strong></div>
-    <div>${t("practice.cf.reqLabel")} <strong>${(p.dollarEV * 100).toFixed(1)}%</strong> <span class="muted">${t("practice.cf.reqApproxNote", { v: (p.dollarEVApprox * 100).toFixed(1) })}</span></div>
-    <div>${t("practice.cf.handEquity", { hand: p.heroHand, pct: p.villainCallRangePct })} <strong>${(p.heroEq * 100).toFixed(1)}%</strong></div>
+    <div>${t("practice.cf.reqLabel")} <strong>${(p.dollarEV * 100).toFixed(1)}%</strong> <span class="muted">${t("practice.cf.cevNote", { v: (p.cEV * 100).toFixed(1) })}</span></div>
+    <div>${t("practice.cf.handEquity", { hand: p.heroHand, pct: comboPctOfTopRange(p.villainCallRangePct) })} <strong>${(p.heroEq * 100).toFixed(1)}%</strong></div>
     <div>${t("practice.label.margin")} <strong style="color: ${margin >= 0 ? "var(--good)" : "var(--bad)"}">${margin >= 0 ? "+" : ""}${(margin * 100).toFixed(1)}%</strong></div>
     <details class="practice-details">
       <summary>${t("practice.details.summary")}</summary>
@@ -411,9 +411,9 @@ export function judgePracticePush(answer: "push" | "fold"): void {
       <button id="practice-next-btn-top" type="button" class="solve-btn compact">${t("practice.nextBtnTop")}</button>
     </div>
     <div class="practice-lesson">💡 ${practicePushLesson(p)}</div>
-    <div>fold $EV: <strong>${evFold.toFixed(3)}</strong></div>
-    <div>push $EV: <strong>${evPush.toFixed(3)}</strong> <span class="muted">${t("practice.push.evNote", { pcall: (pCall * 100).toFixed(0), eq: (eqVsCallRange * 100).toFixed(1) })}</span></div>
-    <div>${t("practice.label.margin")} <strong style="color: ${marginDollar >= 0 ? "var(--good)" : "var(--bad)"}">${marginDollar >= 0 ? "+" : ""}${marginDollar.toFixed(3)}</strong> <span class="muted">${t("practice.push.marginPoolNote", { v: `${marginPct >= 0 ? "+" : ""}${marginPct.toFixed(2)}` })}</span></div>
+    <div>${t("practice.push.pCallLabel")} <strong>${(pCall * 100).toFixed(0)}%</strong></div>
+    <div>${t("practice.push.eqLabel")} <strong>${(eqVsCallRange * 100).toFixed(1)}%</strong></div>
+    <div>${t("practice.push.diffLabel")} <strong style="color: ${marginDollar >= 0 ? "var(--good)" : "var(--bad)"}">${marginPct >= 0 ? "+" : ""}${marginPct.toFixed(2)}%</strong></div>
     <details class="practice-details">
       <summary>${t("practice.details.summary")}</summary>
       <div class="practice-details-body">${t("practice.pushDetails.body.html", {
@@ -438,7 +438,7 @@ export function judgePracticePush(answer: "push" | "fold"): void {
         eqSteal: equitySteal.toFixed(3),
         eqWin: equityWin.toFixed(3),
         eqLose: equityLose.toFixed(3),
-        villainCallRangePct: p.villainCallRangePct,
+        villainCallRangePct: comboPctOfTopRange(p.villainCallRangePct),
         pCall: (pCall * 100).toFixed(1),
         stealPct: ((1 - pCall) * 100).toFixed(1),
         heroHand: p.heroHand,

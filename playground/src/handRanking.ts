@@ -127,3 +127,29 @@ export function comboCountOfRange(range: Iterable<HandNotation>): number {
 export function comboPctOfRange(range: Iterable<HandNotation>): number {
   return (comboCountOfRange(range) / TOTAL_COMBOS) * 100;
 }
+
+/**
+ * コンボ比率で「上位 X%」を取る。強度順の先頭から足していき、コンボ比率が
+ * X% に最も近い所で切る (同じ近さなら狭い方)。スライダーなど画面上の % はこちら。
+ */
+export function topRangeByComboPct(percent: number): Set<HandNotation> {
+  const clamped = Math.max(0, Math.min(100, percent));
+  const target = (TOTAL_COMBOS * clamped) / 100;
+  let combos = 0;
+  let bestCount = 0;
+  let bestDiff = target;
+  for (let i = 0; i < FINAL_RANKING.length; i++) {
+    combos += comboCount(FINAL_RANKING[i]!);
+    const diff = Math.abs(combos - target);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      bestCount = i + 1;
+    }
+  }
+  return new Set(FINAL_RANKING.slice(0, bestCount));
+}
+
+/** 種類ベースの topRange(percent) が実際に占めるコンボ比率 (表示用に四捨五入)。 */
+export function comboPctOfTopRange(percent: number): number {
+  return Math.round(comboPctOfRange(topRange(percent)));
+}

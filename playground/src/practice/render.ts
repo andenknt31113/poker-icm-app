@@ -1,4 +1,4 @@
-import { topRange, type HandNotation } from "../handRanking.js";
+import { topRange, comboPctOfTopRange, type HandNotation } from "../handRanking.js";
 import { equity } from "../equity.js";
 import { renderGrid } from "../grid.js";
 import { t } from "../i18n.js";
@@ -187,7 +187,7 @@ export function renderPracticeProblem(rawP: PracticeProblem): void {
       <div class="scenario-warn-head">${t("practice.villainWarn.head", { pos: villain?.position || "?" })}</div>
       <div class="scenario-warn-body">
         <span class="scenario-warn-item">Stack <strong>${villain ? villain.stack : "?"} BB</strong></span>
-        <span class="scenario-warn-item">${t("practice.villainWarn.estPush")} <strong>Top ${p.villainCallRangePct}%</strong></span>
+        <span class="scenario-warn-item">${t("practice.villainWarn.estPush")} <strong>${t("practice.topPct", { pct: comboPctOfTopRange(p.villainCallRangePct) })}</strong></span>
       </div>
     </div>
   `;
@@ -204,7 +204,6 @@ export function renderPracticeProblem(rawP: PracticeProblem): void {
     <details class="practice-table-details"><summary>${t("workspace.table")}</summary><div id="practice-table-wrapper"></div></details>
     <details class="practice-range-details">
       <summary>${t("practice.villainPushRange.h3")}</summary>
-      <p class="hint">${t("practice.topxNote")}</p>
       <div id="practice-villain-grid" class="hand-grid"></div>
     </details>
   `;
@@ -237,7 +236,7 @@ export function renderPracticeProblemPush(p: PracticeProblem): void {
       <div class="scenario-warn-head">${t("practice.villainCall.head")}</div>
       <div class="scenario-warn-body">
         <span class="scenario-warn-item">Stack <strong>${villain ? villain.stack : "?"} BB</strong></span>
-        <span class="scenario-warn-item">${t("practice.villainCall.estCall")} <strong>Top ${p.villainCallRangePct}%</strong></span>
+        <span class="scenario-warn-item">${t("practice.villainCall.estCall")} <strong>${t("practice.topPct", { pct: comboPctOfTopRange(p.villainCallRangePct) })}</strong></span>
       </div>
     </div>
   `;
@@ -254,7 +253,6 @@ export function renderPracticeProblemPush(p: PracticeProblem): void {
     <details class="practice-table-details"><summary>${t("workspace.table")}</summary><div id="practice-table-wrapper"></div></details>
     <details class="practice-range-details">
       <summary>${t("practice.villainCallRange.h3")}</summary>
-      <p class="hint">${t("practice.topxNote")}</p>
       <div id="practice-villain-grid" class="hand-grid"></div>
     </details>
   `;

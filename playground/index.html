@@ -322,6 +322,7 @@
             自分の push レンジを求める
           </button>
         </div>
+        <p id="direction-auto-hint" class="hint hidden"></p>
 
         <div class="mode-tabs" role="tablist">
           <button
@@ -339,7 +340,7 @@
 
         <div id="preset-controls">
           <label class="range-label">
-            <span id="villain-range-label">相手のpushレンジ</span>: <span id="push-pct">25</span>% <span data-i18n="hand.preset.scale">（ハンド種類の割合）</span>
+            <span id="villain-range-label">相手のpushレンジ</span>: <span data-i18n="hand.preset.top">上位</span> <span id="push-pct">25</span>%
             <input
               id="push-range"
               type="range"
@@ -349,8 +350,6 @@
               step="1"
             />
           </label>
-          <p class="hint" data-i18n="hand.preset.hint">※ 169種類のハンドを本ツールの強度順で選択します。サマリーの%はカードの組合せ数の割合です。</p>
-          <p id="preset-combo-pct" class="hint" aria-live="polite"></p>
         </div>
         <div id="custom-controls" class="hidden">
           <p class="hint">
@@ -390,44 +389,43 @@
       </section>
 
       <section class="card" data-tab="analyze" data-analysis-panel="nash" id="sec-nash">
-        <div id="nash-context" class="nash-context" aria-live="polite"></div>
-        <div class="analysis-assumptions"><strong data-i18n="flow.nashCaution">ここでは「自分からオールイン」を計算します</strong><p data-i18n="flow.nashCautionHint">ハンド判断の相手レンジを使った計算とは別です。自分がプッシュ、相手がコールする2人の均衡を求めます。</p></div>
         <h2 data-i18n="nash.h2">Nash 均衡 (HU push/fold)</h2>
-        <p class="hint" data-i18n="nash.autoHint">開くと自動計算します。プッシュ／フォールドのみを想定した結果です。</p>
-        <details class="nash-explanation">
-        <summary data-i18n="nash.explanation">計算の前提・注意点を見る</summary>
-        <p class="hint" data-i18n-html="nash.hint.html">
-          🎯自分 (pusher) と ⚔️相手 (caller) のヘッズアップ Nash 均衡を計算（ICM反映済み）。
-          <br />
-          ※ HU 2-way 想定。BTN+BB のように間に他プレイヤーがいる場合は警告が出ます。
-          <br />
-          ※ <strong>プッシュ or フォールドの2択</strong>を前提にした均衡です。目安は実効 12BB 以下。12〜20BB では注意を表示し、20BB を超えると範囲外として結果を折りたたみます（実戦では 2BB オープンやリンプが入るため）。
-          <br />
-          ブラインドとアンティは実際のポジションの人が払う前提です（BTN からのプッシュなら自分は blind なし、BB ante は BB の人）。セットアップで自分・相手と SB/BB/アンティを設定してください。この画面を開くと自動計算します。
-        </p>
-
-        </details>
-        <div class="nash-actions">
-        <button id="nash-solve" type="button" class="solve-btn" data-i18n="nash.solveBtn">再計算</button>
-        <button type="button" class="workspace-secondary" data-swap-players data-i18n="setup.players.swap">自分 ⇄ 相手</button>
-        <button type="button" class="workspace-secondary" data-open-tab="setup" data-i18n="nash.editSpot">局面を変更する</button>
-        </div>
+        <div id="nash-context" class="nash-context" aria-live="polite"></div>
         <p id="nash-status" class="hint" role="status"></p>
         <div id="nash-depth-note" class="warn-box hidden"></div>
         <div id="nash-overcall-warn" class="warn-box hidden"></div>
 
         <div id="nash-results" class="range-grids">
           <div>
-            <h3 data-i18n="nash.sbRange.h3">🎯自分 push レンジ 🔴</h3>
+            <!-- 見出しは押す側が自分か相手かで nashUI.ts が書き換える -->
+            <h3 id="nash-push-title">🎯自分の push レンジ 🔴</h3>
             <p class="hint" id="nash-sb-stats"></p>
             <div id="nash-sb-grid" class="hand-grid"></div>
           </div>
           <div>
-            <h3 data-i18n="nash.bbRange.h3">⚔️相手 call レンジ 🟢</h3>
+            <h3 id="nash-call-title">⚔️相手の call レンジ 🟢</h3>
             <p class="hint" id="nash-bb-stats"></p>
             <div id="nash-bb-grid" class="hand-grid"></div>
           </div>
         </div>
+        <div class="nash-actions">
+        <button id="nash-solve" type="button" class="solve-btn" data-i18n="nash.solveBtn">再計算</button>
+        <button type="button" class="workspace-secondary" data-swap-players data-i18n="setup.players.swap">自分 ⇄ 相手</button>
+        <button type="button" class="workspace-secondary" data-open-tab="setup" data-i18n="nash.editSpot">局面を変更する</button>
+        </div>
+        <details class="nash-explanation">
+        <summary data-i18n="nash.explanation">計算の前提・注意点を見る</summary>
+        <p class="hint" data-i18n-html="nash.hint.html">
+          先に動く方が push、後に動く方が call する2人の Nash 均衡を計算します（ICM反映済み）。
+          <br />
+          ※ HU 2-way 想定。BTN+BB のように間に他プレイヤーがいる場合は警告が出ます。
+          <br />
+          ※ <strong>プッシュ or フォールドの2択</strong>を前提にした均衡です。目安は実効 12BB 以下。12〜20BB では注意を表示し、20BB を超えると範囲外として結果を折りたたみます（実戦では 2BB オープンやリンプが入るため）。
+          <br />
+          ブラインドとアンティは実際のポジションの人が払う前提です（BTN からのプッシュなら自分は blind なし、BB ante は BB の人）。この画面を開くと自動計算します。
+        </p>
+
+        </details>
       </section>
 
       <section class="card" data-tab="practice">

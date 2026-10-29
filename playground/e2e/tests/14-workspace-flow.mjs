@@ -25,12 +25,21 @@ export default async function testWorkspaceFlow({ baseURL, createContext }) {
     await page.waitForSelector("#sec-hand", { state: "visible" });
     await page.locator('[data-jump="sec-nash"]').click();
     if (await page.locator("#hero-summary").isVisible()) throw new Error("Nashに別条件のサマリーが表示されています");
-    if (!(await page.locator("#sec-nash .analysis-assumptions").isVisible())) throw new Error("Nashの前提がありません");
+    // 例題は自分=BB・相手=SB。先に動く相手が押し、自分は受ける側として解く
+    if (!(await page.locator("#nash-context").textContent()).includes("相手：プッシュ")) throw new Error("Nashの押す側が席順と合いません");
     await page.locator('[data-jump="sec-hand"]').click();
     if (!(await page.locator("#hand-cell-detail").textContent()).includes("AKs")) throw new Error("画面切替で選択が失われました");
-    await page.locator('.direction-tab[data-direction="pushBack"]').click();
+    if (!(await page.locator('.direction-tab[data-direction="pushBack"]').isDisabled())) throw new Error("BBから先にオールインする向きを選べてしまう");
+    if (!(await page.locator("#direction-auto-hint").isVisible())) throw new Error("向きを自動で選んだ説明がありません");
+    // 自分と相手を入れ替えると自分が SB (先に動く側) になり、自分からオールインに切り替わる
+    await page.locator('[data-jump="sec-nash"]').click();
+    await page.locator('#sec-nash [data-swap-players]').click();
+    await page.locator('[data-jump="sec-hand"]').click();
+    if (!(await page.locator('.direction-tab[data-direction="pushBack"]').evaluate(element => element.classList.contains("active")))) throw new Error("席順で自分からオールインに切り替わりません");
     if (await page.locator("#hand-cell-detail").isVisible()) throw new Error("pushモードにコール専用の詳細が残っています");
-    await page.locator('.direction-tab[data-direction="callBack"]').click();
+    await page.locator('[data-jump="sec-nash"]').click();
+    await page.locator('#sec-nash [data-swap-players]').click();
+    await page.locator('[data-jump="sec-hand"]').click();
     await page.locator('[data-i18n="workspace.edit"]').click();
     await page.locator('.tab-bar [data-tab="practice"]').click();
     await page.locator("#tutorial-intro-start-btn").click();

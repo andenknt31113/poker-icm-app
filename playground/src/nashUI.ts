@@ -44,13 +44,35 @@ const NASH_MAX_ITERATIONS = 500;
 const NASH_CONVERGENCE_TOLERANCE = 0.001;
 let resultInputKey: string | null = null;
 
+/**
+ * Nash で押す側・受ける側。先に動く側しか先にオールインできないので、
+ * 席順が分かれば先に動く方が押す。ポジション未設定なら自分が押す側。
+ */
+export function nashRoles(heroIndex: number, villainIndex: number): { pusherIndex: number; callerIndex: number } {
+  const heroAct = actionOrderIdx(players[heroIndex]?.position ?? "");
+  const villainAct = actionOrderIdx(players[villainIndex]?.position ?? "");
+  const villainFirst = heroAct >= 0 && villainAct >= 0 && villainAct < heroAct;
+  return villainFirst
+    ? { pusherIndex: villainIndex, callerIndex: heroIndex }
+    : { pusherIndex: heroIndex, callerIndex: villainIndex };
+}
+
+/** 結果グリッドの見出し (押すのが自分か相手か)。 */
+function renderNashTitles(heroPushes: boolean): void {
+  const pushTitle = document.getElementById("nash-push-title");
+  const callTitle = document.getElementById("nash-call-title");
+  if (pushTitle) pushTitle.textContent = t(heroPushes ? "nash.title.youPush" : "nash.title.theyPush");
+  if (callTitle) callTitle.textContent = t(heroPushes ? "nash.title.theyCall" : "nash.title.youCall");
+}
+
 export function renderNashContext(): void {
   const context = document.getElementById("nash-context");
   if (!context) return;
   context.replaceChildren();
-  const heading = document.createElement("strong");
-  heading.textContent = t("nash.context");
-  context.appendChild(heading);
+  const heroIndex = players.findIndex((p) => p.role === "hero");
+  const villainIndex = players.findIndex((p) => p.role === "villain");
+  const heroPushes = heroIndex < 0 || villainIndex < 0 || nashRoles(heroIndex, villainIndex).pusherIndex === heroIndex;
+  renderNashTitles(heroPushes);
   const conditions = document.createElement("p");
   conditions.textContent = `${t("nash.prizes")}: ${payoutsInput.value} · SB ${nashSbInput.value} / BB ${nashBbInput.value} · ${t("nash.ante.label")} ${nashAnteInput.value}`;
   const seats = document.createElement("div");
@@ -63,17 +85,17 @@ export function renderNashContext(): void {
   players.forEach((player, index) => {
     const seat = document.createElement("span");
     seat.className = `nash-seat ${player.role}`;
-    const role = player.role === "hero" ? t("nash.youPush") : player.role === "villain" ? t("nash.theyCall") : t("seat.number", { n: index + 1 });
+    const role = player.role === "hero"
+      ? t(heroPushes ? "nash.youPush" : "nash.youCall")
+      : player.role === "villain"
+        ? t(heroPushes ? "nash.theyCall" : "nash.theyPush")
+        : t("seat.number", { n: index + 1 });
     seat.textContent = `${role} · ${player.position || "—"} · ${player.stack} BB`;
     if (player.role === "other") others.appendChild(seat);
     else seats.appendChild(seat);
   });
   context.appendChild(seats);
   context.appendChild(others);
-  const reference = document.createElement("p");
-  const bf = document.querySelector("#bf-result .value")?.textContent;
-  reference.textContent = bf ? `${t("nash.bfReference")} ${bf}` : t("nash.err.needHV");
-  context.appendChild(reference);
 }
 
 export function ensureNashCalculated(): void {
@@ -180,11 +202,6 @@ export function updateNashOvercallWarn(): void {
     warnEl.classList.add("hidden");
     return;
   }
-  if (heroAct > villainAct) {
-    warnEl.textContent = t("nash.positionOrder");
-    warnEl.classList.remove("hidden");
-    return;
-  }
 
   // pusher = 行動順が早い方 (idx が小さい方)。caller = もう片方。
   const pusherAct = Math.min(heroAct, villainAct);
@@ -284,9 +301,10 @@ function runNash(): void {
     nashStatus.innerHTML = `<span class="error">${t("nash.err.ante")}</span>`;
     return;
   }
-  // 実際のポジションの blind / BB ante / 第三者の dead money で局面を組む
+  // 先に動く方が押す。実際のポジションの blind / BB ante / 第三者の dead money で局面を組む
   // (アンティ入力はテーブル合計。BB の人が払う)
-  const spot = buildPushSpot(players, heroIndex, villainIndex, sb, bb, anteRaw);
+  const { pusherIndex, callerIndex } = nashRoles(heroIndex, villainIndex);
+  const spot = buildPushSpot(players, pusherIndex, callerIndex, sb, bb, anteRaw);
 
   // ボタンを「計算中…」に
   nashSolveBtn.disabled = true;
@@ -304,12 +322,11 @@ function runNash(): void {
         nashStatus.textContent = t("nash.inputsChanged");
         return;
       }
-      const t0 = performance.now();
       const result = solveHUNash({
         stacks: spot.stacks,
         payouts,
-        sbIndex: heroIndex,
-        bbIndex: villainIndex,
+        sbIndex: pusherIndex,
+        bbIndex: callerIndex,
         sb,
         bb,
         ante: 0,
@@ -323,7 +340,6 @@ function runNash(): void {
         maxIterations: NASH_MAX_ITERATIONS,
         convergenceTolerance: NASH_CONVERGENCE_TOLERANCE,
       });
-      const elapsedMs = performance.now() - t0;
 
       // 描画: frequency に応じて濃淡（mixed strategy 表示）
       renderNashGridWithFreq(nashSbGrid, result.sbPushFreq, "push");
@@ -343,10 +359,10 @@ function runNash(): void {
         pct: comboPctOfRange(result.bbCallRange).toFixed(1),
       });
 
-      const convStr = result.converged
-        ? `<span style="color: var(--good)">${t("nash.converged")}</span>`
+      // 収束したときは何も出さない (反復回数・計算時間は利用者には不要)
+      nashStatus.innerHTML = result.converged
+        ? ""
         : `<span style="color: var(--warn)">${t("nash.notConverged")}</span>`;
-      nashStatus.innerHTML = `${convStr}${t("nash.statusSuffix", { iter: result.iterations, ms: elapsedMs.toFixed(0) })}`;
 
       // push/fold 前提の注意。深くなるほど実戦には 2BB オープンやリンプが入り、
       // push/fold 2択の均衡は実際より広く押す結果になる。

@@ -4,7 +4,6 @@
 // legalContent.ts (規約) は対象外 (Phase B で判断)。
 
 export const ja: Record<string, string> = {
-  "nash.positionOrder": "自分のポジションが相手より後に行動する設定です。このNashでは自分をプッシュ役として計算します。役割が逆なら「自分 ⇄ 相手」で入れ替えてください。",
   "setup.players.roles": "🎯 自分　⚔️ 相手",
   "setup.players.swap": "自分 ⇄ 相手",
   "setup.players.locked": "{n}人まで無料で編集できます。人数を減らすか、Proで編集を解放できます。例題の分析はそのまま使えます。",
@@ -23,12 +22,16 @@ export const ja: Record<string, string> = {
   "seat.villain": "相手",
   "seat.button": "BTN（ボタン）",
   "seat.setButton": "ここをBTNに",
-  "nash.context": "この局面のNash",
   "nash.otherSeats": "ほかのプレイヤーを見る",
   "nash.prizes": "賞金配分",
   "nash.youPush": "自分：プッシュ",
   "nash.theyCall": "相手：コール",
-  "nash.bfReference": "参考：自分→相手のBF（コール分析）",
+  "nash.youCall": "自分：コール",
+  "nash.theyPush": "相手：プッシュ",
+  "nash.title.youPush": "🎯自分の push レンジ 🔴",
+  "nash.title.theyCall": "⚔️相手の call レンジ 🟢",
+  "nash.title.theyPush": "⚔️相手の push レンジ 🔴",
+  "nash.title.youCall": "🎯自分の call レンジ 🟢",
   "flow.equityDetails": "コール額・必要勝率の内訳を見る →",
   "flow.example": "例題から試す",
   "flow.exampleHint": "よくある局面を選ぶだけ",
@@ -39,8 +42,6 @@ export const ja: Record<string, string> = {
   "flow.hand": "レンジ比較",
   "flow.equity": "賞金・BF",
   "flow.nash": "Nash",
-  "flow.nashCaution": "ここでは「自分からオールイン」を計算します",
-  "flow.nashCautionHint": "ハンド判断の相手レンジを使った計算とは別です。自分がプッシュ、相手がコールする2人の均衡を求めます。",
   "workspace.eyebrow": "TOURNAMENT / STUDY",
   "workspace.title": "そのコールに、根拠を。",
   "workspace.intro": "気になった局面を再現して、賞金への影響とハンドの判断を確かめよう。",
@@ -159,25 +160,22 @@ export const ja: Record<string, string> = {
 
   // ===== index.html: ナッシュ均衡 =====
   "nash.h2": "Nash 均衡 (HU push/fold)",
-  "nash.hint.html": "\n          🎯自分 (pusher) と ⚔️相手 (caller) のヘッズアップ Nash 均衡を計算（ICM反映済み）。\n          <br />\n          ※ HU 2-way 想定。BTN+BB のように間に他プレイヤーがいる場合は警告が出ます。\n          <br />\n          ※ <strong>プッシュ or フォールドの2択</strong>を前提にした均衡です。目安は実効 12BB 以下。12〜20BB では注意を表示し、20BB を超えると範囲外として結果を折りたたみます（実戦では 2BB オープンやリンプが入るため）。\n          <br />\n          ブラインドとアンティは実際のポジションの人が払う前提です（BTN からのプッシュなら自分は blind なし、BB ante は BB の人）。セットアップで自分・相手と SB/BB/アンティを設定してください。この画面を開くと自動計算します。\n        ",
+  "nash.hint.html": "\n          先に動く方が push、後に動く方が call する2人の Nash 均衡を計算します（ICM反映済み）。\n          <br />\n          ※ HU 2-way 想定。BTN+BB のように間に他プレイヤーがいる場合は警告が出ます。\n          <br />\n          ※ <strong>プッシュ or フォールドの2択</strong>を前提にした均衡です。目安は実効 12BB 以下。12〜20BB では注意を表示し、20BB を超えると範囲外として結果を折りたたみます（実戦では 2BB オープンやリンプが入るため）。\n          <br />\n          ブラインドとアンティは実際のポジションの人が払う前提です（BTN からのプッシュなら自分は blind なし、BB ante は BB の人）。この画面を開くと自動計算します。\n        ",
   "nash.ante.label": "\n            アンティ合計\n            ",
   "nash.solveBtn": "再計算",
-  "nash.autoHint": "開くと自動計算します。プッシュ／フォールドのみを想定した結果です。",
   "nash.explanation": "計算の前提・注意点を見る",
   "nash.editSpot": "局面を変更する",
-  "nash.sbRange.h3": "🎯自分 push レンジ 🔴",
-  "nash.bbRange.h3": "⚔️相手 call レンジ 🟢",
 
   // ===== index.html: ハンド比較 =====
   "hand.h2": "ハンドレンジ比較",
   "hand.hint.html": "相手のレンジを仮定して、自分がコール・プッシュできるハンドを調べます。",
   "hand.direction.callBack": "相手のオールインを受ける",
   "hand.direction.pushBack": "自分からオールイン",
+  "hand.direction.autoHero": "席順で自動選択：自分（{pos}）が先に動きます",
+  "hand.direction.autoVillain": "席順で自動選択：相手（{pos}）が先に動きます",
+  "hand.preset.top": "上位",
   "hand.mode.preset": "上位レンジを指定",
   "hand.mode.custom": "\n            カスタム編集\n          ",
-  "hand.preset.hint": "169種類のハンドから本ツールの強度順で選びます。ハンド種類の割合とカードの組合せ割合は異なります。",
-  "hand.preset.scale": "（ハンド種類の割合）",
-  "hand.preset.combos": "カードの組合せ割合：約{pct}%",
   "hand.custom.hint": "グリッドのセルをタップして相手のレンジに追加/削除。",
   "hand.custom.selected.html": "選択中: <strong>{n}</strong> 種類 / {combos} コンボ (<strong>{pct}%</strong>)",
   "hand.custom.actions.all": "全選択",
@@ -196,7 +194,7 @@ export const ja: Record<string, string> = {
   "hand.inspect.verdict.marginal": "五分 (ボーダー)",
   "hand.inspect.verdict.fold": "フォールド",
   "hand.callStats.callBack": "必要勝率 <strong>{req}%</strong> 以上のハンド: <strong>{callable}</strong> 種類 / {callCombos} コンボ (<strong>{callPct}%</strong>) ／ ボーダーライン: {marginal} 種類",
-  "hand.callStats.pushBack": "相手が call <strong>{villainPct}%</strong> してくる前提で、自分が push +EV のハンド: <strong>{n}</strong> 種類 / {pushCombos} コンボ (<strong>{pPct}%</strong>) ／ ボーダー: {marginal} 種類。<br />相手が call ワイドだと push を狭めるべき方向に動きます。",
+  "hand.callStats.pushBack": "相手が call <strong>{villainPct}%</strong> してくる前提で、自分が push +EV のハンド: <strong>{n}</strong> 種類 / {pushCombos} コンボ (<strong>{pPct}%</strong>) ／ ボーダー: {marginal} 種類",
   "hand.banner.callerLabel.hero": "hero (自分)",
   "hand.banner.noBehind.html": "\n      ✅ {label}=<strong>{pos}</strong>: 後ろにプレイヤーがいないので、この 1 対 1 モデルがそのまま当てはまります。\n    ",
   "hand.banner.behind.html": "\n      <details class=\"hand-caveat\">\n        <summary>⚠ {label}=<strong>{pos}</strong>: 後ろの {n} 人ぶんの over-call は未反映 — 実戦はもう少し硬めに</summary>\n        <div class=\"hand-caveat-body\">\n          この計算は「1 対 1 のオールイン」モデルです。{label} の後ろに残っている {n} 人 ({list}) が\n          割り込んでくるリスクは含まれていません。{note}\n        </div>\n      </details>\n    ",
@@ -424,11 +422,10 @@ export const ja: Record<string, string> = {
   "practice.bento.heroStack": "自分のスタック",
   "practice.bento.ante": "アンティ合計",
   "practice.bento.pay": "ペイ",
-  "practice.topxNote": "※ Top X% は169種類のハンドを本ツールの強度順で選ぶ割合です。カードの組合せ数の割合とは異なり、他ツールとは一致しない場合があります。",
   "practice.villainWarn.head": "相手 ({pos}) がオールイン",
   "practice.villainWarn.estPush": "想定レンジ",
   "practice.villainCall.head": "相手 (BB) の想定コールレンジ",
-  "practice.villainCall.estCall": "Est. Call Range",
+  "practice.villainCall.estCall": "想定コールレンジ",
   "practice.villainPushRange.h3": "⚔️ 相手の push レンジ 🔴",
   "practice.villainCallRange.h3": "⚔️ 相手の call レンジ 🔴",
   "practice.yourHand": "あなたのハンド: {hand}",
@@ -481,17 +478,18 @@ export const ja: Record<string, string> = {
   "practice.rp.errorLabel": "誤差:",
 
   // ===== 練習: call/fold フィードバック (judge.ts judgePractice) =====
-  "practice.cf.cevLabel": "cEV 必要勝率:",
-  "practice.cf.reqLabel": "必要勝率 (厳密 ICM):",
-  "practice.cf.reqApproxNote": "(参考: BF近似 {v}%)",
-  "practice.cf.handEquity": "{hand} の equity vs Top{pct}%:",
+  "practice.cf.reqLabel": "必要勝率:",
+  "practice.cf.cevNote": "（チップだけなら {v}%）",
+  "practice.push.pCallLabel": "相手がコールする確率:",
+  "practice.push.eqLabel": "コールされた時の勝率:",
+  "practice.push.diffLabel": "push と fold の差（賞金総額比）:",
+  "practice.topPct": "上位 {pct}%",
+  "practice.cf.handEquity": "{hand} の勝率（相手 上位 {pct}%）:",
   "practice.cf.heroRangeH3": "🎯 自分の call レンジ 🟢 (必要勝率 {pct}% 超のハンド)",
   "practice.cf.legend.call": "call (余裕 +0% 以上 = +EV)",
   "practice.cf.legend.fold": "fold (余裕 マイナス = -EV)",
 
   // ===== 練習: push 判定フィードバック (judge.ts judgePracticePush) =====
-  "practice.push.evNote": "(villain call率 {pcall}% / call された時の hero equity {eq}%)",
-  "practice.push.marginPoolNote": "(プール比 {v}%)",
   "practice.push.heroRangeH3": "🚀 自分の push レンジ 🟢 (push +EV のハンド)",
 
   // ===== 練習: 復習 (review.ts) =====
@@ -547,7 +545,7 @@ export const ja: Record<string, string> = {
   "calc.summary.hero": "🎯 自分",
   "calc.summary.prizeShare": "賞金の取り分",
   "calc.summary.prizeExplanation": "取り分は賞金総額に対する目安（ICM）です。33%なら総額1万円に対し約3,300円相当。ハンドの勝率や確定賞金ではありません。",
-  "calc.summary.pushReference": "以下のBF・必要勝率・RPは、自分がコールする場合の参考値です。プッシュの判断には、相手がフォールドする可能性も含めたレンジ計算を使います。",
+  "calc.summary.pushReference": "※ BF・必要勝率・RP はコールする場合の値です。",
   "nash.inputsChanged": "局面が変わりました。現在の条件でNashを再計算してください。",
   "calc.summary.considerCall": "コールを検討",
   "calc.summary.considerPush": "プッシュを検討",
@@ -612,14 +610,12 @@ export const ja: Record<string, string> = {
   "nash.err.bb": "BB が不正",
   "nash.err.ante": "アンティが不正",
   "nash.calculating": "計算中…",
-  "nash.converged": "収束",
   "nash.notConverged": "未収束",
   "nash.depthNote.html": "⚠ 実効 <strong>{eff}BB</strong>：実戦では 2BB オープンやリンプも普通に選ばれる深さです。この結果は「押すか降りるかの2択に限った場合」で、実際に押すべきハンドはこれより少なくなります。",
   "nash.depthOut.html": "⚠ 実効 <strong>{eff}BB</strong> は push/fold で判断する深さではありません。この深さでは 2BB オープン・リンプ・3ベットを含めて考えるのが普通で、本アプリはそれらを計算しません。下の結果を実戦の判断にそのまま使わないでください。",
   "nash.depthOut.reveal": "2択に限った参考値を見る",
   "hand.pushDepth.caution.html": "⚠ 実効 <strong>{eff}BB</strong>：実戦では 2BB オープンやリンプも選ばれる深さです。ここの push 可能ハンドは「押すか降りるかの2択に限った場合」の上限です。",
   "hand.pushDepth.out.html": "⚠ 実効 <strong>{eff}BB</strong> は push/fold の範囲外です（2BB オープン・リンプ・3ベットを計算していません）。この push 判定を実戦の判断にそのまま使わないでください。",
-  "nash.statusSuffix": "（{iter} iter / {ms} ms）",
   "nash.stats": "{n} 種類 / {combos} コンボ (<strong>{pct}%</strong>)",
   "nash.matrixMissing": "⚠ HU equity matrix が未生成です（hu-equity-matrix.json）。`npx tsx scripts/build-hu-matchups.mts` を実行してください。",
 
@@ -718,7 +714,7 @@ export const ja: Record<string, string> = {
         </p>
 
         <h4>6. ハンド equity</h4>
-        <p><code>{heroHand}</code> vs Top {villainCallRangePct}% range → <strong>{heroEq}%</strong></p>
+        <p><code>{heroHand}</code> vs 上位 {villainCallRangePct}% → <strong>{heroEq}%</strong></p>
 
         <h4>7. 判定</h4>
         <p>
@@ -760,7 +756,7 @@ export const ja: Record<string, string> = {
 
         <h4>4. villain のコール率・equity 内訳</h4>
         <ul>
-          <li>villain (BB) 想定コールレンジ: <code>Top {villainCallRangePct}%</code></li>
+          <li>villain (BB) 想定コールレンジ: <code>上位 {villainCallRangePct}%</code></li>
           <li>コール率 (コンボ重み比) pCall: <code>{pCall}%</code> <span style="color: var(--muted);">(スチール成功率 = 1 − pCall = {stealPct}%)</span></li>
           <li>{heroHand} vs コールレンジ equity: <code>{eqVsCallRange}%</code></li>
         </ul>
