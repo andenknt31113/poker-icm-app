@@ -3345,3 +3345,10 @@ body:has(.tutorial-intro-card) #practice-progress {
 #sec-nash {
   scroll-margin-top: calc(170px + var(--safe-area-top, env(safe-area-inset-top, 0px)));
 }
+
+/* BB はスタックの単位なので 1 で固定。編集できないことが見て分かるようにする */
+#nash-bb[readonly] {
+  color: var(--muted);
+  background: transparent;
+  cursor: default;
+}

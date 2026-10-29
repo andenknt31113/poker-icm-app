@@ -145,7 +145,7 @@
       <section class="card blinds-card" data-tab="setup">
         <h2 data-i18n="setup.blinds.h2">ブラインド・アンティ</h2>
         <p class="hint" data-i18n="setup.blinds.hint">
-          スタックは BB 単位なので通常はこのまま。アンティ有りの卓は「アンティ合計」を入力。
+          スタックは BB 単位なので BB は 1 で固定です。アンティ有りの卓は「アンティ合計」を入力。
         </p>
         <div class="grid">
           <label>
@@ -154,7 +154,8 @@
           </label>
           <label>
             BB
-            <input id="nash-bb" type="number" inputmode="decimal" value="1.0" min="0.1" step="0.1" />
+            <!-- スタックは BB 単位なので BB は常に 1。変えるとスタックと計算がずれるため編集させない -->
+            <input id="nash-bb" type="number" inputmode="decimal" value="1" readonly aria-readonly="true" />
           </label>
           <label>
             <span data-i18n="nash.ante.label">アンティ合計</span>
@@ -225,11 +226,11 @@
               <strong>上段の Risk Premium</strong> は、まさにこの「上乗せ分」。コール額＝ポット（1:1オッズ）のとき、50% より<strong>何pt余分に勝率が必要か</strong>をそのまま表示している。
             </p>
             <h4>2. 色の意味</h4>
-            <p>色は BF <strong>1.0（黄）→ 1.4 以上（赤）</strong>と連続的に濃くなる。ICM の性質上 <strong>BF が 1.00 を下回ることはない</strong>ため、実際に出るのは黄〜赤の範囲。読み方の目安:</p>
+            <p>色は BF <strong>1.0（黄）→ 2.0 以上（赤）</strong>と連続的に濃くなる。ICM の性質上 <strong>BF が 1.00 を下回ることはない</strong>ため、実際に出るのは黄〜赤の範囲。読み方の目安:</p>
             <ul>
               <li>🟡 黄 (BF ≈ 1.0): ICM圧ほぼゼロ、ほぼ cEV 通りに戦ってよい</li>
-              <li>🟠 オレンジ (1.1〜1.3): ICM圧、タイトに</li>
-              <li>🔴 赤 (1.4 前後〜): 超危険、プレミア限定</li>
+              <li>🟠 オレンジ (1.2〜1.5): ICM圧、タイトに</li>
+              <li>🔴 赤 (1.7 前後〜): 超危険、プレミア限定</li>
             </ul>
             <h4>3. 戦略的な読み方</h4>
             <ul>

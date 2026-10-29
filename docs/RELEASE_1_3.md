@@ -1,5 +1,40 @@
 # Poker ICM 1.3 リリース準備
 
+## 2026-10-29: ビルド2（計算の修正・見せ方の整理）
+
+- 10-01 版の改善に加え、レンジ勝率の重み修正・実ポジションの blind・深さの見せ方・席順での向きの自動選択・% のコンボ基準統一・文字量の整理・小さめのUI修正を収録（詳細は HANDOFF.md の 2026-10-28〜29）。
+- アップロード済み 1.3(1) には含まれない。審査には 1.3(2) を使う。ビルド1を提出しない。
+- ストア説明・スクショ文言の差し替え案は [STORE_SCOPE_2026-10-29.md](STORE_SCOPE_2026-10-29.md)。
+- 例題（すべて自分=BB）では Nash が「相手：プッシュ・自分：コール」で表示される。旧スクショの Nash 画面（自分がプッシュ）は使わない。
+- Xcode を 1.3(2) に変更。cap sync 後、`artifacts/release-1.3/PokerICM-1.3-build2.xcarchive` を作成（ARCHIVE SUCCEEDED、Info.plist 1.3/2、codesign 検証成功、同梱 public と playground/dist が一致）。ログは `archive-build2.log`。
+- App Store 用 IPA の書き出しは失敗（`No Accounts` / `No signing certificate "iOS Distribution"`）。Xcode に Apple ID が未ログイン（アカウント一覧が空）のため。本人が Xcode の設定 → Accounts でログインすれば、書き出し・アップロードを再実行できる。Organizer でこの xcarchive を開いて「Distribute App」からアップロードしてもよい。
+- この Archive は未コミットの作業ツリーから作成したため、フッターのビルド表記は c3bdb87。コミット後に作り直すとビルド表記と内容が一致する。
+- スクショ候補（ブラウザ描画）: `artifacts/release-1.3/screenshot-candidates-2026-10-29/{iphone-6.9,ipad-13}/01〜06.png`。iPad の 01 と 02 は同じ画面。実機画像ではない。
+
+### 更新説明（日本語・下書き）
+
+計算の正確さと、画面のわかりやすさを改善しました。
+
+・相手レンジ（上位X%）に対する勝率の計算を修正しました
+・Nash と「自分からオールイン」で、実際のポジションどおりにブラインドを払う計算にしました（BTN からのプッシュ範囲が広く出ていた問題を修正）
+・スタックが深いときは注意を表示し、実効20BBを超える自分からのプッシュは参考表示にしました
+・席順から「相手のオールインを受ける」「自分からオールイン」を自動で選ぶようにしました
+・レンジの % をカードの組合せ基準にそろえました
+・Nash と練習の答え合わせを見やすく整理しました
+・プレイヤー入力の整理、自分と相手の入れ替え、元に戻す機能を追加しました
+
+無料版・Proの利用範囲は従来どおりです。
+
+### Review Notes（下書き）
+
+Version 1.3 improves calculation accuracy and the analysis screens. Free/Pro availability and the existing non-consumable purchase are unchanged. The app is an on-device poker tournament calculator and training tool, not a gambling service. No account is required.
+
+Setup: enter stacks in big blinds and select You and Opponent (examples are in the expandable section). Edit up to four players for free. Because stacks are in big blinds, BB is fixed at 1; enter the table ante total if needed.
+
+Analyze: "Ranges" compares your hands against an assumed opponent range. Whether you call an all-in or shove first follows the seat order (the earlier position shoves). The Nash view follows the same rule and calculates automatically. Deep stacks show a caution, and shoves deeper than 20BB effective are collapsed as a reference only.
+
+Purchase: choose a six-player example, then tap a locked stack field to open the Pro paywall. Purchase and restore require an internet connection.
+
 ## 2026-10-01: 現在のローカル版
 
 - 最新の改善・検証は [UX_UPDATE_2026_10_01.md](UX_UPDATE_2026_10_01.md) を参照。単体321件、画面操作16件、型チェック・ビルド成功。

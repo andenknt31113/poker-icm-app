@@ -15,6 +15,7 @@ import {
   parseList,
   persistedState,
   actionOrderIdx,
+  DEFAULT_BB,
 } from "./appState.js";
 import {
   payoutsInput,
@@ -387,9 +388,10 @@ export function initNashUI(): void {
   // 起動時に保存された Nash パラメータを復元
   // アンティモードは「合計」を必ずデフォルトにする（保存値は無視）。
   // HRC 互換にしたい時はユーザーが明示的にラジオを切り替える。
+  // BB はスタックの単位なので常に 1 (以前の版で変えた値が保存されていても戻す)。
   if (persistedState?.nash) {
     nashSbInput.value = String(persistedState.nash.sb);
-    nashBbInput.value = String(persistedState.nash.bb);
+    nashBbInput.value = String(DEFAULT_BB);
     nashAnteInput.value = String(persistedState.nash.ante);
   }
   // Nash 入力変更時に状態保存

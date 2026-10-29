@@ -39,6 +39,7 @@ interface Scenario {
   ante: number; // テーブル合計
 }
 
+// 並びは 自分 → 相手 → 残りを行動順 (UTG → … → BTN → SB)。
 // 各プリセットは call 分析として成立する構成 (hero=BB、villain はそれより先に行動するポジション)
 // にしてある。これは #position-warn (ポジション逆転警告) を出さないための配置で、
 // スタック分布・人数・ペイの「意味」自体は変えていない (hero/villain のスタック・役割は
@@ -48,13 +49,13 @@ const SCENARIOS: Record<string, Scenario> = {
     players: [
       { stack: 35, role: "hero", position: "BB" },
       { stack: 28, role: "villain", position: "SB" },
-      { stack: 22, role: "other", position: "BTN" },
       { stack: 18, role: "other", position: "UTG" },
       { stack: 15, role: "other", position: "UTG+1" },
       { stack: 12, role: "other", position: "MP" },
       { stack: 10, role: "other", position: "LJ" },
       { stack: 7, role: "other", position: "HJ" },
       { stack: 5, role: "other", position: "CO" },
+      { stack: 22, role: "other", position: "BTN" },
     ],
     payouts: [40, 25, 15, 10, 5, 3, 2, 1, 0.5],
     sb: DEFAULT_SB, bb: DEFAULT_BB, ante: DEFAULT_ANTE,
@@ -63,8 +64,8 @@ const SCENARIOS: Record<string, Scenario> = {
     players: [
       { stack: 4, role: "hero", position: "BB" },
       { stack: 18, role: "villain", position: "SB" },
-      { stack: 22, role: "other", position: "BTN" },
       { stack: 16, role: "other", position: "CO" },
+      { stack: 22, role: "other", position: "BTN" },
     ],
     payouts: [50, 30, 20],
     sb: DEFAULT_SB, bb: DEFAULT_BB, ante: DEFAULT_ANTE,
@@ -73,10 +74,10 @@ const SCENARIOS: Record<string, Scenario> = {
     players: [
       { stack: 18, role: "hero", position: "BB" },
       { stack: 12, role: "villain", position: "SB" },
-      { stack: 22, role: "other", position: "BTN" },
       { stack: 8, role: "other", position: "UTG" },
       { stack: 14, role: "other", position: "HJ" },
       { stack: 10, role: "other", position: "CO" },
+      { stack: 22, role: "other", position: "BTN" },
     ],
     payouts: [45, 25, 15, 8, 4, 3],
     sb: DEFAULT_SB, bb: DEFAULT_BB, ante: DEFAULT_ANTE,
@@ -85,8 +86,8 @@ const SCENARIOS: Record<string, Scenario> = {
     players: [
       { stack: 12, role: "hero", position: "BB" },
       { stack: 18, role: "villain", position: "SB" },
-      { stack: 8, role: "other", position: "BTN" },
       { stack: 15, role: "other", position: "CO" },
+      { stack: 8, role: "other", position: "BTN" },
     ],
     payouts: [50, 30, 15, 5],
     sb: DEFAULT_SB, bb: DEFAULT_BB, ante: DEFAULT_ANTE,
@@ -120,11 +121,11 @@ const SCENARIOS: Record<string, Scenario> = {
   // hero は中堅スタック、villain は短いほうのバブル候補 (早いポジションから shove)。
   satellite3: {
     players: [
-      { stack: 28, role: "other", position: "BTN" },
       { stack: 22, role: "hero", position: "BB" },
-      { stack: 18, role: "other", position: "SB" },
-      { stack: 15, role: "other", position: "CO" },
       { stack: 5, role: "villain", position: "UTG" },
+      { stack: 15, role: "other", position: "CO" },
+      { stack: 28, role: "other", position: "BTN" },
+      { stack: 18, role: "other", position: "SB" },
     ],
     payouts: [33, 33, 33],
     sb: DEFAULT_SB, bb: DEFAULT_BB, ante: DEFAULT_ANTE,
@@ -137,7 +138,8 @@ const SCENARIOS: Record<string, Scenario> = {
  */
 function applyNashParams(s: Scenario): void {
   nashSbInput.value = String(s.sb);
-  nashBbInput.value = String(s.bb);
+  // BB はスタックの単位なので常に 1 (古い保存シナリオに別の値があっても使わない)
+  nashBbInput.value = String(DEFAULT_BB);
   nashAnteInput.value = String(s.ante);
 }
 

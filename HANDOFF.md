@@ -375,3 +375,12 @@
 - テスト: handRangeDirection.test.ts（4件）追加、rangeCopy・practiceRender・nashUI・heroSummary を更新。E2E 14/15 を新しい流れに更新（BB→SB の push は押せない、入れ替えると自分からオールインに切替、HU 例題は自分：コール）。
 - 検証: 型チェック・単体 353 件（core81+UI272）・ビルド・E2E16件（E2E_BROWSER_CHANNEL=chromium）成功。アプリ内ブラウザ 375px でレンジ比較（自動選択・薄い disabled・上位25%と上のカードの25%が一致）、Nash（相手：プッシュ・自分：コール、結果が1画面目に出る）、練習（ペイ折り返しで重ならない、上位83%、答え合わせ3行、push も3行）を確認。
 - 残り: コミット（未指示）。小さめの指摘（BF マップの色、セットアップの並び順、SB/BB 入力、初回案内の一言）は未着手。
+
+## 2026-10-29: 小さめのUI4点・1.3(2) 準備（未コミット）
+- ユーザー「やれることやって」。BF マップの色を 1.0(黄)→2.0(赤) に変更（以前は 1.4 で頭打ちになりバブルの表が全部赤）。説明文の色の目安も更新。bfBackground を export し単体テスト3件。
+- 例題の席順を「自分→相手→残りを行動順」に統一（setupScenarios）。E2E06 に並び順チェック、E2E10 の期待値を更新。
+- BB 入力を 1 で固定（readonly）。保存値・保存シナリオに別の値があっても 1 に戻す。初回案内に「オールインが絡む判断専用、2BB オープンやリンプは計算しない」を追加。
+- 検証: 型チェック・単体 356 件（core81+UI275）・ビルド・E2E16件（E2E_BROWSER_CHANNEL=chromium）・git diff --check 成功。アプリ内ブラウザ 375px で初回案内・BF 色（1.08 黄〜2.0 以上赤）・BB 固定・並び順を確認。
+- ストア用スクショ候補を artifacts/release-1.3/screenshot-candidates-2026-10-29 に再生成（iPhone/iPad 各6枚、横はみ出し・JS エラーなし）。docs/RELEASE_1_3.md に 1.3(2) 向け更新説明・Review Notes 下書きを追加。
+- Xcode を 1.3(2) に変更、cap sync、署名付き Archive 成功（codesign 検証・同梱 public 一致）。IPA 書き出しは Xcode に Apple ID 未ログインのため失敗（アカウント一覧が空・配布証明書なし）。アップロード・ASC 操作・審査提出・commit/push は未実施。
+- 残り: コミット（指示待ち）、本人の Xcode ログイン → 書き出し・アップロード（コミット後に Archive を作り直すとビルド表記が一致）、ASC でビルド2選択・説明文/スクショ差し替え・審査提出、Web 反映（main への push）。
