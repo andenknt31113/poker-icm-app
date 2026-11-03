@@ -7,8 +7,13 @@
 - ストア説明・スクショ文言の差し替え案は [STORE_SCOPE_2026-10-29.md](STORE_SCOPE_2026-10-29.md)。
 - 例題（すべて自分=BB）では Nash が「相手：プッシュ・自分：コール」で表示される。旧スクショの Nash 画面（自分がプッシュ）は使わない。
 - Xcode を 1.3(2) に変更。cap sync 後、`artifacts/release-1.3/PokerICM-1.3-build2.xcarchive` を作成（ARCHIVE SUCCEEDED、Info.plist 1.3/2、codesign 検証成功、同梱 public と playground/dist が一致）。ログは `archive-build2.log`。
-- App Store 用 IPA の書き出しは失敗（`No Accounts` / `No signing certificate "iOS Distribution"`）。Xcode に Apple ID が未ログイン（アカウント一覧が空）のため。本人が Xcode の設定 → Accounts でログインすれば、書き出し・アップロードを再実行できる。Organizer でこの xcarchive を開いて「Distribute App」からアップロードしてもよい。
-- この Archive は未コミットの作業ツリーから作成したため、フッターのビルド表記は c3bdb87。コミット後に作り直すとビルド表記と内容が一致する。
+- 最初の IPA 書き出しは Xcode に Apple ID が未ログインのため失敗（`No Accounts` / `No signing certificate "iOS Distribution"`）。本人のログイン後に解消（下記）。
+- コミット ce4e405 の状態で cap sync と Archive を作り直し済み（フッターのビルド表記 ce4e405、Info.plist 1.3/2、codesign 検証成功、同梱 public は dist と一致。差分は Capacitor 生成の cordova.js / cordova_plugins.js のみ）。
+- 2026-10-29 20:38 JST: Xcode のログインを確認し、ce4e405 の Archive から IPA を書き出し（`artifacts/release-1.3/export-build2/App.ipa`、1.3/2、Apple Distribution 署名、codesign 検証成功、同梱 public は dist と一致、SHA-256 は ipa-sha256.txt）。設定は `opts-build2/`（manageAppVersionAndBuildNumber=false でビルド番号を 2 のまま維持）。
+- 2026-10-29 20:40 JST: App Store Connect へアップロード成功（`Upload succeeded` / `Uploaded package is processing`、ログ `upload-build2.log`）。Apple 側の処理完了・1.3 へのビルド選択は未確認（アプリ内ブラウザは ASC 未ログイン）。審査提出はしていない。
+- 2026-11-01: ユーザー指示で App Store Connect API から 1.3 の下書きを更新（審査提出はしていない）。1.3 にビルド2を選択（処理済み VALID、暗号化の申告は Info.plist で false）。日本語の更新説明を下の下書き＋「Bubble Factor マップの色分けを見分けやすくしました」に差し替え。説明文は STORE_SCOPE の差し替え（Nash 節をショートスタック・実効12BB以下の説明に、練習を「ショートスタックのプッシュ判断」に、レンジ比較に席順での自動切替を追記）と【対応している場面・していない場面】節を追加。Review Notes は前半（Gambling の申告理由・Free/Pro）を残し、1.3 の部分を下の下書きに差し替え。読み直して3項目とも一致を確認。変更前の内容は `artifacts/release-1.3/asc-backup-2026-11-01.json`、反映した文面は `asc-new-2026-11-01.json`。キーワード・プロモーションテキスト・スクショは変更していない（スクショは旧 iPhone 4枚 / iPad 5枚のまま）。
+- 2026-11-01: ユーザー指示で 1.3 のスクショを API で差し替え。候補のフッターが build c3bdb87 だったため、ce4e405 の dist で撮り直した `artifacts/release-1.3/screenshot-final-2026-11-01` を使用。iPhone 6.9（APP_IPHONE_67、1320×2868）は 分析→Nash→賞金・BF→練習→プレイヤー→ペイ の6枚、iPad 13（APP_IPAD_PRO_3GEN_129、2064×2752）は同じ順で重複していた 02 を除く5枚。全枚 COMPLETE、旧スクショ（iPhone 4枚・iPad 5枚）は削除。公開中 1.2 のスクショは変わっていないことを確認。旧スクショの控えは `artifacts/release-1.3/asc-screenshots-backup-2026-11-01/`。
+- 2026-11-03 13:07 JST: ユーザー指示（審査提出まで全部）で提出。事前に API で必須項目（ビルド2 VALID・暗号化 false・著作権・審査連絡先・年齢区分・説明文/更新説明/スクショ）を確認。ce4e405 を Release 構成でシミュレーター（iPhone 17）にビルドして起動し、初回案内・セットアップ・分析・Nash・練習の答え合わせまで動作を確認（起動直後に1〜2秒白画面、その後表示）。プロモーションテキストを STORE_SCOPE 案（「完全オフライン」を「計算と練習はオフラインで動作」に変更）で設定。reviewSubmission d0e4d6d1-dfc5-4e59-a85b-77c1dc3e73bb で提出し、1.3 は WAITING_FOR_REVIEW。リリースは手動のまま（承認後に公開操作が必要）。実機での確認は未実施。
 - スクショ候補（ブラウザ描画）: `artifacts/release-1.3/screenshot-candidates-2026-10-29/{iphone-6.9,ipad-13}/01〜06.png`。iPad の 01 と 02 は同じ画面。実機画像ではない。
 
 ### 更新説明（日本語・下書き）

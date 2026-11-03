@@ -384,3 +384,19 @@
 - ストア用スクショ候補を artifacts/release-1.3/screenshot-candidates-2026-10-29 に再生成（iPhone/iPad 各6枚、横はみ出し・JS エラーなし）。docs/RELEASE_1_3.md に 1.3(2) 向け更新説明・Review Notes 下書きを追加。
 - Xcode を 1.3(2) に変更、cap sync、署名付き Archive 成功（codesign 検証・同梱 public 一致）。IPA 書き出しは Xcode に Apple ID 未ログインのため失敗（アカウント一覧が空・配布証明書なし）。アップロード・ASC 操作・審査提出・commit/push は未実施。
 - 残り: コミット（指示待ち）、本人の Xcode ログイン → 書き出し・アップロード（コミット後に Archive を作り直すとビルド表記が一致）、ASC でビルド2選択・説明文/スクショ差し替え・審査提出、Web 反映（main への push）。
+- 追記（同日）: ユーザー指示でコミット ce4e405。その状態で cap sync・Archive を作り直し（ARCHIVE SUCCEEDED、1.3/2、codesign 成功、ビルド表記 ce4e405、同梱 public は dist と一致）。IPA 書き出し・アップロードは Xcode の Apple ID ログイン待ち。push なし。
+- 追記（同日 20:40）: ユーザー「ログインはできてるはず、できることやって」。Xcode のアカウント登録を確認し、ce4e405 の Archive から IPA 書き出し（1.3/2、Apple Distribution 署名、codesign 成功、同梱 public 一致）→ App Store Connect へアップロード成功（Apple 側で処理中）。ビルド番号は manageAppVersionAndBuildNumber=false で 2 のまま。処理完了の確認・ASC でのビルド選択・説明文/スクショ差し替え・審査提出は未実施（アプリ内ブラウザは ASC 未ログイン、ログインには本人のパスワードと2要素認証が必要）。commit/push なし。
+
+## 2026-11-01: App Store Connect の 1.3 下書きを更新（未コミット）
+- API で状態確認: 1.2(2) 公開中、1.3 は提出準備中、1.3(2) は処理済み（VALID）。ASC の 1.3 の文面は 9 月の古いままだった。
+- ユーザー「やっておいて」で API から反映: 1.3 にビルド2を選択、日本語の更新説明・説明文（STORE_SCOPE の差し替え＋対応範囲の節）・Review Notes（1.3 部分）を差し替え。読み直して一致を確認。変更前は artifacts/release-1.3/asc-backup-2026-11-01.json、反映文面は asc-new-2026-11-01.json。
+- 変更していないもの: キーワード、プロモーションテキスト（空のまま）、スクショ（旧 iPhone 4枚 / iPad 5枚）。審査提出・push・commit なし。
+- 追記: ユーザー「差し替えて」でスクショも API で差し替え。ce4e405 の dist で撮り直した artifacts/release-1.3/screenshot-final-2026-11-01 を使用（iPhone 6枚・iPad 5枚、全枚 COMPLETE、旧スクショは削除・控えは asc-screenshots-backup-2026-11-01）。公開中 1.2 のスクショは不変。
+- 残り: 実機確認、審査提出（本人）。Web 反映（main への push）と記録のコミットは指示待ち。練習カードの「Stack 16 BB」の Stack が日本語表示でも英語のまま（スクショにも写る、未修正）。
+
+## 2026-11-03: 1.3(2) を審査に提出（コミット済み・push なし）
+- ユーザー「審査提出も含めて全部やって、おすすめで進めて」。API で提出前の必須項目を確認（ビルド2 VALID・暗号化 false・著作権・審査連絡先・年齢区分 17+・文面・スクショ）。
+- ce4e405 を Release 構成でシミュレーター（iPhone 17）にビルドして起動。初回案内 → セットアップ → 分析（BF 1.19 等）→ Nash（相手：プッシュ・自分：コール、実効14BB の注意）→ 練習の答え合わせ（3行表示）まで正常。起動直後に1〜2秒白画面。StoreKit の商品取得も成功ログあり。実機での確認は未実施。
+- プロモーションテキストを設定（「計算と練習はオフラインで動作」に言い換え、115字）。
+- 1.3 を審査に提出（reviewSubmission d0e4d6d1-dfc5-4e59-a85b-77c1dc3e73bb、WAITING_FOR_REVIEW）。リリースは手動のまま。
+- 残り: 審査結果待ち → 承認後に公開操作（手動リリース）。Web 反映（main への push）は対象確認待ち。練習カードの「Stack」が日本語でも英語のまま（playground/src/practice/render.ts:189, 238、次のバージョンで修正）。
