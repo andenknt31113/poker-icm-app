@@ -12,6 +12,7 @@ export default async function testSummaryCallVerdict({ baseURL, createContext })
 
     // ftBubble プリセット (hero/villain 指定済み) → サマリーに一行判定が出る
     await page.click('.scenario-btn[data-scenario="ftBubble"]');
+    await page.click('.tab-btn[data-tab="analyze"]');
     await page.waitForSelector("#hero-summary-verdict-btn", { state: "visible" });
 
     const text = await page.textContent("#hero-summary-verdict-btn");

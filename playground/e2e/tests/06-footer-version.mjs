@@ -55,9 +55,9 @@ export default async function testFooterVersion({ baseURL, createContext }) {
 
       // ヘッダー直下の要素 (hero-summary) との間に十分な余白があること
       const headerBox = await page.locator("header").boundingBox();
-      const heroBox = await page.locator("#hero-summary").boundingBox();
+      const heroBox = await page.locator("#setup-examples").boundingBox();
       if (!headerBox || !heroBox) {
-        throw new Error("header / #hero-summary が見つかりません");
+        throw new Error("header / #setup-examples が見つかりません");
       }
       const gap = heroBox.y - (headerBox.y + headerBox.height);
       if (gap < 8) {

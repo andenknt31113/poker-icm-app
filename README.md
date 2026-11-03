@@ -4,7 +4,7 @@
 
 ## 現在のステータス
 - 計算コア（ICM・BF・必要勝率・Nash・ポットオッズ）実装＆テスト済み
-- モバイルWeb UI（playground）が稼働中。5タブ構成・PWA対応
+- モバイルWeb UI（playground）が稼働中。3タブ構成・PWA対応
 - iOS アプリ (Capacitor + RevenueCat 買い切りIAP)。ビルド手順は docs/APP_STORE_BUILD.md
 - Cloudflare Workers にデプロイ済み
 - 開始日: 2026-05-08
@@ -34,7 +34,7 @@ poker-icm-app/
 ## UI 構成（playground）
 モバイル向けの3タブ構成 (v1.1 で 5タブ→3タブに再編):
 - ⚙️ セットアップ — プレイヤー・スタック・ペイ構造・ブラインド/アンティ入力、プリセット
-- 📊 分析 — ICM/BF/必要勝率 + ハンドレンジ比較 + Nash 均衡の縦フロー (セクションジャンプ付き)
+- 📊 分析 — 「ハンドの判断」「賞金への影響」「Nash・詳細」の目的別表示。レンジ表と計算の内訳を行き来できる (ローカル改修・未公開)
 - 🎲 練習 — ランダムシナリオで call/fold 即判定、円卓ビュー、導入コース、復習リスト
 
 ## 設計原則
@@ -50,6 +50,11 @@ npm test           # core のユニットテスト
 npm run typecheck  # 型チェック
 npm run build      # core + playground をビルド
 ```
+
+ローカル改修の見た目を確認するときは、`npm run build` の後に
+`npm -w @poker-icm/playground run preview -- --host 127.0.0.1 --port 5173 --strictPort`
+でビルド済みのアプリを配信する。開発モードではService Workerを登録しない。
+確認サーバーが停止した場合、ローカルURLへの継続アクセスは保証されない。
 
 ## デプロイ
 `main` ブランチへの push で Cloudflare Workers が自動ビルド＆デプロイ。

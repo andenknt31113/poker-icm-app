@@ -4,6 +4,60 @@
 // legalContent.ts (規約) は対象外 (Phase B で判断)。
 
 export const ja: Record<string, string> = {
+  "setup.players.roles": "🎯 自分　⚔️ 相手",
+  "setup.players.swap": "自分 ⇄ 相手",
+  "setup.players.locked": "{n}人まで無料で編集できます。人数を減らすか、Proで編集を解放できます。例題の分析はそのまま使えます。",
+  "setup.player.stack.aria": "プレイヤー{n}のスタック（BB）",
+  "setup.player.position.aria": "プレイヤー{n}のポジション",
+  "setup.player.remove.aria": "プレイヤー{n}を削除",
+  "hand.legend.title": "色と数字の見方",
+  "hand.emptyRange": "相手のレンジが空です。ハンドを選ぶか「プリセットから読み込む」を押してください。",
+  "calc.err.positivePrize": "賞金を1つ以上、0より大きい値で入力してください。",
+  "nash.details": "賞金・ブラインド・残りのプレイヤー",
+  "seat.number": "席 {n}",
+  "seat.up": "ひとつ上の席へ",
+  "seat.down": "ひとつ下の席へ",
+  "seat.stack": "スタック",
+  "seat.hero": "自分",
+  "seat.villain": "相手",
+  "seat.button": "BTN（ボタン）",
+  "seat.setButton": "ここをBTNに",
+  "nash.otherSeats": "ほかのプレイヤーを見る",
+  "nash.prizes": "賞金配分",
+  "nash.youPush": "自分：プッシュ",
+  "nash.theyCall": "相手：コール",
+  "nash.youCall": "自分：コール",
+  "nash.theyPush": "相手：プッシュ",
+  "nash.title.youPush": "🎯自分の push レンジ 🔴",
+  "nash.title.theyCall": "⚔️相手の call レンジ 🟢",
+  "nash.title.theyPush": "⚔️相手の push レンジ 🔴",
+  "nash.title.youCall": "🎯自分の call レンジ 🟢",
+  "flow.equityDetails": "コール額・必要勝率の内訳を見る →",
+  "flow.example": "例題から試す",
+  "flow.exampleHint": "よくある局面を選ぶだけ",
+  "flow.own": "自分の局面を入力",
+  "flow.ownHint": "スタック・賞金を再現",
+  "flow.practice": "クイズで練習",
+  "flow.practiceHint": "1問ずつ、判断の感覚を磨く",
+  "flow.hand": "レンジ比較",
+  "flow.equity": "賞金・BF",
+  "flow.nash": "Nash",
+  "workspace.eyebrow": "TOURNAMENT / STUDY",
+  "workspace.title": "そのコールに、根拠を。",
+  "workspace.intro": "気になった局面を再現して、賞金への影響とハンドの判断を確かめよう。",
+  "workspace.step1": "01 局面をつくる",
+  "workspace.step2": "02 ハンドを調べる",
+  "workspace.step3": "03 練習で身につける",
+  "workspace.practice": "まずは練習で試す →",
+  "workspace.ready": "局面を設定したら",
+  "workspace.readyHint": "相手のレンジと、自分のハンドを確かめよう。",
+  "workspace.analyze": "この局面を分析する →",
+  "workspace.analysisEyebrow": "YOUR DECISION",
+  "workspace.analysisTitle": "局面の分析",
+  "workspace.edit": "局面を編集",
+  "workspace.you": "自分",
+  "workspace.opponent": "相手",
+  "workspace.table": "卓の配置を詳しく見る",
   // ===== index.html: ヘッダー =====
   "header.help.title": "使い方ガイド",
   "header.help.aria": "ヘルプ",
@@ -23,16 +77,16 @@ export const ja: Record<string, string> = {
 
   // ===== index.html: セットアップ - シナリオプリセット =====
   "setup.presets.h2": "シナリオプリセット",
-  "setup.presets.summary": "プリセット一覧（タップで開閉）",
+  "setup.presets.summary": "例題・保存した局面を使う",
   "setup.presets.hint": "タップで状況一発セット。スタック・ポジション・ペイアウトを丸ごと反映。",
-  "setup.presets.ft9": "9-max FT 開幕",
-  "setup.presets.ftBubble": "FT バブル (短/普通×3)",
-  "setup.presets.ft6": "6 残り",
-  "setup.presets.ft4": "4 残り",
-  "setup.presets.ft3": "3-handed",
-  "setup.presets.hu": "HU 10/10",
-  "setup.presets.huShort": "HU 短/長",
-  "setup.presets.satellite3": "🛰 サテライト (3人入賞)",
+  "setup.presets.ft9": "9人残り・全員入賞",
+  "setup.presets.ftBubble": "4人残り・3人入賞（自分がショート）",
+  "setup.presets.ft6": "6人残り・全員入賞",
+  "setup.presets.ft4": "4人残り・全員入賞",
+  "setup.presets.ft3": "3人残り・全員入賞",
+  "setup.presets.hu": "最後の2人・10 BBずつ",
+  "setup.presets.huShort": "最後の2人・自分5 BB／相手18 BB",
+  "setup.presets.satellite3": "5人残り・上位3人が同額入賞",
   "setup.presets.userLabel": "自分のシナリオ",
   "setup.presets.saveBtn": "＋ 現在の状況を保存",
 
@@ -51,7 +105,10 @@ export const ja: Record<string, string> = {
 
   // ===== index.html: セットアップ - プレイヤー =====
   "setup.players.h2": "プレイヤー",
-  "setup.players.hint.html": "\n          各プレイヤーのスタックを入力。<strong>🎯 自分</strong> /\n          <strong>⚔️ 相手</strong> をタップで指定。最大9人。<br />\n          ポジションは<strong>1人ぶん選べば残り全員が自動で並びます</strong>（2回目からは選んだ2人の入れ替え）。\n        ",
+  "setup.players.hint.html": "スタックはBB単位。🎯と⚔️で自分・相手を指定します。",
+  "seat.edit": "席順・BTN・削除を編集",
+  "seat.done": "席の編集を終える",
+  "setup.undo": "元に戻す",
   // add-player ボタンのテキストは renderPlayers() (setup.ts) が制御するため JS 側で t() する
   "setup.players.add": "+ プレイヤー追加",
   "setup.players.addMax": "(最大 {n} 人)",
@@ -72,7 +129,7 @@ export const ja: Record<string, string> = {
   "setup.payouts.savedLabel": "\n              保存済み\n              ",
   "setup.payouts.saveBtn": "\n                ＋ 現在の値を保存\n              ",
   "setup.blinds.h2": "ブラインド・アンティ",
-  "setup.blinds.hint": "スタックは BB 単位なので通常はこのまま。アンティ有りの卓は「アンティ合計」を入力。",
+  "setup.blinds.hint": "スタックは BB 単位なので BB は 1 で固定です。アンティ有りの卓は「アンティ合計」を入力。",
 
 
   // ===== index.html: 計算結果 - ICM エクイティ =====
@@ -89,7 +146,7 @@ export const ja: Record<string, string> = {
   "result.bf.matrixHint.html": "\n          縦軸 = Hero（自分）、横軸 = Villain（相手）。\n          上段=1:1ポット時のRisk Premium、下段=BF値。\n        ",
   "result.bf.howto.summary": "📖 表の見方（クリックで展開）",
   "result.bf.howto.body.html":
-    "\n            <h4>1. 各セルの数字</h4>\n            <p><strong>下段の BF（Bubble Factor）</strong>がメイン指標。「この相手との勝負は、<strong>負けた痛みが勝った嬉しさの何倍か</strong>」を表す。</p>\n            <ul>\n              <li><strong>1.00</strong> = 痛み＝嬉しさ。チップの価値どおり戦ってよい（ICM圧ゼロ）</li>\n              <li><strong>1.16</strong> = 痛みが 1.16 倍。1:1 のポットなら勝率 50% では足りず、<strong>約 53.7%（+3.7pt）</strong>ないと割に合わない</li>\n              <li><strong>1.41</strong> = 痛みが 1.41 倍。同じ条件で<strong>約 58.5%（+8.5pt）</strong>必要。プレミアハンド級でないと合わない（やばい）</li>\n            </ul>\n            <p><strong>上段の Risk Premium</strong> は、まさにこの「上乗せ分」。コール額＝ポット（1:1オッズ）のとき、50% より<strong>何pt余分に勝率が必要か</strong>をそのまま表示している。</p>\n            <h4>2. 色の意味</h4>\n            <p>色は BF <strong>1.0（黄）→ 1.4 以上（赤）</strong>と連続的に濃くなる。ICM の性質上 <strong>BF が 1.00 を下回ることはない</strong>ため、実際に出るのは黄〜赤の範囲。読み方の目安:</p>\n            <ul>\n              <li>🟡 黄 (BF ≈ 1.0): ICM圧ほぼゼロ、ほぼ cEV 通りに戦ってよい</li>\n              <li>🟠 オレンジ (1.1〜1.3): ICM圧、タイトに</li>\n              <li>🔴 赤 (1.4 前後〜): 超危険、プレミア限定</li>\n            </ul>\n            <h4>3. 戦略的な読み方</h4>\n            <ul>\n              <li><strong>赤いセル</strong>の相手が絡んできたら → 降りる方向にウェイト</li>\n              <li><strong>黄色に近い（BF が 1.0 前後の）セル</strong>の相手 → ややルース寄せOK</li>\n              <li><strong>自分が最短スタック</strong>の行は全体的にBFが低い（=失うものが少ない）→ 比較的気楽に勝負できる</li>\n              <li><strong>チップリーダー対 2番手</strong>のセルは BF が跳ね上がる → リーダー同士の絡みは慎重に（表全体で BF 最大になりやすいのは、2番手がリーダーに絡まれるセル）</li>\n              <li>自分がリーダーでないなら、自分の行の中で<strong>チップリーダーの列</strong>が最も BF が高くなりやすい → 大きいスタックに絡まれた時ほどタイトに（典型的な ICM プレッシャー）</li>\n            </ul>\n            <h4>4. 実戦での使い方</h4>\n            <ol>\n              <li>テーブル着席後、全員のスタックを入力</li>\n              <li>左端の<strong>自分の行</strong>を見て「誰に対してタイト/ルース打つべきか」を把握</li>\n              <li>ハンド中に「あれ、この相手ヤバい？」となったら該当セルを確認</li>\n            </ol>\n            <p class=\"howto-note\">※ 表は左右対称ではない（hero/villain を入れ替えると BF が変わる）。同じチップ移動でも、双方のスタック量と順位状況で $ への影響が違うため（例: ショート側は負けると飛ぶが、カバーしている側は負けても生き残る）。</p>\n          ",
+    "\n            <h4>1. 各セルの数字</h4>\n            <p><strong>下段の BF（Bubble Factor）</strong>がメイン指標。「この相手との勝負は、<strong>負けた痛みが勝った嬉しさの何倍か</strong>」を表す。</p>\n            <ul>\n              <li><strong>1.00</strong> = 痛み＝嬉しさ。チップの価値どおり戦ってよい（ICM圧ゼロ）</li>\n              <li><strong>1.16</strong> = 痛みが 1.16 倍。1:1 のポットなら勝率 50% では足りず、<strong>約 53.7%（+3.7pt）</strong>ないと割に合わない</li>\n              <li><strong>1.41</strong> = 痛みが 1.41 倍。同じ条件で<strong>約 58.5%（+8.5pt）</strong>必要。プレミアハンド級でないと合わない（やばい）</li>\n            </ul>\n            <p><strong>上段の Risk Premium</strong> は、まさにこの「上乗せ分」。コール額＝ポット（1:1オッズ）のとき、50% より<strong>何pt余分に勝率が必要か</strong>をそのまま表示している。</p>\n            <h4>2. 色の意味</h4>\n            <p>色は BF <strong>1.0（黄）→ 2.0 以上（赤）</strong>と連続的に濃くなる。ICM の性質上 <strong>BF が 1.00 を下回ることはない</strong>ため、実際に出るのは黄〜赤の範囲。読み方の目安:</p>\n            <ul>\n              <li>🟡 黄 (BF ≈ 1.0): ICM圧ほぼゼロ、ほぼ cEV 通りに戦ってよい</li>\n              <li>🟠 オレンジ (1.2〜1.5): ICM圧、タイトに</li>\n              <li>🔴 赤 (1.7 前後〜): 超危険、プレミア限定</li>\n            </ul>\n            <h4>3. 戦略的な読み方</h4>\n            <ul>\n              <li><strong>赤いセル</strong>の相手が絡んできたら → 降りる方向にウェイト</li>\n              <li><strong>黄色に近い（BF が 1.0 前後の）セル</strong>の相手 → ややルース寄せOK</li>\n              <li><strong>自分が最短スタック</strong>の行は全体的にBFが低い（=失うものが少ない）→ 比較的気楽に勝負できる</li>\n              <li><strong>チップリーダー対 2番手</strong>のセルは BF が跳ね上がる → リーダー同士の絡みは慎重に（表全体で BF 最大になりやすいのは、2番手がリーダーに絡まれるセル）</li>\n              <li>自分がリーダーでないなら、自分の行の中で<strong>チップリーダーの列</strong>が最も BF が高くなりやすい → 大きいスタックに絡まれた時ほどタイトに（典型的な ICM プレッシャー）</li>\n            </ul>\n            <h4>4. 実戦での使い方</h4>\n            <ol>\n              <li>テーブル着席後、全員のスタックを入力</li>\n              <li>左端の<strong>自分の行</strong>を見て「誰に対してタイト/ルース打つべきか」を把握</li>\n              <li>ハンド中に「あれ、この相手ヤバい？」となったら該当セルを確認</li>\n            </ol>\n            <p class=\"howto-note\">※ 表は左右対称ではない（hero/villain を入れ替えると BF が変わる）。同じチップ移動でも、双方のスタック量と順位状況で $ への影響が違うため（例: ショート側は負けると飛ぶが、カバーしている側は負けても生き残る）。</p>\n          ",
   "result.bf.scrollHint": "→ 横にスクロール",
 
   // ===== index.html: 計算結果 - 必要勝率 =====
@@ -103,20 +160,22 @@ export const ja: Record<string, string> = {
 
   // ===== index.html: ナッシュ均衡 =====
   "nash.h2": "Nash 均衡 (HU push/fold)",
-  "nash.hint.html": "\n          🎯自分 (pusher) と ⚔️相手 (caller) のヘッズアップ Nash 均衡を計算（ICM反映済み）。\n          <br />\n          ※ HU 2-way 想定。BTN+BB のように間に他プレイヤーがいる場合は警告が出ます。\n          <br />\n          ※ <strong>プッシュ or フォールドの2択</strong>を前提にした均衡です。目安 10BB 以下ならほぼ実戦どおり。深くなるほど、実際は小さなレイズ等の選択肢があるぶん、真の GTO よりプッシュレンジは広めに出ます（「押すか降りるかなら押してよい」の意味）。\n          <br />\n          ⚙️ セットアップタブで 🎯/⚔️ の指定と SB/BB/アンティを設定してから Nash 計算を押してください。\n        ",
+  "nash.hint.html": "\n          先に動く方が push、後に動く方が call する2人の Nash 均衡を計算します（ICM反映済み）。\n          <br />\n          ※ HU 2-way 想定。BTN+BB のように間に他プレイヤーがいる場合は警告が出ます。\n          <br />\n          ※ <strong>プッシュ or フォールドの2択</strong>を前提にした均衡です。目安は実効 12BB 以下。12〜20BB では注意を表示し、20BB を超えると範囲外として結果を折りたたみます（実戦では 2BB オープンやリンプが入るため）。\n          <br />\n          ブラインドとアンティは実際のポジションの人が払う前提です（BTN からのプッシュなら自分は blind なし、BB ante は BB の人）。この画面を開くと自動計算します。\n        ",
   "nash.ante.label": "\n            アンティ合計\n            ",
-  "nash.solveBtn": "Nash 計算",
-  "nash.sbRange.h3": "🎯自分 push レンジ 🔴",
-  "nash.bbRange.h3": "⚔️相手 call レンジ 🟢",
+  "nash.solveBtn": "再計算",
+  "nash.explanation": "計算の前提・注意点を見る",
+  "nash.editSpot": "局面を変更する",
 
   // ===== index.html: ハンド比較 =====
   "hand.h2": "ハンドレンジ比較",
-  "hand.hint.html": "\n          <strong>「相手がこのくらいのレンジで push してきたら、自分はどこまで call できるか」</strong>を見る画面です。\n          スタック同士の 1 対 1 (all-in) で計算するので、ポジションではなく<strong>お互いのスタック</strong>で決まります。\n        ",
-  "hand.direction.callBack": "\n            自分の call レンジを求める\n          ",
-  "hand.direction.pushBack": "\n            自分の push レンジを求める\n          ",
-  "hand.mode.preset": "\n            プリセット (Top X%)\n          ",
+  "hand.hint.html": "相手のレンジを仮定して、自分がコール・プッシュできるハンドを調べます。",
+  "hand.direction.callBack": "相手のオールインを受ける",
+  "hand.direction.pushBack": "自分からオールイン",
+  "hand.direction.autoHero": "席順で自動選択：自分（{pos}）が先に動きます",
+  "hand.direction.autoVillain": "席順で自動選択：相手（{pos}）が先に動きます",
+  "hand.preset.top": "上位",
+  "hand.mode.preset": "上位レンジを指定",
   "hand.mode.custom": "\n            カスタム編集\n          ",
-  "hand.preset.hint": "※ Top X% は本ツール定義の強度順。他ツールとは一致しない場合があります。",
   "hand.custom.hint": "グリッドのセルをタップして相手のレンジに追加/削除。",
   "hand.custom.selected.html": "選択中: <strong>{n}</strong> 種類 / {combos} コンボ (<strong>{pct}%</strong>)",
   "hand.custom.actions.all": "全選択",
@@ -135,9 +194,8 @@ export const ja: Record<string, string> = {
   "hand.inspect.verdict.marginal": "五分 (ボーダー)",
   "hand.inspect.verdict.fold": "フォールド",
   "hand.callStats.callBack": "必要勝率 <strong>{req}%</strong> 以上のハンド: <strong>{callable}</strong> 種類 / {callCombos} コンボ (<strong>{callPct}%</strong>) ／ ボーダーライン: {marginal} 種類",
-  "hand.callStats.pushBack": "相手が call <strong>{villainPct}%</strong> してくる前提で、自分が push +EV のハンド: <strong>{n}</strong> 種類 / {pushCombos} コンボ (<strong>{pPct}%</strong>) ／ ボーダー: {marginal} 種類。<br />相手が call ワイドだと push を狭めるべき方向に動きます。",
+  "hand.callStats.pushBack": "相手が call <strong>{villainPct}%</strong> してくる前提で、自分が push +EV のハンド: <strong>{n}</strong> 種類 / {pushCombos} コンボ (<strong>{pPct}%</strong>) ／ ボーダー: {marginal} 種類",
   "hand.banner.callerLabel.hero": "hero (自分)",
-  "hand.banner.callerLabel.villain": "villain (相手)",
   "hand.banner.noBehind.html": "\n      ✅ {label}=<strong>{pos}</strong>: 後ろにプレイヤーがいないので、この 1 対 1 モデルがそのまま当てはまります。\n    ",
   "hand.banner.behind.html": "\n      <details class=\"hand-caveat\">\n        <summary>⚠ {label}=<strong>{pos}</strong>: 後ろの {n} 人ぶんの over-call は未反映 — 実戦はもう少し硬めに</summary>\n        <div class=\"hand-caveat-body\">\n          この計算は「1 対 1 のオールイン」モデルです。{label} の後ろに残っている {n} 人 ({list}) が\n          割り込んでくるリスクは含まれていません。{note}\n        </div>\n      </details>\n    ",
   "hand.banner.note.callBack": "ここで「call OK」と出ても実戦ではより硬い range で受けるべきです。",
@@ -209,6 +267,7 @@ export const ja: Record<string, string> = {
         <li><span class="onboarding-tab-icon">📊</span> 分析（ICM・BF・必要勝率・レンジ比較・Nash）</li>
         <li><span class="onboarding-tab-icon">🎲</span> 練習（クイズで実戦感覚）</li>
       </ul>
+      <p class="hint">扱うのはオールインが絡む判断（相手のオールインにコールするか、ショートスタックで押すか）です。2BB オープンやリンプは計算しません。</p>
     `,
   "onboarding.step2.title": "⚡ まず触ってみる",
   "onboarding.step2.body": `
@@ -359,16 +418,15 @@ export const ja: Record<string, string> = {
   "practice.table.pot": "Pot",
   "practice.table.ante": "ante",
   // bento カードの英語ラベル (Phase B 抽出。日本語表示でも従来どおり英語のまま)
-  "practice.bento.tournamentState": "TOURNAMENT STATE",
-  "practice.bento.blinds": "Blinds",
-  "practice.bento.heroStack": "HERO STACK",
+  "practice.bento.tournamentState": "この問題の条件",
+  "practice.bento.blinds": "ブラインド",
+  "practice.bento.heroStack": "自分のスタック",
   "practice.bento.ante": "アンティ合計",
   "practice.bento.pay": "ペイ",
-  "practice.topxNote": "※ Top X% は本ツール定義の強度順。他ツールとは一致しない場合があります。",
-  "practice.villainWarn.head": "⚠️ Villain ({pos}) All-in",
-  "practice.villainWarn.estPush": "Est. Push Range",
-  "practice.villainCall.head": "⚔️ Villain (BB) の想定コールレンジ",
-  "practice.villainCall.estCall": "Est. Call Range",
+  "practice.villainWarn.head": "相手 ({pos}) がオールイン",
+  "practice.villainWarn.estPush": "想定レンジ",
+  "practice.villainCall.head": "相手 (BB) の想定コールレンジ",
+  "practice.villainCall.estCall": "想定コールレンジ",
   "practice.villainPushRange.h3": "⚔️ 相手の push レンジ 🔴",
   "practice.villainCallRange.h3": "⚔️ 相手の call レンジ 🔴",
   "practice.yourHand": "あなたのハンド: {hand}",
@@ -421,17 +479,18 @@ export const ja: Record<string, string> = {
   "practice.rp.errorLabel": "誤差:",
 
   // ===== 練習: call/fold フィードバック (judge.ts judgePractice) =====
-  "practice.cf.cevLabel": "cEV 必要勝率:",
-  "practice.cf.reqLabel": "必要勝率 (厳密 ICM):",
-  "practice.cf.reqApproxNote": "(参考: BF近似 {v}%)",
-  "practice.cf.handEquity": "{hand} の equity vs Top{pct}%:",
+  "practice.cf.reqLabel": "必要勝率:",
+  "practice.cf.cevNote": "（チップだけなら {v}%）",
+  "practice.push.pCallLabel": "相手がコールする確率:",
+  "practice.push.eqLabel": "コールされた時の勝率:",
+  "practice.push.diffLabel": "push と fold の差（賞金総額比）:",
+  "practice.topPct": "上位 {pct}%",
+  "practice.cf.handEquity": "{hand} の勝率（相手 上位 {pct}%）:",
   "practice.cf.heroRangeH3": "🎯 自分の call レンジ 🟢 (必要勝率 {pct}% 超のハンド)",
   "practice.cf.legend.call": "call (余裕 +0% 以上 = +EV)",
   "practice.cf.legend.fold": "fold (余裕 マイナス = -EV)",
 
   // ===== 練習: push 判定フィードバック (judge.ts judgePracticePush) =====
-  "practice.push.evNote": "(villain call率 {pcall}% / call された時の hero equity {eq}%)",
-  "practice.push.marginPoolNote": "(プール比 {v}%)",
   "practice.push.heroRangeH3": "🚀 自分の push レンジ 🟢 (push +EV のハンド)",
 
   // ===== 練習: 復習 (review.ts) =====
@@ -479,27 +538,35 @@ export const ja: Record<string, string> = {
   "calc.autofill.tableHead": "<tr><th>選択</th><th>残スタック</th><th>vs fold</th><th>起点比</th></tr>",
 
   // ===== 状況サマリー (calculator.ts renderHeroSummary) =====
-  "calc.summary.title": "状況サマリー (タップ＝用語解説)",
+  "calc.summary.title": "この局面",
   "calc.summary.sample": "サンプル",
   "calc.summary.expand": "展開",
   "calc.summary.collapse": "折りたたみ",
   "calc.summary.collapseToggle": "折りたたみ切替",
   "calc.summary.hero": "🎯 自分",
+  "calc.summary.prizeShare": "賞金の取り分",
+  "calc.summary.prizeExplanation": "取り分は賞金総額に対する目安（ICM）です。33%なら総額1万円に対し約3,300円相当。ハンドの勝率や確定賞金ではありません。",
+  "calc.summary.pushReference": "※ BF・必要勝率・RP はコールする場合の値です。",
+  "nash.inputsChanged": "局面が変わりました。現在の条件でNashを再計算してください。",
+  "calc.summary.considerCall": "コールを検討",
+  "calc.summary.considerPush": "プッシュを検討",
+  "calc.summary.allIn": "オールイン",
+  "calc.summary.assumedCall": "コールを想定",
   "calc.summary.villain": "⚔️ 相手",
   "calc.summary.villainUnset": "⚔️ 相手未指定",
   "calc.summary.aroundHtml": "<span>👥 周り <strong>{stacks}</strong> BB</span>",
   "calc.summary.bfLabel": "BF ⓘ",
   "calc.summary.reqLabel": "必要勝率 ⓘ",
   "calc.summary.rpLabel": "RP ⓘ",
-  "calc.summary.verdict.call": "⚖️ 相手のpushレンジ ({villain}%) には、上位 <strong>{hero}%</strong> のハンドでコール可",
+  "calc.summary.verdict.call": "⚖️ 相手のpushレンジ ({villain}%) を仮定すると、コール可能な組合せは全体の約 <strong>{hero}%</strong>",
   "calc.summary.verdict.callNone": "⚖️ 相手のpushレンジ ({villain}%) にコールできるハンドはほぼ無し",
-  "calc.summary.verdict.push": "⚖️ 相手のcallレンジ ({villain}%) には、上位 <strong>{hero}%</strong> のハンドでpush可",
+  "calc.summary.verdict.push": "⚖️ 相手のcallレンジ ({villain}%) を仮定すると、push可能な組合せは全体の約 <strong>{hero}%</strong>",
   "calc.summary.verdict.pushNone": "⚖️ 相手のcallレンジ ({villain}%) にpushできるハンドはほぼ無し",
   "calc.summary.verdict.link": "ハンド比較 ›",
 
   // ===== 警告 (calculator.ts) =====
   "calc.warn.position.html": "\n      ⚠ <strong>ポジション逆転</strong>: 行動順は <code>{heroPos}({heroAct}) → {villainPos}({villainAct})</code>。\n      実戦では <strong>hero ({heroPos}) が先に行動</strong>するため、villain ({villainPos}) の open push に対して call することはあり得ません。\n      (call 計算は math 上は動きますが、ポジを入れ替える方が現実的)\n    ",
-  "calc.warn.depth.html": "\n    ⚠️ 実効 {eff}bb: この深さでは push/fold 以外の選択肢\n    (小さいオープンやコール) が現実的です。本ツールの計算はオールイン前提です。\n  ",
+  "calc.warn.depth.html": "⚠️ 実効 {eff}bb：オールインされた後のコール判断なので、この計算はそのまま使えます。ただ、この深さでいきなりオールインしてくる相手はかなり強いハンドに絞られることが多いので、相手レンジは狭めに設定してください。",
 
   // ===== 用語解説モーダル (calculator.ts INFO_TEXTS) =====
   "info.icm.title": "ICM (Independent Chip Model)",
@@ -544,10 +611,12 @@ export const ja: Record<string, string> = {
   "nash.err.bb": "BB が不正",
   "nash.err.ante": "アンティが不正",
   "nash.calculating": "計算中…",
-  "nash.converged": "収束",
   "nash.notConverged": "未収束",
-  "nash.depthNote.html": "⚠ 実効スタック <strong>{eff}BB</strong> は push/fold 前提が崩れ始める深さです（目安 10BB 超）。実戦では小さなレイズ等の選択肢があるため、この push レンジは「<strong>押すか降りるかなら押してよい</strong>」の上限として読んでください。",
-  "nash.statusSuffix": "（{iter} iter / {ms} ms）",
+  "nash.depthNote.html": "⚠ 実効 <strong>{eff}BB</strong>：実戦では 2BB オープンやリンプも普通に選ばれる深さです。この結果は「押すか降りるかの2択に限った場合」で、実際に押すべきハンドはこれより少なくなります。",
+  "nash.depthOut.html": "⚠ 実効 <strong>{eff}BB</strong> は push/fold で判断する深さではありません。この深さでは 2BB オープン・リンプ・3ベットを含めて考えるのが普通で、本アプリはそれらを計算しません。下の結果を実戦の判断にそのまま使わないでください。",
+  "nash.depthOut.reveal": "2択に限った参考値を見る",
+  "hand.pushDepth.caution.html": "⚠ 実効 <strong>{eff}BB</strong>：実戦では 2BB オープンやリンプも選ばれる深さです。ここの push 可能ハンドは「押すか降りるかの2択に限った場合」の上限です。",
+  "hand.pushDepth.out.html": "⚠ 実効 <strong>{eff}BB</strong> は push/fold の範囲外です（2BB オープン・リンプ・3ベットを計算していません）。この push 判定を実戦の判断にそのまま使わないでください。",
   "nash.stats": "{n} 種類 / {combos} コンボ (<strong>{pct}%</strong>)",
   "nash.matrixMissing": "⚠ HU equity matrix が未生成です（hu-equity-matrix.json）。`npx tsx scripts/build-hu-matchups.mts` を実行してください。",
 
@@ -646,7 +715,7 @@ export const ja: Record<string, string> = {
         </p>
 
         <h4>6. ハンド equity</h4>
-        <p><code>{heroHand}</code> vs Top {villainCallRangePct}% range → <strong>{heroEq}%</strong></p>
+        <p><code>{heroHand}</code> vs 上位 {villainCallRangePct}% → <strong>{heroEq}%</strong></p>
 
         <h4>7. 判定</h4>
         <p>
@@ -688,7 +757,7 @@ export const ja: Record<string, string> = {
 
         <h4>4. villain のコール率・equity 内訳</h4>
         <ul>
-          <li>villain (BB) 想定コールレンジ: <code>Top {villainCallRangePct}%</code></li>
+          <li>villain (BB) 想定コールレンジ: <code>上位 {villainCallRangePct}%</code></li>
           <li>コール率 (コンボ重み比) pCall: <code>{pCall}%</code> <span style="color: var(--muted);">(スチール成功率 = 1 − pCall = {stealPct}%)</span></li>
           <li>{heroHand} vs コールレンジ equity: <code>{eqVsCallRange}%</code></li>
         </ul>

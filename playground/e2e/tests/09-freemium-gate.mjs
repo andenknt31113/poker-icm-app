@@ -30,6 +30,7 @@ export default async function testFreemiumGate({ baseURL, createContext }) {
     // ② プリセット閲覧は無料 (ft6=6人 → 計算結果が見られる)
     await page.click('.scenario-btn[data-scenario="ft6"]');
     await page.click('.tab-btn[data-tab="analyze"]');
+    await page.click('[data-jump="sec-icm"]');
     await page.waitForSelector("#bf-matrix .bf-cell", { state: "visible" });
 
     // ③ ftBubble (4人) → v1.1 から無料で編集できる

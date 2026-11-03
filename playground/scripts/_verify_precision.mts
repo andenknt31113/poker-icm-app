@@ -1,7 +1,7 @@
 /**
  * 高精度 equity テーブルの検証スクリプト（生成後の QC）。
  *
- *   npx tsx scripts/_verify_precision.mts <old-hu.json> <old-table.json>
+ *   npx tsx scripts/_verify_precision.mts <old-hu.json>
  *
  * - 対称性 / 既知値: HU マトリクスの MC 値を厳密列挙(exact)と突き合わせ、|MC-exact| を報告。
  * - 旧テーブルとの差分統計: 平均|Δ| / 最大Δ / Δ>1pt のセル数。
@@ -16,7 +16,6 @@ import { evaluate7 } from "./_fastEval.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const HU_PATH = path.resolve(__dirname, "../src/data/hu-equity-matrix.json");
-const TABLE_PATH = path.resolve(__dirname, "../src/data/equity-table.json");
 
 type AnyTable = Record<string, any>;
 const load = (p: string): AnyTable => JSON.parse(fs.readFileSync(p, "utf8"));
@@ -65,14 +64,11 @@ function exactClassEquity(hero: string, villain: string): number {
 }
 
 function main(): void {
-  const [oldHuPath, oldTablePath] = process.argv.slice(2);
+  const [oldHuPath] = process.argv.slice(2);
   const hu = load(HU_PATH);
-  const table = load(TABLE_PATH);
 
   console.log("=== HU マトリクス _meta ===");
   console.log(JSON.stringify(hu._meta));
-  console.log("=== equity-table _meta ===");
-  console.log(JSON.stringify(table._meta));
 
   // ---- 1) 既知値: MC vs 厳密列挙 ----
   console.log("\n=== HU: MC 値 vs 厳密列挙 (|Δ|) ===");
@@ -129,30 +125,6 @@ function main(): void {
     console.log(`\n=== HU: 旧テーブル差分 (${n} ペア) ===`);
     console.log(`mean|Δ|=${((sum / n) * 100).toFixed(3)}pt  max|Δ|=${(max * 100).toFixed(3)}pt (${maxPair})  Δ>1pt=${over1} (${((100 * over1) / n).toFixed(2)}%)`);
   }
-
-  if (oldTablePath && fs.existsSync(oldTablePath)) {
-    const oldT = load(oldTablePath);
-    let n = 0, sum = 0, max = 0, over1 = 0;
-    let maxCell = "";
-    for (const hand of ALL_169_HANDS) {
-      const nr = table[hand], or = oldT[hand];
-      if (!nr || !or) continue;
-      for (let pct = 1; pct <= 100; pct++) {
-        const nv = nr[String(pct)], ov = or[String(pct)];
-        if (typeof nv !== "number" || typeof ov !== "number") continue;
-        const d = Math.abs(nv - ov);
-        n++; sum += d; if (d > max) { max = d; maxCell = `${hand}@${pct}%`; }
-        if (d > 0.01) over1++;
-      }
-    }
-    console.log(`\n=== table: 旧テーブル差分 (${n} セル) ===`);
-    console.log(`mean|Δ|=${((sum / n) * 100).toFixed(3)}pt  max|Δ|=${(max * 100).toFixed(3)}pt (${maxCell})  Δ>1pt=${over1} (${((100 * over1) / n).toFixed(2)}%)`);
-  }
-
-  // ---- 4) table 既知値スポット + 単調性 ----
-  console.log("\n=== table 既知値スポット ===");
-  const ts: Array<[string, number]> = [["AA", 100], ["22", 50], ["72o", 100], ["AKs", 10], ["KK", 5]];
-  for (const [h, p] of ts) console.log(`${h} vs Top${p}%: ${table[h][String(p)]}`);
 }
 
 main();

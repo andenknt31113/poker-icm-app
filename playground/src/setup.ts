@@ -7,7 +7,11 @@
 // このファイルはそれらの初期化順を決め、外向けの API (main.ts / practice が
 // 使う renderPlayers / setPayouts / refreshProGatedUi) を再公開するだけ。
 import { isPro } from "./entitlement.js";
-import { renderPlayers, initPlayersUI } from "./setupPlayers.js";
+import { configureSetupUndo, canUndoSetup, undoSetup, stageSetupInput, commitSetupInput, endSetupInput } from "./setupUndo.js";
+import { players } from "./appState.js";
+import { payoutsArr, replacePayouts, payoutsInput, nashSbInput, nashBbInput, nashAnteInput } from "./domRefs.js";
+import { recompute, getCallManualOverride, setCallManualOverride } from "./calculator.js";
+import { renderPlayers, initPlayersUI, getPositionAutoLink, setPositionAutoLink } from "./setupPlayers.js";
 import { initScenariosUI } from "./setupScenarios.js";
 import { renderPayouts, initPayoutsUI } from "./setupPayouts.js";
 import { STORAGE_KEYS, readRaw, writeRaw, type StorageKey } from "./storage.js";
@@ -42,10 +46,11 @@ export function refreshProGatedUi(): void {
 const COLLAPSE_CLOSED = "closed";
 const COLLAPSE_OPEN = "open";
 
-function initCollapsibleSection(detailsId: string, storageKey: StorageKey): void {
+function initCollapsibleSection(detailsId: string, storageKey: StorageKey, defaultOpen = true): void {
   const details = document.getElementById(detailsId) as HTMLDetailsElement | null;
   if (!details) return;
-  details.open = readRaw(storageKey) !== COLLAPSE_CLOSED;
+  const saved = readRaw(storageKey);
+  details.open = saved === COLLAPSE_OPEN || (saved !== COLLAPSE_CLOSED && defaultOpen);
   details.addEventListener("toggle", () => {
     writeRaw(storageKey, details.open ? COLLAPSE_OPEN : COLLAPSE_CLOSED);
   });
@@ -57,10 +62,45 @@ function initCollapsibleSection(detailsId: string, storageKey: StorageKey): void
  * (同一要素に複数 listener を張る箇所があるため、順序は意味を持つ)。
  */
 export function initSetup(): void {
+  configureSetupUndo(() => {
+    const savedPlayers = players.map(player => ({ ...player }));
+    const autoLink = getPositionAutoLink();
+    const prizes = payoutsArr.slice();
+    const blinds = [nashSbInput.value, nashBbInput.value, nashAnteInput.value];
+    const call = document.querySelector<HTMLInputElement>("#call")!;
+    const pot = document.querySelector<HTMLInputElement>("#potwin")!;
+    const amounts = [call.value, pot.value];
+    const manual = getCallManualOverride();
+    return () => {
+      players.splice(0, players.length, ...savedPlayers);
+      setPositionAutoLink(autoLink);
+      replacePayouts(prizes);
+      payoutsInput.value = prizes.join(", ");
+      [nashSbInput, nashBbInput, nashAnteInput].forEach((input, index) => { input.value = blinds[index]!; });
+      call.value = amounts[0]!;
+      pot.value = amounts[1]!;
+      setCallManualOverride(manual);
+      renderPlayers();
+      renderPayouts();
+      recompute();
+    };
+  });
+  const undo = document.querySelector<HTMLButtonElement>("#setup-undo");
+  undo?.addEventListener("click", undoSetup);
+  document.addEventListener("focusin", event => {
+    const input = event.target;
+    if (input instanceof HTMLInputElement && !input.readOnly && input.matches(".player-stack, .payout-amount, #nash-sb, #nash-bb, #nash-ante, #call, #potwin")) stageSetupInput(input);
+  });
+  document.addEventListener("input", event => {
+    const input = event.target;
+    if (input instanceof HTMLInputElement && !input.readOnly) commitSetupInput(input);
+  }, true);
+  document.addEventListener("focusout", endSetupInput);
+  document.addEventListener("setup-undo-change", () => { if (undo) undo.disabled = !canUndoSetup(); });
   initPlayersUI();
   initScenariosUI();
   initPayoutsUI();
 
-  initCollapsibleSection("scenario-presets-toggle", STORAGE_KEYS.collapseScenarioPresets);
+  initCollapsibleSection("scenario-presets-toggle", STORAGE_KEYS.collapseScenarioPresets, false);
   initCollapsibleSection("payout-presets-toggle", STORAGE_KEYS.collapsePayoutPresets);
 }

@@ -35,7 +35,7 @@ export function computeDerivedFields(base: PracticeProblemBase): PracticeProblem
   const { scenarioPlayers, payouts, sb, bb, totalAnte, villainCallRangePct, heroHand } = base;
   const heroIdx = scenarioPlayers.findIndex((p) => p.role === "hero");
   const villainIdx = scenarioPlayers.findIndex((p) => p.role === "villain");
-  const sbIdx = scenarioPlayers.findIndex((p) => p.position === "SB");
+  const sbIdx = scenarioPlayers.findIndex((p) => posToPotOddsPos(p.position, scenarioPlayers.length) === "SB");
   const stacks = scenarioPlayers.map((p) => p.stack);
   const villainPos = scenarioPlayers[villainIdx]!.position;
 
@@ -52,7 +52,7 @@ export function computeDerivedFields(base: PracticeProblemBase): PracticeProblem
     heroStack: stacks[heroIdx]!,
     villainStack: stacks[villainIdx]!,
     heroPosition: "BB", // 練習問題では hero は常に BB
-    villainPosition: posToPotOddsPos(villainPos),
+    villainPosition: posToPotOddsPos(villainPos, scenarioPlayers.length),
     sb, bb, ante: totalAnte,
   });
   const callAmount = podds.callAmount;
@@ -70,7 +70,7 @@ export function computeDerivedFields(base: PracticeProblemBase): PracticeProblem
     heroIndex: heroIdx,
     villainIndex: villainIdx,
     heroPosition: "BB",
-    villainPosition: posToPotOddsPos(villainPos),
+    villainPosition: posToPotOddsPos(villainPos, scenarioPlayers.length),
     sbPlayerIndex: sbIdx >= 0 ? sbIdx : undefined,
     sb, bb, ante: totalAnte,
   });

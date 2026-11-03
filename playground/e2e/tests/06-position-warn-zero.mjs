@@ -41,6 +41,18 @@ export default async function testPositionWarnZero({ baseURL, createContext }) {
     for (const id of SCENARIO_IDS) {
       await page.click('.tab-btn[data-tab="setup"]');
       await page.click(`.scenario-btn[data-scenario="${id}"]`);
+      // 並びは 自分 → 相手 → 残りを行動順 (卓の並びと対応が取れるように)
+      const rows = await page.$$eval("#players-list .player-row", (els) =>
+        els.map((el) => ({
+          role: el.classList.contains("hero") ? "hero" : el.classList.contains("villain") ? "villain" : "other",
+          pos: el.querySelector(".player-pos")?.value ?? "",
+        })),
+      );
+      const ACT_ORDER = ["UTG", "UTG+1", "MP", "LJ", "HJ", "CO", "BTN", "SB", "BB"];
+      const others = rows.slice(2).map((r) => ACT_ORDER.indexOf(r.pos));
+      if (rows[0]?.role !== "hero" || rows[1]?.role !== "villain" || others.some((v, i) => i > 0 && v < others[i - 1])) {
+        throw new Error(`プリセット "${id}" の席の並びが行動順ではありません: ${JSON.stringify(rows)}`);
+      }
       await page.click('.tab-btn[data-tab="analyze"]');
       const hidden = await isPositionWarnHidden(page);
       if (!hidden) {

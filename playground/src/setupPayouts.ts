@@ -3,6 +3,7 @@
 // freemium ゲート: 無料時はペイ構造の手編集・プリセット適用・保存がロックされる。
 // (シナリオプリセット経由の setPayouts はプログラム的な差し替えなので許可。)
 import { t as tr } from "./i18n.js";
+import { checkpointSetup } from "./setupUndo.js";
 import { $ } from "./dom.js";
 import { isPro, FREE_MAX_PLAYERS } from "./entitlement.js";
 import { openPaywall } from "./paywall.js";
@@ -147,6 +148,7 @@ export function initPayoutsUI(): void {
     if (payoutsArr.length > 1) {
       const i = Number(remove.dataset.i);
       if (Number.isFinite(i) && i >= 0 && i < payoutsArr.length) {
+        checkpointSetup();
         payoutsArr.splice(i, 1);
         syncPayoutsInput();
         renderPayouts();
@@ -158,6 +160,7 @@ export function initPayoutsUI(): void {
   addPayoutBtn.addEventListener("click", () => {
     if (!isPro() && players.length > FREE_MAX_PLAYERS) return openPaywall();
     if (payoutsArr.length >= MAX_PAYOUTS) return;
+    checkpointSetup();
     payoutsArr.push(0);
     syncPayoutsInput();
     renderPayouts();
@@ -174,7 +177,7 @@ export function initPayoutsUI(): void {
       btn.addEventListener("click", () => {
         if (!isPro() && players.length > FREE_MAX_PLAYERS) return openPaywall();
         const v = btn.dataset.preset;
-        if (v) setPayouts(parseList(v));
+        if (v) { checkpointSetup(); setPayouts(parseList(v)); }
       });
     });
 
@@ -195,6 +198,7 @@ export function initPayoutsUI(): void {
       return;
     }
     if (target.classList.contains("load")) {
+      checkpointSetup();
       setPayouts(parseList(target.dataset.value ?? ""));
     }
   });

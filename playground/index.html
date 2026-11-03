@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>🎰 Poker ICM/BF Playground</title>
     <link rel="stylesheet" href="/src/style.css" />
+    <link rel="stylesheet" href="/src/workspace.css" />
     <!-- PWA -->
     <link rel="manifest" href="/manifest.json" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
@@ -31,11 +32,11 @@
     <meta name="twitter:description" content="ICMエクイティ・バブルファクター・ナッシュ均衡をリアルタイムに計算できるポーカートーナメント向けの無料ツール。プッシュ/フォールドの練習問題で実戦感覚も鍛えられます。" />
     <meta name="twitter:image" content="https://poker-icm-app.andenknt31113.workers.dev/og-image.png" />
   </head>
-  <body>
+  <body class="workspace">
     <main class="container">
       <header>
         <div class="header-row">
-          <h1>🎰 Poker ICM/BF</h1>
+          <h1><span class="brand-mark" aria-hidden="true">♠</span> Poker ICM<span class="brand-sub">STUDY ROOM</span></h1>
           <div class="header-actions">
             <button id="help-btn" class="header-btn" type="button" title="使い方ガイド" aria-label="ヘルプ" data-i18n-attr="title:header.help.title;aria-label:header.help.aria">❓</button>
             <button id="lang-toggle" class="header-btn header-lang-btn" type="button" title="言語切替" aria-label="言語切替" data-i18n-attr="title:header.lang.title;aria-label:header.lang.aria">EN</button>
@@ -61,10 +62,9 @@
       </nav>
 
 
-      <section class="card" data-tab="setup">
-        <h2 data-i18n="setup.presets.h2">シナリオプリセット</h2>
+      <section class="card preset-card" id="setup-examples" data-tab="setup">
         <details class="section-toggle" id="scenario-presets-toggle">
-          <summary data-i18n="setup.presets.summary">プリセット一覧（タップで開閉）</summary>
+          <summary data-i18n="setup.presets.summary">例題・保存した局面を使う</summary>
           <div class="section-toggle-body">
             <p class="hint" data-i18n="setup.presets.hint">タップで状況一発セット。スタック・ポジション・ペイアウトを丸ごと反映。</p>
             <div class="scenario-presets">
@@ -86,13 +86,21 @@
         </details>
       </section>
 
-      <section class="card" data-tab="setup">
-        <h2 data-i18n="setup.players.h2">プレイヤー</h2>
+      <section class="card players-card" id="setup-players" data-tab="setup">
+        <div class="setup-card-heading">
+          <h2 data-i18n="setup.players.h2">プレイヤー</h2>
+          <button id="setup-undo" class="save-btn" type="button" disabled data-i18n="setup.undo">元に戻す</button>
+        </div>
         <p class="hint" data-i18n-html="setup.players.hint.html">
           各プレイヤーのスタックを入力。<strong>🎯 自分</strong> /
           <strong>⚔️ 相手</strong> をタップで指定。最大9人。<br />
           ポジションは<strong>1人ぶん選べば残り全員が自動で並びます</strong>。
         </p>
+        <div class="players-toolbar">
+          <span data-i18n="setup.players.roles">🎯 自分　⚔️ 相手</span>
+          <button id="swap-players" class="save-btn" type="button" data-swap-players data-i18n="setup.players.swap">自分 ⇄ 相手</button>
+        </div>
+        <p id="players-lock-notice" class="hint lock-notice" role="status" hidden></p>
         <div id="players-list" class="players-list"></div>
         <div class="players-actions">
           <button id="add-player" class="add-btn" type="button">
@@ -104,7 +112,7 @@
         </div>
       </section>
 
-      <section class="card" data-tab="setup">
+      <section class="card payouts-card" data-tab="setup">
         <h2 data-i18n="setup.payouts.h2">ペイ構造</h2>
         <p class="hint" data-i18n="setup.payouts.hint">1位から順に賞金を入力。単位は % でも $ でも OK。</p>
         <div id="payouts-list" class="payouts-list"></div>
@@ -134,10 +142,10 @@
         </details>
       </section>
 
-      <section class="card" data-tab="setup">
+      <section class="card blinds-card" data-tab="setup">
         <h2 data-i18n="setup.blinds.h2">ブラインド・アンティ</h2>
         <p class="hint" data-i18n="setup.blinds.hint">
-          スタックは BB 単位なので通常はこのまま。アンティ有りの卓は「アンティ合計」を入力。
+          スタックは BB 単位なので BB は 1 で固定です。アンティ有りの卓は「アンティ合計」を入力。
         </p>
         <div class="grid">
           <label>
@@ -146,7 +154,8 @@
           </label>
           <label>
             BB
-            <input id="nash-bb" type="number" inputmode="decimal" value="1.0" min="0.1" step="0.1" />
+            <!-- スタックは BB 単位なので BB は常に 1。変えるとスタックと計算がずれるため編集させない -->
+            <input id="nash-bb" type="number" inputmode="decimal" value="1" readonly aria-readonly="true" />
           </label>
           <label>
             <span data-i18n="nash.ante.label">アンティ合計</span>
@@ -155,13 +164,20 @@
         </div>
       </section>
 
+      <section class="setup-analyze-action" data-tab="setup">
+        <button class="workspace-primary" type="button" data-open-tab="analyze" data-i18n="workspace.analyze">この局面を分析する →</button>
+      </section>
+      <section class="workspace-section-head" data-tab="analyze">
+        <h2 data-i18n="workspace.analysisTitle">局面の分析</h2>
+        <button class="workspace-secondary" type="button" data-open-tab="setup" data-i18n="workspace.edit">局面を編集</button>
+      </section>
       <nav class="analyze-jump" data-tab="analyze" aria-label="分析セクション" data-i18n-attr="aria-label:analyze.jump.aria">
-        <button type="button" data-jump="sec-icm">📊 <span data-i18n="analyze.jump.results">計算結果</span></button>
-        <button type="button" data-jump="sec-hand">🃏 <span data-i18n="analyze.jump.hand">レンジ比較</span></button>
-        <button type="button" data-jump="sec-nash">🎯 <span data-i18n="analyze.jump.nash">Nash</span></button>
+        <button type="button" data-jump="sec-hand" aria-controls="sec-hand"><span data-i18n="flow.hand">ハンドの判断</span></button>
+        <button type="button" data-jump="sec-icm" aria-controls="sec-icm sec-bf sec-equity"><span data-i18n="flow.equity">賞金への影響</span></button>
+        <button type="button" data-jump="sec-nash" aria-controls="sec-nash"><span data-i18n="flow.nash">Nash・詳細</span></button>
       </nav>
 
-      <section class="card" data-tab="analyze" id="sec-icm">
+      <section class="card" data-tab="analyze" data-analysis-panel="equity" id="sec-icm">
         <h2 data-i18n="result.icm.h2">ICM エクイティ</h2>
         <table id="icm-table">
           <thead>
@@ -176,7 +192,7 @@
         </table>
       </section>
 
-      <section class="card" data-tab="analyze">
+      <section class="card" data-tab="analyze" data-analysis-panel="equity" id="sec-bf">
         <h2 data-i18n="result.bf.h2">BF マップ</h2>
         <p class="hint" data-i18n-html="result.bf.hint.html">
           🎯自分と⚔️相手のオールイン想定。リスクするチップは小さい方のスタックに自動調整されます。
@@ -210,11 +226,11 @@
               <strong>上段の Risk Premium</strong> は、まさにこの「上乗せ分」。コール額＝ポット（1:1オッズ）のとき、50% より<strong>何pt余分に勝率が必要か</strong>をそのまま表示している。
             </p>
             <h4>2. 色の意味</h4>
-            <p>色は BF <strong>1.0（黄）→ 1.4 以上（赤）</strong>と連続的に濃くなる。ICM の性質上 <strong>BF が 1.00 を下回ることはない</strong>ため、実際に出るのは黄〜赤の範囲。読み方の目安:</p>
+            <p>色は BF <strong>1.0（黄）→ 2.0 以上（赤）</strong>と連続的に濃くなる。ICM の性質上 <strong>BF が 1.00 を下回ることはない</strong>ため、実際に出るのは黄〜赤の範囲。読み方の目安:</p>
             <ul>
               <li>🟡 黄 (BF ≈ 1.0): ICM圧ほぼゼロ、ほぼ cEV 通りに戦ってよい</li>
-              <li>🟠 オレンジ (1.1〜1.3): ICM圧、タイトに</li>
-              <li>🔴 赤 (1.4 前後〜): 超危険、プレミア限定</li>
+              <li>🟠 オレンジ (1.2〜1.5): ICM圧、タイトに</li>
+              <li>🔴 赤 (1.7 前後〜): 超危険、プレミア限定</li>
             </ul>
             <h4>3. 戦略的な読み方</h4>
             <ul>
@@ -256,7 +272,7 @@
         <p class="hint bf-matrix-scroll-hint hidden" id="bf-matrix-scroll-hint" data-i18n="result.bf.scrollHint">→ 横にスクロール</p>
       </section>
 
-      <section class="card" data-tab="analyze">
+      <section class="card" data-tab="analyze" data-analysis-panel="equity" id="sec-equity">
         <h2 data-i18n="result.eq.h2">必要勝率 (cEV / $EV / RP)</h2>
         <p class="hint" data-i18n-html="result.eq.hint.html">
           🎯と⚔️のオールイン想定で自動計算。手動入力したい場合は数値を上書きしてください。
@@ -289,8 +305,10 @@
 
       </section>
 
-      <section class="card" data-tab="analyze" id="sec-hand">
+      <section class="card" data-tab="analyze" data-analysis-panel="hand" id="sec-hand">
         <h2 data-i18n="hand.h2">ハンドレンジ比較</h2>
+        <p id="range-unavailable" class="error hidden" role="status"></p>
+        <div id="range-content">
         <p class="hint" data-i18n-html="hand.hint.html">
           HU all-in 想定。<strong>hero=BB</strong>（最終 actor）のときに完全に有効。
           他ポジションは「後ろのプレイヤーが全員 fold した」想定の概算として参考程度に。
@@ -305,6 +323,7 @@
             自分の push レンジを求める
           </button>
         </div>
+        <p id="direction-auto-hint" class="hint hidden"></p>
 
         <div class="mode-tabs" role="tablist">
           <button
@@ -322,7 +341,7 @@
 
         <div id="preset-controls">
           <label class="range-label">
-            <span id="villain-range-label">相手のpushレンジ</span>: <span id="push-pct">25</span>%
+            <span id="villain-range-label">相手のpushレンジ</span>: <span data-i18n="hand.preset.top">上位</span> <span id="push-pct">25</span>%
             <input
               id="push-range"
               type="range"
@@ -332,7 +351,6 @@
               step="1"
             />
           </label>
-          <p class="hint" data-i18n="hand.preset.hint">※ Top X% は本ツール定義の強度順。他ツールとは一致しない場合があります。</p>
         </div>
         <div id="custom-controls" class="hidden">
           <p class="hint">
@@ -350,51 +368,65 @@
         </div>
 
         <div class="range-grids">
-          <div>
-            <h3 id="villain-grid-title">相手のpushレンジ 🔴</h3>
+          <details id="villain-range-details" class="opponent-range-details">
+            <summary id="villain-grid-title">相手のpushレンジ 🔴</summary>
             <div id="grid-villain" class="hand-grid"></div>
-          </div>
-          <div>
+          </details>
+          <div class="hero-range-result">
             <h3 id="hero-grid-title">自分のcallレンジ 🟢</h3>
+            <div id="push-depth-warn" class="warn-box hidden"></div>
+            <p class="hint call-stats-below" id="call-stats"></p>
+            <p class="hint hand-cell-detail hidden" id="hand-cell-detail" aria-live="polite"></p>
             <!-- タップしたセルの答えはグリッドの「上」に置く。グリッドの下に置くと
                  13行ぶん下がって画面外になり、タップしても何も起きないように見えるため。 -->
-            <p class="hint hand-cell-detail hidden" id="hand-cell-detail"></p>
             <div id="grid-hero" class="hand-grid"></div>
-            <p class="hint hand-grid-legend" data-i18n-html="hand.legend.html">👆 <strong>セルをタップ</strong>すると、そのハンドの勝率と「コール可／フォールド」がグリッドの上に出ます。<br />「自分の call レンジを求める」時: 🟩 必要勝率+0.1pt以上 = コール可 ／ 🟨 ±0.1pt = ボーダー (ほぼ完全に五分) ／ 無色 = フォールド。<br />「自分の push レンジを求める」時: 🟩 = push が $EV でフォールドを上回るハンド ／ 🟨 = ほぼ互角のボーダー ／ 無色 = フォールド。</p>
-            <p class="hint call-stats-below" id="call-stats"></p>
+            <details class="range-legend-details"><summary data-i18n="hand.legend.title">色と数字の見方</summary><p class="hint hand-grid-legend" data-i18n-html="hand.legend.html"></p></details>
           </div>
+        </div>
+        <div class="analysis-details-link">
+          <button class="workspace-secondary" type="button" data-analysis-target="sec-icm" data-i18n="flow.equityDetails">コール額・必要勝率の内訳を見る →</button>
+        </div>
         </div>
       </section>
 
-      <section class="card" data-tab="analyze" id="sec-nash">
+      <section class="card" data-tab="analyze" data-analysis-panel="nash" id="sec-nash">
         <h2 data-i18n="nash.h2">Nash 均衡 (HU push/fold)</h2>
-        <p class="hint" data-i18n-html="nash.hint.html">
-          🎯自分 (pusher) と ⚔️相手 (caller) のヘッズアップ Nash 均衡を計算（ICM反映済み）。
-          <br />
-          ※ HU 2-way 想定。BTN+BB のように間に他プレイヤーがいる場合は警告が出ます。
-          <br />
-          ※ <strong>プッシュ or フォールドの2択</strong>を前提にした均衡です。目安 10BB 以下ならほぼ実戦どおり。深くなるほど、実際は小さなレイズ等の選択肢があるぶん、真の GTO よりプッシュレンジは広めに出ます（「押すか降りるかなら押してよい」の意味）。
-          <br />
-          ⚙️ セットアップタブの「プレイヤー」で 🎯/⚔️ を指定してから Nash 計算を押してください。
-        </p>
-
-        <button id="nash-solve" type="button" class="solve-btn" data-i18n="nash.solveBtn">Nash 計算</button>
-        <p id="nash-status" class="hint"></p>
+        <div id="nash-context" class="nash-context" aria-live="polite"></div>
+        <p id="nash-status" class="hint" role="status"></p>
         <div id="nash-depth-note" class="warn-box hidden"></div>
         <div id="nash-overcall-warn" class="warn-box hidden"></div>
 
-        <div class="range-grids">
+        <div id="nash-results" class="range-grids">
           <div>
-            <h3 data-i18n="nash.sbRange.h3">🎯自分 push レンジ 🔴</h3>
+            <!-- 見出しは押す側が自分か相手かで nashUI.ts が書き換える -->
+            <h3 id="nash-push-title">🎯自分の push レンジ 🔴</h3>
             <p class="hint" id="nash-sb-stats"></p>
             <div id="nash-sb-grid" class="hand-grid"></div>
           </div>
           <div>
-            <h3 data-i18n="nash.bbRange.h3">⚔️相手 call レンジ 🟢</h3>
+            <h3 id="nash-call-title">⚔️相手の call レンジ 🟢</h3>
             <p class="hint" id="nash-bb-stats"></p>
             <div id="nash-bb-grid" class="hand-grid"></div>
           </div>
         </div>
+        <div class="nash-actions">
+        <button id="nash-solve" type="button" class="solve-btn" data-i18n="nash.solveBtn">再計算</button>
+        <button type="button" class="workspace-secondary" data-swap-players data-i18n="setup.players.swap">自分 ⇄ 相手</button>
+        <button type="button" class="workspace-secondary" data-open-tab="setup" data-i18n="nash.editSpot">局面を変更する</button>
+        </div>
+        <details class="nash-explanation">
+        <summary data-i18n="nash.explanation">計算の前提・注意点を見る</summary>
+        <p class="hint" data-i18n-html="nash.hint.html">
+          先に動く方が push、後に動く方が call する2人の Nash 均衡を計算します（ICM反映済み）。
+          <br />
+          ※ HU 2-way 想定。BTN+BB のように間に他プレイヤーがいる場合は警告が出ます。
+          <br />
+          ※ <strong>プッシュ or フォールドの2択</strong>を前提にした均衡です。目安は実効 12BB 以下。12〜20BB では注意を表示し、20BB を超えると範囲外として結果を折りたたみます（実戦では 2BB オープンやリンプが入るため）。
+          <br />
+          ブラインドとアンティは実際のポジションの人が払う前提です（BTN からのプッシュなら自分は blind なし、BB ante は BB の人）。この画面を開くと自動計算します。
+        </p>
+
+        </details>
       </section>
 
       <section class="card" data-tab="practice">

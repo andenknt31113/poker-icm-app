@@ -16,10 +16,17 @@ export const DEFAULT_SB = 0.5;
 export const DEFAULT_BB = 1.0;
 export const DEFAULT_ANTE = 1.0; // BB ante 構造の標準値
 
-/** Position → calculatePotOdds の position 種別 (SB / BB / OTHER) に変換。 */
-export function posToPotOddsPos(pos: Position | undefined): PotOddsPosition {
+/** ヘッズアップ (2人卓) の人数。この卓では BTN が SB を払う。 */
+const HEADS_UP_PLAYERS = 2;
+
+/**
+ * Position → calculatePotOdds の position 種別 (SB / BB / OTHER) に変換。
+ * 2人卓の BTN は SB を払うので "SB" として扱う (positionsForN(2) は BTN/BB)。
+ */
+export function posToPotOddsPos(pos: Position | undefined, playerCount: number): PotOddsPosition {
   if (pos === "SB") return "SB";
   if (pos === "BB") return "BB";
+  if (pos === "BTN" && playerCount === HEADS_UP_PLAYERS) return "SB";
   return "OTHER";
 }
 
@@ -101,6 +108,40 @@ export interface Player {
   stack: number;
   role: Role;
   position: Position;
+}
+
+export function assignRole(table: Player[], playerId: number, role: Role): boolean {
+  const target = table.find(player => player.id === playerId);
+  if (!target || target.role === role) return false;
+  const previousRole = target.role;
+  if (role !== "other") {
+    const previous = table.find(player => player.role === role);
+    if (previous) previous.role = previousRole;
+  }
+  target.role = role;
+  return true;
+}
+
+export function swapDecisionPlayers(table: Player[]): boolean {
+  const hero = table.find(player => player.role === "hero");
+  const villain = table.find(player => player.role === "villain");
+  if (!hero || !villain) return false;
+  hero.role = "villain";
+  villain.role = "hero";
+  return true;
+}
+
+export function positionsForChangedTable(current: readonly Position[]): Position[] {
+  if (current.every(position => position === "")) return [...current];
+  const valid = positionsForN(current.length);
+  const occupied = new Set<Position>();
+  const next = current.map(position => {
+    if (!valid.includes(position) || occupied.has(position)) return "";
+    occupied.add(position);
+    return position;
+  });
+  const available = valid.filter(position => !occupied.has(position));
+  return next.map(position => position || available.shift() || "");
 }
 
 let nextId = 0;

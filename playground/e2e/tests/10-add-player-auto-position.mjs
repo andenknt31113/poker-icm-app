@@ -13,7 +13,7 @@ export default async function testAddPlayerAutoPosition({ baseURL, createContext
 
     await page.goto(baseURL, { waitUntil: "load" });
 
-    // ftBubble プリセット: 4人 (BB / SB / BTN / CO)
+    // ftBubble プリセット: 4人 (自分 BB / 相手 SB / 残りを行動順に CO, BTN)
     await page.click('.scenario-btn[data-scenario="ftBubble"]');
     await page.waitForFunction(
       () => document.querySelectorAll("#players-list .player-row").length === 4,
@@ -23,7 +23,7 @@ export default async function testAddPlayerAutoPosition({ baseURL, createContext
       page.$$eval("#players-list .player-pos", (els) => els.map((el) => el.value));
 
     const before = await positions();
-    if (before.join(",") !== "BB,SB,BTN,CO") {
+    if (before.join(",") !== "BB,SB,CO,BTN") {
       throw new Error(`ftBubble の初期ポジションが想定と異なります: ${before.join(",")}`);
     }
 
@@ -33,7 +33,7 @@ export default async function testAddPlayerAutoPosition({ baseURL, createContext
       () => document.querySelectorAll("#players-list .player-row").length === 5,
     );
     const after5 = await positions();
-    if (after5.join(",") !== "BB,SB,BTN,CO,UTG") {
+    if (after5.join(",") !== "BB,SB,CO,BTN,UTG") {
       throw new Error(`5人目の自動採番が想定と異なります: ${after5.join(",")}`);
     }
 
@@ -43,7 +43,7 @@ export default async function testAddPlayerAutoPosition({ baseURL, createContext
       () => document.querySelectorAll("#players-list .player-row").length === 6,
     );
     const after6 = await positions();
-    if (after6.join(",") !== "BB,SB,BTN,CO,UTG,HJ") {
+    if (after6.join(",") !== "BB,SB,CO,BTN,UTG,HJ") {
       throw new Error(`6人目の自動採番が想定と異なります: ${after6.join(",")}`);
     }
 

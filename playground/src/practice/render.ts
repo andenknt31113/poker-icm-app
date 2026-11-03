@@ -1,4 +1,4 @@
-import { topRange, type HandNotation } from "../handRanking.js";
+import { topRange, comboPctOfTopRange, type HandNotation } from "../handRanking.js";
 import { equity } from "../equity.js";
 import { renderGrid } from "../grid.js";
 import { t } from "../i18n.js";
@@ -130,6 +130,12 @@ function renderScenarioBento(p: PracticeProblem, extraHtml: string): string {
 
 // ハンド表記 (例 "AKs" / "QQ" / "T9o") をトランプ2枚の視覚表現に変換。
 // suited は ♠♠、offsuit/pair は ♠♥ (♥/♦ は赤、♠/♣ は濃色)。
+function renderPlayerStrip(p: PracticeProblem): string {
+  return `<div class="practice-player-strip">${p.scenarioPlayers.map((player) =>
+    `<span class="practice-seat ${player.role}"><span>${player.role === "hero" ? t("workspace.you") : player.role === "villain" ? t("workspace.opponent") : player.position || "—"}</span><strong>${player.stack} BB</strong></span>`,
+  ).join("")}</div>`;
+}
+
 function renderHeroHandCards(hand: HandNotation): string {
   const isPair = hand.length === 2;
   const r1 = hand[0]!;
@@ -181,16 +187,13 @@ export function renderPracticeProblem(rawP: PracticeProblem): void {
       <div class="scenario-warn-head">${t("practice.villainWarn.head", { pos: villain?.position || "?" })}</div>
       <div class="scenario-warn-body">
         <span class="scenario-warn-item">Stack <strong>${villain ? villain.stack : "?"} BB</strong></span>
-        <span class="scenario-warn-item">${t("practice.villainWarn.estPush")} <strong>Top ${p.villainCallRangePct}%</strong></span>
+        <span class="scenario-warn-item">${t("practice.villainWarn.estPush")} <strong>${t("practice.topPct", { pct: comboPctOfTopRange(p.villainCallRangePct) })}</strong></span>
       </div>
     </div>
   `;
   area.innerHTML = `
-    <div id="practice-table-wrapper"></div>
     ${renderScenarioBento(p, villainWarnHtml)}
-    <p class="hint">${t("practice.topxNote")}</p>
-    <h3 style="font-size: 13px; margin: 12px 0 4px;">${t("practice.villainPushRange.h3")}</h3>
-    <div id="practice-villain-grid" class="hand-grid"></div>
+    ${renderPlayerStrip(p)}
     ${renderHeroHandCards(p.heroHand)}
     <div class="practice-hand">${t("practice.yourHand", { hand: p.heroHand })}</div>
     <div class="practice-actions">
@@ -198,6 +201,11 @@ export function renderPracticeProblem(rawP: PracticeProblem): void {
       <button class="practice-btn fold" data-answer="fold">${t("practice.btn.fold")}</button>
     </div>
     <div id="practice-feedback"></div>
+    <details class="practice-table-details"><summary>${t("workspace.table")}</summary><div id="practice-table-wrapper"></div></details>
+    <details class="practice-range-details">
+      <summary>${t("practice.villainPushRange.h3")}</summary>
+      <div id="practice-villain-grid" class="hand-grid"></div>
+    </details>
   `;
   const tableWrap = document.getElementById("practice-table-wrapper");
   if (tableWrap) renderRoundTable(tableWrap, p.scenarioPlayers, {
@@ -228,16 +236,13 @@ export function renderPracticeProblemPush(p: PracticeProblem): void {
       <div class="scenario-warn-head">${t("practice.villainCall.head")}</div>
       <div class="scenario-warn-body">
         <span class="scenario-warn-item">Stack <strong>${villain ? villain.stack : "?"} BB</strong></span>
-        <span class="scenario-warn-item">${t("practice.villainCall.estCall")} <strong>Top ${p.villainCallRangePct}%</strong></span>
+        <span class="scenario-warn-item">${t("practice.villainCall.estCall")} <strong>${t("practice.topPct", { pct: comboPctOfTopRange(p.villainCallRangePct) })}</strong></span>
       </div>
     </div>
   `;
   area.innerHTML = `
-    <div id="practice-table-wrapper"></div>
     ${renderScenarioBento(p, villainCallInfoHtml)}
-    <p class="hint">${t("practice.topxNote")}</p>
-    <h3 style="font-size: 13px; margin: 12px 0 4px;">${t("practice.villainCallRange.h3")}</h3>
-    <div id="practice-villain-grid" class="hand-grid"></div>
+    ${renderPlayerStrip(p)}
     ${renderHeroHandCards(p.heroHand)}
     <div class="practice-hand">${t("practice.yourHandSb", { hand: p.heroHand })}</div>
     <div class="practice-actions">
@@ -245,6 +250,11 @@ export function renderPracticeProblemPush(p: PracticeProblem): void {
       <button class="practice-btn fold" data-answer="fold">${t("practice.btn.fold")}</button>
     </div>
     <div id="practice-feedback"></div>
+    <details class="practice-table-details"><summary>${t("workspace.table")}</summary><div id="practice-table-wrapper"></div></details>
+    <details class="practice-range-details">
+      <summary>${t("practice.villainCallRange.h3")}</summary>
+      <div id="practice-villain-grid" class="hand-grid"></div>
+    </details>
   `;
   const tableWrap = document.getElementById("practice-table-wrapper");
   if (tableWrap) renderRoundTable(tableWrap, p.scenarioPlayers, {

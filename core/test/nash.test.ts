@@ -257,6 +257,47 @@ describe("solveHUNash", () => {
     expect(result.bbCallPct).toBeGreaterThan(0.85);
   });
 
+  describe("pusherBlind / callerBlind / deadMoney (実際のポジションの blind)", () => {
+    const base = {
+      stacks: [10, 10, 20],
+      payouts: [50, 30, 20],
+      sbIndex: 0,
+      bbIndex: 1,
+      sb: 0.5,
+      bb: 1,
+      ante: 0,
+      huEquity: fakeEq,
+      allHands: ALL_HANDS,
+      maxIterations: 300,
+    };
+
+    it("省略時は従来どおり (pusherBlind=sb, callerBlind=bb, deadMoney=0)", () => {
+      const legacy = solveHUNash(base);
+      const explicit = solveHUNash({ ...base, pusherBlind: 0.5, callerBlind: 1, deadMoney: 0 });
+      expect(explicit.sbPushPct).toBe(legacy.sbPushPct);
+      expect(explicit.bbCallPct).toBe(legacy.bbCallPct);
+    });
+
+    it("blind を払っていない位置 (BTN) からのプッシュは SB からより狭い", () => {
+      // BTN は降りても失うチップがないので、押す理由が減る。
+      // SB の 0.5 は第三者の dead money としてポットに残る (合計ポットは同じ)。
+      const fromSb = solveHUNash(base);
+      const fromBtn = solveHUNash({ ...base, pusherBlind: 0, deadMoney: 0.5 });
+      expect(fromBtn.sbPushPct).toBeLessThan(fromSb.sbPushPct);
+    });
+
+    it("dead money が増えるとプッシュは広がる", () => {
+      const noDead = solveHUNash({ ...base, pusherBlind: 0 });
+      const withDead = solveHUNash({ ...base, pusherBlind: 0, deadMoney: 3 });
+      expect(withDead.sbPushPct).toBeGreaterThan(noDead.sbPushPct);
+    });
+
+    it("負の値はエラー", () => {
+      expect(() => solveHUNash({ ...base, deadMoney: -1 })).toThrow();
+      expect(() => solveHUNash({ ...base, pusherBlind: -0.5 })).toThrow();
+    });
+  });
+
   it("不正な入力: stacks 不足でエラー", () => {
     expect(() =>
       solveHUNash({

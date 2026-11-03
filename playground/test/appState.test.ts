@@ -68,11 +68,15 @@ describe("positionsForN", () => {
 
 describe("posToPotOddsPos", () => {
   it("SB/BB はそのまま、それ以外は OTHER にマップする", () => {
-    expect(posToPotOddsPos("SB")).toBe("SB");
-    expect(posToPotOddsPos("BB")).toBe("BB");
-    expect(posToPotOddsPos("BTN")).toBe("OTHER");
-    expect(posToPotOddsPos("")).toBe("OTHER");
-    expect(posToPotOddsPos(undefined)).toBe("OTHER");
+    expect(posToPotOddsPos("SB", 6)).toBe("SB");
+    expect(posToPotOddsPos("BB", 6)).toBe("BB");
+    expect(posToPotOddsPos("BTN", 6)).toBe("OTHER");
+    expect(posToPotOddsPos("", 6)).toBe("OTHER");
+    expect(posToPotOddsPos(undefined, 6)).toBe("OTHER");
+  });
+  it("2人卓の BTN は SB を払うので SB にマップする", () => {
+    expect(posToPotOddsPos("BTN", 2)).toBe("SB");
+    expect(posToPotOddsPos("BB", 2)).toBe("BB");
   });
 });
 

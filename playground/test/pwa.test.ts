@@ -59,6 +59,7 @@ describe("SW 更新通知トースト", () => {
   let reloadMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
+    vi.stubEnv("DEV", false);
     setupDom();
     stubMatchMedia();
 
@@ -77,6 +78,7 @@ describe("SW 更新通知トースト", () => {
   });
 
   afterEach(() => {
+    vi.unstubAllEnvs();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
     document.body.innerHTML = "";
@@ -98,6 +100,13 @@ describe("SW 更新通知トースト", () => {
     worker.dispatchEvent(new Event("statechange"));
     return worker;
   }
+
+  it("開発用HTMLをService Workerに登録しない", () => {
+    vi.stubEnv("DEV", true);
+    initPwa();
+    window.dispatchEvent(new Event("load"));
+    expect(registerMock).not.toHaveBeenCalled();
+  });
 
   it("既存 controller がある状態で installed になったら更新トーストを表示する", async () => {
     await triggerUpdateInstalled();

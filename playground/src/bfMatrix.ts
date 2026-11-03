@@ -13,21 +13,21 @@ const BF_CELL_BG_ERROR = "#444";
 const BF_CELL_BG_NO_RISK = "#222";
 
 /**
- * BF を hue（緑 → 黄 → 赤）に対応付けて HSL 文字列を返す。
- *
- * 注意: 定数を式から導出しないこと。0.8 は「1.4 - 0.6」だが JS の
- * 浮動小数では 1.4 - 0.6 === 0.7999999999999998 になり hue が僅かにずれる。
- * 見た目を 1px も変えないため、リテラルのまま据え置く。
+ * BF を hue（黄 → 赤）に対応付けて HSL 文字列を返す。
+ * ICM では BF が 1.0 を下回らないので 1.0 (黄) から 2.0 (赤) に割り当てる。
+ * 以前は 1.4 で赤が頭打ちになり、バブルの卓 (BF 1.5〜2.0) が全セル同じ赤になっていた。
  */
-function bfBackground(bf: number): string {
+const BF_COLOR_MIN = 1.0;
+const BF_COLOR_MAX = 2.0;
+const HUE_YELLOW = 60;
+export function bfBackground(bf: number): string {
   if (!Number.isFinite(bf)) return BF_CELL_BG_ERROR;
-  const clamped = Math.max(0.6, Math.min(1.4, bf));
-  // 0.6 → hue 130 (deep green), 1.0 → hue 60 (yellow), 1.4 → hue 0 (red)
-  const t = (clamped - 0.6) / 0.8;
-  const hue = 130 - t * 130;
-  // 1.0 付近は彩度を抑え、両端は強める
-  const sat = 50 + Math.abs(clamped - 1.0) * 30;
-  const light = 32 - Math.abs(clamped - 1.0) * 4;
+  const clamped = Math.max(BF_COLOR_MIN, Math.min(BF_COLOR_MAX, bf));
+  const t = (clamped - BF_COLOR_MIN) / (BF_COLOR_MAX - BF_COLOR_MIN);
+  const hue = HUE_YELLOW * (1 - t);
+  // 1.0 付近は彩度を抑え、赤に近づくほど強める
+  const sat = 50 + t * 25;
+  const light = 32 - t * 4;
   return `hsl(${hue.toFixed(0)}, ${sat.toFixed(0)}%, ${light.toFixed(0)}%)`;
 }
 

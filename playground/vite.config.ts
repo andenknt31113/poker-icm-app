@@ -43,7 +43,7 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        // 事前計算 equity データ (約390KB、デプロイ間でほぼ不変) をアプリ本体と
+        // 事前計算 equity データ (HU マトリクス約185KB、デプロイ間でほぼ不変) をアプリ本体と
         // 別チャンクに分ける。デプロイごとに SW が再取得するのは本体 (~135KB) だけに
         // なり、取得も並列化される。読み込みタイミング自体は静的 import のまま。
         manualChunks(id: string): string | undefined {

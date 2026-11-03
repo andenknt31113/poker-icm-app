@@ -639,9 +639,8 @@ body {
   margin-bottom: 14px;
   box-shadow: var(--hero-summary-shadow);
   position: sticky;
-  top: 4px;
+  top: calc(var(--safe-area-top, env(safe-area-inset-top, 0px)) + 4px);
   z-index: 50;
-  backdrop-filter: blur(8px);
 }
 .hero-summary.active {
   display: block;
@@ -706,7 +705,7 @@ body {
 }
 .hero-summary-row {
   display: grid;
-  grid-template-columns: 56px 1fr 1fr 1fr;
+  grid-template-columns: 56px 1fr 1fr;
   gap: 4px;
   align-items: center;
   padding: 4px 4px;
@@ -1494,6 +1493,11 @@ input[type="range"]::-moz-range-thumb {
   font-weight: bold;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
+/* 席順でありえない向き (BB から先にオールインなど) は押せないことが分かるように薄くする */
+.direction-tab:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 
 /* ===== ステッパー (+/- ボタン付き数値入力) ===== */
 .num-stepper {
@@ -2162,13 +2166,17 @@ input[type="range"]::-moz-range-thumb {
   padding: 2px 0;
 }
 .scenario-fact-key {
+  flex-shrink: 0;
   color: var(--muted);
+  white-space: nowrap;
 }
+/* ペイ構造など長い値は列幅で折り返す (nowrap だと右のスタック表示に重なる) */
 .scenario-fact-val {
+  min-width: 0;
   font-family: var(--mono);
   color: var(--text);
   text-align: right;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 .scenario-hero-stack {
   font-family: var(--mono);
@@ -2273,6 +2281,13 @@ input[type="range"]::-moz-range-thumb {
   top: 50%;
   transform: translate(-50%, -50%);
   font-size: 32px;
+}
+.practice-range-details {
+  margin: 12px 0;
+}
+.practice-range-details > summary {
+  padding: 12px 0;
+  cursor: pointer;
 }
 .practice-hand {
   font-size: 12px;
@@ -3328,5 +3343,12 @@ body:has(.tutorial-intro-card) #practice-progress {
 #sec-icm,
 #sec-hand,
 #sec-nash {
-  scroll-margin-top: 170px;
+  scroll-margin-top: calc(170px + var(--safe-area-top, env(safe-area-inset-top, 0px)));
+}
+
+/* BB はスタックの単位なので 1 で固定。編集できないことが見て分かるようにする */
+#nash-bb[readonly] {
+  color: var(--muted);
+  background: transparent;
+  cursor: default;
 }
