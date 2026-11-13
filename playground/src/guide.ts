@@ -167,6 +167,15 @@ function ensureGuideModal(): HTMLDivElement {
 function openGuideModal(): void {
   ensureGuideModal().classList.remove("hidden");
 }
+/** 使い方ガイドを開き、指定した節 (details の id) を開いてそこまでスクロールする。 */
+export function openGuideAt(sectionId: string): void {
+  const modal = ensureGuideModal();
+  modal.classList.remove("hidden");
+  const section = modal.querySelector<HTMLDetailsElement>(`#${sectionId}`);
+  if (!section) return;
+  section.open = true;
+  section.scrollIntoView({ block: "start" });
+}
 function closeGuideModal(): void {
   guideModalEl?.classList.add("hidden");
 }
@@ -236,6 +245,7 @@ function insertFirstHintBar(): void {
 /** ガイド関連 (❓ボタン・初回ヒントバー・Escape キー) の配線。main.ts から一度だけ呼ぶ。 */
 export function initGuide(): void {
   document.getElementById("help-btn")?.addEventListener("click", openGuideModal);
+  document.getElementById("open-limits")?.addEventListener("click", () => openGuideAt("guide-limits"));
   document.getElementById("footer-legal-link")?.addEventListener("click", () => {
     openLegalModal();
   });

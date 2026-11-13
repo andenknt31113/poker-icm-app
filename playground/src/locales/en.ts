@@ -373,6 +373,34 @@ export const en: Record<string, string> = {
             </ol>
           </div>
         </details>
+        <details class="howto" id="guide-limits">
+          <summary>📐 Assumptions and limits</summary>
+          <div class="howto-body">
+            <h4>What is calculated</h4>
+            <ul>
+              <li><strong>ICM uses the Malmuth-Harville method</strong>: finish probabilities proportional to stacks, converted to prize equity.</li>
+              <li><strong>Required equity</strong> compares three outcomes with ICM: folding, calling and winning, calling and losing. Only with a manually entered call amount, or when no seat is the BB, it falls back to a Bubble Factor estimate.</li>
+              <li><strong>Hand equity</strong> comes from a 169 × 169 matchup table (1,000,000 simulated deals per matchup), weighted for the cards your hand removes.</li>
+              <li><strong>Nash</strong> solves the two-player push-or-fold / call-or-fold equilibrium in prize equity.</li>
+              <li>Blinds assume a <strong>big blind ante</strong> (the BB posts the ante for the table).</li>
+            </ul>
+            <h4>What is not calculated</h4>
+            <ul>
+              <li><strong>Only two players are all-in.</strong> Calls from players still to act (over-calls) are not calculated; a warning appears when that applies.</li>
+              <li><strong>Future hands are ignored.</strong> By the nature of ICM, upcoming blinds and skill differences are not included.</li>
+              <li><strong>Options other than all-in</strong> (2BB opens, limps, 3-bets) are not handled. Shoving results are meant for effective stacks of 12BB or less and are shown as reference only above 20BB.</li>
+              <li><strong>Up to 9 players.</strong> Multi-table bubbles cannot be entered.</li>
+              <li>The opponent’s <strong>“Top X%” is ordered by equity against a random hand</strong>. Real opponents may include more suited connectors and small pairs; use “Custom edit” to pick their range directly.</li>
+            </ul>
+            <h4>What has been checked</h4>
+            <ul>
+              <li>ICM: compared with a separate brute-force implementation on 402 spots (2–9 players); differences below 0.000000001.</li>
+              <li>Hand equity: matches well-known values such as AA vs KK 82.0%, AKo vs QQ 43.2%, AA vs random 85.2%.</li>
+              <li>Nash: heads-up, 10BB, winner takes all gives push 58.1% / call 37.4%; a separate calculation confirms neither side gains even 0.001BB by deviating.</li>
+            </ul>
+            <p class="hint">Results are a guide. At the table, also weigh your opponent’s tendencies and the players behind.</p>
+          </div>
+        </details>
         <details class="howto">
           <summary>📚 Quick term glossary</summary>
           <div class="howto-body">
@@ -403,10 +431,9 @@ export const en: Record<string, string> = {
           <summary>❓ What is “Top X%”</summary>
           <div class="howto-body">
             <p>
-              “Top X%” is a simplified top-X% range based on this tool’s own hand-strength ranking.
-              Because the assumptions (sample size, scenarios, etc.) differ from other tools like
-              Sklansky-Chubukov, <strong>the same X% may not match the exact hands or numbers</strong>.
-              Use it as a rough guide to grasp tendencies.
+              The opponent’s “Top X%” takes X% of all hand combinations, <strong>ordered by equity against a random hand</strong>.
+              Other tools rank hands differently (for example by how well they shove), so <strong>the same X% may contain different hands</strong>.
+              To match a real opponent, pick the range directly with “Custom edit”.
             </p>
           </div>
         </details>
@@ -416,6 +443,7 @@ export const en: Record<string, string> = {
 
   // ===== 初回ヒントバー (guide.ts) =====
   "firstHint.html": "👋 New here? Tap a <strong>preset</strong> → see results in <strong>📊</strong>, or practice in <strong>🎲</strong>",
+  "calc.limitsLink": "Assumptions and limits ›",
   "firstHint.close.aria": "Close",
 
   // ===== PWA (pwa.ts) =====

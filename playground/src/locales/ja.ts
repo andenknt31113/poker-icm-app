@@ -369,6 +369,34 @@ export const ja: Record<string, string> = {
             </ol>
           </div>
         </details>
+        <details class="howto" id="guide-limits">
+          <summary>📐 計算の前提と限界</summary>
+          <div class="howto-body">
+            <h4>何を計算しているか</h4>
+            <ul>
+              <li><strong>ICM は Malmuth-Harville 方式</strong>。スタックの比で各順位の確率を決め、賞金期待値に直します。</li>
+              <li><strong>必要勝率</strong>は、降りた時・コールして勝った時・負けた時の3通りを ICM で比べて出します。コール額を手入力したときと、BB の人が決まっていない卓だけ、BF を使った概算になります。</li>
+              <li><strong>ハンドの勝率</strong>は 169 種類どうしの対戦表（1組あたり 100 万回のシミュレーション）を、手札でカードが減る分も数えて使います。</li>
+              <li><strong>Nash</strong> は2人の「押すか降りるか／コールするか降りるか」の均衡を、賞金期待値で解きます。</li>
+              <li>ブラインドは <strong>BB アンティ</strong>（BB の人が全員分のアンティを払う）前提です。</li>
+            </ul>
+            <h4>計算していないこと</h4>
+            <ul>
+              <li><strong>オールインに関わるのは2人だけ</strong>。後ろに残っている人がコールしてくる場合（オーバーコール）は計算せず、該当するときに注意を出します。</li>
+              <li><strong>次のハンド以降は見ません</strong>。ICM の性質上、すぐブラインドが回ってくるか、プレイヤーの上手さの差などは入りません。</li>
+              <li><strong>オールイン以外の選択肢</strong>（2BB オープン、リンプ、3ベット）は扱いません。自分から押す計算は実効 12BB 以下が目安で、20BB を超えると参考表示にします。</li>
+              <li><strong>プレイヤーは 9 人まで</strong>。複数卓にまたがるバブルは入力できません。</li>
+              <li>相手レンジの<strong>「上位 X%」は対ランダム勝率の順</strong>です。実際の相手はスーテッドコネクターや小さいペアを多めに含むことがあるので、気になるときは「カスタム編集」で相手のレンジを直接選んでください。</li>
+            </ul>
+            <h4>確かめたこと</h4>
+            <ul>
+              <li>ICM: 全順列を数える別の実装と 402 局面（2〜9人）で突き合わせ、差は 0.000000001 未満。</li>
+              <li>ハンドの勝率: AA vs KK 82.0%、AKo vs QQ 43.2%、AA 対ランダム 85.2% など、よく知られた値と一致。</li>
+              <li>Nash: 2人・10BB・勝者総取りで push 58.1% / call 37.4%。どちらが戦略を変えても 0.001BB も得をしないことを別の計算で確認。</li>
+            </ul>
+            <p class="hint">計算結果は判断の目安です。実戦では相手の傾向や後ろの人数も合わせて考えてください。</p>
+          </div>
+        </details>
         <details class="howto">
           <summary>📚 用語ミニ解説</summary>
           <div class="howto-body">
@@ -396,13 +424,12 @@ export const ja: Record<string, string> = {
           </div>
         </details>
         <details class="howto">
-          <summary>❓ 「Top X%」とは</summary>
+          <summary>❓ 「上位 X%」とは</summary>
           <div class="howto-body">
             <p>
-              「Top X%」は本ツール独自のハンド強度ランキングに基づく上位 X% の簡易レンジです。
-              Sklansky-Chubukov など他ツールのランキングとは前提（サンプル数・想定シナリオなど）が異なるため、
-              <strong>同じ X% でも具体的なハンドの構成や数字が一致しない場合があります</strong>。
-              あくまで傾向を掴むための目安としてご利用ください。
+              相手のレンジを決める「上位 X%」は、<strong>ランダムなハンドに対する勝率が高い順</strong>に、全ハンドの組合せの X% ぶんを取ったものです。
+              他のツールの順位（プッシュ向きの順位など）とは並びが違うため、<strong>同じ X% でも中身のハンドが一致しないことがあります</strong>。
+              実際の相手に合わせたいときは「カスタム編集」で直接選んでください。
             </p>
           </div>
         </details>
@@ -412,6 +439,7 @@ export const ja: Record<string, string> = {
 
   // ===== 初回ヒントバー (guide.ts) =====
   "firstHint.html": "👋 はじめてなら: <strong>プリセット</strong>をタップ → <strong>📊</strong>で結果を見る、か <strong>🎲</strong>で練習",
+  "calc.limitsLink": "計算の前提と限界を見る ›",
   "firstHint.close.aria": "閉じる",
 
   // ===== PWA (pwa.ts) =====

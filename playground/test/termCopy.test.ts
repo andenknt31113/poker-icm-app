@@ -23,4 +23,18 @@ describe("用語説明の文言", () => {
       }
     }
   });
+
+  it("ガイドに「計算の前提と限界」があり、扱わない場面と確かめた内容を載せる", () => {
+    const jaBody = (ja as Record<string, string>)["guide.body.html"]!;
+    const enBody = (en as Record<string, string>)["guide.body.html"]!;
+    for (const body of [jaBody, enBody]) {
+      expect(body).toContain('id="guide-limits"');
+      expect(body).toContain("Malmuth-Harville");
+      expect(body).toContain("58.1%");
+    }
+    expect(jaBody).toContain("オールインに関わるのは2人だけ");
+    expect(jaBody).toContain("プレイヤーは 9 人まで");
+    expect(jaBody).not.toContain("本ツール独自のハンド強度ランキング");
+    expect(enBody).toContain("Only two players are all-in");
+  });
 });

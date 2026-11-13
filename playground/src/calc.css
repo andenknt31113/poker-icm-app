@@ -244,3 +244,8 @@
   .hero-summary.floating .hero-summary-value,
   .hero-summary.floating .hero-summary-item.primary .hero-summary-value { font-size: 14px; }
 }
+
+/* ----- 計算の前提と限界への入口 ----- */
+.workspace .limits-link { order: 19; text-align: center; }
+.limits-link button { min-height: 44px; padding: 8px 16px; border: 0; background: transparent; color: var(--muted); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.limits-link button:hover { color: var(--accent); }
