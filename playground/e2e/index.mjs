@@ -30,6 +30,7 @@ import testSummaryCompact from "./tests/13-summary-compact.mjs";
 import testWorkspaceFlow from "./tests/14-workspace-flow.mjs";
 import testNashInvalidation from "./tests/15-nash-invalidation.mjs";
 import testCompactUsability from "./tests/16-compact-usability.mjs";
+import testPracticeHidden from "./tests/17-practice-hidden.mjs";
 
 async function main() {
   const t0 = Date.now();
@@ -45,11 +46,15 @@ async function main() {
 
   const tests = [
     {
+      name: "既定は練習を非表示: タブバーなし・計算1画面・案内とヘルプに練習の記述なし",
+      run: () => testPracticeHidden({ baseURL, createContext }),
+    },
+    {
       name: "コンパクト入力・役割交換・空入力・スマホ表示",
       run: () => testCompactUsability({ baseURL, createContext }),
     },
     {
-      name: "3タブ レンダリング・ダーク固定 (console/pageerror ゼロ)",
+      name: "2タブ (練習を出した状態) レンダリング・ダーク固定 (console/pageerror ゼロ)",
       run: () => testTabsTheme({ baseURL, createContext }),
     },
     {

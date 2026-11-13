@@ -422,6 +422,14 @@
 
       <section class="card" data-tab="analyze" data-analysis-panel="nash" id="sec-nash">
         <h2 data-i18n="nash.h2">Nash 均衡 (HU push/fold)</h2>
+        <p class="hint" data-i18n="nash.table.lead">誰が最初に押すかごとに、押せるレンジと、後ろの人がコールできるレンジです。行をタップすると表が開きます。</p>
+        <p id="nash-table-status" class="hint" role="status"></p>
+        <div id="nash-table" class="nash-table"></div>
+        <div class="nash-actions">
+          <button type="button" class="workspace-secondary" data-scroll-spot data-i18n="nash.editSpot">局面を変更する</button>
+        </div>
+        <!-- 旧表示 (自分 / 相手の2人ぶんだけ)。一覧表に置き換えたので画面には出さない -->
+        <div class="nash-legacy" hidden>
         <div id="nash-context" class="nash-context" aria-live="polite"></div>
         <p id="nash-status" class="hint" role="status"></p>
         <div id="nash-depth-note" class="warn-box hidden"></div>
@@ -440,10 +448,11 @@
             <div id="nash-bb-grid" class="hand-grid"></div>
           </div>
         </div>
+        <p id="nash-others" class="hint hidden"></p>
         <div class="nash-actions">
         <button id="nash-solve" type="button" class="solve-btn" data-i18n="nash.solveBtn">再計算</button>
         <button type="button" class="workspace-secondary" data-swap-players data-i18n="setup.players.swap">自分 ⇄ 相手</button>
-        <button type="button" class="workspace-secondary" data-scroll-spot data-i18n="nash.editSpot">局面を変更する</button>
+        </div>
         </div>
         <details class="nash-explanation">
         <summary data-i18n="nash.explanation">計算の前提・注意点を見る</summary>

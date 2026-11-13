@@ -246,7 +246,7 @@
 }
 
 /* ----- 計算の前提と限界への入口 ----- */
-.workspace .limits-link { order: 19; text-align: center; }
+.workspace section.limits-link[data-tab="analyze"]:not(#sec-hand):not(.workspace-section-head) { order: 19; text-align: center; }
 .limits-link button { min-height: 44px; padding: 8px 16px; border: 0; background: transparent; color: var(--muted); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .limits-link button:hover { color: var(--accent); }
 
@@ -268,3 +268,50 @@
 #chop-table .chop-chip { color: var(--muted); }
 #chop-total { margin: 8px 0; }
 .chop-units button:disabled { opacity: 0.35; cursor: default; }
+
+/* ----- 練習を出さないとき (features.isPracticeEnabled が false) ----- */
+/* タブは計算だけなのでタブバーを隠し、案内・ヘルプの練習の記述も隠す */
+body.no-practice .tab-bar,
+body.no-practice [data-feature="practice"],
+body.no-practice section[data-tab="practice"] { display: none !important; }
+body.no-practice.workspace .container { padding-bottom: 40px; }
+
+/* ----- Nash: 全員ぶんの一覧表 ----- */
+.nash-table { display: flex; flex-direction: column; gap: 10px; margin: 10px 0 14px; }
+.nash-group { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #121c17; }
+.nash-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "label pct" "text text";
+  gap: 2px 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-top: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.nash-group > .nash-row:first-child { border-top: 0; }
+.nash-row.push { background: #1a2a21; }
+.nash-row.open { background: #22352a; }
+.nash-row-label { grid-area: label; font-size: 14px; font-weight: 700; }
+.nash-row.call .nash-row-label { font-weight: 500; padding-left: 4px; }
+.nash-row-branch { color: var(--muted); margin-right: 6px; }
+.nash-row-pct { grid-area: pct; font-family: var(--mono); font-size: 16px; font-weight: 700; }
+.nash-row.push .nash-row-pct { color: var(--bad); }
+.nash-row.call .nash-row-pct { color: var(--accent); }
+.nash-row-text { grid-area: text; font-family: var(--mono); font-size: 11px; line-height: 1.5; color: var(--muted); overflow-wrap: anywhere; }
+.nash-row.call .nash-row-text { padding-left: 22px; }
+.nash-row-grid { margin: 0 10px 12px; }
+.nash-group-note { margin: 0; padding: 8px 12px; border-top: 1px solid var(--border); color: var(--warn); }
+.nash-legacy[hidden] { display: none !important; }
+
+/* Nash: オーバーコールの行 */
+.nash-row { grid-template-areas: "label pct" "text text" "oc oc"; }
+.nash-row-oc { grid-area: oc; padding-left: 22px; font-size: 11px; color: var(--warn); }
+.nash-row.overcall { background: #0f1813; }
+.nash-row.overcall .nash-row-label { font-weight: 500; padding-left: 14px; font-size: 13px; }
+.nash-row.overcall .nash-row-pct { color: var(--warn); font-size: 14px; }
+.nash-row.overcall .nash-row-text { padding-left: 46px; }

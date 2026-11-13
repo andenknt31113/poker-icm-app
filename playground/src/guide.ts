@@ -91,7 +91,7 @@ function renderOnboardingStep(): void {
     } else {
       footerActions.innerHTML = `
         <div class="onboarding-cta-row">
-          <button type="button" class="solve-btn" id="onboarding-cta-practice">${t("onboarding.cta.practice")}</button>
+          <button type="button" class="solve-btn" id="onboarding-cta-practice" data-feature="practice">${t("onboarding.cta.practice")}</button>
           <button type="button" class="solve-btn" id="onboarding-cta-setup" style="background: var(--card); color: var(--text); border: 1px solid var(--border);">${t("onboarding.cta.setup")}</button>
         </div>
       `;

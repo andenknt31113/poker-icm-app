@@ -139,7 +139,7 @@ export const ja: Record<string, string> = {
   "hand.nashRange.donePush": "相手が Nash どおりに押すレンジ（全ハンドの {pct}%）を入れました。局面を変えたら、もう一度押してください。",
   "hand.nashRange.doneCall": "相手が Nash どおりにコールするレンジ（全ハンドの {pct}%）を入れました。局面を変えたら、もう一度押してください。",
   "hand.nashRange.failed": "この局面では Nash を計算できません。自分と相手、スタック、賞金を確認してください。",
-  "hand.nashRange.multiway": "2人だけで解いた結果です。押す側の後ろにあと {n} 人いるので、実際のレンジはこれより狭くなります。",
+  "hand.nashRange.multiway": "押す人の後ろにいるあと {n} 人のコールも入れて解いています。",
   "hand.thumb.aria": "相手のレンジを表で見る",
   "hand.thumb.caption": "表で見る",
   "calc.summary.chipOnly": "チップだけなら {v}%",
@@ -185,8 +185,21 @@ export const ja: Record<string, string> = {
   "result.eq.autofillBtn": "\n          🔄 自動算出に戻す\n        ",
 
   // ===== index.html: ナッシュ均衡 =====
-  "nash.h2": "Nash（2人の押し引き）",
-  "nash.hint.html": "\n          先に動く方が push、後に動く方が call する2人の Nash 均衡を計算します（ICM反映済み）。\n          <br />\n          ※ HU 2-way 想定。BTN+BB のように間に他プレイヤーがいる場合は警告が出ます。\n          <br />\n          ※ <strong>プッシュ or フォールドの2択</strong>を前提にした均衡です。目安は実効 12BB 以下。12〜20BB では注意を表示し、20BB を超えると範囲外として結果を折りたたみます（実戦では 2BB オープンやリンプが入るため）。\n          <br />\n          ブラインドとアンティは実際のポジションの人が払う前提です（BTN からのプッシュなら自分は blind なし、BB ante は BB の人）。この画面を開くと自動計算します。\n        ",
+  "nash.h2": "Nash（押すか降りるか）",
+  "nash.table.lead": "誰が最初に押すかごとに、押せるレンジと、後ろの人がコールできるレンジです。行をタップすると表が開きます。",
+  "nash.table.push": "{pos} が押す",
+  "nash.table.call": "{pos} がコール",
+  "nash.table.overcall": "{pos} もコール",
+  "nash.table.overcallSummary": "さらにコール: {list}",
+  "nash.table.loading": "勝率表を読み込み中…",
+  "nash.table.noOvercall": "3人の勝率表を読めなかったため、2人目のコール（オーバーコール）は入っていません。",
+  "nash.table.none": "なし",
+  "nash.table.calculating": "計算中… ({done}/{total})",
+  "nash.table.deep": "実効 {eff}BB は、押すか降りるかの2択で考える深さを超えています。参考値として見てください。",
+  "nash.table.needPositions": "全員の位置（BTN・SB・BB など）を設定すると表示されます。",
+  "nash.others": "後ろのほかの人がコールするレンジ: {list}",
+  "nash.multiway.note.html": "押す人の後ろにいる {n} 人（{list}）のコールも入れて解いています。",
+  "nash.hint.html": "先に動く方が押し、後ろの人がコールするか降りるかを決める Nash 均衡を、賞金期待値 (ICM) で計算します。<br />押す人の後ろに残っている全員のコールと、誰かがコールした後の2人目のコール（オーバーコール）まで入れて解きます。3人目以降のコール（4人以上の同時オールイン）は入れていません。<br />※ <strong>押すか降りるかの2択</strong>を前提にした均衡です。目安は実効 12BB 以下。12〜20BB では注意を表示し、20BB を超えると範囲外として結果を折りたたみます（実戦では 2BB オープンやリンプが入るため）。<br />ブラインドとアンティは実際のポジションの人が払う前提です（BTN から押すなら自分はブラインドなし、BB アンティは BB の人）。この画面を開くと自動で計算します。",
   "nash.ante.label": "\n            アンティ合計\n            ",
   "nash.solveBtn": "再計算",
   "nash.explanation": "計算の前提・注意点を見る",
@@ -285,29 +298,28 @@ export const ja: Record<string, string> = {
   "onboarding.step1.body": `
       <p>
         トーナメントの「チップ枚数」と「賞金への価値」は同じではありません。
-        本アプリはこの <strong>ICM プレッシャー</strong>を、数字で『計算』しながら
-        クイズで『練習』もできます。
+        本アプリはこの <strong>ICM プレッシャー</strong>を、数字で『計算』します。<span data-feature="practice">クイズで『練習』もできます。</span>
       </p>
       <ul class="onboarding-tab-list">
         <li><span class="onboarding-tab-icon">📊</span> 計算（スタックと賞金を入れると、必要勝率・コールできるハンド・Nash がその場で出る）</li>
-        <li><span class="onboarding-tab-icon">🎲</span> 練習（クイズで実戦感覚）</li>
+        <li data-feature="practice"><span class="onboarding-tab-icon">🎲</span> 練習（クイズで実戦感覚）</li>
       </ul>
       <p class="hint">扱うのはオールインが絡む判断（相手のオールインにコールするか、ショートスタックで押すか）です。2BB オープンやリンプは計算しません。</p>
     `,
   "onboarding.step2.title": "⚡ まず触ってみる",
   "onboarding.step2.body": `
-      <p>おすすめの入り口は2つあります。</p>
+      <p>まずは数字を動かしてみてください。</p>
       <ol>
         <li>
           <strong>📊 計算</strong>でスタックを打ち換える（「例題・保存した局面」から選んでも OK）→
           すぐ下の必要勝率とハンド表を確認する
         </li>
-        <li>
+        <li data-feature="practice">
           <strong>🎲 練習</strong>タブでクイズに答えながら感覚を掴む
         </li>
       </ol>
       <p class="hint">
-        どちらから始めても OK。困ったときはヘッダー右上の <strong>❓</strong> から、
+        困ったときはヘッダー右上の <strong>❓</strong> から、
         いつでも使い方ガイドと用語解説を開けます。
       </p>
     `,
@@ -321,7 +333,7 @@ export const ja: Record<string, string> = {
   "guide.close.aria": "閉じる",
   // アプリ版のみ表示 (guide.ts proNoteHtml)。価格は書かない。
   "guide.proNote.html":
-    "ℹ️ シナリオプリセット・計算結果・ナッシュ均衡・練習はすべて無料。<strong>4人までのテーブルはスタック・ペイ構造とも自由に編集できます</strong>。5人以上のテーブルの編集とシナリオ保存は 🔒 Pro（買い切り）機能です。",
+    "ℹ️ シナリオプリセット・計算結果・ナッシュ均衡はすべて無料。<strong>4人までのテーブルはスタック・ペイ構造とも自由に編集できます</strong>。5人以上のテーブルの編集とシナリオ保存は 🔒 Pro（買い切り）機能です。",
   "guide.body.html": `
         <p class="guide-intro">
           このツールはショートスタック（〜20bb）のオールイン局面に特化しています。
@@ -372,7 +384,7 @@ export const ja: Record<string, string> = {
             </ol>
           </div>
         </details>
-        <details class="howto">
+        <details class="howto" data-feature="practice">
           <summary>🎲 練習 — できること・使い方</summary>
           <div class="howto-body">
             <p>ランダムなシナリオでコール/フォールド判断や Risk Premium 当て、push 判定を練習できる画面。</p>
@@ -391,12 +403,12 @@ export const ja: Record<string, string> = {
               <li><strong>ICM は Malmuth-Harville 方式</strong>。スタックの比で各順位の確率を決め、賞金期待値に直します。</li>
               <li><strong>必要勝率</strong>は、降りた時・コールして勝った時・負けた時の3通りを ICM で比べて出します。コール額を手入力したときと、BB の人が決まっていない卓だけ、BF を使った概算になります。</li>
               <li><strong>ハンドの勝率</strong>は 169 種類どうしの対戦表（1組あたり 100 万回のシミュレーション）を、手札でカードが減る分も数えて使います。</li>
-              <li><strong>Nash</strong> は2人の「押すか降りるか／コールするか降りるか」の均衡を、賞金期待値で解きます。</li>
+              <li><strong>Nash</strong> は「押すか降りるか／コールするか降りるか」の均衡を、賞金期待値で解きます。押す人の後ろに残っている全員のコールと、2人目のコール（オーバーコール）まで入れます。3人が同時にオールインしたときの勝率は、3つ組 約82万通りを事前に計算した表を使います。</li>
               <li>ブラインドは <strong>BB アンティ</strong>（BB の人が全員分のアンティを払う）前提です。</li>
             </ul>
             <h4>計算していないこと</h4>
             <ul>
-              <li><strong>オールインに関わるのは2人だけ</strong>。後ろに残っている人がコールしてくる場合（オーバーコール）は計算せず、該当するときに注意を出します。</li>
+              <li><strong>4人以上が同時にオールインになる場合は計算しません</strong>。Nash は3人の同時オールインまで入れます。必要勝率とハンド表（コールの判断）は、自分と相手の2人だけで計算します。</li>
               <li><strong>次のハンド以降は見ません</strong>。ICM の性質上、すぐブラインドが回ってくるか、プレイヤーの上手さの差などは入りません。</li>
               <li><strong>オールイン以外の選択肢</strong>（2BB オープン、リンプ、3ベット）は扱いません。自分から押す計算は実効 12BB 以下が目安で、20BB を超えると参考表示にします。</li>
               <li><strong>プレイヤーは 9 人まで</strong>。複数卓にまたがるバブルは入力できません。</li>
@@ -407,6 +419,7 @@ export const ja: Record<string, string> = {
               <li>ICM: 全順列を数える別の実装と 402 局面（2〜9人）で突き合わせ、差は 0.000000001 未満。</li>
               <li>ハンドの勝率: AA vs KK 82.0%、AKo vs QQ 43.2%、AA 対ランダム 85.2% など、よく知られた値と一致。</li>
               <li>Nash: 2人・10BB・勝者総取りで push 58.1% / call 37.4%。どちらが戦略を変えても 0.001BB も得をしないことを別の計算で確認。</li>
+              <li>3人以上の Nash: HoldemResources の無料 Nash ICM 計算と、3人・10BB の局面で照合（押す 33.0% / 32.1%、コール 18.1% / 17.8%、オーバーコール 13.1% / 12.8%、最後の人のコール 24.3% / 24.3%）。差は、押しても降りてもほぼ同じ損得の境界のハンドです。</li>
             </ul>
             <p class="hint">計算結果は判断の目安です。実戦では相手の傾向や後ろの人数も合わせて考えてください。</p>
           </div>
@@ -654,11 +667,6 @@ export const ja: Record<string, string> = {
       <p>同額を賭け合う勝負では: <code>RP = BF ÷ (BF + 1) − 50%</code></p>
     `,
   // ===== ナッシュ均衡 (nashUI.ts) =====
-  "nash.overcall.between": "<strong>{n}</strong> 人が pusher と caller の間 ({list})",
-  "nash.overcall.behind": "<strong>{n}</strong> 人が caller の後ろ ({list})",
-  "nash.overcall.callerTighten": "<br />→ <strong>caller ({callerPos}) も狭く call</strong> すべき (後ろに {n} 人控えてるため)。",
-  "nash.overcall.callerOk": "<br />→ caller ({callerPos}) は概ね HU Nash 通り (介在者が降りた前提なので)。",
-  "nash.overcall.main.html": "\n    ⚠ <strong>HU Nash 想定外の介入者あり</strong>: {parts}。\n    <br />→ <strong>pusher ({pusherPos}) は HU Nash よりさらに狭く push</strong> すべき\n    （介在者が強いハンドで over-call/3bet する分、fold equity が減るため）。\n    {callerAdvice}\n    <br />当 Nash 結果は HU 2-way 想定の参考値として読んでください。\n  ",
   "nash.err.needHV": "🎯自分と⚔️相手をそれぞれ1人ずつ指定してください",
   "nash.err.needPayout": "ペイ構造を入力してください",
   "nash.err.sb": "SB が不正",

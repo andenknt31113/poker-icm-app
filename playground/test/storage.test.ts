@@ -51,6 +51,7 @@ describe("STORAGE_KEYS (永続化キーの凍結)", () => {
       practiceStats: "poker-icm-practice-stats",
       practiceReview: "poker-icm-practice-review",
       practiceHistory: "poker-icm-practice-history",
+      practiceEnabled: "poker-icm-practice-enabled",
     });
   });
 

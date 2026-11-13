@@ -29,6 +29,7 @@ import { STORAGE_KEYS, readJson, writeJson } from "./storage.js";
 import { buildPushSpot, pushDepthTier } from "./pushSpot.js";
 import { fmt } from "./format.js";
 import { nashRangeForSpot } from "./nashRange.js";
+import { loadThreeWayTable } from "./threeWay.js";
 
 // ===== DOM 参照 (ハンド比較タブ) =====
 const pushRangeInput = $<HTMLInputElement>("push-range");
@@ -595,8 +596,10 @@ export function initHandRange(onChange: () => void): void {
 
   // この局面の Nash を相手レンジ (カスタム) に入れる。上位 X% は対ランダム勝率順で、
   // 小さいペアやスーテッドコネクターが入りにくいため、実際の押し引きに近い形を1タップで置けるようにする。
-  document.getElementById("use-nash-range")?.addEventListener("click", () => {
+  document.getElementById("use-nash-range")?.addEventListener("click", async () => {
     const note = document.getElementById("nash-range-note");
+    // オーバーコールまで入れた Nash タブと同じ結果にするため、3 人の勝率表を先に読む (失敗しても続ける)
+    await loadThreeWayTable();
     const heroIdx = players.findIndex((p) => p.role === "hero");
     const villainIdx = players.findIndex((p) => p.role === "villain");
     const villainPushes = direction === "callBack";

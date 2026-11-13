@@ -32,9 +32,9 @@ describe("用語説明の文言", () => {
       expect(body).toContain("Malmuth-Harville");
       expect(body).toContain("58.1%");
     }
-    expect(jaBody).toContain("オールインに関わるのは2人だけ");
+    expect(jaBody).toContain("4人以上が同時にオールインになる場合は計算しません");
     expect(jaBody).toContain("プレイヤーは 9 人まで");
     expect(jaBody).not.toContain("本ツール独自のハンド強度ランキング");
-    expect(enBody).toContain("Only two players are all-in");
+    expect(enBody).toContain("Four or more players all-in at once are not calculated");
   });
 });

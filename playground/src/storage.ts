@@ -62,6 +62,8 @@ export const STORAGE_KEYS = {
   practiceReview: "poker-icm-practice-review",
   /** 練習の解答履歴 (成績の推移グラフ用)。 */
   practiceHistory: "poker-icm-practice-history",
+  /** 練習タブを表示するか ("1" のときだけ表示。既定は非表示)。 */
+  practiceEnabled: "poker-icm-practice-enabled",
 } as const;
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];

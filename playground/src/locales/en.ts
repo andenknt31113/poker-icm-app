@@ -145,7 +145,7 @@ export const en: Record<string, string> = {
   "hand.nashRange.donePush": "Loaded the range the opponent shoves at Nash ({pct}% of hands). Tap again after changing the spot.",
   "hand.nashRange.doneCall": "Loaded the range the opponent calls with at Nash ({pct}% of hands). Tap again after changing the spot.",
   "hand.nashRange.failed": "Nash cannot be calculated for this spot. Check the roles, stacks and payouts.",
-  "hand.nashRange.multiway": "This is solved for two players only. With {n} more player(s) behind the shover, the real range is tighter.",
+  "hand.nashRange.multiway": "Calls from the other {n} player(s) behind the shover are included.",
   "hand.thumb.aria": "Show their range as a chart",
   "hand.thumb.caption": "Open chart",
   "calc.summary.chipOnly": "Chips only: {v}%",
@@ -191,8 +191,21 @@ export const en: Record<string, string> = {
   "result.eq.autofillBtn": "\n          🔄 Back to auto-calc\n        ",
 
   // ===== index.html: ナッシュ均衡 =====
-  "nash.h2": "Nash (two-player push/fold)",
-  "nash.hint.html": "\n          Computes the two-player Nash equilibrium where the earlier position pushes and the later one calls, ICM included.\n          <br />\n          ※ Assumes HU 2-way. A warning appears when other players sit between (e.g. BTN + BB).\n          <br />\n          ※ This equilibrium assumes a <strong>push-or-fold only</strong> game. Guide: effective 12BB or less. From 12 to 20BB a caution is shown, and above 20BB the result is folded away as out of range (real play adds min-raises and limps).\n          <br />\n          Blinds and antes are paid by the actual positions (a BTN shove posts no blind; the BB pays the BB ante). Opening this view calculates automatically.\n        ",
+  "nash.h2": "Nash (push or fold)",
+  "nash.table.lead": "For each player who could shove first: the range they can shove and the range each player behind can call with. Tap a row to open its chart.",
+  "nash.table.push": "{pos} shoves",
+  "nash.table.call": "{pos} calls",
+  "nash.table.overcall": "{pos} also calls",
+  "nash.table.overcallSummary": "Then also call: {list}",
+  "nash.table.loading": "Loading equity table…",
+  "nash.table.noOvercall": "The three-way equity table could not be loaded, so second calls (over-calls) are not included.",
+  "nash.table.none": "none",
+  "nash.table.calculating": "Calculating… ({done}/{total})",
+  "nash.table.deep": "Effective {eff}BB is deeper than push-or-fold play. Treat this as reference only.",
+  "nash.table.needPositions": "Set every seat (BTN, SB, BB, …) to see this table.",
+  "nash.others": "Ranges the other players behind call with: {list}",
+  "nash.multiway.note.html": "Calls from the {n} player(s) behind the shover ({list}) are included.",
+  "nash.hint.html": "Calculates the Nash equilibrium in prize equity (ICM) where the first player to act shoves and the players behind decide to call or fold.<br />Calls from every player still behind the shover are included, as is a second call after someone has already called (an over-call). A third call (four or more players all-in) is not.<br />※ The equilibrium assumes <strong>push or fold only</strong>. It is meant for effective stacks of 12BB or less; a caution appears at 12–20BB and results are folded away above 20BB (real play includes 2BB opens and limps).<br />Blinds and the ante are posted by the players in those seats (a BTN shove posts no blind; the BB posts the big blind ante). Opening this view calculates automatically.",
   "nash.ante.label": "\n            Total ante\n            ",
   "nash.solveBtn": "Recalculate",
   "nash.explanation": "Assumptions and limitations",
@@ -289,29 +302,28 @@ export const en: Record<string, string> = {
   "onboarding.step1.body": `
       <p>
         In tournaments, your <strong>chip count</strong> and its <strong>prize value</strong> aren’t the same.
-        This app lets you both <strong>calculate</strong> that ICM pressure in numbers and
-        <strong>practice</strong> it with quizzes.
+        This app lets you <strong>calculate</strong> that ICM pressure in numbers.<span data-feature="practice"> You can also <strong>practice</strong> it with quizzes.</span>
       </p>
       <ul class="onboarding-tab-list">
         <li><span class="onboarding-tab-icon">📊</span> Calculator (enter stacks and payouts; required equity, callable hands and Nash appear right below)</li>
-        <li><span class="onboarding-tab-icon">🎲</span> Practice (real-feel quizzes)</li>
+        <li data-feature="practice"><span class="onboarding-tab-icon">🎲</span> Practice (real-feel quizzes)</li>
       </ul>
       <p class="hint">It covers all-in decisions: calling an opponent’s all-in, or shoving with a short stack. It does not calculate min-raises or limps.</p>
     `,
   "onboarding.step2.title": "⚡ Try it first",
   "onboarding.step2.body": `
-      <p>There are two good ways in.</p>
+      <p>Start by changing the numbers.</p>
       <ol>
         <li>
           Change the stacks in <strong>📊 Calculator</strong> (or pick from “Examples and saved spots”) →
           check the required equity and hand chart right below
         </li>
-        <li>
+        <li data-feature="practice">
           Answer quizzes in the <strong>🎲 Practice</strong> tab to build a feel
         </li>
       </ol>
       <p class="hint">
-        Start from either one — and if you get stuck, the <strong>❓</strong> at the
+        If you get stuck, the <strong>❓</strong> at the
         top right opens the how-to guide and term explanations anytime.
       </p>
     `,
@@ -325,7 +337,7 @@ export const en: Record<string, string> = {
   "guide.close.aria": "Close",
   // アプリ版のみ表示 (guide.ts proNoteHtml)。価格は書かない。
   "guide.proNote.html":
-    "ℹ️ Scenario presets, results, Nash equilibrium, and practice are all free. <strong>Tables with up to 4 players are fully editable (stacks & payouts)</strong>. Editing tables with 5+ players and saving scenarios are 🔒 Pro (one-time purchase) features.",
+    "ℹ️ Scenario presets, results and Nash equilibrium are all free. <strong>Tables with up to 4 players are fully editable (stacks & payouts)</strong>. Editing tables with 5+ players and saving scenarios are 🔒 Pro (one-time purchase) features.",
   "guide.body.html": `
         <p class="guide-intro">
           This tool focuses on short-stack (~20bb) all-in spots.
@@ -376,7 +388,7 @@ export const en: Record<string, string> = {
             </ol>
           </div>
         </details>
-        <details class="howto">
+        <details class="howto" data-feature="practice">
           <summary>🎲 Practice — what it does & how to use</summary>
           <div class="howto-body">
             <p>Practice call/fold decisions, Risk Premium guessing, and push decisions on random scenarios.</p>
@@ -395,12 +407,12 @@ export const en: Record<string, string> = {
               <li><strong>ICM uses the Malmuth-Harville method</strong>: finish probabilities proportional to stacks, converted to prize equity.</li>
               <li><strong>Required equity</strong> compares three outcomes with ICM: folding, calling and winning, calling and losing. Only with a manually entered call amount, or when no seat is the BB, it falls back to a Bubble Factor estimate.</li>
               <li><strong>Hand equity</strong> comes from a 169 × 169 matchup table (1,000,000 simulated deals per matchup), weighted for the cards your hand removes.</li>
-              <li><strong>Nash</strong> solves the two-player push-or-fold / call-or-fold equilibrium in prize equity.</li>
+              <li><strong>Nash</strong> solves the push-or-fold / call-or-fold equilibrium in prize equity, including calls from every player still behind the shover and one over-call. Three-way all-in equities come from a precomputed table of about 820,000 hand triples.</li>
               <li>Blinds assume a <strong>big blind ante</strong> (the BB posts the ante for the table).</li>
             </ul>
             <h4>What is not calculated</h4>
             <ul>
-              <li><strong>Only two players are all-in.</strong> Calls from players still to act (over-calls) are not calculated; a warning appears when that applies.</li>
+              <li><strong>Four or more players all-in at once are not calculated.</strong> Nash goes up to a three-way all-in. Required equity and the hand chart (call decisions) are calculated for you and one opponent only.</li>
               <li><strong>Future hands are ignored.</strong> By the nature of ICM, upcoming blinds and skill differences are not included.</li>
               <li><strong>Options other than all-in</strong> (2BB opens, limps, 3-bets) are not handled. Shoving results are meant for effective stacks of 12BB or less and are shown as reference only above 20BB.</li>
               <li><strong>Up to 9 players.</strong> Multi-table bubbles cannot be entered.</li>
@@ -657,11 +669,6 @@ export const en: Record<string, string> = {
       <p>In an even-money all-in: <code>RP = BF ÷ (BF + 1) − 50%</code></p>
     `,
   // ===== ナッシュ均衡 (nashUI.ts) =====
-  "nash.overcall.between": "<strong>{n}</strong> between pusher and caller ({list})",
-  "nash.overcall.behind": "<strong>{n}</strong> behind the caller ({list})",
-  "nash.overcall.callerTighten": "<br />→ <strong>caller ({callerPos}) should also call tighter</strong> (with {n} still to act behind).",
-  "nash.overcall.callerOk": "<br />→ caller ({callerPos}) is roughly per HU Nash (assuming those in between folded).",
-  "nash.overcall.main.html": "\n    ⚠ <strong>Intervening players outside the HU Nash assumption</strong>: {parts}.\n    <br />→ <strong>pusher ({pusherPos}) should push even tighter than HU Nash</strong>\n    (fold equity drops as intervening players over-call/3-bet with strong hands).\n    {callerAdvice}\n    <br />Read this Nash result as a reference under HU 2-way assumptions.\n  ",
   "nash.err.needHV": "Set exactly one 🎯 you and one ⚔️ villain",
   "nash.err.needPayout": "Enter a payout structure",
   "nash.err.sb": "Invalid SB",

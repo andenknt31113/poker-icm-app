@@ -90,11 +90,13 @@ export default async function testCompactUsability({ baseURL, createContext }) {
     }
     await page.setViewportSize({ width: 390, height: 844 });
     await page.locator('[data-jump="sec-nash"]').click();
-    await page.waitForFunction(() => document.getElementById("nash-sb-stats")?.textContent.length > 0);
-    if (!(await page.locator("#nash-context").textContent()).includes("BB")) throw new Error("Nashの局面がない");
-    await page.locator('#sec-nash [data-swap-players]').click();
-    await page.waitForFunction(() => document.getElementById("nash-sb-stats")?.textContent.length > 0);
-    if (!(await page.locator("#nash-context").textContent()).includes("18 BB")) throw new Error("Nash内で役割を交換できない");
+    await page.waitForFunction(() => document.querySelectorAll("#nash-table .nash-row").length > 0 && document.getElementById("nash-table-status")?.textContent === "");
+    const heroRow = () => page.locator("#nash-table .nash-row", { has: page.locator(".icm-role.hero") }).first().locator(".nash-row-label").textContent();
+    const heroBefore = await heroRow();
+    if (!heroBefore) throw new Error("Nashの一覧に自分の行がない");
+    await page.locator("#swap-players").click();
+    await page.waitForFunction(() => document.querySelectorAll("#nash-table .nash-row").length > 0 && document.getElementById("nash-table-status")?.textContent === "");
+    if ((await heroRow()) === heroBefore) throw new Error("役割を交換しても Nash の一覧の印が変わらない");
     if (screenshotDirectory) await page.screenshot({ path: path.join(screenshotDirectory, "nash-390.png"), fullPage: true });
     await page.locator("#lang-toggle").click();
     await page.waitForFunction(() => document.documentElement.lang === "en");

@@ -1,12 +1,12 @@
-import { solveHUNash } from "@poker-icm/core";
-import { ALL_169_HANDS, type HandNotation,
+import { type HandNotation,
   comboCountOfRange,
   comboPctOfRange,
 } from "./handRanking.js";
-import { huEquity, hasHUMatrix } from "./huEquityMatrix.js";
-import { comboCountVsHero } from "./rangeEquity.js";
+import { hasHUMatrix } from "./huEquityMatrix.js";
 import { renderGrid } from "./grid.js";
-import { buildPushSpot, pushDepthTier, type PushDepthTier } from "./pushSpot.js";
+import { pushDepthTier, type PushDepthTier } from "./pushSpot.js";
+import { solveSpotNash } from "./nashRange.js";
+import { ensureNashTable } from "./nashTableUI.js";
 import { fmt } from "./format.js";
 import { t } from "./i18n.js";
 import { $ } from "./dom.js";
@@ -100,6 +100,12 @@ export function renderNashContext(): void {
 }
 
 export function ensureNashCalculated(): void {
+  // 一覧表 (nashTableUI) がある画面では、そちらが全員ぶんを計算する。
+  // ここから下は、自分 / 相手の 2 人ぶんだけを出す旧表示用。
+  if (document.getElementById("nash-table")) {
+    ensureNashTable();
+    return;
+  }
   if (document.body.dataset.activeTab !== "analyze" || document.body.dataset.analysisView !== "nash") return;
   renderNashContext();
   if (resultInputKey === currentInputKey() || nashSolveBtn.disabled || !hasHUMatrix()) return;
@@ -121,6 +127,11 @@ function clearNashResult(): void {
   nashBbStats.textContent = "";
   nashDepthNote.classList.add("hidden");
   nashResults.classList.remove("hidden");
+  const othersEl = document.getElementById("nash-others");
+  if (othersEl) {
+    othersEl.textContent = "";
+    othersEl.classList.add("hidden");
+  }
 }
 
 /** 実効スタックの深さに応じた注意表示と、範囲外のときの結果の折りたたみ。 */
@@ -220,52 +231,12 @@ export function updateNashOvercallWarn(): void {
     return;
   }
 
-  // 介在者の位置を「間」「後ろ」で分類
-  const callerAct = Math.max(heroAct, villainAct);
-  const between: typeof intruders = [];
-  const behind: typeof intruders = [];
-  for (const p of intruders) {
-    const a = actionOrderIdx(p.position);
-    if (a < callerAct) between.push(p);
-    else behind.push(p);
-  }
-
-  const pusherIdx = heroAct < villainAct ? heroIdx : villainIdx;
-  const callerIdx = heroAct < villainAct ? villainIdx : heroIdx;
-  const pusherPos = players[pusherIdx]?.position;
-  const callerPos = players[callerIdx]?.position;
-
-  const partsHtml: string[] = [];
-  if (between.length > 0) {
-    partsHtml.push(
-      t("nash.overcall.between", {
-        n: between.length,
-        list: between.map((p) => `${p.position}(${p.stack}BB)`).join(", "),
-      }),
-    );
-  }
-  if (behind.length > 0) {
-    partsHtml.push(
-      t("nash.overcall.behind", {
-        n: behind.length,
-        list: behind.map((p) => `${p.position}(${p.stack}BB)`).join(", "),
-      }),
-    );
-  }
-
-  // 主要な調整: pusher は介在者の over-call リスクを織り込んで tighter に
-  // caller は介在者が fold した後に判断するため HU Nash 通りで概ね OK
-  // (caller の後ろに人がいる場合のみ caller も tighter)
-  const callerNeedsTighten = behind.length > 0;
-
+  // 押す人の後ろにいる人は、全員のコールを入れて解いている (solveSpotNash)。
+  // ただし 2 人目のコール (オーバーコール) は入れていないので、その旨を出す。
   warnEl.classList.remove("hidden");
-  const callerAdvice = callerNeedsTighten
-    ? t("nash.overcall.callerTighten", { callerPos: callerPos ?? "", n: behind.length })
-    : t("nash.overcall.callerOk", { callerPos: callerPos ?? "" });
-  warnEl.innerHTML = t("nash.overcall.main.html", {
-    parts: partsHtml.join(" / "),
-    pusherPos: pusherPos ?? "",
-    callerAdvice,
+  warnEl.innerHTML = t("nash.multiway.note.html", {
+    n: intruders.length,
+    list: intruders.map((p) => `${p.position} ${p.stack}BB`).join("、"),
   });
 }
 
@@ -305,7 +276,6 @@ function runNash(): void {
   // 先に動く方が押す。実際のポジションの blind / BB ante / 第三者の dead money で局面を組む
   // (アンティ入力はテーブル合計。BB の人が払う)
   const { pusherIndex, callerIndex } = nashRoles(heroIndex, villainIndex);
-  const spot = buildPushSpot(players, pusherIndex, callerIndex, sb, bb, anteRaw);
 
   // ボタンを「計算中…」に
   nashSolveBtn.disabled = true;
@@ -323,42 +293,37 @@ function runNash(): void {
         nashStatus.textContent = t("nash.inputsChanged");
         return;
       }
-      const result = solveHUNash({
-        stacks: spot.stacks,
-        payouts,
-        sbIndex: pusherIndex,
-        bbIndex: callerIndex,
-        sb,
-        bb,
-        ante: 0,
-        pusherBlind: spot.pusherBlind,
-        callerBlind: spot.callerBlind,
-        deadMoney: spot.deadMoney,
-        huEquity,
-        allHands: ALL_169_HANDS,
-        // カードリムーバル込みのコンボ重みで best response を厳密化（被搾取度を低減）。
-        comboWeight: comboCountVsHero,
-        maxIterations: NASH_MAX_ITERATIONS,
-        convergenceTolerance: NASH_CONVERGENCE_TOLERANCE,
-      });
+      // 押す人の後ろに 2 人以上いれば全員のコールを入れて解く (それ以外は 2 人モデル)
+      const result = solveSpotNash(players, payouts, pusherIndex, callerIndex, sb, bb, anteRaw);
 
       // 描画: frequency に応じて濃淡（mixed strategy 表示）
-      renderNashGridWithFreq(nashSbGrid, result.sbPushFreq, "push");
-      renderNashGridWithFreq(nashBbGrid, result.bbCallFreq, "call");
+      renderNashGridWithFreq(nashSbGrid, result.pushFreq, "push");
+      renderNashGridWithFreq(nashBbGrid, result.callFreq, "call");
 
-      const sbCount = result.sbPushRange.size;
-      const bbCount = result.bbCallRange.size;
+      const sbCount = result.pushRange.size;
+      const bbCount = result.callRange.size;
       // 割合はコンボベース (ポーカー標準)。件数は「種類 / コンボ」を併記する。
       nashSbStats.innerHTML = t("nash.stats", {
         n: sbCount,
-        combos: comboCountOfRange(result.sbPushRange),
-        pct: comboPctOfRange(result.sbPushRange).toFixed(1),
+        combos: comboCountOfRange(result.pushRange),
+        pct: comboPctOfRange(result.pushRange).toFixed(1),
       });
       nashBbStats.innerHTML = t("nash.stats", {
         n: bbCount,
-        combos: comboCountOfRange(result.bbCallRange),
-        pct: comboPctOfRange(result.bbCallRange).toFixed(1),
+        combos: comboCountOfRange(result.callRange),
+        pct: comboPctOfRange(result.callRange).toFixed(1),
       });
+
+      // 後ろにいる他の人のコールレンジ (多人数モデルのときだけ)
+      const othersEl = document.getElementById("nash-others");
+      if (othersEl) {
+        othersEl.classList.toggle("hidden", result.others.length === 0);
+        othersEl.textContent = result.others.length === 0 ? "" : t("nash.others", {
+          list: result.others
+            .map(({ index, range }) => `${players[index]?.position ?? ""} ${comboPctOfRange(range).toFixed(0)}%`)
+            .join(" / "),
+        });
+      }
 
       // 収束したときは何も出さない (反復回数・計算時間は利用者には不要)
       nashStatus.innerHTML = result.converged
