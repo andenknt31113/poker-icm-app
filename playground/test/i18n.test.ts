@@ -18,7 +18,7 @@ describe("i18n t()", () => {
     expect(
       t("hand.callStats.callBack", { req: 37.8, callable: 68, callCombos: 520, callPct: 39, marginal: 2 }),
     ).toBe(
-      "必要勝率 <strong>37.8%</strong> 以上のハンド: <strong>68</strong> 種類 / 520 コンボ (<strong>39%</strong>) ／ ボーダーライン: 2 種類",
+      "<strong>68</strong> 種類・全ハンドの <strong>39%</strong>（520 コンボ）。必要勝率 <strong>37.8%</strong> 以上のハンドです。ボーダー: 2 種類",
     );
   });
 
@@ -59,7 +59,7 @@ describe("applyStaticTranslations", () => {
   it("[data-i18n] は textContent を辞書値にする", () => {
     document.body.innerHTML = `<span data-i18n="tabs.analyze">X</span>`;
     applyStaticTranslations(document.body);
-    expect(document.body.querySelector("span")?.textContent).toBe("分析");
+    expect(document.body.querySelector("span")?.textContent).toBe("計算");
   });
 
   it("[data-i18n-html] は innerHTML を辞書値にする", () => {

@@ -43,28 +43,29 @@ export default async function testCompactUsability({ baseURL, createContext }) {
     if (await page.locator("#range-unavailable").isVisible() || !(await page.locator("#grid-hero").isVisible())) throw new Error("レンジ復元で結果が戻らない");
     await page.locator('.mode-tab[data-mode="preset"]').click();
 
-    await page.locator('.tab-btn[data-tab="setup"]').click();
+    await page.locator('.tab-btn[data-tab="analyze"]').click();
     await page.locator(".player-row.hero").locator('[data-role="other"]').click();
     await page.locator('.tab-btn[data-tab="analyze"]').click();
     if (!(await page.locator("#range-unavailable").isVisible()) || await page.locator("#range-content").isVisible()) throw new Error("自分未指定でも判定が残る");
-    await page.locator('.tab-btn[data-tab="setup"]').click();
+    await page.locator('.tab-btn[data-tab="analyze"]').click();
     await page.locator("#setup-undo").click();
     await page.locator(".player-row.hero .player-stack").fill("0");
     await page.locator('.tab-btn[data-tab="analyze"]').click();
     if (!(await page.locator("#range-unavailable").isVisible()) || await page.locator("#range-content").isVisible()) throw new Error("自分0BBでも判定が残る");
-    await page.locator('.tab-btn[data-tab="setup"]').click();
+    await page.locator('.tab-btn[data-tab="analyze"]').click();
     await page.locator("#setup-undo").click();
 
-    await page.locator('.tab-btn[data-tab="setup"]').click();
+    await page.locator('.tab-btn[data-tab="analyze"]').click();
+    if (!(await page.locator("#payouts-fold").evaluate(element => element.open))) await page.locator("#payouts-fold > summary").click();
     for (const input of await page.locator(".payout-amount").all()) await input.fill("0");
     await page.locator('.tab-btn[data-tab="analyze"]').click();
     if (!(await page.locator("#range-unavailable").isVisible()) || await page.locator("#range-content").isVisible()) throw new Error("不正な賞金でも前の結果を表示する");
-    await page.locator('.tab-btn[data-tab="setup"]').click();
+    await page.locator('.tab-btn[data-tab="analyze"]').click();
     await page.locator(".payout-amount").first().fill("100");
     await page.locator('.tab-btn[data-tab="analyze"]').click();
     if (await page.locator("#range-unavailable").isVisible()) throw new Error("賞金修正で分析が戻らない");
 
-    await page.locator('.tab-btn[data-tab="setup"]').click();
+    await page.locator('.tab-btn[data-tab="analyze"]').click();
     await page.locator('#scenario-presets-toggle > summary').click();
     await page.locator('.scenario-btn[data-scenario="ft6"]').click();
     if (!(await page.locator("#players-lock-notice").isVisible())) throw new Error("編集ロックの理由がない");
@@ -78,7 +79,7 @@ export default async function testCompactUsability({ baseURL, createContext }) {
     if (screenshotDirectory) await mkdir(screenshotDirectory, { recursive: true });
     for (const width of [320, 390, 768, 1280]) {
       await page.setViewportSize({ width, height: 844 });
-      await page.locator('.tab-btn[data-tab="setup"]').click();
+      await page.locator('.tab-btn[data-tab="analyze"]').click();
       await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
       if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)) throw new Error(`${width}px入力の横はみ出し`);
       if (await page.locator(".player-row").first().evaluate(element => element.getBoundingClientRect().height) > 85) throw new Error(`${width}pxの席が大きすぎる`);

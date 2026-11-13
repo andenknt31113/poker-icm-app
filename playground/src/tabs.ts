@@ -13,14 +13,16 @@ import { initAnalysisView, setAnalysisView } from "./analysisView.js";
 //   - 保存値の検証 (isTabId)
 //   - スワイプジェスチャーの並び順 (index ± 1 で隣のタブへ)
 // をすべて兼ねる。表示順は index.html の .tab-btn の並びと一致させること。
-export const TAB_IDS = ["setup", "analyze", "practice"] as const;
+export const TAB_IDS = ["analyze", "practice"] as const;
 export type TabId = (typeof TAB_IDS)[number];
 
-const DEFAULT_TAB: TabId = "setup";
+const DEFAULT_TAB: TabId = "analyze";
 
 // 旧5タブ構成 (result/hand/nash) の保存値は分析タブへ読み替える
 // (既存ユーザーの localStorage との互換)。
+// 旧3タブ構成の setup は、局面入力を取り込んだ計算タブ (analyze) へ読み替える。
 const LEGACY_TAB_MAP: Record<string, TabId> = {
+  setup: "analyze",
   result: "analyze",
   hand: "analyze",
   nash: "analyze",
@@ -82,6 +84,11 @@ export function applyTab(tab: TabId): void {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+/** 計算タブの先頭にある局面カード (卓の入力) へスクロールする。 */
+export function scrollToSpot(): void {
+  document.getElementById("setup-players")?.scrollIntoView({ block: "start", behavior: "smooth" });
+}
+
 /** タブバー・スワイプジェスチャーの配線。main.ts から一度だけ呼ぶ。 */
 export function initTabs(): void {
   initAnalysisView();
@@ -97,6 +104,10 @@ export function initTabs(): void {
       const t = btn.dataset.tab as TabId | undefined;
       if (t) applyTab(t);
     });
+  });
+  // 「局面を変更する」: 同じ画面の上にある局面カードへ戻る
+  document.querySelectorAll<HTMLButtonElement>("[data-scroll-spot]").forEach((button) => {
+    button.addEventListener("click", scrollToSpot);
   });
 
   // ===== タブ切替のスワイプ ジェスチャー =====

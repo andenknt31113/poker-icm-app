@@ -17,7 +17,7 @@ export default async function testPositionSwap({ baseURL, createContext }) {
     if (await page.locator("#call").inputValue() !== "2") throw new Error("手入力のコール額が自動計算で上書きされた");
     await page.locator('.num-step-btn[data-target="call"][data-delta="1"]').click();
     if (Number(await page.locator("#call").inputValue()) !== 3) throw new Error("コール額を増やせない");
-    await page.locator('.tab-btn[data-tab="setup"]').click();
+    await page.locator('.tab-btn[data-tab="analyze"]').click();
     await page.click("#setup-undo");
     if (await page.locator("#call").inputValue() !== "2") throw new Error("ステッパー操作を取り消せない");
     await page.click('.scenario-btn[data-scenario="hu"]');

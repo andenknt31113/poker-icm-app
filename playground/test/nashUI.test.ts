@@ -74,8 +74,8 @@ describe("Nashの結果と現在の入力を一致させる", () => {
     renderNashContext();
     expect(context.textContent).toContain("自分：コール");
     expect(context.textContent).toContain("相手：プッシュ");
-    expect(document.getElementById("nash-push-title")!.textContent).toContain("相手の push");
-    expect(document.getElementById("nash-call-title")!.textContent).toContain("自分の call");
+    expect(document.getElementById("nash-push-title")!.textContent).toContain("相手が押す");
+    expect(document.getElementById("nash-call-title")!.textContent).toContain("自分がコールする");
     // 席順どおりなので入れ替えの案内は出さない
     updateNashOvercallWarn();
     expect(warn.classList.contains("hidden")).toBe(true);

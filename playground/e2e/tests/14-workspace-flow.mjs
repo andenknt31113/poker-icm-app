@@ -13,14 +13,18 @@ export default async function testWorkspaceFlow({ baseURL, createContext }) {
     if (await page.locator(".workspace-starts, .workspace-steps").count()) throw new Error("不要な案内カードが残っています");
     if (!(await page.locator("#scenario-presets-toggle").evaluate(element => element.open))) await page.locator('#scenario-presets-toggle > summary').click();
     if (!(await page.locator("#scenario-presets-toggle").evaluate(element => element.open))) throw new Error("例題一覧が開きません");
-    if (await page.locator("#hero-summary").isVisible()) throw new Error("入力画面に分析サマリーが表示されています");
     await page.locator('.scenario-btn[data-scenario="ftBubble"]').click();
-    await page.locator('[data-open-tab="analyze"]').click();
+    // 局面の入力と結果は同じ画面にある (タブを行き来しない)
+    if (!(await page.locator("#hero-summary").isVisible()) || !(await page.locator("#players-list .player-stack").first().isVisible())) throw new Error("入力と結果が同じ画面にありません");
+    if (await page.locator('[data-open-tab="analyze"], .tab-btn[data-tab="setup"]').count()) throw new Error("廃止した画面移動のボタンが残っています");
     if (await page.locator('#quick-hand, #hand-rank-first, #hand-rank-second, #hand-suited').count()) throw new Error("不要な手札選択欄が残っています");
     await page.locator('#grid-hero .hand-cell[title="AKs"]').click();
     await page.waitForFunction(() => document.getElementById("hand-cell-detail")?.textContent.includes("AKs"));
     await page.locator('[data-jump="sec-icm"]').click();
     if (!(await page.locator("#sec-icm").isVisible()) || await page.locator("#sec-hand").isVisible()) throw new Error("目的別表示が切り替わりません");
+    // 一行判定は画面の先頭にいるときだけ出る (スクロール中は1行の局面と数字だけ)
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForFunction(() => !document.getElementById("hero-summary").classList.contains("floating"));
     await page.locator("#hero-summary-verdict-btn").click();
     await page.waitForSelector("#sec-hand", { state: "visible" });
     await page.locator('[data-jump="sec-nash"]').click();
@@ -40,7 +44,6 @@ export default async function testWorkspaceFlow({ baseURL, createContext }) {
     await page.locator('[data-jump="sec-nash"]').click();
     await page.locator('#sec-nash [data-swap-players]').click();
     await page.locator('[data-jump="sec-hand"]').click();
-    await page.locator('[data-i18n="workspace.edit"]').click();
     await page.locator('.tab-bar [data-tab="practice"]').click();
     await page.locator("#tutorial-intro-start-btn").click();
     await page.locator("#tutorial-start-problem-btn").click();

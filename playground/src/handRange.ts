@@ -231,6 +231,8 @@ function syncDirectionWithPositions(): void {
     btn.classList.toggle("active", btn.dataset.direction === direction);
     btn.disabled = forced !== null && btn.dataset.direction !== forced;
   });
+  // 席順で向きが決まっているときは選ぶ余地がないので、切替タブごと隠す
+  document.querySelector(".direction-tabs")?.classList.toggle("hidden", forced !== null);
   const hint = document.getElementById("direction-auto-hint");
   if (!hint) return;
   if (!forced) {
@@ -265,6 +267,9 @@ function updatePushDepthWarn(): void {
 export function renderRangeComparison(requiredEquity: number): RangeVerdictSummary {
   const pushPct = Number(pushRangeInput.value);
   pushPctLabel.textContent = String(pushPct);
+  document.querySelectorAll<HTMLButtonElement>("[data-range-pct]").forEach((button) => {
+    button.classList.toggle("active", Number(button.dataset.rangePct) === pushPct);
+  });
 
   syncDirectionWithPositions();
   updatePushDepthWarn();
@@ -307,6 +312,10 @@ export function renderRangeComparison(requiredEquity: number): RangeVerdictSumma
   renderGrid(villainGrid, (hand) =>
     villainRange.has(hand) ? villainClass : "",
   );
+
+  // スライダーの横の小さい表 (相手レンジの形がその場で見える)
+  const miniGrid = document.getElementById("grid-villain-mini") as HTMLDivElement | null;
+  if (miniGrid) renderGrid(miniGrid, (hand) => (villainRange.has(hand) ? villainClass : ""));
 
   const villainPct = comboPctOfRange(villainRange);
   let verdict: RangeVerdictSummary;
@@ -582,4 +591,20 @@ export function initHandRange(onChange: () => void): void {
 
   // pushRangeInput の変更は再計算トリガー
   pushRangeInput.addEventListener("input", onChange);
+
+  // 小さい表をタップ → 大きい表をその場で開く
+  document.getElementById("villain-range-thumb")?.addEventListener("click", () => {
+    const details = document.getElementById("villain-range-details") as HTMLDetailsElement | null;
+    if (!details) return;
+    details.open = !details.open;
+    if (details.open) details.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  });
+
+  // レンジの目安ボタン (スライダーはスマホで狙った値に合わせにくい)
+  document.querySelectorAll<HTMLButtonElement>("[data-range-pct]").forEach((button) => {
+    button.addEventListener("click", () => {
+      pushRangeInput.value = button.dataset.rangePct ?? pushRangeInput.value;
+      onChange();
+    });
+  });
 }

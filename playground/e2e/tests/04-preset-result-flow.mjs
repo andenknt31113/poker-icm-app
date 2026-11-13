@@ -24,11 +24,11 @@ export default async function testPresetResultFlow({ baseURL, createContext }) {
       throw new Error(`BF マトリクスのセル数が少なすぎます: ${cellCount} (期待: 4人で12)`);
     }
 
-    // 必要勝率フロー: $EV (True Req) の値が % 表示される
+    // 必要勝率フロー: 必要勝率 (ICM) の値が % 表示される
     await page.waitForSelector("#eq-result .eq-flow-final", { state: "visible" });
     const evText = await page.textContent("#eq-result .eq-flow-final");
     if (!evText || !/%/.test(evText)) {
-      throw new Error(`$EV (True Req) の表示が想定と異なります: "${evText}"`);
+      throw new Error(`必要勝率 (ICM) の表示が想定と異なります: "${evText}"`);
     }
 
     // 廃止済みのハンド別判定パネルが DOM に残っていないこと

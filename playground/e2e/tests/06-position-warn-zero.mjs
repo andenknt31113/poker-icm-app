@@ -39,7 +39,7 @@ export default async function testPositionWarnZero({ baseURL, createContext }) {
 
     // ---- 1〜8. 全シナリオプリセット ----
     for (const id of SCENARIO_IDS) {
-      await page.click('.tab-btn[data-tab="setup"]');
+      await page.click('.tab-btn[data-tab="analyze"]');
       await page.click(`.scenario-btn[data-scenario="${id}"]`);
       // 並びは 自分 → 相手 → 残りを行動順 (卓の並びと対応が取れるように)
       const rows = await page.$$eval("#players-list .player-row", (els) =>

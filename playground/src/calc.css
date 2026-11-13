@@ -1,0 +1,246 @@
+/* ===== 計算タブ (局面入力 + 結果を1画面に) =====
+   workspace.css の後に読み込む。セットアップと分析を1画面にまとめた版の
+   レイアウトと、局面カード・結果カードの見た目。 */
+
+/* ----- 並び順: 局面 → 結果 → 切替 → 各パネル ----- */
+.workspace section.spot-card[data-tab="analyze"]:not(#sec-hand):not(.workspace-section-head) { order: 0; padding: 16px; }
+.workspace #hero-summary { order: 1; }
+.workspace .analyze-jump { order: 2; }
+
+/* ----- 局面カード ----- */
+.spot-card .setup-card-heading { margin-bottom: 6px; }
+.workspace .spot-card h2 { font-size: 17px; }
+.workspace .spot-card .save-btn { min-height: 36px; padding: 6px 12px; font-size: 12px; }
+
+.spot-columns,
+.workspace .spot-card .player-row {
+  display: grid;
+  grid-template-columns: 58px minmax(56px, 1fr) auto 28px;
+  gap: 6px;
+  align-items: center;
+}
+.spot-columns {
+  padding: 0 9px 6px;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+.spot-columns span:nth-child(2) { text-align: center; }
+.workspace .spot-card .players-list { gap: 6px; }
+.workspace .spot-card .player-row {
+  padding: 4px 6px;
+  border-radius: 12px;
+  background: #121c17;
+  border-color: transparent;
+}
+.workspace .spot-card .player-row.hero { border-color: #648b70; background: #16261d; }
+.workspace .spot-card .player-row.villain { border-color: #8f6258; background: #261b18; }
+.workspace .spot-card .player-row:has(.lock-badge) { grid-template-columns: 58px minmax(44px, 1fr) 16px auto 28px; }
+.workspace .spot-card .player-pos {
+  height: 40px;
+  min-height: 40px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 9px;
+}
+.workspace .spot-card .player-stack {
+  font-size: 18px;
+  min-height: 40px;
+  padding: 6px 4px;
+  background: #0d1611;
+  border-color: #33453a;
+  border-radius: 9px;
+}
+.workspace .spot-card .player-roles { gap: 0; border: 1px solid #33453a; border-radius: 9px; overflow: hidden; flex: 0 0 auto; }
+.workspace .spot-card .role-btn {
+  width: auto;
+  min-width: 40px;
+  flex: 0 0 auto;
+  height: 38px;
+  min-height: 38px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+.workspace .spot-card .role-btn + .role-btn { border-left: 1px solid #33453a; }
+.workspace .spot-card .role-btn.active { background: #2a3a31; color: var(--text); }
+.workspace .spot-card .role-btn.active.hero { background: #3d6a4c; color: #f0fff3; }
+.workspace .spot-card .role-btn.active.villain { background: #7a4a40; color: #fff3f0; }
+.workspace .spot-card .player-remove { width: 28px; height: 38px; border: 0; font-size: 13px; }
+
+.workspace .spot-card .players-actions {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 6px;
+  margin: 8px 0 4px;
+}
+.workspace .spot-card .players-actions .add-btn {
+  min-width: 0;
+  margin: 0;
+  padding: 8px 6px;
+  min-height: 40px;
+  font-size: 12px;
+  border-style: solid;
+  border-radius: 9px;
+  white-space: nowrap;
+}
+
+/* 賞金・ブラインド・例題: ふだんは1行。タップで開く */
+.spot-fold { border-top: 1px solid var(--border); }
+.spot-fold > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 42px;
+  padding: 0 2px;
+  cursor: pointer;
+  list-style: none;
+}
+.spot-fold > summary::-webkit-details-marker { display: none; }
+.spot-fold > summary::after { content: "›"; color: var(--muted); font-size: 18px; transition: transform 0.15s; }
+.spot-fold[open] > summary::after { transform: rotate(90deg); }
+.spot-fold-label { font-size: 13px; color: var(--muted); flex: 0 0 auto; }
+.spot-fold-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.spot-fold-body { padding: 4px 0 14px; }
+.spot-fold-body .presets { margin: 0 0 10px; }
+.spot-fold-body .hint { margin: 0 0 8px; }
+.workspace .spot-fold-body .scenario-presets { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.workspace .spot-fold-body .scenario-btn { min-height: 46px; padding: 8px 10px; font-size: 12px; }
+
+/* ----- 結果カード ----- */
+/* 画面の先頭にいる間は、すぐ上の局面カードにスタックが出ているので役割だけ出す */
+.hero-summary:not(.floating) .hero-summary-row-stack { display: none; }
+.hero-summary:not(.floating) .hero-summary-spot .hero-summary-row { background: transparent; padding: 0; }
+.workspace #hero-summary {
+  padding: 12px 14px;
+  border-color: var(--accent);
+  border-radius: 14px;
+  background: #15221b;
+}
+.hero-summary-spot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: 12px;
+}
+.workspace .hero-summary-spot .hero-summary-row {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  margin: 0;
+  padding: 4px 8px;
+  border-radius: 8px;
+  grid-template-columns: none;
+  font-family: inherit;
+}
+.hero-summary-spot .hero-summary-row-stat { font-family: var(--mono); font-size: 13px; }
+.hero-summary-spot .hero-summary-role { display: inline; font-size: 11px; color: var(--muted); }
+.hero-summary-arrow { color: var(--muted); }
+.workspace .hero-summary-grid {
+  grid-template-columns: 1.5fr 1fr 1fr;
+  align-items: end;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+}
+.hero-summary-item.primary { align-items: flex-start; text-align: left; padding-left: 4px; }
+.hero-summary-item.primary .hero-summary-label { font-size: 12px; }
+.hero-summary-item.primary .hero-summary-value { font-size: 34px; line-height: 1.1; color: var(--accent); }
+.hero-summary-item.primary .hero-summary-value .unit { font-size: 16px; }
+.hero-summary-sub { margin-top: 2px; font-size: 11px; color: var(--muted); white-space: nowrap; }
+.workspace .hero-summary-verdict { margin-top: 10px; padding: 10px; font-size: 13px; border-radius: 10px; }
+
+/* スクロール中: 1行の局面 + 3つの数字だけ */
+.hero-summary.floating .hero-summary-spot { display: flex; }
+.workspace .hero-summary.floating .hero-summary-spot .hero-summary-row { display: inline-flex; padding: 2px 6px; }
+.hero-summary.floating .hero-summary-role,
+.hero-summary.floating .hero-summary-sub,
+.hero-summary.floating .hero-summary-push-note,
+.hero-summary.floating .hero-summary-verdict,
+.hero-summary.floating .hero-summary-sample-badge { display: none; }
+.workspace .hero-summary.floating .hero-summary-grid { margin-top: 6px; padding-top: 0; border-top: 0; grid-template-columns: repeat(3, 1fr); align-items: center; }
+.hero-summary.floating .hero-summary-item { flex-direction: row; gap: 6px; align-items: baseline; justify-content: center; padding: 0; }
+.hero-summary.floating .hero-summary-item.primary .hero-summary-value { font-size: 18px; }
+.hero-summary.floating .hero-summary-item.primary .hero-summary-value .unit { font-size: 10px; }
+.hero-summary.floating .hero-summary-value { font-size: 15px; margin-top: 0; }
+
+/* ----- ハンドの判断 ----- */
+/* 相手のレンジ: 小さい表 (形が見える) + スライダー。大きい表はそのすぐ下で開く */
+.villain-range-block { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 12px; align-items: start; }
+.range-thumb { display: block; padding: 4px; border: 1px solid var(--border); border-radius: 10px; background: #0f1913; cursor: pointer; }
+.range-thumb .hand-grid.mini { display: grid; gap: 0; padding: 0; background: #1b2a22; font-size: 0; border-radius: 4px; overflow: hidden; }
+.range-thumb .hand-grid.mini .hand-cell { font-size: 0; border-radius: 0; min-width: 0; }
+.range-thumb .hand-grid.mini .hand-cell:not(.in-range-villain):not(.in-range-hero) { background: #22332a; }
+.range-thumb-caption { display: block; margin-top: 4px; font-size: 10px; color: var(--muted); text-align: center; }
+.villain-range-controls .range-label { margin-bottom: 4px; }
+.workspace #sec-hand .opponent-range-details { order: -1; border-top: 0; border-bottom: 1px solid var(--border); }
+.workspace #sec-hand .opponent-range-details:not([open]) > summary { display: none; }
+.workspace #sec-hand .opponent-range-details:not([open]) { border-bottom: 0; }
+.villain-range-controls .range-quick { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+.villain-range-controls .range-quick button { font-size: 12px; min-height: 38px; padding: 0; }
+.range-quick { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 10px; }
+.range-quick button {
+  min-height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 13px;
+  cursor: pointer;
+}
+.range-quick button.active { border-color: var(--accent); color: #14241a; background: var(--accent); font-weight: 700; }
+.workspace #direction-auto-hint { margin: 0 0 10px; }
+
+@media (min-width: 900px) {
+  /* PC: 左に局面、右に結果を並べる */
+  .workspace section.spot-card[data-tab="analyze"]:not(#sec-hand):not(.workspace-section-head) { grid-column: 1; grid-row: auto; align-self: start; }
+  .workspace .container > #hero-summary { grid-column: 2; align-self: start; }
+}
+@media (max-width: 359px) {
+  .spot-columns,
+  .workspace .spot-card .player-row { grid-template-columns: 54px minmax(44px, 1fr) auto 26px; gap: 4px; padding-left: 4px; padding-right: 4px; }
+  .workspace .spot-card .role-btn { min-width: 34px; width: auto; padding: 0 5px; font-size: 11px; }
+  .workspace .spot-card .player-remove { width: 26px; }
+  .workspace .spot-card .players-actions .add-btn { font-size: 11px; padding: 8px 2px; }
+  .hero-summary-item.primary .hero-summary-value { font-size: 28px; }
+}
+
+@media (max-width: 599px) {
+  .workspace .container { padding-top: 10px; gap: 10px; }
+  .workspace header { padding-bottom: 8px; }
+  .workspace h1 { font-size: 17px; gap: 8px; }
+  .brand-mark { width: 28px; height: 30px; font-size: 20px; border-radius: 8px; }
+  .workspace .header-btn { width: 36px; height: 36px; }
+  .workspace section.spot-card[data-tab="analyze"]:not(#sec-hand):not(.workspace-section-head) { padding: 12px 14px 4px; }
+}
+
+/* ----- 賞金・BF ----- */
+/* 自分 vs 相手の BF は結果カードに出ているので、ここでは全員の表だけ見せる */
+.workspace #sec-bf #bf-result { display: none; }
+.icm-role { margin-left: 6px; padding: 1px 6px; border-radius: 6px; font-size: 11px; font-family: inherit; }
+.icm-role.hero { background: #3d6a4c; color: #f0fff3; }
+.icm-role.villain { background: #7a4a40; color: #fff3f0; }
+.workspace #icm-table td:first-child, .workspace #icm-table th:first-child { text-align: left; white-space: nowrap; }
+@media (max-width: 359px) {
+  .workspace #hero-summary { padding-left: 10px; padding-right: 10px; }
+  .workspace .hero-summary.floating .hero-summary-grid { gap: 2px; }
+  .hero-summary.floating .hero-summary-item { gap: 3px; }
+  .hero-summary.floating .hero-summary-value,
+  .hero-summary.floating .hero-summary-item.primary .hero-summary-value { font-size: 14px; }
+}

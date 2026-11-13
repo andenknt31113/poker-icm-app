@@ -14,8 +14,9 @@ export default async function testNashInvalidation({ baseURL, createContext }) {
     await page.locator(".nash-explanation summary").click();
     if (!(await page.locator(".nash-explanation").evaluate(element => element.open))) throw new Error("計算前提を開けない");
     await page.locator(".nash-explanation summary").click();
-    await page.locator('#sec-nash [data-open-tab="setup"]').click();
-    if ((await page.locator("body").getAttribute("data-active-tab")) !== "setup") throw new Error("Nashから局面編集へ戻れない");
+    await page.locator('#sec-nash [data-scroll-spot]').click();
+    await page.waitForFunction(() => document.getElementById("setup-players").getBoundingClientRect().top < window.innerHeight / 2);
+    if (!(await page.locator("#blinds-fold").evaluate(element => element.open))) await page.locator("#blinds-fold > summary").click();
     await page.locator("#nash-ante").fill("1");
     await page.click('.tab-btn[data-tab="analyze"]');
     await page.click('[data-jump="sec-nash"]');

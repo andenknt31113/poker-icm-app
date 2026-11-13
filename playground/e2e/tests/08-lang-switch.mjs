@@ -39,8 +39,8 @@ export default async function testLangSwitch({ baseURL, createContext }) {
     // 代表文言が英語であることを 4 箇所以上で確認
     const checks = [
       ['.tab-btn[data-tab="practice"] .tab-label', "Practice"],
-      ['.tab-btn[data-tab="setup"] .tab-label', "Setup"],
-      ['.tab-btn[data-tab="analyze"] .tab-label', "Analyze"],
+      ['.tab-btn[data-tab="analyze"] .tab-label', "Calculator"],
+      ["#setup-players h2", "Spot"],
     ];
     for (const [sel, expected] of checks) {
       const actual = await textOf(page, sel);

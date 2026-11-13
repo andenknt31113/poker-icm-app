@@ -210,13 +210,13 @@ function closeLegalModal(): void {
 // ===== 初回ヒントバー（セットアップタブ最上部、シナリオプリセットの上） =====
 function insertFirstHintBar(): void {
   if (!shouldShowFirstHint) return;
-  const firstSetupCard = document.querySelector('section.card[data-tab="setup"]');
+  const firstSetupCard = document.querySelector('section.card[data-tab="analyze"]');
   if (!firstSetupCard || !firstSetupCard.parentElement) return;
   const bar = document.createElement("div");
   bar.id = "first-hint-bar";
   bar.className = "first-hint-bar";
-  bar.dataset.tab = "setup";
-  bar.classList.toggle("hidden-tab", getActiveTab() !== "setup");
+  bar.dataset.tab = "analyze";
+  bar.classList.toggle("hidden-tab", getActiveTab() !== "analyze");
   const text = document.createElement("span");
   text.innerHTML = t("firstHint.html");
   const closeBtn = document.createElement("button");
