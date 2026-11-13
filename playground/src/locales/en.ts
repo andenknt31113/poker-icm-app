@@ -153,6 +153,15 @@ export const en: Record<string, string> = {
 
 
   // ===== index.html: 計算結果 - ICM エクイティ =====
+  "chop.h2": "If you chop (make a deal)",
+  "chop.hint": "What each remaining player gets if the prizes are split now. Enter the real prize amounts under Payouts to use the figures directly.",
+  "chop.unit.aria": "Rounding unit",
+  "chop.unit.label": "Round to",
+  "chop.unit.none": "Exact",
+  "chop.th.icm": "ICM chop",
+  "chop.th.chip": "Chip chop",
+  "chop.total": "Total {total} (prizes for the {n} remaining players)",
+  "chop.note": "An ICM chop pays everyone their prize equity and is generally considered the fair method. A chip chop guarantees everyone the lowest remaining prize and splits the rest by chips, which favors the chip leader.",
   "result.icm.h2": "Prize equity (ICM)",
   "result.icm.th.rank": "Seat",
   "result.icm.th.stack": "Stack",

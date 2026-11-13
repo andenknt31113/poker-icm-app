@@ -254,3 +254,17 @@
 .nash-range-row { margin: 12px 0 4px; }
 .workspace .nash-range-row button { width: 100%; white-space: normal; }
 .nash-range-row .hint { margin: 8px 0 0; }
+
+/* ----- チョップ (ディール) ----- */
+.chop-units { display: flex; align-items: center; gap: 6px; margin: 10px 0; flex-wrap: wrap; }
+.chop-units-label { font-size: 12px; color: var(--muted); margin-right: 2px; }
+.chop-units button { min-height: 38px; padding: 0 12px; border: 1px solid var(--border); border-radius: 9px; background: transparent; color: var(--muted); font-family: var(--mono); font-size: 13px; cursor: pointer; }
+.chop-units button.active { border-color: var(--accent); background: var(--accent); color: #14241a; font-weight: 700; }
+#chop-table { width: 100%; border-collapse: collapse; }
+#chop-table th, #chop-table td { padding: 8px 6px; text-align: right; font-family: var(--mono); font-size: 13px; border-bottom: 1px solid var(--border); }
+#chop-table th { font-family: inherit; font-size: 11px; font-weight: 400; color: var(--muted); }
+#chop-table th:first-child, #chop-table td:first-child { text-align: left; white-space: nowrap; }
+#chop-table .chop-icm { color: var(--accent); font-weight: 700; }
+#chop-table .chop-chip { color: var(--muted); }
+#chop-total { margin: 8px 0; }
+.chop-units button:disabled { opacity: 0.35; cursor: default; }

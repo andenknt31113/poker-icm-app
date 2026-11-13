@@ -147,6 +147,15 @@ export const ja: Record<string, string> = {
 
 
   // ===== index.html: 計算結果 - ICM エクイティ =====
+  "chop.h2": "チョップ（ディール）するなら",
+  "chop.hint": "残っている全員で賞金を分けるときの金額です。賞金の欄に実際の金額を入れると、そのまま使えます。",
+  "chop.unit.aria": "金額の刻み",
+  "chop.unit.label": "刻み",
+  "chop.unit.none": "そのまま",
+  "chop.th.icm": "ICM チョップ",
+  "chop.th.chip": "チップ比例",
+  "chop.total": "合計 {total}（残り {n} 人ぶんの賞金）",
+  "chop.note": "ICM チョップは各自の賞金期待値どおりに分ける、一般に公平とされる方法です。チップ比例は最下位ぶんを全員に保証して残りをチップの比で分けるもので、チップリーダーに有利になります。",
   "result.icm.h2": "賞金期待値 (ICM)",
   "result.icm.th.rank": "位置",
   "result.icm.th.stack": "スタック",

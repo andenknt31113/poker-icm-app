@@ -188,6 +188,31 @@
         </table>
       </section>
 
+      <section class="card" data-tab="analyze" data-analysis-panel="equity" id="sec-chop">
+        <h2 data-i18n="chop.h2">チョップ（ディール）するなら</h2>
+        <p class="hint" data-i18n="chop.hint">残っている全員で賞金を分けるときの金額です。賞金の欄に実際の金額を入れると、そのまま使えます。</p>
+        <div class="chop-units" role="group" aria-label="金額の刻み" data-i18n-attr="aria-label:chop.unit.aria">
+          <span class="chop-units-label" data-i18n="chop.unit.label">刻み</span>
+          <button type="button" data-chop-unit="0" data-i18n="chop.unit.none">そのまま</button>
+          <button type="button" data-chop-unit="100">100</button>
+          <button type="button" data-chop-unit="500">500</button>
+          <button type="button" data-chop-unit="1000">1,000</button>
+        </div>
+        <table id="chop-table">
+          <thead>
+            <tr>
+              <th data-i18n="result.icm.th.rank">位置</th>
+              <th data-i18n="result.icm.th.stack">スタック</th>
+              <th data-i18n="chop.th.icm">ICM チョップ</th>
+              <th data-i18n="chop.th.chip">チップ比例</th>
+            </tr>
+          </thead>
+          <tbody id="chop-rows"></tbody>
+        </table>
+        <p class="hint" id="chop-total"></p>
+        <p class="hint" data-i18n="chop.note">ICM チョップは各自の賞金期待値どおりに分ける、一般に公平とされる方法です。チップ比例は最下位ぶんを全員に保証して残りをチップの比で分けるもので、チップリーダーに有利になります。</p>
+      </section>
+
       <section class="card" data-tab="analyze" data-analysis-panel="equity" id="sec-bf">
         <h2 data-i18n="result.bf.h2">BF マップ</h2>
         <p class="hint" data-i18n-html="result.bf.hint.html">

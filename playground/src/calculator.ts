@@ -40,6 +40,7 @@ import { renderBFMatrix, initBFMatrix } from "./bfMatrix.js";
 import { updatePositionWarn, updateDepthWarn } from "./warnings.js";
 import { initInfoModal } from "./infoModal.js";
 import { exactCallRequiredEquity } from "./callSpot.js";
+import { renderChop, clearChop, initChop } from "./chopView.js";
 
 // ===== DOM参照 (計算結果タブ) =====
 const callInput = $<HTMLInputElement>("call");
@@ -70,7 +71,7 @@ function renderSpotFoldSummaries(): void {
   const payoutsEl = document.getElementById("payouts-summary");
   if (payoutsEl) {
     const list = parseList(payoutsInput.value);
-    payoutsEl.textContent = list.length > 0 ? list.map((v) => String(Number(v.toFixed(2)))).join(" / ") : "—";
+    payoutsEl.textContent = list.length > 0 ? list.map((v) => Number(v.toFixed(2)).toLocaleString("en-US")).join(" / ") : "—";
   }
   const blindsEl = document.getElementById("blinds-summary");
   if (blindsEl) {
@@ -125,6 +126,8 @@ export function recompute(): void {
         </tr>`;
       })
       .join("");
+
+    renderChop(stacks, payouts);
 
     // BF
     let bf = 1.0;
@@ -320,6 +323,7 @@ export function recompute(): void {
     icmRows.innerHTML = `<tr><td colspan="4" class="error">${msg}</td></tr>`;
     bfResult.innerHTML = "";
     eqResult.innerHTML = "";
+    clearChop();
     hideHeroSummary();
     setRangeUnavailable(msg);
     updateDepthWarn(-1, -1, []);
@@ -406,4 +410,5 @@ export function initCalculator(): void {
 
   initInfoModal();
   initHeroSummary();
+  initChop();
 }
