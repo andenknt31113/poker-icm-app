@@ -249,3 +249,8 @@
 .workspace .limits-link { order: 19; text-align: center; }
 .limits-link button { min-height: 44px; padding: 8px 16px; border: 0; background: transparent; color: var(--muted); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .limits-link button:hover { color: var(--accent); }
+
+/* ----- 相手レンジに Nash を入れる ----- */
+.nash-range-row { margin: 12px 0 4px; }
+.workspace .nash-range-row button { width: 100%; white-space: normal; }
+.nash-range-row .hint { margin: 8px 0 0; }

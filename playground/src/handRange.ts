@@ -28,6 +28,7 @@ import {
 import { STORAGE_KEYS, readJson, writeJson } from "./storage.js";
 import { buildPushSpot, pushDepthTier } from "./pushSpot.js";
 import { fmt } from "./format.js";
+import { nashRangeForSpot } from "./nashRange.js";
 
 // ===== DOM 参照 (ハンド比較タブ) =====
 const pushRangeInput = $<HTMLInputElement>("push-range");
@@ -591,6 +592,47 @@ export function initHandRange(onChange: () => void): void {
 
   // pushRangeInput の変更は再計算トリガー
   pushRangeInput.addEventListener("input", onChange);
+
+  // この局面の Nash を相手レンジ (カスタム) に入れる。上位 X% は対ランダム勝率順で、
+  // 小さいペアやスーテッドコネクターが入りにくいため、実際の押し引きに近い形を1タップで置けるようにする。
+  document.getElementById("use-nash-range")?.addEventListener("click", () => {
+    const note = document.getElementById("nash-range-note");
+    const heroIdx = players.findIndex((p) => p.role === "hero");
+    const villainIdx = players.findIndex((p) => p.role === "villain");
+    const villainPushes = direction === "callBack";
+    const range = nashRangeForSpot(
+      players,
+      parseList(payoutsInput.value),
+      villainPushes ? villainIdx : heroIdx,
+      villainPushes ? heroIdx : villainIdx,
+      Number(nashSbInput.value) || DEFAULT_SB,
+      Number(nashBbInput.value) || DEFAULT_BB,
+      Number(nashAnteInput.value) || 0,
+      villainPushes ? "push" : "call",
+    );
+    if (note) note.classList.remove("hidden");
+    if (!range) {
+      if (note) note.textContent = t("hand.nashRange.failed");
+      return;
+    }
+    customVillainRange.clear();
+    for (const hand of range) customVillainRange.add(hand);
+    saveCustomRange();
+    if (note) {
+      // 2人だけの Nash なので、押す側の後ろに他の人が残っていると実際より広く出る
+      const pusherAct = actionOrderIdx(players[villainPushes ? villainIdx : heroIdx]?.position ?? "");
+      const othersBehind = players.filter((p, i) =>
+        i !== heroIdx && i !== villainIdx && p.stack > 0 && pusherAct >= 0 && actionOrderIdx(p.position) > pusherAct,
+      ).length;
+      note.textContent =
+        t(villainPushes ? "hand.nashRange.donePush" : "hand.nashRange.doneCall", {
+          pct: comboPctOfRange(range).toFixed(0),
+        }) + (othersBehind > 0 ? " " + t("hand.nashRange.multiway", { n: othersBehind }) : "");
+    }
+    const customTab = document.querySelector<HTMLButtonElement>('.mode-tab[data-mode="custom"]');
+    if (villainRangeMode !== "custom" && customTab) customTab.click();
+    else onChange();
+  });
 
   // 小さい表をタップ → 大きい表をその場で開く
   document.getElementById("villain-range-thumb")?.addEventListener("click", () => {

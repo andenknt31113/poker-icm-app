@@ -23,8 +23,11 @@ export default async function testWorkspaceFlow({ baseURL, createContext }) {
     await page.locator('[data-jump="sec-icm"]').click();
     if (!(await page.locator("#sec-icm").isVisible()) || await page.locator("#sec-hand").isVisible()) throw new Error("目的別表示が切り替わりません");
     // 一行判定は画面の先頭にいるときだけ出る (スクロール中は1行の局面と数字だけ)
-    await page.evaluate(() => window.scrollTo(0, 0));
-    await page.waitForFunction(() => !document.getElementById("hero-summary").classList.contains("floating"));
+    // 直前の切替でスムーズスクロールが走っているので、止まって先頭に戻るまで待つ
+    await page.waitForFunction(() => {
+      window.scrollTo({ top: 0, behavior: "instant" });
+      return window.scrollY === 0 && !document.getElementById("hero-summary").classList.contains("floating");
+    });
     await page.locator("#hero-summary-verdict-btn").click();
     await page.waitForSelector("#sec-hand", { state: "visible" });
     await page.locator('[data-jump="sec-nash"]').click();
