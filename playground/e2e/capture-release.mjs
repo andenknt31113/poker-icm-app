@@ -6,6 +6,8 @@ import { attachErrorCollector, assertNoErrors } from "./lib/context.mjs";
 
 const OUTPUT = process.argv[2];
 if (!OUTPUT) throw new Error("スクリーンショットの出力先を指定してください");
+// 表示言語 ("ja" / "en")。省略時はアプリの既定 (日本語)。例: node capture-release.mjs out en
+const CAPTURE_LANG = process.argv[3] ?? "";
 const DEVICES = [
   { name: "iphone-6.9", viewport: { width: 440, height: 956 }, deviceScaleFactor: 3 },
   { name: "ipad-13", viewport: { width: 1032, height: 1376 }, deviceScaleFactor: 2 },
@@ -19,10 +21,11 @@ try {
     await mkdir(folder, { recursive: true });
     const context = await browser.newContext({ viewport: device.viewport, deviceScaleFactor: device.deviceScaleFactor });
     try {
-      await context.addInitScript(() => {
+      await context.addInitScript((lang) => {
         localStorage.setItem("poker-icm-onboarding-done", "1");
         localStorage.setItem("poker-icm-tutorial-done", "1");
-      });
+        if (lang) localStorage.setItem("poker-icm-lang", lang);
+      }, CAPTURE_LANG);
       const page = await context.newPage();
       const errors = attachErrorCollector(page, device.name);
       await page.goto(server.baseURL, { waitUntil: "networkidle" });
