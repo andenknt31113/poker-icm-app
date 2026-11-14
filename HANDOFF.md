@@ -650,3 +650,16 @@
 - 検証: 型チェック、単体 93 + 323、ビルド成功。PR #83、CI（push / pull_request とも success）を読んでから別の操作で main にマージ（735556c）。本番の `/legal` で「Web 版」「ブラウザ」が0件、新しい文面が出ていることを確認。
 - iOS アプリ内の規約表示は 1.4(1) のビルドのまま（古い文面）。次のビルドで入れ替わる。
 - 残っている Web 版関連（未着手・判断待ち）: `index.html` の canonical / OGP の URL、README の公開 URL、Web で開いたときの「ホーム画面に追加」の案内（`pwa.ts`）。
+
+## 2026-11-14 21:20頃: iOS 1.4.1(1) を審査に提出（ストアで見つけてもらうための更新）
+- 本人「（ASO の提案を）おすすめで全部やっといて」。ブランチ `release/ios-1.4.1`。
+- アプリ: 評価のお願いを追加（`playground/src/reviewPrompt.ts`。3回以上起動＋Nash の一覧を2回最後まで見た直後、120日あける。iOS アプリ内のみ。`@capacitor-community/in-app-review` 8.0.0）。撮影スクリプトに言語指定を追加。バージョン 1.4.1(1)。同梱の Web 資産は build ec2b542（サポートページ・利用規約は Web 版の案内を外した新しい文面）。
+- 検証: 型チェック、単体 93 + 328 成功。シミュレーター（iPhone 17 / iOS 27.2、Release）で、条件を満たした状態で Nash の計算が終わった直後に評価ダイアログが出ることを確認（`artifacts/release-1.4.1/sim-review.png`）。英語表示のスクショを目視（はみ出し・未翻訳は見当たらず）。実機は未確認。
+- 署名付き Archive（1.4.1/1、codesign 成功）→ アップロード成功、処理済み VALID（build id b3fc3e7b-a201-4d73-88b5-e0d3d3f69425）。
+- ASC: 1.4.1 の version id 8c6cff85-065c-4690-a813-2177b61d7935（手動リリース）。ja loc id 9d60bb76-47c4-49fc-8b61-2e11d49f957b、en-US loc id d9e6cfb0-5c27-477f-880f-1197d8a3376b、編集中の appInfo id 883ffc7e-3837-416c-89fd-8ed19cc3dabe、reviewDetail id f2312551-bb37-449b-b295-7495c55c1a0b。
+  - 日本語: アプリ名「Poker ICM - ポーカー トーナメント計算」、サブタイトル「必要勝率・Nashレンジ・ICMチョップを計算」、キーワードを 93/100 文字に（名前・サブタイトルと重なる語を外して入れ替え）。
+  - 英語（en-US）を新規追加: アプリ名「Poker ICM - Nash Push/Fold」、サブタイトル「ICM calculator, ranges & chop」、説明文・キーワード・宣伝文・更新説明、スクショ iPhone / iPad 各5枚（全枚 COMPLETE）。
+  - 文面は `docs/RELEASE_1_4_1.md`、送った内容と変更前の控えは `artifacts/release-1.4.1/asc/`。
+- 審査に提出（reviewSubmission 7b81e5d6-5ff1-4193-91ca-8081b7ba2601、WAITING_FOR_REVIEW）。1.4 は公開中のまま。
+- BB アンティの確認: アプリは「BB が全員分のアンティをまとめて払う」前提（初期値 1BB）。本人の理解と一致。
+- 残り: 審査結果待ち → 承認後に公開操作（手動）。実機での確認。課金アイテムの英語名は未確認（英語のストアで日本語名のまま出る可能性）。検索順位は測っていない。
