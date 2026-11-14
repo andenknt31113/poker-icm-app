@@ -572,3 +572,23 @@
 - `setupPlayers.ts` の `fillMissingPositions()`: 決まっている席はそのまま、未設定・重複の席へその人数で使う位置のうち空いているものを入れる。誰も位置を持たない卓は上の行から BTN → SB → BB の順。ボタンは document で受けて、取り消し用の記録 → 埋める → 再描画・再計算（「元に戻す」で戻せる）。
 - 検証: 単体 core 93 + UI 323 件（fillPositions 4件追加）、型チェック、ビルド、E2E 17 件、git diff --check 成功。プレビュー 375px で、1席の位置を外す → Nash に案内とボタン → 押すと位置が入り一覧（20行）が出ること、コンソールエラーなしを確認。
 - 残り: コミットと Web 反映（指示待ち）。ローカルは `feat/calc-screen-multiway-nash` のまま（main のマージコミット 2801696 は未取り込み）。
+
+## 2026-11-14: 位置を埋めるボタンと、読み込み中の二重計算の修正を Web に反映
+- PR #79（位置が未設定の席を埋めるボタン）を main にマージ（587dc31）。**手順の誤り**: CI の結果を読むコマンドとマージを一続きで実行したため、push 側の build が失敗している状態でマージした（pull_request 側は成功）。
+- 失敗の原因: E2E 14「Nashの一覧が席順と合いません」。Nash タブを開くと同じ画面切替で計算の呼び出しが2回来る。1回目が3人の勝率表を読み込んでいる間に、2回目が表なしで解き始め、読み込み後に解き直していた。画面では結果が一度出て消えて出直し、テストはその隙間を読んでいた。dcefd1c（オーバーコール対応）から入っていた不具合で、#79 の変更が原因ではない。
+- 修正: `nashTableUI.ts` に `threeWayLoading` を追加し、読み込みが終わるまで計算を始めない。E2E 15 に「一度出た行が減らない」確認を追加。ローカルで E2E 17 件を3回連続成功。
+- PR #80 を作成 → CI 3本（push / pull_request / Workers Builds）の成功を確認してから main にマージ（9bc0396）。本番 https://poker-icm-app.andenknt31113.workers.dev/ のフッターが build 9bc0396 に更新、`/three-way-equity.bin` は 200。
+- 本番をユーザーの Chrome で確認（読み取りのみ）: 保存データ（3席の位置が未設定）で、Nash に新しい案内文と「空いている位置を自動で入れる」ボタンが出る。保存データを変えないようボタンは押していない。
+- 以後の決まり: CI の結果を読むコマンドと `gh pr merge` を同じコマンドにつなげない。結果を読んでから別の呼び出しでマージする。
+- ローカルは `fix/nash-load-race` ブランチ（内容は main の 9bc0396 の1つ前と同じ）。この追記は未コミット。
+- 残り: iOS アプリは 1.3 の旧画面のまま（新ビルド・審査・ストアの説明文とスクショの差し替えが必要）。英語表示の目視、旧 Nash 表示のコード削除、CI のランナー固定（Playwright 更新後に戻す）。
+
+## 2026-11-14: iOS 1.4(1) をアップロードし、審査提出の直前まで準備（未コミット・未提出）
+- ユーザー「iOSアプリにも反映して」。ブランチ `release/ios-1.4`（main の 9bc0396 から）。Xcode を 1.4(1) に変更、cap sync（同梱 Web 資産は build 9bc0396）。
+- **Xcode 27.2（iOS 27 SDK）でビルドすると起動直後に落ちた**（`UIScene life cycle is required for apps built with this SDK`、SIGTRAP）。今回の Web 側の変更が原因ではなく、ビルド環境が変わったため。公開中の 1.3 は旧 SDK ビルドなので影響なし。対応: Capacitor 8.3.4 → 8.6.2、`@capacitor/app` 8.1.0 → 8.1.2（package.json / package-lock.json / CapApp-SPM/Package.swift）、公式テンプレートどおり `ios/App/App/SceneDelegate.swift` 追加・`AppDelegate.swift` 差し替え・`Info.plist` に `UIApplicationSceneManifest`・pbxproj に登録。
+- 検証: 型チェック、単体 93 + 323 成功。シミュレーター（iPhone 17 / iOS 27.2、Release）で起動・初回案内の表示、確認用コピーへの自動操作で Nash 一覧とオーバーコール行（3人の勝率表の読み込み）を確認。タップ操作（Pro の購入画面・StoreKit）と実機は未確認（シミュレーター操作ツールの許可が出なかった）。E2E は今回走らせていない（Web 資産は 9bc0396 のまま）。
+- 署名付き Archive（`artifacts/release-1.4/PokerICM-1.4-build1.xcarchive`、1.4/1、codesign 成功、同梱 public は dist と一致）→ App Store Connect へアップロード成功、処理済み VALID（build id 17c1d0b0-0cef-40ca-b82f-4a0ea32faed8）。
+- ASC（API）: 1.4 の下書きを作成（version id 16535d2c-9ebc-4100-891c-92b05c4057bd、手動リリース、ja loc id 0c389145-bae3-43e2-95dd-662497c456a2、reviewDetail id ec5fe522-4b23-4121-a7dc-d1c875d34a5d）。ビルド1を選択。更新説明・説明文・プロモーションテキスト・キーワード（「練習」→「チョップ」）・Review Notes を docs/RELEASE_1_4.md の文面に更新し、読み直して一致を確認。スクショを新画面の5枚ずつ（iPhone 6.9 / iPad 13、`artifacts/release-1.4/screenshots`）に差し替え、全枚 COMPLETE。公開中 1.3 の文面・スクショは変わっていないことを確認。変更前の控えは `artifacts/release-1.4/asc-*-before.json`。
+- `playground/e2e/capture-release.mjs` を新画面用に更新（練習タブを撮らない）。
+- **審査提出はしていない**（文面は自分が書いたものなので本人の確認待ち）。練習モードは 1.4 では非表示になる点を更新説明・説明文に明記した。
+- 残り: 文面の確認 → 審査提出 → 承認後に公開操作（手動リリース）。変更のコミット（指示待ち）。実機での確認。

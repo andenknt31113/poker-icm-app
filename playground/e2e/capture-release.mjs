@@ -40,17 +40,17 @@ try {
         if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)) throw new Error(`${name}: 横はみ出し`);
         await page.screenshot({ path: path.join(folder, `${name}.png`), animations: "disabled" });
       };
-      await capture("01-setup", "#setup-players");
-      await capture("02-seats", "#players-list");
-      await page.locator('.tab-btn[data-tab="analyze"]').click();
-      await capture("03-analysis", "#hero-summary");
+      // 1 画面構成 (局面 + 結果カード → レンジ → 賞金・BF → チョップ → Nash)。練習タブは非表示なので撮らない
+      await capture("01-spot", "#hero-summary");
+      await capture("02-players", "#setup-players");
+      await page.locator('[data-jump="sec-hand"]').click();
+      await capture("03-range", "#sec-hand");
       await page.locator('[data-jump="sec-icm"]').click();
       await capture("04-prizes", "#sec-icm");
+      await capture("05-chop", "#sec-chop");
       await page.locator('[data-jump="sec-nash"]').click();
-      await page.waitForFunction(() => document.getElementById("nash-sb-stats")?.textContent.length > 0);
-      await capture("05-nash", "#nash-context");
-      await page.locator('.tab-btn[data-tab="practice"]').click();
-      await capture("06-practice", ".practice-actions-top");
+      await page.waitForFunction(() => document.querySelectorAll("#nash-table .nash-row").length > 0 && document.getElementById("nash-table-status")?.textContent === "", null, { timeout: 60000 });
+      await capture("06-nash", "#sec-nash");
       assertNoErrors(errors, device.name);
       console.log(`${device.name}: 6枚作成、横はみ出し・JavaScriptエラーなし`);
     } finally { await context.close(); }
