@@ -10,6 +10,18 @@ export default async function testNashInvalidation({ baseURL, createContext }) {
     await page.click('.tab-btn[data-tab="analyze"]');
     await page.click('[data-jump="sec-nash"]');
     await page.waitForFunction(() => document.querySelectorAll("#nash-table .nash-row").length > 0 && document.getElementById("nash-table-status")?.textContent === "");
+    // 一度出た結果が、勝率表の読み込み後に消えて出直さないこと (読み込み中は計算を始めない)
+    await page.evaluate(() => {
+      window.__nashRowDrops = 0;
+      let last = document.querySelectorAll("#nash-table .nash-row.push").length;
+      new MutationObserver(() => {
+        const now = document.querySelectorAll("#nash-table .nash-row.push").length;
+        if (now < last) window.__nashRowDrops++;
+        last = now;
+      }).observe(document.getElementById("nash-table"), { childList: true, subtree: true });
+    });
+    await page.waitForTimeout(1500);
+    if (await page.evaluate(() => window.__nashRowDrops) > 0) throw new Error("Nash の結果が一度出たあとで消えて出直している");
     // 行をタップすると 13x13 の表が開き、もう一度で閉じる
     await page.locator("#nash-table .nash-row.push").first().click();
     if (await page.locator("#nash-table .nash-row-grid .hand-cell").count() !== 169) throw new Error("行をタップしても表が開かない");

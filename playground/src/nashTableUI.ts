@@ -39,6 +39,7 @@ let state: TableState | null = null;
 let openRow: string | null = null;
 let timer: ReturnType<typeof setTimeout> | null = null;
 let threeWayTried = false;
+let threeWayLoading = false;
 
 function inputKey(): string {
   return JSON.stringify([
@@ -158,11 +159,16 @@ function solveNext(): void {
 export function ensureNashTable(): void {
   if (document.body.dataset.activeTab !== "analyze" || document.body.dataset.analysisView !== "nash") return;
   // 3 人の勝率表 (オーバーコール用) をまだ読んでいなければ、先に読む。読めなくても計算は続ける
+  // 読み込み中に別の呼び出し (同じ画面切替で 2 回来る) が計算を始めると、表なしで一度解いてから
+  // 読み込み後に解き直すことになり、結果が一瞬出て消える。読み終わるまで待つ。
+  if (threeWayLoading) return;
   if (!hasThreeWayTable() && !threeWayTried) {
     threeWayTried = true;
+    threeWayLoading = true;
     const status = document.getElementById("nash-table-status");
     if (status) status.textContent = t("nash.table.loading");
     void loadThreeWayTable().then(() => {
+      threeWayLoading = false;
       state = null;
       ensureNashTable();
     });
