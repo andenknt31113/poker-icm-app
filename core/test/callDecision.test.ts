@@ -201,7 +201,7 @@ describe("calculateExactCallEquity", () => {
     ).toThrow();
   });
 
-  it("heroPosition/villainPosition のどちらも BB でないとエラー (ante 負担者不明)", () => {
+  it("heroPosition/villainPosition のどちらも BB でなく bbPlayerIndex も無いとエラー (ante 負担者不明)", () => {
     expect(() =>
       calculateExactCallEquity({
         stacks: [1000, 1000, 1000],
@@ -215,5 +215,73 @@ describe("calculateExactCallEquity", () => {
         ante: 100,
       }),
     ).toThrow();
+  });
+  it("BB が第三者 (BTN のオールインを SB が受ける): BB の blind と ante が dead money、チップは保存", () => {
+    // 並び: BTN=villain(2000), SB=hero(1500), BB=第三者(3000)
+    const r = calculateExactCallEquity({
+      stacks: [2000, 1500, 3000],
+      payouts: [50, 30, 20],
+      heroIndex: 1,
+      villainIndex: 0,
+      heroPosition: "SB",
+      villainPosition: "OTHER",
+      sbPlayerIndex: 1,
+      bbPlayerIndex: 2,
+      sb: 50,
+      bb: 100,
+      ante: 100,
+    });
+    // matched = 1500、dead = BB 100 + ante 100、pot = 3200
+    expect(r.stacksFold).toEqual([2250, 1450, 2800]);
+    expect(r.stacksWin).toEqual([500, 3200, 2800]);
+    expect(r.stacksLose).toEqual([3700, 0, 2800]);
+    for (const st of [r.stacksFold, r.stacksWin, r.stacksLose]) {
+      expect(sum(st)).toBeCloseTo(6500, 6);
+    }
+  });
+
+  it("BB が第三者でも、勝者総取りなら必要勝率はポットオッズ (cEV) と一致する", () => {
+    const common = { sb: 50, bb: 100, ante: 100 };
+    const r = calculateExactCallEquity({
+      stacks: [2000, 1500, 3000],
+      payouts: [100],
+      heroIndex: 1,
+      villainIndex: 0,
+      heroPosition: "SB",
+      villainPosition: "OTHER",
+      sbPlayerIndex: 1,
+      bbPlayerIndex: 2,
+      ...common,
+    });
+    const odds = calculatePotOdds({
+      heroStack: 1500,
+      villainStack: 2000,
+      heroPosition: "SB",
+      villainPosition: "OTHER",
+      ...common,
+    });
+    expect(r.requiredEquity).toBeCloseTo(
+      odds.callAmount / (odds.callAmount + odds.potIfWin),
+      9,
+    );
+  });
+
+  it("ショートの第三者 BB は持っている分だけ払う (ante → blind の順)", () => {
+    const r = calculateExactCallEquity({
+      stacks: [2000, 1500, 120],
+      payouts: [50, 30, 20],
+      heroIndex: 1,
+      villainIndex: 0,
+      heroPosition: "SB",
+      villainPosition: "OTHER",
+      sbPlayerIndex: 1,
+      bbPlayerIndex: 2,
+      sb: 50,
+      bb: 100,
+      ante: 100,
+    });
+    expect(r.stacksFold[2]).toBe(0);
+    expect(sum(r.stacksWin)).toBeCloseTo(3620, 6);
+    expect(r.stacksWin[1]).toBe(3120);
   });
 });

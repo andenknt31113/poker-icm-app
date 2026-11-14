@@ -12,7 +12,7 @@
 
 export const en: Record<string, string> = {
   "setup.players.roles": "🎯 You　⚔️ Opponent",
-  "setup.players.swap": "You ⇄ opponent",
+  "setup.players.swap": "⇄ Swap roles",
   "setup.players.locked": "Edit up to {n} players for free. Remove players or unlock Pro to edit this spot. You can still analyze the example.",
   "setup.player.stack.aria": "Player {n} stack in BB",
   "setup.player.position.aria": "Player {n} position",
@@ -35,10 +35,10 @@ export const en: Record<string, string> = {
   "nash.theyCall": "Opponent: call",
   "nash.youCall": "You: call",
   "nash.theyPush": "Opponent: push",
-  "nash.title.youPush": "🎯 Your push range 🔴",
-  "nash.title.theyCall": "⚔️ Opponent call range 🟢",
-  "nash.title.theyPush": "⚔️ Opponent push range 🔴",
-  "nash.title.youCall": "🎯 Your call range 🟢",
+  "nash.title.youPush": "Range you shove 🔴",
+  "nash.title.theyCall": "Range they call with 🟢",
+  "nash.title.theyPush": "Range they shove 🔴",
+  "nash.title.youCall": "Range you call with 🟢",
   "flow.equityDetails": "Review call amount and required equity →",
   "flow.example": "Start with an example",
   "flow.exampleHint": "Choose a familiar tournament spot",
@@ -46,7 +46,7 @@ export const en: Record<string, string> = {
   "flow.ownHint": "Enter stacks and payouts",
   "flow.practice": "Practice a decision",
   "flow.practiceHint": "Build intuition, one hand at a time",
-  "flow.hand": "Ranges",
+  "flow.hand": "Hands",
   "flow.equity": "Prizes / BF",
   "flow.nash": "Nash",
   "workspace.eyebrow": "TOURNAMENT / STUDY",
@@ -75,7 +75,7 @@ export const en: Record<string, string> = {
   // ===== index.html: タブ (幅制約: 短く) =====
   "tabs.aria": "Sections",
   "tabs.setup": "Setup",
-  "tabs.analyze": "Analyze",
+  "tabs.analyze": "Calculator",
   "tabs.practice": "Practice",
   "analyze.jump.aria": "Analysis sections",
   "analyze.jump.results": "Results",
@@ -111,7 +111,7 @@ export const en: Record<string, string> = {
   "setup.prompt.savePayout": "Save with a name (e.g. JOPT / APT / My HU)",
 
   // ===== index.html: セットアップ - プレイヤー =====
-  "setup.players.h2": "Players",
+  "setup.players.h2": "Spot",
   "setup.players.hint.html": "Enter stacks in BB. Choose 🎯 you and ⚔️ your opponent.",
   "seat.edit": "Edit seats / BTN / removal",
   "seat.done": "Done editing seats",
@@ -119,35 +119,58 @@ export const en: Record<string, string> = {
   "setup.players.add": "+ Add player",
   "setup.players.addMax": "(max {n})",
   "setup.players.randomize.title": "Randomize current players’ stacks to 3–30 BB",
-  "setup.players.randomize": "\n            🎲 Randomize stacks\n          ",
+  "setup.players.randomize": "🎲 Random",
 
   // ===== index.html: セットアップ - ペイ構造 =====
-  "setup.payouts.h2": "Payout structure",
-  "setup.payouts.hint": "Enter prizes from 1st place down. % or $ both work.",
+  "setup.payouts.h2": "Payouts",
+  "setup.payouts.hint": "Enter from 1st place down. % or amounts both work.",
   "setup.payouts.add": "\n          + Add place\n        ",
   "setup.payouts.summary": "Presets & saved (tap to expand)",
   "setup.payouts.presetLabel": "Presets",
-  "setup.payouts.preset.top3": "Top 3 (50/30/20)",
-  "setup.payouts.preset.top2": "Top 2 (65/35)",
-  "setup.payouts.preset.wta": "WTA",
-  "setup.payouts.preset.ft9": "9-max FT",
-  "setup.payouts.preset.satellite": "🛰 Satellite Top 3",
+  "setup.payouts.preset.top3": "50/30/20",
+  "setup.payouts.preset.top2": "65/35",
+  "setup.payouts.preset.wta": "Winner takes all",
+  "setup.payouts.preset.ft9": "Top 7",
+  "setup.payouts.preset.satellite": "Satellite, 3 seats",
   "setup.payouts.savedLabel": "\n              Saved\n              ",
   "setup.payouts.saveBtn": "\n                + Save current values\n              ",
-  "setup.blinds.h2": "Blinds & ante",
+  "setup.blinds.h2": "Blinds",
+  "setup.blinds.summary": "SB {sb} / BB {bb} / ante {ante}",
+  "setup.cols.pos": "Seat",
+  "setup.cols.stack": "Stack (BB)",
+  "setup.cols.role": "Role",
+  "setup.presets.open": "Choose",
+  "hand.quick.aria": "Range shortcuts",
+  "hand.nashRange.btn": "Use this spot’s Nash range for the opponent",
+  "hand.nashRange.donePush": "Loaded the range the opponent shoves at Nash ({pct}% of hands). Tap again after changing the spot.",
+  "hand.nashRange.doneCall": "Loaded the range the opponent calls with at Nash ({pct}% of hands). Tap again after changing the spot.",
+  "hand.nashRange.failed": "Nash cannot be calculated for this spot. Check the roles, stacks and payouts.",
+  "hand.nashRange.multiway": "Calls from the other {n} player(s) behind the shover are included.",
+  "hand.thumb.aria": "Show their range as a chart",
+  "hand.thumb.caption": "Open chart",
+  "calc.summary.chipOnly": "Chips only: {v}%",
   "setup.blinds.hint": "Stacks are in BB units, so BB is fixed at 1. For ante games, enter the table total.",
 
 
   // ===== index.html: 計算結果 - ICM エクイティ =====
-  "result.icm.h2": "ICM equity",
-  "result.icm.th.rank": "#",
+  "chop.h2": "If you chop (make a deal)",
+  "chop.hint": "What each remaining player gets if the prizes are split now. Enter the real prize amounts under Payouts to use the figures directly.",
+  "chop.unit.aria": "Rounding unit",
+  "chop.unit.label": "Round to",
+  "chop.unit.none": "Exact",
+  "chop.th.icm": "ICM chop",
+  "chop.th.chip": "Chip chop",
+  "chop.total": "Total {total} (prizes for the {n} remaining players)",
+  "chop.note": "An ICM chop pays everyone their prize equity and is generally considered the fair method. A chip chop guarantees everyone the lowest remaining prize and splits the rest by chips, which favors the chip leader.",
+  "result.icm.h2": "Prize equity (ICM)",
+  "result.icm.th.rank": "Seat",
   "result.icm.th.stack": "Stack",
-  "result.icm.th.equity": "$ equity",
-  "result.icm.th.pct": "%",
+  "result.icm.th.equity": "Prize equity",
+  "result.icm.th.pct": "Share",
 
   // ===== index.html: 計算結果 - BF マップ =====
-  "result.bf.h2": "BF map",
-  "result.bf.hint.html": "\n          Assumes 🎯 you vs ⚔️ villain all-in. Chips at risk auto-adjust to the shorter stack.\n        ",
+  "result.bf.h2": "BF map (everyone vs everyone)",
+  "result.bf.hint.html": "Rows are you, columns are the opponent. Bottom = BF, top = RP in an even-money all-in. Values assume a two-player all-in for the effective stack.",
   "result.bf.matrixTitle": "Everyone vs everyone BF map 🆕",
   "result.bf.matrixHint.html": "\n          Rows = Hero (you), columns = Villain.\n          Top = Risk Premium at a 1:1 pot, bottom = BF value.\n        ",
   "result.bf.howto.summary": "📖 How to read the table (click to expand)",
@@ -156,8 +179,11 @@ export const en: Record<string, string> = {
   "result.bf.scrollHint": "→ Scroll sideways",
 
   // ===== index.html: 計算結果 - 必要勝率 =====
-  "result.eq.h2": "Required equity (cEV / $EV / RP)",
-  "result.eq.hint.html": "\n          Auto-calculated for a 🎯 vs ⚔️ all-in. Overwrite the numbers to enter them manually.\n        ",
+  "result.eq.h2": "Required equity & RP",
+  "calc.eq.flow.chip": "Chips only",
+  "calc.eq.flow.rp": "+ RP",
+  "calc.eq.flow.icm": "Required (ICM)",
+  "result.eq.hint.html": "Calculated automatically from your all-in against the villain. Overwrite the numbers to enter them manually.",
   "result.eq.callLabel": "\n            Call amount\n            ",
   "result.eq.call.placeholder": "e.g. 8.0",
   "result.eq.potwinLabel": "\n            Net gain if you win\n            ",
@@ -165,15 +191,28 @@ export const en: Record<string, string> = {
   "result.eq.autofillBtn": "\n          🔄 Back to auto-calc\n        ",
 
   // ===== index.html: ナッシュ均衡 =====
-  "nash.h2": "Nash equilibrium (HU push/fold)",
-  "nash.hint.html": "\n          Computes the two-player Nash equilibrium where the earlier position pushes and the later one calls, ICM included.\n          <br />\n          ※ Assumes HU 2-way. A warning appears when other players sit between (e.g. BTN + BB).\n          <br />\n          ※ This equilibrium assumes a <strong>push-or-fold only</strong> game. Guide: effective 12BB or less. From 12 to 20BB a caution is shown, and above 20BB the result is folded away as out of range (real play adds min-raises and limps).\n          <br />\n          Blinds and antes are paid by the actual positions (a BTN shove posts no blind; the BB pays the BB ante). Opening this view calculates automatically.\n        ",
+  "nash.h2": "Nash (push or fold)",
+  "nash.table.lead": "For each player who could shove first: the range they can shove and the range each player behind can call with. Tap a row to open its chart.",
+  "nash.table.push": "{pos} shoves",
+  "nash.table.call": "{pos} calls",
+  "nash.table.overcall": "{pos} also calls",
+  "nash.table.overcallSummary": "Then also call: {list}",
+  "nash.table.loading": "Loading equity table…",
+  "nash.table.noOvercall": "The three-way equity table could not be loaded, so second calls (over-calls) are not included.",
+  "nash.table.none": "none",
+  "nash.table.calculating": "Calculating… ({done}/{total})",
+  "nash.table.deep": "Effective {eff}BB is deeper than push-or-fold play. Treat this as reference only.",
+  "nash.table.needPositions": "Set every seat (BTN, SB, BB, …) to see this table.",
+  "nash.others": "Ranges the other players behind call with: {list}",
+  "nash.multiway.note.html": "Calls from the {n} player(s) behind the shover ({list}) are included.",
+  "nash.hint.html": "Calculates the Nash equilibrium in prize equity (ICM) where the first player to act shoves and the players behind decide to call or fold.<br />Calls from every player still behind the shover are included, as is a second call after someone has already called (an over-call). A third call (four or more players all-in) is not.<br />※ The equilibrium assumes <strong>push or fold only</strong>. It is meant for effective stacks of 12BB or less; a caution appears at 12–20BB and results are folded away above 20BB (real play includes 2BB opens and limps).<br />Blinds and the ante are posted by the players in those seats (a BTN shove posts no blind; the BB posts the big blind ante). Opening this view calculates automatically.",
   "nash.ante.label": "\n            Total ante\n            ",
   "nash.solveBtn": "Recalculate",
   "nash.explanation": "Assumptions and limitations",
   "nash.editSpot": "Edit situation",
 
   // ===== index.html: ハンド比較 =====
-  "hand.h2": "Hand range comparison",
+  "hand.h2": "Hand decision",
   "hand.hint.html": "Assume an opponent range to find the hands you can call or shove.",
   "hand.direction.callBack": "Facing an all-in",
   "hand.direction.pushBack": "Shoving myself",
@@ -187,19 +226,19 @@ export const en: Record<string, string> = {
   "hand.custom.actions.all": "Select all",
   "hand.custom.actions.clear": "Clear all",
   "hand.custom.actions.fromPreset": "\n              Load from preset\n            ",
-  "hand.title.villainPush": "Villain push range 🔴",
-  "hand.title.heroCall": "Your call range 🟢",
-  "hand.label.villainPush": "Villain push range",
-  "hand.title.villainCall": "Villain call range 🟢",
-  "hand.title.heroPush": "Your push range 🔴",
-  "hand.label.villainCall": "Villain call range",
+  "hand.title.villainPush": "Range they shove 🔴",
+  "hand.title.heroCall": "Hands you can call 🟢",
+  "hand.label.villainPush": "Range they shove",
+  "hand.title.villainCall": "Range they call with 🟢",
+  "hand.title.heroPush": "Hands you can shove 🔴",
+  "hand.label.villainCall": "Range they call with",
   "hand.legend.html": "👆 <strong>Tap any cell</strong> to see that hand’s equity and a call/fold verdict above the grid.<br />In “Find my call range”: 🟩 ≥ required +0.1pt = call ／ 🟨 within ±0.1pt = borderline (a true coin flip) ／ uncolored = fold.<br />In “Find my push range”: 🟩 = shoving beats folding in $EV ／ 🟨 = borderline, essentially a tie ／ uncolored = fold.",
   "hand.inspect.detail.html": "<strong>{hand}</strong>: equity {eq}% − required {req}% = <strong>{margin}pt</strong> → {verdict}",
   "hand.inspect.verdict.call": "Call",
   "hand.inspect.verdict.marginal": "Borderline",
   "hand.inspect.verdict.fold": "Fold",
-  "hand.callStats.callBack": "Hands with required equity <strong>{req}%</strong> or higher: <strong>{callable}</strong> hand types / {callCombos} combos (<strong>{callPct}%</strong>) / borderline: {marginal} types",
-  "hand.callStats.pushBack": "Assuming the villain calls <strong>{villainPct}%</strong>, hands where your shove is +EV: <strong>{n}</strong> hand types / {pushCombos} combos (<strong>{pPct}%</strong>) / borderline: {marginal} types",
+  "hand.callStats.callBack": "<strong>{callable}</strong> hand types, <strong>{callPct}%</strong> of all hands ({callCombos} combos): hands at or above the required equity of <strong>{req}%</strong>. Borderline: {marginal} types",
+  "hand.callStats.pushBack": "<strong>{n}</strong> hand types, <strong>{pPct}%</strong> of all hands ({pushCombos} combos): hands where shoving beats folding if they call <strong>{villainPct}%</strong>. Borderline: {marginal} types",
   "hand.banner.callerLabel.hero": "hero (you)",
   "hand.banner.noBehind.html": "\n      ✅ {label} = <strong>{pos}</strong>: nobody left to act, so this 1-vs-1 model applies exactly.\n    ",
   "hand.banner.behind.html": "\n      <details class=\"hand-caveat\">\n        <summary>⚠ {label} = <strong>{pos}</strong>: over-calls from {n} player(s) behind are not reflected — play a bit tighter</summary>\n        <div class=\"hand-caveat-body\">\n          This is a 1-vs-1 all-in model. It does not include the risk of the {n} players ({list}) behind {label} coming over the top. {note}\n        </div>\n      </details>\n    ",
@@ -263,30 +302,28 @@ export const en: Record<string, string> = {
   "onboarding.step1.body": `
       <p>
         In tournaments, your <strong>chip count</strong> and its <strong>prize value</strong> aren’t the same.
-        This app lets you both <strong>calculate</strong> that ICM pressure in numbers and
-        <strong>practice</strong> it with quizzes.
+        This app lets you <strong>calculate</strong> that ICM pressure in numbers.<span data-feature="practice"> You can also <strong>practice</strong> it with quizzes.</span>
       </p>
       <ul class="onboarding-tab-list">
-        <li><span class="onboarding-tab-icon">⚙️</span> Setup (enter stacks and payouts)</li>
-        <li><span class="onboarding-tab-icon">📊</span> Analyze (ICM, BF, required equity, ranges, Nash)</li>
-        <li><span class="onboarding-tab-icon">🎲</span> Practice (real-feel quizzes)</li>
+        <li><span class="onboarding-tab-icon">📊</span> Calculator (enter stacks and payouts; required equity, callable hands and Nash appear right below)</li>
+        <li data-feature="practice"><span class="onboarding-tab-icon">🎲</span> Practice (real-feel quizzes)</li>
       </ul>
       <p class="hint">It covers all-in decisions: calling an opponent’s all-in, or shoving with a short stack. It does not calculate min-raises or limps.</p>
     `,
   "onboarding.step2.title": "⚡ Try it first",
   "onboarding.step2.body": `
-      <p>There are two good ways in.</p>
+      <p>Start by changing the numbers.</p>
       <ol>
         <li>
-          Tap a <strong>scenario preset</strong> in <strong>⚙️ Setup</strong> →
-          check ICM / BF right away in <strong>📊 Analyze</strong>
+          Change the stacks in <strong>📊 Calculator</strong> (or pick from “Examples and saved spots”) →
+          check the required equity and hand chart right below
         </li>
-        <li>
+        <li data-feature="practice">
           Answer quizzes in the <strong>🎲 Practice</strong> tab to build a feel
         </li>
       </ol>
       <p class="hint">
-        Start from either one — and if you get stuck, the <strong>❓</strong> at the
+        If you get stuck, the <strong>❓</strong> at the
         top right opens the how-to guide and term explanations anytime.
       </p>
     `,
@@ -300,19 +337,19 @@ export const en: Record<string, string> = {
   "guide.close.aria": "Close",
   // アプリ版のみ表示 (guide.ts proNoteHtml)。価格は書かない。
   "guide.proNote.html":
-    "ℹ️ Scenario presets, results, Nash equilibrium, and practice are all free. <strong>Tables with up to 4 players are fully editable (stacks & payouts)</strong>. Editing tables with 5+ players and saving scenarios are 🔒 Pro (one-time purchase) features.",
+    "ℹ️ Scenario presets, results and Nash equilibrium are all free. <strong>Tables with up to 4 players are fully editable (stacks & payouts)</strong>. Editing tables with 5+ players and saving scenarios are 🔒 Pro (one-time purchase) features.",
   "guide.body.html": `
         <p class="guide-intro">
           This tool focuses on short-stack (~20bb) all-in spots.
         </p>
         <details class="howto">
-          <summary>⚙️ Setup — what it does & how to use</summary>
+          <summary>📊 Calculator: entering the spot — what it does & how to use</summary>
           <div class="howto-body">
-            <p>Build a scenario by setting player stacks, payout structure, and 🎯 you / ⚔️ villain.</p>
+            <p>Enter stacks, seats, You / Villain and payouts in the “Spot” card at the top. Results appear right below and update as you type.</p>
             <ol>
-              <li>Open “Preset list” and tap a preset to load a situation instantly</li>
-              <li>Adjust stacks under “Players” (add more with + Add player)</li>
-              <li>Tap to set 🎯 you / ⚔️ villain</li>
+              <li>Open “Examples and saved spots” and tap one to load a situation instantly</li>
+              <li>Adjust stacks (add more with + Add player). Tap the Payouts and Blinds rows to open them</li>
+              <li>Tap “You” / “Villain” to set the roles</li>
             </ol>
           </div>
         </details>
@@ -321,7 +358,7 @@ export const en: Record<string, string> = {
           <div class="howto-body">
             <p>Auto-calculates ICM equity, Bubble Factor, and required equity (cEV / $EV / RP).</p>
             <ol>
-              <li>Enter a situation in ⚙️ (presets are fine)</li>
+              <li>Enter a situation in “Spot” (examples are fine)</li>
               <li>Check each player’s $ value in the “ICM equity” table</li>
               <li>Check the 🎯 vs ⚔️ cell in the “everyone vs everyone BF map”</li>
               <li>Call amount / net gain auto-calc from 🎯⚔️ (after editing, “🔄 Back to auto-calc” restores them)</li>
@@ -351,7 +388,7 @@ export const en: Record<string, string> = {
             </ol>
           </div>
         </details>
-        <details class="howto">
+        <details class="howto" data-feature="practice">
           <summary>🎲 Practice — what it does & how to use</summary>
           <div class="howto-body">
             <p>Practice call/fold decisions, Risk Premium guessing, and push decisions on random scenarios.</p>
@@ -362,19 +399,47 @@ export const en: Record<string, string> = {
             </ol>
           </div>
         </details>
+        <details class="howto" id="guide-limits">
+          <summary>📐 Assumptions and limits</summary>
+          <div class="howto-body">
+            <h4>What is calculated</h4>
+            <ul>
+              <li><strong>ICM uses the Malmuth-Harville method</strong>: finish probabilities proportional to stacks, converted to prize equity.</li>
+              <li><strong>Required equity</strong> compares three outcomes with ICM: folding, calling and winning, calling and losing. Only with a manually entered call amount, or when no seat is the BB, it falls back to a Bubble Factor estimate.</li>
+              <li><strong>Hand equity</strong> comes from a 169 × 169 matchup table (1,000,000 simulated deals per matchup), weighted for the cards your hand removes.</li>
+              <li><strong>Nash</strong> solves the push-or-fold / call-or-fold equilibrium in prize equity, including calls from every player still behind the shover and one over-call. Three-way all-in equities come from a precomputed table of about 820,000 hand triples.</li>
+              <li>Blinds assume a <strong>big blind ante</strong> (the BB posts the ante for the table).</li>
+            </ul>
+            <h4>What is not calculated</h4>
+            <ul>
+              <li><strong>Four or more players all-in at once are not calculated.</strong> Nash goes up to a three-way all-in. Required equity and the hand chart (call decisions) are calculated for you and one opponent only.</li>
+              <li><strong>Future hands are ignored.</strong> By the nature of ICM, upcoming blinds and skill differences are not included.</li>
+              <li><strong>Options other than all-in</strong> (2BB opens, limps, 3-bets) are not handled. Shoving results are meant for effective stacks of 12BB or less and are shown as reference only above 20BB.</li>
+              <li><strong>Up to 9 players.</strong> Multi-table bubbles cannot be entered.</li>
+              <li>The opponent’s <strong>“Top X%” is ordered by equity against a random hand</strong>. Real opponents may include more suited connectors and small pairs; use “Custom edit” to pick their range directly.</li>
+            </ul>
+            <h4>What has been checked</h4>
+            <ul>
+              <li>ICM: compared with a separate brute-force implementation on 402 spots (2–9 players); differences below 0.000000001.</li>
+              <li>Hand equity: matches well-known values such as AA vs KK 82.0%, AKo vs QQ 43.2%, AA vs random 85.2%.</li>
+              <li>Nash: heads-up, 10BB, winner takes all gives push 58.1% / call 37.4%; a separate calculation confirms neither side gains even 0.001BB by deviating.</li>
+            </ul>
+            <p class="hint">Results are a guide. At the table, also weigh your opponent’s tendencies and the players behind.</p>
+          </div>
+        </details>
         <details class="howto">
           <summary>📚 Quick term glossary</summary>
           <div class="howto-body">
             <h4>ICM (Independent Chip Model)</h4>
             <p>
               Tournament chips don’t convert to prizes 1:1 (<strong>chips ≠ prize value</strong>).
-              ICM is the definition that turns a chip stack into “what would it cash for right now?”
+              ICM is a model that estimates how much prize money your current chip stack is worth.
               E.g. if your ICM% is 25%, on average you expect to take home a quarter of the total prize pool.
             </p>
             <h4>Bubble Factor (BF)</h4>
             <p>
               A coefficient for <strong>the pain of losing ÷ the joy of winning</strong>.
-              BF = 1.3 means you should play <strong>30% tighter</strong> than cEV (chip basis).
+              BF = 1.3 means the prize equity you lose by losing is 1.3× what you gain by winning. In an even-money all-in you need <strong>about 56.5%</strong> (1.3 ÷ 2.3) instead of 50%.
             </p>
             <h4>Risk Premium (RP)</h4>
             <p>
@@ -392,10 +457,9 @@ export const en: Record<string, string> = {
           <summary>❓ What is “Top X%”</summary>
           <div class="howto-body">
             <p>
-              “Top X%” is a simplified top-X% range based on this tool’s own hand-strength ranking.
-              Because the assumptions (sample size, scenarios, etc.) differ from other tools like
-              Sklansky-Chubukov, <strong>the same X% may not match the exact hands or numbers</strong>.
-              Use it as a rough guide to grasp tendencies.
+              The opponent’s “Top X%” takes X% of all hand combinations, <strong>ordered by equity against a random hand</strong>.
+              Other tools rank hands differently (for example by how well they shove), so <strong>the same X% may contain different hands</strong>.
+              To match a real opponent, pick the range directly with “Custom edit”.
             </p>
           </div>
         </details>
@@ -405,6 +469,7 @@ export const en: Record<string, string> = {
 
   // ===== 初回ヒントバー (guide.ts) =====
   "firstHint.html": "👋 New here? Tap a <strong>preset</strong> → see results in <strong>📊</strong>, or practice in <strong>🎲</strong>",
+  "calc.limitsLink": "Assumptions and limits ›",
   "firstHint.close.aria": "Close",
 
   // ===== PWA (pwa.ts) =====
@@ -520,7 +585,7 @@ export const en: Record<string, string> = {
   "calc.bf.err.needHV": "Set exactly one 🎯 you and one ⚔️ villain",
   "calc.bf.err.sameHV": "🎯 you and ⚔️ villain must be different players",
   "calc.bf.err.zeroStack": "Stack is 0, so BF can’t be computed",
-  "calc.bf.label.bf": "🎯 vs ⚔️ BF",
+  "calc.bf.label.bf": "You vs villain BF",
   "calc.bf.label.risk": "Chips at risk",
   "calc.autofill.summaryLine": "✓ Added call <strong>{call}</strong> / net gain <strong>{pot}</strong> BB",
   "calc.autofill.detailsSummary": "▸ Calculation breakdown",
@@ -546,7 +611,7 @@ export const en: Record<string, string> = {
   "calc.summary.expand": "Expand",
   "calc.summary.collapse": "Collapse",
   "calc.summary.collapseToggle": "Toggle collapse",
-  "calc.summary.hero": "🎯 You",
+  "calc.summary.hero": "You",
   "calc.summary.prizeShare": "Prize share",
   "calc.summary.prizeExplanation": "Estimated share of the total prize pool (ICM). 33% of a $100 pool means about $33 in value, not your hand's win rate or a guaranteed payout.",
   "calc.summary.pushReference": "BF, required equity and RP are values for calling.",
@@ -555,17 +620,18 @@ export const en: Record<string, string> = {
   "calc.summary.considerPush": "Considering push",
   "calc.summary.allIn": "All-in",
   "calc.summary.assumedCall": "Assumed caller",
-  "calc.summary.villain": "⚔️ Villain",
+  "calc.summary.villain": "Villain",
   "calc.summary.villainUnset": "⚔️ Villain unset",
   "calc.summary.aroundHtml": "<span>👥 Around <strong>{stacks}</strong> BB</span>",
   "calc.summary.bfLabel": "BF ⓘ",
+  "calc.eq.approxNote": "With a manually entered call amount, or when no seat is the BB, this is an estimate based on the Bubble Factor.",
   "calc.summary.reqLabel": "Req. eq ⓘ", // fable レビュー済: ピル幅優先の短縮形
   "calc.summary.rpLabel": "RP ⓘ",
-  "calc.summary.verdict.call": "⚖️ Assuming their {villain}% shove range: about <strong>{hero}%</strong> of all combinations can call",
-  "calc.summary.verdict.callNone": "⚖️ vs their {villain}% shove range: almost no hands can call",
-  "calc.summary.verdict.push": "⚖️ Assuming their {villain}% calling range: about <strong>{hero}%</strong> of all combinations can shove",
-  "calc.summary.verdict.pushNone": "⚖️ vs their {villain}% calling range: almost no hands can shove",
-  "calc.summary.verdict.link": "Hand ranges ›",
+  "calc.summary.verdict.call": "Assuming they shove {villain}% of hands, you can call with about <strong>{hero}%</strong> of hands",
+  "calc.summary.verdict.callNone": "Assuming they shove {villain}% of hands, almost no hands can call",
+  "calc.summary.verdict.push": "Assuming they call with {villain}% of hands, you can shove about <strong>{hero}%</strong> of hands",
+  "calc.summary.verdict.pushNone": "Assuming they call with {villain}% of hands, almost no hands can shove",
+  "calc.summary.verdict.link": "Hand chart ›",
 
   // ===== 警告 (calculator.ts) =====
   "calc.warn.position.html": "\n      ⚠ <strong>Position reversed</strong>: action order is <code>{heroPos}({heroAct}) → {villainPos}({villainAct})</code>.\n      In practice <strong>hero ({heroPos}) acts first</strong>, so calling a villain ({villainPos}) open shove can’t happen.\n      (The call math still runs, but swapping positions is more realistic.)\n    ",
@@ -574,40 +640,35 @@ export const en: Record<string, string> = {
   // ===== 用語解説モーダル (calculator.ts INFO_TEXTS) =====
   "info.icm.title": "ICM (Independent Chip Model)",
   "info.icm.body": `
-      <p>A formula that converts your tournament <strong>chips into “what would they cash for right now?”</strong></p>
-      <p>Prizes are fixed per finishing position, so 2× chips ≠ 2× prize.<br />
-      It reflects the asymmetry that busting leaves you only the lowest remaining payout.</p>
-      <p>ICM% is <code>your $EV ÷ total prize pool</code>. E.g. 25% = on average you take home a quarter of the pool.</p>
+      <p>A model that converts your tournament <strong>chips into the prize money they are worth</strong>.</p>
+      <p>Prizes are fixed per finishing position, so doubling your chips does not double your prize.<br />
+      Losing all your chips, however, locks in the payout for your finishing place. ICM puts a number on that asymmetry.</p>
+      <p>ICM% is <code>your prize equity ÷ total prize pool</code>. E.g. 25% = on average you take home a quarter of the pool.</p>
+      <p>This app uses the Malmuth-Harville method (finish probabilities proportional to stacks), the most common form of ICM.</p>
     `,
   "info.bf.title": "BF (Bubble Factor)",
   "info.bf.body": `
-      <p>A coefficient for <strong>“chip pain ÷ chip joy.”</strong> Assumes HU all-in.</p>
+      <p><strong>“Prize equity lost when you lose ÷ prize equity gained when you win.”</strong> Measured for a two-player all-in for the effective stack.</p>
       <ul>
-        <li><strong>1.00</strong>: chips ⇄ $ is linear (zero ICM pressure)</li>
-        <li><strong>1.20</strong>: “losing 100 hurts = winning 120 feels good” → 20% tighter</li>
-        <li><strong>1.50+</strong>: bubble/satellite level, ultra-tight</li>
+        <li><strong>1.00</strong>: loss and gain are equal (no ICM effect, e.g. heads-up)</li>
+        <li><strong>1.20</strong>: the loss is 1.2× the gain. An even-money all-in needs 54.5%</li>
+        <li><strong>1.50</strong>: the same spot needs 60%. Common around the bubble</li>
       </ul>
-      <p>Exact definition: <code>BF = (current − $ when losing) ÷ ($ when winning − current)</code>.
-      Same calculation as HRC / ICMIZER.</p>
-      <p>※ At 1:1 pot odds, <code>required equity = BF/(BF+1)</code>. BF=1.2 → 54.5%, BF=1.5 → 60%.</p>
+      <p>Definition: <code>BF = (now − if you lose) ÷ (if you win − now)</code>, all in ICM prize equity. This is the definition commonly used in ICM literature.</p>
+      <p>※ In an even-money (1:1 odds) all-in, <code>required equity = BF ÷ (BF + 1)</code>.</p>
     `,
   "info.rp.title": "Risk Premium (RP)",
   "info.rp.body": `
-      <p>The <strong>difference between cEV (chip EV) and $EV (ICM EV)</strong>. How much extra equity you need under ICM weighting.</p>
+      <p>The <strong>difference between the required equity under ICM and the chips-only required equity (cEV)</strong>: how much extra equity the prize structure demands.</p>
       <ul>
-        <li>RP = 0%: cEV and $EV match (no ICM effect)</li>
-        <li>RP = +10%: a coin flip (50%) actually needs 60%</li>
-        <li>RP = +20%: on the bubble, +30% in a satellite</li>
+        <li>RP = 0%: decide on chips alone (no ICM effect)</li>
+        <li>RP = +10%: a spot that needs 50% on chips alone needs 60%</li>
       </ul>
-      <p>Calculation: <code>RP = $EV required equity − cEV required equity</code></p>
-      <p>At 1:1 odds: <code>RP = BF/(BF+1) − 50%</code></p>
+      <p>Its size depends on the spot. It grows around the bubble and for stacks sitting inside the seats in a satellite, and shrinks for the shortest stack, which has little to lose.</p>
+      <p>Calculation: <code>RP = required equity under ICM − chips-only required equity</code></p>
+      <p>In an even-money all-in: <code>RP = BF ÷ (BF + 1) − 50%</code></p>
     `,
   // ===== ナッシュ均衡 (nashUI.ts) =====
-  "nash.overcall.between": "<strong>{n}</strong> between pusher and caller ({list})",
-  "nash.overcall.behind": "<strong>{n}</strong> behind the caller ({list})",
-  "nash.overcall.callerTighten": "<br />→ <strong>caller ({callerPos}) should also call tighter</strong> (with {n} still to act behind).",
-  "nash.overcall.callerOk": "<br />→ caller ({callerPos}) is roughly per HU Nash (assuming those in between folded).",
-  "nash.overcall.main.html": "\n    ⚠ <strong>Intervening players outside the HU Nash assumption</strong>: {parts}.\n    <br />→ <strong>pusher ({pusherPos}) should push even tighter than HU Nash</strong>\n    (fold equity drops as intervening players over-call/3-bet with strong hands).\n    {callerAdvice}\n    <br />Read this Nash result as a reference under HU 2-way assumptions.\n  ",
   "nash.err.needHV": "Set exactly one 🎯 you and one ⚔️ villain",
   "nash.err.needPayout": "Enter a payout structure",
   "nash.err.sb": "Invalid SB",
@@ -625,16 +686,15 @@ export const en: Record<string, string> = {
 
   "info.req.title": "Required equity",
   "info.req.body": `
-      <p>The <strong>minimum equity for this call to be EV 0</strong>. If your hand’s real equity exceeds it, call; below it, fold.</p>
+      <p>The <strong>minimum equity at which this call breaks even</strong>. If your hand’s equity is above it, call; below it, fold.</p>
       <ul>
-        <li><strong>cEV required equity</strong>: pot odds only (ignores ICM)</li>
-        <li><strong>$EV required equity</strong>: reflects BF (ICM pressure) — use this one in practice</li>
+        <li><strong>Chips only (cEV)</strong>: required equity from pot odds alone, ignoring ICM</li>
+        <li><strong>Required (ICM)</strong>: required equity in prize equity — use this one in practice</li>
       </ul>
-      <p>Exact formula: <code>$EV = (call × BF) ÷ (call × BF + win)</code></p>
-      <p>E.g. call 8 BB / pot 20 BB / BF 1.4<br />
-      → cEV = 8/(8+20) = 28.6%<br />
-      → $EV = (8×1.4)/(8×1.4 + 20) = 11.2/31.2 = <strong>35.9%</strong><br />
-      (at 1:1 odds it’s <code>BF/(BF+1)</code>)</p>
+      <p>Calculation: <code>required equity = (if you fold − if you lose) ÷ (if you win − if you lose)</code><br />
+      Everyone’s stacks after folding, calling and winning, and calling and losing are each converted to prize equity with ICM and compared.</p>
+      <p>With a manually entered call amount, or when no seat is the BB, it falls back to the Bubble Factor estimate
+      <code>(call × BF) ÷ (call × BF + net win)</code>.</p>
     `,
 
   // ===== 練習: 「📖 詳しい計算式」details 本体 (judge.ts, Phase B 抽出) =====

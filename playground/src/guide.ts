@@ -91,7 +91,7 @@ function renderOnboardingStep(): void {
     } else {
       footerActions.innerHTML = `
         <div class="onboarding-cta-row">
-          <button type="button" class="solve-btn" id="onboarding-cta-practice">${t("onboarding.cta.practice")}</button>
+          <button type="button" class="solve-btn" id="onboarding-cta-practice" data-feature="practice">${t("onboarding.cta.practice")}</button>
           <button type="button" class="solve-btn" id="onboarding-cta-setup" style="background: var(--card); color: var(--text); border: 1px solid var(--border);">${t("onboarding.cta.setup")}</button>
         </div>
       `;
@@ -167,6 +167,15 @@ function ensureGuideModal(): HTMLDivElement {
 function openGuideModal(): void {
   ensureGuideModal().classList.remove("hidden");
 }
+/** 使い方ガイドを開き、指定した節 (details の id) を開いてそこまでスクロールする。 */
+export function openGuideAt(sectionId: string): void {
+  const modal = ensureGuideModal();
+  modal.classList.remove("hidden");
+  const section = modal.querySelector<HTMLDetailsElement>(`#${sectionId}`);
+  if (!section) return;
+  section.open = true;
+  section.scrollIntoView({ block: "start" });
+}
 function closeGuideModal(): void {
   guideModalEl?.classList.add("hidden");
 }
@@ -210,13 +219,13 @@ function closeLegalModal(): void {
 // ===== 初回ヒントバー（セットアップタブ最上部、シナリオプリセットの上） =====
 function insertFirstHintBar(): void {
   if (!shouldShowFirstHint) return;
-  const firstSetupCard = document.querySelector('section.card[data-tab="setup"]');
+  const firstSetupCard = document.querySelector('section.card[data-tab="analyze"]');
   if (!firstSetupCard || !firstSetupCard.parentElement) return;
   const bar = document.createElement("div");
   bar.id = "first-hint-bar";
   bar.className = "first-hint-bar";
-  bar.dataset.tab = "setup";
-  bar.classList.toggle("hidden-tab", getActiveTab() !== "setup");
+  bar.dataset.tab = "analyze";
+  bar.classList.toggle("hidden-tab", getActiveTab() !== "analyze");
   const text = document.createElement("span");
   text.innerHTML = t("firstHint.html");
   const closeBtn = document.createElement("button");
@@ -236,6 +245,7 @@ function insertFirstHintBar(): void {
 /** ガイド関連 (❓ボタン・初回ヒントバー・Escape キー) の配線。main.ts から一度だけ呼ぶ。 */
 export function initGuide(): void {
   document.getElementById("help-btn")?.addEventListener("click", openGuideModal);
+  document.getElementById("open-limits")?.addEventListener("click", () => openGuideAt("guide-limits"));
   document.getElementById("footer-legal-link")?.addEventListener("click", () => {
     openLegalModal();
   });

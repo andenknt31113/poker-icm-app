@@ -6,6 +6,7 @@
     <title>🎰 Poker ICM/BF Playground</title>
     <link rel="stylesheet" href="/src/style.css" />
     <link rel="stylesheet" href="/src/workspace.css" />
+    <link rel="stylesheet" href="/src/calc.css" />
     <!-- PWA -->
     <link rel="manifest" href="/manifest.json" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
@@ -56,49 +57,20 @@
       </div>
 
       <nav class="tab-bar" role="tablist" aria-label="セクション" data-i18n-attr="aria-label:tabs.aria">
-        <button type="button" class="tab-btn active" data-tab="setup"><span class="tab-icon">⚙️</span><span class="tab-label" data-i18n="tabs.setup">セットアップ</span></button>
-        <button type="button" class="tab-btn" data-tab="analyze"><span class="tab-icon">📊</span><span class="tab-label" data-i18n="tabs.analyze">分析</span></button>
+        <button type="button" class="tab-btn active" data-tab="analyze"><span class="tab-icon">📊</span><span class="tab-label" data-i18n="tabs.analyze">計算</span></button>
         <button type="button" class="tab-btn" data-tab="practice"><span class="tab-icon">🎲</span><span class="tab-label" data-i18n="tabs.practice">練習</span></button>
       </nav>
 
-
-      <section class="card preset-card" id="setup-examples" data-tab="setup">
-        <details class="section-toggle" id="scenario-presets-toggle">
-          <summary data-i18n="setup.presets.summary">例題・保存した局面を使う</summary>
-          <div class="section-toggle-body">
-            <p class="hint" data-i18n="setup.presets.hint">タップで状況一発セット。スタック・ポジション・ペイアウトを丸ごと反映。</p>
-            <div class="scenario-presets">
-              <button type="button" data-scenario="ft9" class="scenario-btn" data-i18n="setup.presets.ft9">9-max FT 開幕</button>
-              <button type="button" data-scenario="ftBubble" class="scenario-btn" data-i18n="setup.presets.ftBubble">FT バブル (短/普通×3)</button>
-              <button type="button" data-scenario="ft6" class="scenario-btn" data-i18n="setup.presets.ft6">6 残り</button>
-              <button type="button" data-scenario="ft4" class="scenario-btn" data-i18n="setup.presets.ft4">4 残り</button>
-              <button type="button" data-scenario="ft3" class="scenario-btn" data-i18n="setup.presets.ft3">3-handed</button>
-              <button type="button" data-scenario="hu" class="scenario-btn" data-i18n="setup.presets.hu">HU 10/10</button>
-              <button type="button" data-scenario="huShort" class="scenario-btn" data-i18n="setup.presets.huShort">HU 短/長</button>
-              <button type="button" data-scenario="satellite3" class="scenario-btn" data-i18n="setup.presets.satellite3">🛰 サテライト (3人入賞)</button>
-            </div>
-            <div class="presets-label" style="margin-top: 10px;">
-              <span data-i18n="setup.presets.userLabel">自分のシナリオ</span>
-              <button id="save-scenario-btn" type="button" class="save-btn" data-i18n="setup.presets.saveBtn">＋ 現在の状況を保存</button>
-            </div>
-            <div id="user-scenarios" class="scenario-presets user"></div>
-          </div>
-        </details>
-      </section>
-
-      <section class="card players-card" id="setup-players" data-tab="setup">
+      <!-- 局面 (卓の入力)。結果はこのすぐ下に出て、入力のたびに更新される -->
+      <section class="card spot-card players-card" id="setup-players" data-tab="analyze">
         <div class="setup-card-heading">
-          <h2 data-i18n="setup.players.h2">プレイヤー</h2>
+          <h2 data-i18n="setup.players.h2">局面</h2>
           <button id="setup-undo" class="save-btn" type="button" disabled data-i18n="setup.undo">元に戻す</button>
         </div>
-        <p class="hint" data-i18n-html="setup.players.hint.html">
-          各プレイヤーのスタックを入力。<strong>🎯 自分</strong> /
-          <strong>⚔️ 相手</strong> をタップで指定。最大9人。<br />
-          ポジションは<strong>1人ぶん選べば残り全員が自動で並びます</strong>。
-        </p>
-        <div class="players-toolbar">
-          <span data-i18n="setup.players.roles">🎯 自分　⚔️ 相手</span>
-          <button id="swap-players" class="save-btn" type="button" data-swap-players data-i18n="setup.players.swap">自分 ⇄ 相手</button>
+        <div class="spot-columns" aria-hidden="true">
+          <span data-i18n="setup.cols.pos">位置</span>
+          <span data-i18n="setup.cols.stack">スタック (BB)</span>
+          <span data-i18n="setup.cols.role">役割</span>
         </div>
         <p id="players-lock-notice" class="hint lock-notice" role="status" hidden></p>
         <div id="players-list" class="players-list"></div>
@@ -106,31 +78,31 @@
           <button id="add-player" class="add-btn" type="button">
             + プレイヤー追加
           </button>
+          <button id="swap-players" class="add-btn" type="button" data-swap-players data-i18n="setup.players.swap">自分 ⇄ 相手</button>
           <button id="randomize-stacks" class="add-btn" type="button" title="現プレイヤーのスタックを 3-30 BB のランダム値に" data-i18n="setup.players.randomize" data-i18n-attr="title:setup.players.randomize.title">
-            🎲 スタックをランダム化
+            🎲 ランダム
           </button>
         </div>
-      </section>
 
-      <section class="card payouts-card" data-tab="setup">
-        <h2 data-i18n="setup.payouts.h2">ペイ構造</h2>
-        <p class="hint" data-i18n="setup.payouts.hint">1位から順に賞金を入力。単位は % でも $ でも OK。</p>
-        <div id="payouts-list" class="payouts-list"></div>
-        <button id="add-payout" class="add-btn" type="button" data-i18n="setup.payouts.add">
-          + 順位追加
-        </button>
-        <input id="payouts" type="hidden" value="50, 30, 20" />
-        <details class="section-toggle" id="payout-presets-toggle">
-          <summary data-i18n="setup.payouts.summary">プリセット・保存済み（タップで開閉）</summary>
-          <div class="section-toggle-body">
-            <div class="presets-label" data-i18n="setup.payouts.presetLabel">プリセット</div>
-            <div class="presets">
-              <button data-preset="50,30,20" type="button" data-i18n="setup.payouts.preset.top3">Top3 (50/30/20)</button>
-              <button data-preset="65,35" type="button" data-i18n="setup.payouts.preset.top2">Top2 (65/35)</button>
-              <button data-preset="100" type="button" data-i18n="setup.payouts.preset.wta">WTA</button>
-              <button data-preset="40,25,15,10,5,3,2" type="button" data-i18n="setup.payouts.preset.ft9">9-max FT</button>
-              <button data-preset="33,33,33" type="button" data-i18n="setup.payouts.preset.satellite">🛰 サテライト Top3</button>
+        <details class="spot-fold payouts-card" id="payouts-fold">
+          <summary>
+            <span class="spot-fold-label" data-i18n="setup.payouts.h2">賞金</span>
+            <span class="spot-fold-value" id="payouts-summary"></span>
+          </summary>
+          <div class="spot-fold-body">
+            <div class="presets" id="payout-presets">
+              <button data-preset="50,30,20" type="button" data-i18n="setup.payouts.preset.top3">50/30/20</button>
+              <button data-preset="65,35" type="button" data-i18n="setup.payouts.preset.top2">65/35</button>
+              <button data-preset="100" type="button" data-i18n="setup.payouts.preset.wta">総取り</button>
+              <button data-preset="40,25,15,10,5,3,2" type="button" data-i18n="setup.payouts.preset.ft9">7位まで</button>
+              <button data-preset="33,33,33" type="button" data-i18n="setup.payouts.preset.satellite">サテライト 3人通過</button>
             </div>
+            <p class="hint" data-i18n="setup.payouts.hint">1位から順に入力。% でも金額でも OK。</p>
+            <div id="payouts-list" class="payouts-list"></div>
+            <button id="add-payout" class="add-btn" type="button" data-i18n="setup.payouts.add">
+              + 順位追加
+            </button>
+            <input id="payouts" type="hidden" value="50, 30, 20" />
             <div class="presets-label">
               <span data-i18n="setup.payouts.savedLabel">保存済み</span>
               <button id="save-payout" type="button" class="save-btn" data-i18n="setup.payouts.saveBtn">
@@ -140,37 +112,61 @@
             <div id="saved-payouts" class="presets saved"></div>
           </div>
         </details>
-      </section>
 
-      <section class="card blinds-card" data-tab="setup">
-        <h2 data-i18n="setup.blinds.h2">ブラインド・アンティ</h2>
-        <p class="hint" data-i18n="setup.blinds.hint">
-          スタックは BB 単位なので BB は 1 で固定です。アンティ有りの卓は「アンティ合計」を入力。
-        </p>
-        <div class="grid">
-          <label>
-            SB
-            <input id="nash-sb" type="number" inputmode="decimal" value="0.5" min="0" step="0.1" />
-          </label>
-          <label>
-            BB
-            <!-- スタックは BB 単位なので BB は常に 1。変えるとスタックと計算がずれるため編集させない -->
-            <input id="nash-bb" type="number" inputmode="decimal" value="1" readonly aria-readonly="true" />
-          </label>
-          <label>
-            <span data-i18n="nash.ante.label">アンティ合計</span>
-            <input id="nash-ante" type="number" inputmode="decimal" value="1.0" min="0" step="0.05" />
-          </label>
+        <details class="spot-fold blinds-card" id="blinds-fold">
+          <summary>
+            <span class="spot-fold-label" data-i18n="setup.blinds.h2">ブラインド</span>
+            <span class="spot-fold-value" id="blinds-summary"></span>
+          </summary>
+          <div class="spot-fold-body">
+            <p class="hint" data-i18n="setup.blinds.hint">
+              スタックは BB 単位なので BB は 1 で固定です。アンティ有りの卓は「アンティ合計」を入力。
+            </p>
+            <div class="grid">
+              <label>
+                SB
+                <input id="nash-sb" type="number" inputmode="decimal" value="0.5" min="0" step="0.1" />
+              </label>
+              <label>
+                BB
+                <!-- スタックは BB 単位なので BB は常に 1。変えるとスタックと計算がずれるため編集させない -->
+                <input id="nash-bb" type="number" inputmode="decimal" value="1" readonly aria-readonly="true" />
+              </label>
+              <label>
+                <span data-i18n="nash.ante.label">アンティ合計</span>
+                <input id="nash-ante" type="number" inputmode="decimal" value="1.0" min="0" step="0.05" />
+              </label>
+            </div>
+          </div>
+        </details>
+
+        <div id="setup-examples" class="spot-fold-wrap">
+          <details class="spot-fold" id="scenario-presets-toggle">
+            <summary>
+              <span class="spot-fold-label" data-i18n="setup.presets.summary">例題・保存した局面</span>
+              <span class="spot-fold-value" data-i18n="setup.presets.open">選ぶ</span>
+            </summary>
+            <div class="spot-fold-body">
+              <div class="scenario-presets">
+                <button type="button" data-scenario="ft9" class="scenario-btn" data-i18n="setup.presets.ft9">9-max FT 開幕</button>
+                <button type="button" data-scenario="ftBubble" class="scenario-btn" data-i18n="setup.presets.ftBubble">FT バブル (短/普通×3)</button>
+                <button type="button" data-scenario="ft6" class="scenario-btn" data-i18n="setup.presets.ft6">6 残り</button>
+                <button type="button" data-scenario="ft4" class="scenario-btn" data-i18n="setup.presets.ft4">4 残り</button>
+                <button type="button" data-scenario="ft3" class="scenario-btn" data-i18n="setup.presets.ft3">3-handed</button>
+                <button type="button" data-scenario="hu" class="scenario-btn" data-i18n="setup.presets.hu">HU 10/10</button>
+                <button type="button" data-scenario="huShort" class="scenario-btn" data-i18n="setup.presets.huShort">HU 短/長</button>
+                <button type="button" data-scenario="satellite3" class="scenario-btn" data-i18n="setup.presets.satellite3">🛰 サテライト (3人入賞)</button>
+              </div>
+              <div class="presets-label" style="margin-top: 10px;">
+                <span data-i18n="setup.presets.userLabel">自分のシナリオ</span>
+                <button id="save-scenario-btn" type="button" class="save-btn" data-i18n="setup.presets.saveBtn">＋ 現在の状況を保存</button>
+              </div>
+              <div id="user-scenarios" class="scenario-presets user"></div>
+            </div>
+          </details>
         </div>
       </section>
 
-      <section class="setup-analyze-action" data-tab="setup">
-        <button class="workspace-primary" type="button" data-open-tab="analyze" data-i18n="workspace.analyze">この局面を分析する →</button>
-      </section>
-      <section class="workspace-section-head" data-tab="analyze">
-        <h2 data-i18n="workspace.analysisTitle">局面の分析</h2>
-        <button class="workspace-secondary" type="button" data-open-tab="setup" data-i18n="workspace.edit">局面を編集</button>
-      </section>
       <nav class="analyze-jump" data-tab="analyze" aria-label="分析セクション" data-i18n-attr="aria-label:analyze.jump.aria">
         <button type="button" data-jump="sec-hand" aria-controls="sec-hand"><span data-i18n="flow.hand">ハンドの判断</span></button>
         <button type="button" data-jump="sec-icm" aria-controls="sec-icm sec-bf sec-equity"><span data-i18n="flow.equity">賞金への影響</span></button>
@@ -192,6 +188,31 @@
         </table>
       </section>
 
+      <section class="card" data-tab="analyze" data-analysis-panel="equity" id="sec-chop">
+        <h2 data-i18n="chop.h2">チョップ（ディール）するなら</h2>
+        <p class="hint" data-i18n="chop.hint">残っている全員で賞金を分けるときの金額です。賞金の欄に実際の金額を入れると、そのまま使えます。</p>
+        <div class="chop-units" role="group" aria-label="金額の刻み" data-i18n-attr="aria-label:chop.unit.aria">
+          <span class="chop-units-label" data-i18n="chop.unit.label">刻み</span>
+          <button type="button" data-chop-unit="0" data-i18n="chop.unit.none">そのまま</button>
+          <button type="button" data-chop-unit="100">100</button>
+          <button type="button" data-chop-unit="500">500</button>
+          <button type="button" data-chop-unit="1000">1,000</button>
+        </div>
+        <table id="chop-table">
+          <thead>
+            <tr>
+              <th data-i18n="result.icm.th.rank">位置</th>
+              <th data-i18n="result.icm.th.stack">スタック</th>
+              <th data-i18n="chop.th.icm">ICM チョップ</th>
+              <th data-i18n="chop.th.chip">チップ比例</th>
+            </tr>
+          </thead>
+          <tbody id="chop-rows"></tbody>
+        </table>
+        <p class="hint" id="chop-total"></p>
+        <p class="hint" data-i18n="chop.note">ICM チョップは各自の賞金期待値どおりに分ける、一般に公平とされる方法です。チップ比例は最下位ぶんを全員に保証して残りをチップの比で分けるもので、チップリーダーに有利になります。</p>
+      </section>
+
       <section class="card" data-tab="analyze" data-analysis-panel="equity" id="sec-bf">
         <h2 data-i18n="result.bf.h2">BF マップ</h2>
         <p class="hint" data-i18n-html="result.bf.hint.html">
@@ -199,11 +220,6 @@
         </p>
         <div id="bf-result" class="result"></div>
 
-        <h3 class="bf-matrix-title" data-i18n="result.bf.matrixTitle">全員 vs 全員 BF マップ 🆕</h3>
-        <p class="hint" data-i18n-html="result.bf.matrixHint.html">
-          縦軸 = Hero（自分）、横軸 = Villain（相手）。
-          上段=1:1ポット時のRisk Premium、下段=BF値。
-        </p>
         <details class="howto" id="bf-howto">
           <summary data-i18n="result.bf.howto.summary">📖 表の見方（クリックで展開）</summary>
           <div class="howto-body" data-i18n-html="result.bf.howto.body.html">
@@ -273,7 +289,7 @@
       </section>
 
       <section class="card" data-tab="analyze" data-analysis-panel="equity" id="sec-equity">
-        <h2 data-i18n="result.eq.h2">必要勝率 (cEV / $EV / RP)</h2>
+        <h2 data-i18n="result.eq.h2">必要勝率と RP</h2>
         <p class="hint" data-i18n-html="result.eq.hint.html">
           🎯と⚔️のオールイン想定で自動計算。手動入力したい場合は数値を上書きしてください。
         </p>
@@ -309,10 +325,6 @@
         <h2 data-i18n="hand.h2">ハンドレンジ比較</h2>
         <p id="range-unavailable" class="error hidden" role="status"></p>
         <div id="range-content">
-        <p class="hint" data-i18n-html="hand.hint.html">
-          HU all-in 想定。<strong>hero=BB</strong>（最終 actor）のときに完全に有効。
-          他ポジションは「後ろのプレイヤーが全員 fold した」想定の概算として参考程度に。
-        </p>
         <div id="hand-position-banner" class="warn-box hidden"></div>
 
         <div class="direction-tabs" role="tablist">
@@ -340,6 +352,12 @@
         </div>
 
         <div id="preset-controls">
+          <div class="villain-range-block">
+          <button type="button" id="villain-range-thumb" class="range-thumb" aria-label="相手のレンジを表で見る" data-i18n-attr="aria-label:hand.thumb.aria">
+            <span id="grid-villain-mini" class="hand-grid mini" aria-hidden="true"></span>
+            <span class="range-thumb-caption" data-i18n="hand.thumb.caption">表で見る</span>
+          </button>
+          <div class="villain-range-controls">
           <label class="range-label">
             <span id="villain-range-label">相手のpushレンジ</span>: <span data-i18n="hand.preset.top">上位</span> <span id="push-pct">25</span>%
             <input
@@ -351,6 +369,19 @@
               step="1"
             />
           </label>
+          <div class="range-quick" role="group" aria-label="レンジの目安" data-i18n-attr="aria-label:hand.quick.aria">
+            <button type="button" data-range-pct="10">10%</button>
+            <button type="button" data-range-pct="20">20%</button>
+            <button type="button" data-range-pct="35">35%</button>
+            <button type="button" data-range-pct="50">50%</button>
+            <button type="button" data-range-pct="100">100%</button>
+          </div>
+          </div>
+          </div>
+        </div>
+        <div class="nash-range-row">
+          <button type="button" class="workspace-secondary" id="use-nash-range" data-i18n="hand.nashRange.btn">この局面の Nash を相手レンジに入れる</button>
+          <p class="hint hidden" id="nash-range-note" role="status"></p>
         </div>
         <div id="custom-controls" class="hidden">
           <p class="hint">
@@ -391,6 +422,14 @@
 
       <section class="card" data-tab="analyze" data-analysis-panel="nash" id="sec-nash">
         <h2 data-i18n="nash.h2">Nash 均衡 (HU push/fold)</h2>
+        <p class="hint" data-i18n="nash.table.lead">誰が最初に押すかごとに、押せるレンジと、後ろの人がコールできるレンジです。行をタップすると表が開きます。</p>
+        <p id="nash-table-status" class="hint" role="status"></p>
+        <div id="nash-table" class="nash-table"></div>
+        <div class="nash-actions">
+          <button type="button" class="workspace-secondary" data-scroll-spot data-i18n="nash.editSpot">局面を変更する</button>
+        </div>
+        <!-- 旧表示 (自分 / 相手の2人ぶんだけ)。一覧表に置き換えたので画面には出さない -->
+        <div class="nash-legacy" hidden>
         <div id="nash-context" class="nash-context" aria-live="polite"></div>
         <p id="nash-status" class="hint" role="status"></p>
         <div id="nash-depth-note" class="warn-box hidden"></div>
@@ -409,10 +448,11 @@
             <div id="nash-bb-grid" class="hand-grid"></div>
           </div>
         </div>
+        <p id="nash-others" class="hint hidden"></p>
         <div class="nash-actions">
         <button id="nash-solve" type="button" class="solve-btn" data-i18n="nash.solveBtn">再計算</button>
         <button type="button" class="workspace-secondary" data-swap-players data-i18n="setup.players.swap">自分 ⇄ 相手</button>
-        <button type="button" class="workspace-secondary" data-open-tab="setup" data-i18n="nash.editSpot">局面を変更する</button>
+        </div>
         </div>
         <details class="nash-explanation">
         <summary data-i18n="nash.explanation">計算の前提・注意点を見る</summary>
@@ -461,6 +501,10 @@
           <button id="practice-tutorial-btn" type="button" class="solve-btn tutorial-cta-btn" data-i18n="practice.tutorialBtn">🎓 導入コース</button>
         </div>
         <div id="practice-area" class="practice-area"></div>
+      </section>
+
+      <section class="limits-link" data-tab="analyze">
+        <button type="button" id="open-limits" data-i18n="calc.limitsLink">計算の前提と限界を見る ›</button>
       </section>
 
       <footer>

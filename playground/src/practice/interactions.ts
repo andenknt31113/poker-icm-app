@@ -126,7 +126,7 @@ export function initPracticeInteractions(): void {
       nashAnteInput.value = String(p.totalAnte);
       setCallManualOverride(false);
       recompute();
-      applyTab("setup");
+      applyTab("analyze");
       return;
     }
     // call / fold ボタン (push 判定モードでは push / fold ボタン)

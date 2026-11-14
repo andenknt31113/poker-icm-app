@@ -34,7 +34,7 @@ export default async function testFreemiumGate({ baseURL, createContext }) {
     await page.waitForSelector("#bf-matrix .bf-cell", { state: "visible" });
 
     // ③ ftBubble (4人) → v1.1 から無料で編集できる
-    await page.click('.tab-btn[data-tab="setup"]');
+    await page.click('.tab-btn[data-tab="analyze"]');
     await page.click('.scenario-btn[data-scenario="ftBubble"]');
     await page.waitForFunction(
       () => document.querySelectorAll("#players-list .player-row").length === 4,

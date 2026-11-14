@@ -28,6 +28,8 @@ import {
 import { STORAGE_KEYS, readJson, writeJson } from "./storage.js";
 import { buildPushSpot, pushDepthTier } from "./pushSpot.js";
 import { fmt } from "./format.js";
+import { nashRangeForSpot } from "./nashRange.js";
+import { loadThreeWayTable } from "./threeWay.js";
 
 // ===== DOM 参照 (ハンド比較タブ) =====
 const pushRangeInput = $<HTMLInputElement>("push-range");
@@ -231,6 +233,8 @@ function syncDirectionWithPositions(): void {
     btn.classList.toggle("active", btn.dataset.direction === direction);
     btn.disabled = forced !== null && btn.dataset.direction !== forced;
   });
+  // 席順で向きが決まっているときは選ぶ余地がないので、切替タブごと隠す
+  document.querySelector(".direction-tabs")?.classList.toggle("hidden", forced !== null);
   const hint = document.getElementById("direction-auto-hint");
   if (!hint) return;
   if (!forced) {
@@ -265,6 +269,9 @@ function updatePushDepthWarn(): void {
 export function renderRangeComparison(requiredEquity: number): RangeVerdictSummary {
   const pushPct = Number(pushRangeInput.value);
   pushPctLabel.textContent = String(pushPct);
+  document.querySelectorAll<HTMLButtonElement>("[data-range-pct]").forEach((button) => {
+    button.classList.toggle("active", Number(button.dataset.rangePct) === pushPct);
+  });
 
   syncDirectionWithPositions();
   updatePushDepthWarn();
@@ -307,6 +314,10 @@ export function renderRangeComparison(requiredEquity: number): RangeVerdictSumma
   renderGrid(villainGrid, (hand) =>
     villainRange.has(hand) ? villainClass : "",
   );
+
+  // スライダーの横の小さい表 (相手レンジの形がその場で見える)
+  const miniGrid = document.getElementById("grid-villain-mini") as HTMLDivElement | null;
+  if (miniGrid) renderGrid(miniGrid, (hand) => (villainRange.has(hand) ? villainClass : ""));
 
   const villainPct = comboPctOfRange(villainRange);
   let verdict: RangeVerdictSummary;
@@ -582,4 +593,63 @@ export function initHandRange(onChange: () => void): void {
 
   // pushRangeInput の変更は再計算トリガー
   pushRangeInput.addEventListener("input", onChange);
+
+  // この局面の Nash を相手レンジ (カスタム) に入れる。上位 X% は対ランダム勝率順で、
+  // 小さいペアやスーテッドコネクターが入りにくいため、実際の押し引きに近い形を1タップで置けるようにする。
+  document.getElementById("use-nash-range")?.addEventListener("click", async () => {
+    const note = document.getElementById("nash-range-note");
+    // オーバーコールまで入れた Nash タブと同じ結果にするため、3 人の勝率表を先に読む (失敗しても続ける)
+    await loadThreeWayTable();
+    const heroIdx = players.findIndex((p) => p.role === "hero");
+    const villainIdx = players.findIndex((p) => p.role === "villain");
+    const villainPushes = direction === "callBack";
+    const range = nashRangeForSpot(
+      players,
+      parseList(payoutsInput.value),
+      villainPushes ? villainIdx : heroIdx,
+      villainPushes ? heroIdx : villainIdx,
+      Number(nashSbInput.value) || DEFAULT_SB,
+      Number(nashBbInput.value) || DEFAULT_BB,
+      Number(nashAnteInput.value) || 0,
+      villainPushes ? "push" : "call",
+    );
+    if (note) note.classList.remove("hidden");
+    if (!range) {
+      if (note) note.textContent = t("hand.nashRange.failed");
+      return;
+    }
+    customVillainRange.clear();
+    for (const hand of range) customVillainRange.add(hand);
+    saveCustomRange();
+    if (note) {
+      // 2人だけの Nash なので、押す側の後ろに他の人が残っていると実際より広く出る
+      const pusherAct = actionOrderIdx(players[villainPushes ? villainIdx : heroIdx]?.position ?? "");
+      const othersBehind = players.filter((p, i) =>
+        i !== heroIdx && i !== villainIdx && p.stack > 0 && pusherAct >= 0 && actionOrderIdx(p.position) > pusherAct,
+      ).length;
+      note.textContent =
+        t(villainPushes ? "hand.nashRange.donePush" : "hand.nashRange.doneCall", {
+          pct: comboPctOfRange(range).toFixed(0),
+        }) + (othersBehind > 0 ? " " + t("hand.nashRange.multiway", { n: othersBehind }) : "");
+    }
+    const customTab = document.querySelector<HTMLButtonElement>('.mode-tab[data-mode="custom"]');
+    if (villainRangeMode !== "custom" && customTab) customTab.click();
+    else onChange();
+  });
+
+  // 小さい表をタップ → 大きい表をその場で開く
+  document.getElementById("villain-range-thumb")?.addEventListener("click", () => {
+    const details = document.getElementById("villain-range-details") as HTMLDetailsElement | null;
+    if (!details) return;
+    details.open = !details.open;
+    if (details.open) details.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  });
+
+  // レンジの目安ボタン (スライダーはスマホで狙った値に合わせにくい)
+  document.querySelectorAll<HTMLButtonElement>("[data-range-pct]").forEach((button) => {
+    button.addEventListener("click", () => {
+      pushRangeInput.value = button.dataset.rangePct ?? pushRangeInput.value;
+      onChange();
+    });
+  });
 }

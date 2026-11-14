@@ -59,13 +59,12 @@ export function renderPlayers(): void {
       )
       .join("");
     row.innerHTML = `
-      <span class="player-num">#${i + 1}</span>
-      <input type="number" inputmode="decimal" aria-label="${tr("setup.player.stack.aria", { n: i + 1 })}" class="player-stack${locked ? " locked-pro" : ""}" min="0" step="1" value="${p.stack}" data-id="${p.id}"${locked ? " readonly" : ""} />
-      ${locked ? `<span class="lock-badge" aria-hidden="true" title="${tr("paywall.lock.title")}">🔒</span>` : `<span class="player-unit">BB</span>`}
       <select class="player-pos" data-id="${p.id}" aria-label="${tr("setup.player.position.aria", { n: i + 1 })}" title="${tr("setup.player.pos.title")}">${posOptions}</select>
+      <input type="number" inputmode="decimal" aria-label="${tr("setup.player.stack.aria", { n: i + 1 })}" class="player-stack${locked ? " locked-pro" : ""}" min="0" step="1" value="${p.stack}" data-id="${p.id}"${locked ? " readonly" : ""} />
+      ${locked ? `<span class="lock-badge" aria-hidden="true" title="${tr("paywall.lock.title")}">🔒</span>` : ""}
       <div class="player-roles" data-id="${p.id}">
-        <button type="button" class="role-btn ${p.role === "hero" ? "active hero" : ""}" data-role="hero" aria-pressed="${p.role === "hero"}" aria-label="${tr("setup.player.role.hero")}" title="${tr("setup.player.role.hero")}">🎯</button>
-        <button type="button" class="role-btn ${p.role === "villain" ? "active villain" : ""}" data-role="villain" aria-pressed="${p.role === "villain"}" aria-label="${tr("setup.player.role.villain")}" title="${tr("setup.player.role.villain")}">⚔️</button>
+        <button type="button" class="role-btn ${p.role === "hero" ? "active hero" : ""}" data-role="hero" aria-pressed="${p.role === "hero"}" title="${tr("setup.player.role.hero")}">${tr("setup.player.role.hero")}</button>
+        <button type="button" class="role-btn ${p.role === "villain" ? "active villain" : ""}" data-role="villain" aria-pressed="${p.role === "villain"}" title="${tr("setup.player.role.villain")}">${tr("setup.player.role.villain")}</button>
         <button type="button" class="role-btn ${p.role === "other" ? "active" : ""}" data-role="other" aria-pressed="${p.role === "other"}" aria-label="${tr("setup.player.role.other")}" title="${tr("setup.player.role.other")}">${tr("setup.player.role.otherText")}</button>
       </div>
       <button type="button" class="player-remove" data-id="${p.id}" aria-label="${tr("setup.player.remove.aria", { n: i + 1 })}" title="${tr("setup.common.delete")}" ${players.length <= MIN_PLAYERS ? "disabled" : ""}>✕</button>

@@ -5,6 +5,7 @@ import { isTutorialActive, isTutorialDone, isTutorialSkippedSession } from "./pr
 import { renderTutorialNarrationStep, renderTutorialIntroCard } from "./practice/tutorial.js";
 import { STORAGE_KEYS, readRaw, writeRaw } from "./storage.js";
 import { initAnalysisView, setAnalysisView } from "./analysisView.js";
+import { isPracticeEnabled } from "./features.js";
 
 // ===== タブナビ =====
 //
@@ -13,14 +14,16 @@ import { initAnalysisView, setAnalysisView } from "./analysisView.js";
 //   - 保存値の検証 (isTabId)
 //   - スワイプジェスチャーの並び順 (index ± 1 で隣のタブへ)
 // をすべて兼ねる。表示順は index.html の .tab-btn の並びと一致させること。
-export const TAB_IDS = ["setup", "analyze", "practice"] as const;
+export const TAB_IDS = ["analyze", "practice"] as const;
 export type TabId = (typeof TAB_IDS)[number];
 
-const DEFAULT_TAB: TabId = "setup";
+const DEFAULT_TAB: TabId = "analyze";
 
 // 旧5タブ構成 (result/hand/nash) の保存値は分析タブへ読み替える
 // (既存ユーザーの localStorage との互換)。
+// 旧3タブ構成の setup は、局面入力を取り込んだ計算タブ (analyze) へ読み替える。
 const LEGACY_TAB_MAP: Record<string, TabId> = {
+  setup: "analyze",
   result: "analyze",
   hand: "analyze",
   nash: "analyze",
@@ -32,13 +35,15 @@ function isTabId(v: unknown): v is TabId {
 
 const savedTabRaw = readRaw(STORAGE_KEYS.activeTab);
 const savedTab = (savedTabRaw && LEGACY_TAB_MAP[savedTabRaw]) || savedTabRaw;
-let activeTab: TabId = isTabId(savedTab) ? savedTab : DEFAULT_TAB;
+// 練習を非表示にしている間は、保存値が練習でも計算タブで開く
+let activeTab: TabId = isTabId(savedTab) && (savedTab !== "practice" || isPracticeEnabled()) ? savedTab : DEFAULT_TAB;
 
 export function getActiveTab(): TabId {
   return activeTab;
 }
 
 export function applyTab(tab: TabId): void {
+  if (tab === "practice" && !isPracticeEnabled()) tab = DEFAULT_TAB;
   activeTab = tab;
   document.body.dataset.activeTab = tab;
   document.dispatchEvent(new Event("analysis-view-change"));
@@ -82,8 +87,15 @@ export function applyTab(tab: TabId): void {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+/** 計算タブの先頭にある局面カード (卓の入力) へスクロールする。 */
+export function scrollToSpot(): void {
+  document.getElementById("setup-players")?.scrollIntoView({ block: "start", behavior: "smooth" });
+}
+
 /** タブバー・スワイプジェスチャーの配線。main.ts から一度だけ呼ぶ。 */
 export function initTabs(): void {
+  // 練習を出さないときはタブが 1 つだけになるので、タブバーごと隠す (CSS: body.no-practice)
+  document.body.classList.toggle("no-practice", !isPracticeEnabled());
   initAnalysisView();
   document.querySelectorAll<HTMLButtonElement>("[data-open-tab]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -97,6 +109,10 @@ export function initTabs(): void {
       const t = btn.dataset.tab as TabId | undefined;
       if (t) applyTab(t);
     });
+  });
+  // 「局面を変更する」: 同じ画面の上にある局面カードへ戻る
+  document.querySelectorAll<HTMLButtonElement>("[data-scroll-spot]").forEach((button) => {
+    button.addEventListener("click", scrollToSpot);
   });
 
   // ===== タブ切替のスワイプ ジェスチャー =====
@@ -138,6 +154,7 @@ export function initTabs(): void {
     const dy = t.clientY - touchStartY;
     if (Math.abs(dx) < SWIPE_MIN_DX) return;
     if (Math.abs(dy) > SWIPE_MAX_DY) return;
+    if (!isPracticeEnabled()) return;
     const idx = TABS.indexOf(activeTab);
     if (dx < 0 && idx < TABS.length - 1) applyTab(TABS[idx + 1]!);
     if (dx > 0 && idx > 0) applyTab(TABS[idx - 1]!);

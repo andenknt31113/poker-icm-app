@@ -39,6 +39,8 @@ import { renderHeroSummary, hideHeroSummary, initHeroSummary } from "./heroSumma
 import { renderBFMatrix, initBFMatrix } from "./bfMatrix.js";
 import { updatePositionWarn, updateDepthWarn } from "./warnings.js";
 import { initInfoModal } from "./infoModal.js";
+import { exactCallRequiredEquity } from "./callSpot.js";
+import { renderChop, clearChop, initChop } from "./chopView.js";
 
 // ===== DOM参照 (計算結果タブ) =====
 const callInput = $<HTMLInputElement>("call");
@@ -64,8 +66,26 @@ export function setCallManualOverride(v: boolean): void {
 
 // ===== メイン計算 =====
 
+/** 局面カードの折りたたみ行 (賞金・ブラインド) に、今の設定を1行で出す。 */
+function renderSpotFoldSummaries(): void {
+  const payoutsEl = document.getElementById("payouts-summary");
+  if (payoutsEl) {
+    const list = parseList(payoutsInput.value);
+    payoutsEl.textContent = list.length > 0 ? list.map((v) => Number(v.toFixed(2)).toLocaleString("en-US")).join(" / ") : "—";
+  }
+  const blindsEl = document.getElementById("blinds-summary");
+  if (blindsEl) {
+    blindsEl.textContent = t("setup.blinds.summary", {
+      sb: nashSbInput.value || String(DEFAULT_SB),
+      bb: nashBbInput.value || String(DEFAULT_BB),
+      ante: nashAnteInput.value || "0",
+    });
+  }
+}
+
 export function recompute(): void {
   invalidateChangedNash();
+  renderSpotFoldSummaries();
   try {
     const stacks = players.map((p) => p.stack);
     const payouts = parseList(payoutsInput.value);
@@ -92,16 +112,22 @@ export function recompute(): void {
         const pct = totalPrize > 0 ? eq / totalPrize : 0;
         const role = players[i]?.role;
         const tag =
-          role === "hero" ? " 🎯" : role === "villain" ? " ⚔️" : "";
+          role === "hero"
+            ? ` <span class="icm-role hero">${t("calc.summary.hero")}</span>`
+            : role === "villain"
+              ? ` <span class="icm-role villain">${t("calc.summary.villain")}</span>`
+              : "";
         const rowClass = role === "hero" ? ' class="hero-row"' : "";
         return `<tr${rowClass}>
-          <td>${i + 1}${tag}</td>
+          <td>${players[i]?.position || `#${i + 1}`}${tag}</td>
           <td>${stack}</td>
           <td>${fmt(eq, 3)}</td>
           <td>${fmtPct(pct, 1)}</td>
         </tr>`;
       })
       .join("");
+
+    renderChop(stacks, payouts);
 
     // BF
     let bf = 1.0;
@@ -220,30 +246,49 @@ export function recompute(): void {
     }
     const callAmount = Number(callInput.value);
     const potIfWin = Number(potWinInput.value);
-    const eq = calculateRequiredEquity({
+    const approxEq = calculateRequiredEquity({
       callAmount,
       potIfWin,
       bubbleFactor: bf,
     });
+    // 必要勝率は厳密 ICM (fold / コール勝ち / コール負けの3終端) で出す。練習タブと同じ計算。
+    // コール額・純利得を手入力したときと、BB の人が決まらない卓は BF 近似に戻す。
+    const exactReq =
+      !callManualOverride && !decisionUnavailable
+        ? exactCallRequiredEquity(
+            players,
+            payouts,
+            heroIndex,
+            villainIndex,
+            Number(nashSbInput.value) || DEFAULT_SB,
+            Number(nashBbInput.value) || DEFAULT_BB,
+            Number(nashAnteInput.value) || 0,
+          )
+        : null;
+    const eq =
+      exactReq === null
+        ? approxEq
+        : { cEV: approxEq.cEV, dollarEV: exactReq, riskPremium: exactReq - approxEq.cEV };
 
     const rpSign = eq.riskPremium >= 0 ? "+" : "";
     eqResult.innerHTML = `
       <div class="eq-flow">
         <div class="eq-flow-item eq-flow-cev">
-          <div class="eq-flow-label">cEV</div>
+          <div class="eq-flow-label">${t("calc.eq.flow.chip")}</div>
           <div class="eq-flow-value">${fmtPct(eq.cEV)}</div>
         </div>
         <div class="eq-flow-arrow">→</div>
         <div class="eq-flow-item eq-flow-rp">
-          <div class="eq-flow-label">+ Risk Premium</div>
+          <div class="eq-flow-label">${t("calc.eq.flow.rp")}</div>
           <div class="eq-flow-value">${rpSign}${fmtPct(eq.riskPremium, 2)}</div>
         </div>
         <div class="eq-flow-arrow">→</div>
         <div class="eq-flow-item eq-flow-final">
-          <div class="eq-flow-label">$EV (True Req)</div>
+          <div class="eq-flow-label">${t("calc.eq.flow.icm")}</div>
           <div class="eq-flow-value">${fmtPct(eq.dollarEV)}</div>
         </div>
       </div>
+      ${exactReq === null ? `<p class="hint eq-approx-note">${t("calc.eq.approxNote")}</p>` : ""}
     `;
 
     // レンジ比較 (戻り値の要約は状況サマリーの一行判定に使う)
@@ -278,6 +323,7 @@ export function recompute(): void {
     icmRows.innerHTML = `<tr><td colspan="4" class="error">${msg}</td></tr>`;
     bfResult.innerHTML = "";
     eqResult.innerHTML = "";
+    clearChop();
     hideHeroSummary();
     setRangeUnavailable(msg);
     updateDepthWarn(-1, -1, []);
@@ -364,4 +410,5 @@ export function initCalculator(): void {
 
   initInfoModal();
   initHeroSummary();
+  initChop();
 }

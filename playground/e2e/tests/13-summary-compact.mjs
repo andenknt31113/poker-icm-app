@@ -26,20 +26,20 @@ export default async function testSummaryCompact({ baseURL, createContext }) {
         return !t || t.offsetParent === null;
       };
       return {
-        contextHidden: hidden(".hero-summary-context"),
-        rowsHidden: hidden(".hero-summary-row"),
+        subHidden: hidden(".hero-summary-sub"),
+        verdictHidden: hidden("#hero-summary-verdict-btn"),
         gridVisible: !hidden(".hero-summary-grid"),
-        verdictVisible: !hidden("#hero-summary-verdict-btn"),
+        spotVisible: !hidden(".hero-summary-row-stack"),
         heightPct: el.getBoundingClientRect().height / window.innerHeight,
       };
     });
-    if (!compact.contextHidden || !compact.rowsHidden) {
-      throw new Error("floating 中に文脈行が畳まれていない");
+    if (!compact.subHidden || !compact.verdictHidden) {
+      throw new Error("floating 中に補足行・一行判定が畳まれていない");
     }
-    if (!compact.gridVisible || !compact.verdictVisible) {
-      throw new Error("floating 中に BF グリッド or 一行判定が消えている");
+    if (!compact.gridVisible || !compact.spotVisible) {
+      throw new Error("floating 中に 必要勝率/RP/BF or 局面の1行 (スタック) が消えている");
     }
-    if (compact.heightPct > 0.2) {
+    if (compact.heightPct > 0.15) {
       throw new Error(`floating 中の占有率が想定超え: ${(compact.heightPct * 100).toFixed(0)}%`);
     }
 
@@ -63,10 +63,10 @@ export default async function testSummaryCompact({ baseURL, createContext }) {
     );
     const expanded = await page.evaluate(() => {
       const el = document.getElementById("hero-summary");
-      const t = el.querySelector(".hero-summary-row");
+      const t = el.querySelector("#hero-summary-verdict-btn");
       return !!t && t.offsetParent !== null;
     });
-    if (!expanded) throw new Error("トップ復帰後に自分/相手行が再表示されていない");
+    if (!expanded) throw new Error("トップ復帰後に一行判定が再表示されていない");
 
     assertNoErrors(errors, "サマリーのスクロール時コンパクト化フロー");
   } finally {

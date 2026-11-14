@@ -1,14 +1,15 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { players, solve } = vi.hoisted(() => ({
+const { players, solve, solveMultiway } = vi.hoisted(() => ({
   players: [
     { stack: 18, role: "hero", position: "SB" },
     { stack: 14, role: "villain", position: "BB" },
   ],
   solve: vi.fn(),
+  solveMultiway: vi.fn(),
 }));
-vi.mock("@poker-icm/core", () => ({ solveHUNash: solve }));
+vi.mock("@poker-icm/core", () => ({ solveHUNash: solve, solveMultiwayPushFold: solveMultiway }));
 vi.mock("../src/appState.js", () => ({
   players, persistedState: null, actionOrderIdx: (position: string) => ["BTN", "SB", "BB"].indexOf(position),
   parseList: (value: string) => value.split(",").filter(Boolean).map(Number),
@@ -43,6 +44,12 @@ beforeEach(() => {
     sbPushRange: new Set(["AA"]), bbCallRange: new Set(["AA"]),
     converged: true, iterations: 1,
   });
+  solveMultiway.mockReset().mockReturnValue({
+    pushFreq: new Map([["AA", 1]]), pushRange: new Set(["AA"]),
+    callFreqs: [new Map([["KK", 1]]), new Map([["AA", 1]])],
+    callRanges: [new Set(["KK"]), new Set(["AA"])],
+    converged: true, iterations: 1,
+  });
 });
 afterEach(() => vi.useRealTimers());
 
@@ -74,8 +81,8 @@ describe("Nashの結果と現在の入力を一致させる", () => {
     renderNashContext();
     expect(context.textContent).toContain("自分：コール");
     expect(context.textContent).toContain("相手：プッシュ");
-    expect(document.getElementById("nash-push-title")!.textContent).toContain("相手の push");
-    expect(document.getElementById("nash-call-title")!.textContent).toContain("自分の call");
+    expect(document.getElementById("nash-push-title")!.textContent).toContain("相手が押す");
+    expect(document.getElementById("nash-call-title")!.textContent).toContain("自分がコールする");
     // 席順どおりなので入れ替えの案内は出さない
     updateNashOvercallWarn();
     expect(warn.classList.contains("hidden")).toBe(true);
@@ -190,7 +197,7 @@ describe("実際のポジションの blind で Nash を解く", () => {
     expect(input).toMatchObject({ pusherBlind: 0.5, callerBlind: 1, deadMoney: 0, ante: 0 });
   });
 
-  it("BTN からのプッシュ: 自分は blind なし、降りた SB と BB ante はポットに残る", async () => {
+  it("BTN からのプッシュ: 後ろの SB と BB の両方のコールを入れた多人数モデルで解く", async () => {
     players.length = 0;
     players.push(
       { stack: 10, role: "hero", position: "BTN" },
@@ -198,10 +205,26 @@ describe("実際のポジションの blind で Nash を解く", () => {
       { stack: 15, role: "villain", position: "BB" },
     );
     (document.getElementById("nash-ante") as HTMLInputElement).value = "1";
-    const input = await solveOnce();
-    expect(input).toMatchObject({ pusherBlind: 0, callerBlind: 1, deadMoney: 1.5 });
-    // SB は blind 0.5、BB は ante 1 をすでに払っている
-    expect(input.stacks).toEqual([10, 11.5, 14]);
+    document.body.insertAdjacentHTML("beforeend", '<p id="nash-others" class="hidden"></p>');
+    const { initNashUI } = await import("../src/nashUI.js");
+    initNashUI(); clickSolve(); vi.runAllTimers();
+    expect(solve).not.toHaveBeenCalled();
+    // 自分 (BTN) は blind なし。SB 0.5 と BB 1、BB ante 1 は実際のポジションの人が払う
+    // 後ろの席 (SB が押す局面) を先に解いてから、BTN の局面を解く
+    expect(solveMultiway.mock.calls[0]![0]).toMatchObject({ pusherIndex: 1, callerIndices: [2] });
+    expect(solveMultiway.mock.calls.at(-1)![0]).toMatchObject({
+      stacks: [10, 12, 15],
+      pusherIndex: 0,
+      callerIndices: [1, 2],
+      blinds: [0, 0.5, 1],
+      antes: [0, 0, 1],
+      foldWinnerIndex: 2,
+    });
+    // 相手 (BB) のコールレンジを表に出し、間の SB は一覧に出す
+    expect(document.querySelector("#nash-bb-grid .in-range-hero")?.textContent).toBe("AA");
+    const others = document.getElementById("nash-others")!;
+    expect(others.classList.contains("hidden")).toBe(false);
+    expect(others.textContent).toContain("SB");
   });
 
   it("2人卓の BTN は SB を払う", async () => {

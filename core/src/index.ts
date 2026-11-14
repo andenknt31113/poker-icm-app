@@ -14,6 +14,18 @@ export type {
   PushDecisionResult,
 } from "./pushDecision.js";
 export { solveHUNash, huNashExploitability } from "./nash.js";
+export { solveMultiwayPushFold, buildMultiwayTerminals, computeNodeValues } from "./multiwayNash.js";
+export { solveOvercallPushFold } from "./overcallNash.js";
+export type {
+  OvercallPushFoldInput,
+  OvercallPushFoldResult,
+  ThreeWayEquityFn,
+} from "./overcallNash.js";
+export type {
+  MultiwayPushFoldInput,
+  MultiwayPushFoldResult,
+  MultiwayTerminals,
+} from "./multiwayNash.js";
 export type {
   BubbleFactorInput,
   BubbleFactorResult,

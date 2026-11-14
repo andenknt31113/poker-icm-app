@@ -15,8 +15,9 @@ import type { PotOddsPosition } from "./potOdds.js";
  * から必要勝率を直接求める（線形化を経由しない）。
  *
  * 前提 (BB ante 構造):
- *   - BB が ante を全額負担する。したがって heroPosition か villainPosition の
- *     どちらかが "BB" である必要がある（ante の負担者を特定するため）。
+ *   - BB が ante を全額負担する。heroPosition / villainPosition のどちらも "BB"
+ *     でない場合 (例: BTN のオールインを SB が受ける) は、bbPlayerIndex で BB の
+ *     人を渡す。その人は降りた前提で、blind と ante が dead money になる。
  *   - practice では hero は常に BB として呼ばれるが、関数自体は heroPosition /
  *     villainPosition を尊重するため一般化されている。
  *   - SB を務めるプレイヤーが hero/villain のどちらでもない場合、その SB は
@@ -39,6 +40,11 @@ export interface ExactCallEquityInput {
    * （どちらでも同じ結果になる）。テーブルに SB がいない/該当なしなら省略可。
    */
   readonly sbPlayerIndex?: number;
+  /**
+   * BB を務めるプレイヤーの index。hero/villain のどちらも BB でないときに必須
+   * (降りた BB の blind と ante を dead money にする)。どちらかが BB なら無視する。
+   */
+  readonly bbPlayerIndex?: number;
   /** SB blind 額。 */
   readonly sb: number;
   /** BB blind 額。 */
@@ -81,6 +87,7 @@ export function calculateExactCallEquity(
     heroPosition,
     villainPosition,
     sbPlayerIndex,
+    bbPlayerIndex,
     sb,
     bb,
     ante,
@@ -100,11 +107,19 @@ export function calculateExactCallEquity(
   if (sb < 0 || bb < 0 || ante < 0) {
     throw new Error("ExactCallEquity: blind/ante は非負である必要があります");
   }
-  if (heroPosition !== "BB" && villainPosition !== "BB") {
-    // ante 負担者 (BB ante 構造) を hero/villain のどちらかから特定できないと
-    // dead money の計算が不定になる。practice では hero は常に BB。
+  const bbInAction = heroPosition === "BB" || villainPosition === "BB";
+  const bbIsThirdParty =
+    !bbInAction &&
+    bbPlayerIndex !== undefined &&
+    bbPlayerIndex >= 0 &&
+    bbPlayerIndex < stacks.length &&
+    bbPlayerIndex !== heroIndex &&
+    bbPlayerIndex !== villainIndex;
+  if (!bbInAction && !bbIsThirdParty) {
+    // ante と BB blind の負担者 (BB ante 構造) を特定できないと dead money の
+    // 計算が不定になる。
     throw new Error(
-      "ExactCallEquity: heroPosition か villainPosition のどちらかが BB である必要があります",
+      "ExactCallEquity: heroPosition / villainPosition のどちらかが BB であるか、bbPlayerIndex の指定が必要です",
     );
   }
 
@@ -125,17 +140,28 @@ export function calculateExactCallEquity(
   const sbIsThirdParty =
     sbPlayerIndex !== undefined &&
     sbPlayerIndex >= 0 &&
+    sbPlayerIndex < stacks.length &&
     sbPlayerIndex !== heroIndex &&
-    sbPlayerIndex !== villainIndex;
-  const sbDead = sbIsThirdParty ? sb : 0;
+    sbPlayerIndex !== villainIndex &&
+    !(bbIsThirdParty && sbPlayerIndex === bbPlayerIndex);
+  // 第三者は持っている分しか払えない (ショートの blind / ante)
+  const sbDead = sbIsThirdParty ? Math.min(sb, stacks[sbPlayerIndex!]!) : 0;
+  // BB が第三者: ante → blind の順に払い、どちらも dead money になる
+  const bbThirdAnte = bbIsThirdParty ? Math.min(ante, stacks[bbPlayerIndex!]!) : 0;
+  const bbThirdBlind = bbIsThirdParty
+    ? Math.min(bb, stacks[bbPlayerIndex!]! - bbThirdAnte)
+    : 0;
   // ante は BB ante 構造上つねに dead money (誰の commit でもない)
-  const dead = sbDead + ante;
+  const dead = sbDead + (bbIsThirdParty ? bbThirdAnte + bbThirdBlind : ante);
 
   const pot = 2 * matched + dead;
 
   const applyThirdPartySb = (arr: number[]): void => {
     if (sbIsThirdParty) {
-      arr[sbPlayerIndex!] = stacks[sbPlayerIndex!]! - sb;
+      arr[sbPlayerIndex!] = stacks[sbPlayerIndex!]! - sbDead;
+    }
+    if (bbIsThirdParty) {
+      arr[bbPlayerIndex!] = stacks[bbPlayerIndex!]! - bbThirdAnte - bbThirdBlind;
     }
   };
 
