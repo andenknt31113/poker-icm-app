@@ -64,6 +64,8 @@ export const STORAGE_KEYS = {
   practiceHistory: "poker-icm-practice-history",
   /** 練習タブを表示するか ("1" のときだけ表示。既定は非表示)。 */
   practiceEnabled: "poker-icm-practice-enabled",
+  /** 評価のお願いの判定用 (起動回数・Nash を見た回数・最後に頼んだ時刻)。 */
+  reviewState: "poker-icm-review-state",
 } as const;
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];

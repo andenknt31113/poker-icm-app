@@ -18,6 +18,7 @@ import { PUSH_FOLD_CAUTION_MAX_BB } from "./pushSpot.js";
 import { t } from "./i18n.js";
 import { players, parseList, DEFAULT_SB, DEFAULT_BB } from "./appState.js";
 import { payoutsInput, nashSbInput, nashBbInput, nashAnteInput } from "./domRefs.js";
+import { noteNashFinishedForReview } from "./reviewPrompt.js";
 
 interface TableState {
   key: string;
@@ -147,7 +148,10 @@ function solveNext(): void {
   try {
     const result = current.chain.next();
     if (result) current.solved.set(result.pusherIndex, result);
-    else current.finished = true;
+    else {
+      current.finished = true;
+      noteNashFinishedForReview();
+    }
   } catch (err) {
     current.error = err instanceof Error ? err.message : String(err);
   }
