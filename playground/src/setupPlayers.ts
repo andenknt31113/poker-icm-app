@@ -202,7 +202,33 @@ function randomizeStacks(): void {
 }
 
 /** プレイヤー行のイベント配線。initSetup から一度だけ呼ぶ。 */
+/**
+ * 位置が未設定・重複している席を、その人数で使う位置のうち空いているもので埋める。
+ * 誰も位置を持っていない卓は、上の行から BTN → SB → BB … の順に入れる。
+ * 変えた席があれば true。
+ */
+export function fillMissingPositions(): boolean {
+  const before = players.map((player) => player.position).join(",");
+  if (players.every((player) => player.position === "")) {
+    const order = positionsForN(players.length);
+    players.forEach((player, index) => { player.position = order[index] ?? ""; });
+  } else {
+    repairPositions();
+  }
+  return players.map((player) => player.position).join(",") !== before;
+}
+
 export function initPlayersUI(): void {
+  // 「空いている位置を入れる」ボタン (Nash の一覧など、位置が全員ぶん必要な画面の案内から押す)。
+  // 画面のあちこちに後から描かれるので、document で受ける。
+  document.addEventListener("click", (event) => {
+    if (!(event.target as HTMLElement).closest("[data-fill-positions]")) return;
+    checkpointSetup();
+    if (!fillMissingPositions()) return;
+    ringAutoLinkArmed = false;
+    renderPlayers();
+    recompute();
+  });
   document.querySelectorAll<HTMLButtonElement>("[data-swap-players]").forEach(button => button.addEventListener("click", () => {
     if (!players.some(player => player.role === "hero") || !players.some(player => player.role === "villain")) return;
     checkpointSetup();

@@ -30,6 +30,8 @@ interface TableState {
   /** これ以上解く席がない。 */
   finished: boolean;
   error: string | null;
+  /** error の理由が「位置が全員ぶん決まっていない」か。 */
+  needPositions: boolean;
 }
 
 let state: TableState | null = null;
@@ -94,7 +96,10 @@ function render(): void {
     return;
   }
   if (state.error) {
-    el.innerHTML = "";
+    // 位置が足りないときは、空いている位置を入れるボタンを添える (押すと setupPlayers が埋めて再計算)
+    el.innerHTML = state.needPositions
+      ? `<button type="button" class="workspace-secondary" data-fill-positions>${t("nash.table.fillPositions")}</button>`
+      : "";
     status.textContent = state.error;
     return;
   }
@@ -175,6 +180,7 @@ export function ensureNashTable(): void {
   const payouts = parseList(payoutsInput.value);
   let error: string | null = null;
   let chain: NashChain | null = null;
+  let needPositions = false;
   if (!hasHUMatrix()) error = t("nash.matrixMissing");
   else if (payouts.length === 0 || !payouts.some((p) => p > 0)) error = t("nash.err.needPayout");
   else {
@@ -185,9 +191,12 @@ export function ensureNashTable(): void {
       Number(nashBbInput.value) || DEFAULT_BB,
       Number(nashAnteInput.value) || 0,
     );
-    if (!chain) error = t("nash.table.needPositions");
+    if (!chain) {
+      error = t("nash.table.needPositions");
+      needPositions = true;
+    }
   }
-  state = { key, pushers: chain?.pushers ?? [], chain, solved: new Map(), finished: false, error };
+  state = { key, pushers: chain?.pushers ?? [], chain, solved: new Map(), finished: false, error, needPositions };
   render();
   if (!error) timer = setTimeout(solveNext, 0);
 }
