@@ -14,7 +14,9 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # ubuntu-latest が 26.04 になり、いまの Playwright (E2E 用) がその OS に未対応のため固定する。
+    # Playwright を対応版に上げたら ubuntu-latest に戻してよい。
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
