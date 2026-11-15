@@ -58,6 +58,10 @@ npm run build      # core + playground をビルド
 
 ## デプロイ
 `main` ブランチへの push で Cloudflare Workers が自動ビルド＆デプロイ。
-公開URL: https://poker-icm-app.andenknt31113.workers.dev/
+
+Web (workers.dev) では計算アプリの画面を配信しない（製品は iOS アプリだけ）。配信するのは
+サポートページ (`/support`) と利用規約 (`/legal`) だけで、それ以外の URL は
+「iOS アプリで提供しています」の案内を返す（`worker/index.ts`）。
+画面の確認は上の手元のサーバー（`npm run dev` / preview）で行う。
 
 詳細な仕様は `docs/SPEC.md` 参照。

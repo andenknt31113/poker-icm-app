@@ -1,9 +1,14 @@
+// Web (workers.dev) の配信設定。
+// 計算アプリの画面は配信しない。サポートページと利用規約だけ通す (worker/index.ts)。
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "poker-icm-app",
   "compatibility_date": "2026-01-01",
+  "main": "./worker/index.ts",
   "assets": {
     "directory": "./playground/dist",
-    "not_found_handling": "single-page-application"
+    "binding": "ASSETS",
+    // すべてのリクエストを先に Worker に通す (通してよいパスだけ ASSETS に渡す)
+    "run_worker_first": true
   }
 }
