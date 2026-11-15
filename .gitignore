@@ -10,3 +10,6 @@ artifacts/
 
 # Claude Code agent worktrees / session-local files
 .claude/
+
+# wrangler dev のローカル状態
+.wrangler/
