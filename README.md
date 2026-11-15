@@ -1,10 +1,10 @@
 # Poker ICM/BF Calculator (仮称)
 
-日本語UIの店舗トナメ向け ICM/BF/Nash 計算アプリ（モバイルWeb / PWA + iOS アプリ (Capacitor)）。
+日本語UIの店舗トナメ向け ICM/BF/Nash 計算アプリ。製品は iOS アプリ (Capacitor) だけで、Web では配信しない（画面は Web 技術で作り、手元のブラウザで確認できる）。
 
 ## 現在のステータス
 - 計算コア（ICM・BF・必要勝率・Nash・ポットオッズ）実装＆テスト済み
-- モバイルWeb UI（playground）が稼働中。3タブ構成・PWA対応
+- UI（playground）は3タブ構成。iOS アプリに同梱して動かす
 - iOS アプリ (Capacitor + RevenueCat 買い切りIAP)。ビルド手順は docs/APP_STORE_BUILD.md
 - Cloudflare Workers にデプロイ済み
 - 開始日: 2026-05-08
@@ -25,7 +25,7 @@ poker-icm-app/
 │   │   └── index.ts     # エクスポート
 │   └── test/
 │       └── *.test.ts    # ユニットテスト
-├── playground/          # モバイルWeb UI（Vite + TypeScript、PWA）
+├── playground/          # UI（Vite + TypeScript）
 │   ├── index.html
 │   └── src/
 └── wrangler.jsonc       # Cloudflare Workers デプロイ設定
@@ -53,11 +53,15 @@ npm run build      # core + playground をビルド
 
 ローカル改修の見た目を確認するときは、`npm run build` の後に
 `npm -w @poker-icm/playground run preview -- --host 127.0.0.1 --port 5173 --strictPort`
-でビルド済みのアプリを配信する。開発モードではService Workerを登録しない。
+でビルド済みのアプリを手元で配信する。
 確認サーバーが停止した場合、ローカルURLへの継続アクセスは保証されない。
 
 ## デプロイ
 `main` ブランチへの push で Cloudflare Workers が自動ビルド＆デプロイ。
-公開URL: https://poker-icm-app.andenknt31113.workers.dev/
+
+Web (workers.dev) では計算アプリの画面を配信しない（製品は iOS アプリだけ）。配信するのは
+サポートページ (`/support`) と利用規約 (`/legal`) だけで、それ以外の URL は
+「iOS アプリで提供しています」の案内を返す（`worker/index.ts`）。
+画面の確認は上の手元のサーバー（`npm run dev` / preview）で行う。
 
 詳細な仕様は `docs/SPEC.md` 参照。

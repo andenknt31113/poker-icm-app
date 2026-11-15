@@ -6,7 +6,8 @@
 
 # 利用規約・プライバシーポリシー（下書き）
 
-対象サービス: iOS アプリ「Poker ICM」および Web 版「Poker ICM/BF」（以下あわせて「本サービス」）
+対象サービス: iOS アプリ「Poker ICM」（以下「本サービス」）
+<!-- 2026-11-15: Web 版は提供しないので対象から外した。公開中の文面の正は playground/src/legalContent.ts と playground/public/legal.html -->
 運営: 個人開発者（andenknt31113@gmail.com）
 
 <!-- 2026-08-27: アプリ内から外部 Web 版へ誘導して見えるのを避けるため Web 版 URL の記載を削除 -->

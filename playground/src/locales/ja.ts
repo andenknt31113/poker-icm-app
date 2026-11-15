@@ -471,12 +471,6 @@ export const ja: Record<string, string> = {
   "firstHint.close.aria": "閉じる",
 
   // ===== PWA (pwa.ts) =====
-  "pwa.swUpdate.aria": "新しいバージョンがあります。タップで更新",
-  "pwa.swUpdate.text": "🔄 新しいバージョンがあります — タップで更新",
-  "pwa.close.aria": "閉じる",
-  "pwa.install.title": "ホーム画面に追加",
-  "pwa.install.aria": "インストール",
-  "pwa.iosBanner.text": "ホーム画面に追加でアプリとして使えます: 共有ボタン → ホーム画面に追加",
   "pwa.offline.text": "📡 オフライン — 計算はすべて端末内で動作します",
 
   // ===== 練習問題の表示 (render.ts) =====
