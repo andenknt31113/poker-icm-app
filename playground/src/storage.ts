@@ -42,7 +42,7 @@ export const STORAGE_KEYS = {
   collapseScenarioPresets: "poker-icm-collapse-scenario-presets",
   /** ペイ構造プリセットカードの details 開閉状態。 */
   collapsePayoutPresets: "poker-icm-collapse-payout-presets",
-  /** iOS ホーム画面追加ヒントを閉じたか。 */
+  /** (未使用) Web 版の「ホーム画面に追加」案内を閉じたか。案内は外したがキーの一覧には残す。 */
   iosInstallHint: "poker-icm-ios-install-hint",
   /** 開発/E2E 用の Pro 裏口フラグ。 */
   pro: "poker-icm-pro",

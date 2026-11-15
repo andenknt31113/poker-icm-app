@@ -13,7 +13,7 @@
 # App Store リスティング素材（下書き）
 
 対象アプリ: **Poker ICM**（appId: `dev.workers.andenknt31113.pokericm`）
-Web版: https://poker-icm-app.andenknt31113.workers.dev/（無料・継続提供）
+Web 版: 提供しない（2026-11-15 に計算アプリの画面の配信を止めた。workers.dev で配信するのはサポートページと利用規約だけ）
 
 ---
 

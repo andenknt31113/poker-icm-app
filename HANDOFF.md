@@ -668,3 +668,13 @@
 - 審査通過（PENDING_DEVELOPER_RELEASE）を API で確認。本人「こうかいして」→ `POST /v1/appStoreVersionReleaseRequests` で公開操作、状態は READY_FOR_DISTRIBUTION。
 - 公開ストアの表示は操作直後の時点でまだ 1.4 / 「Poker ICM」のまま（iTunes lookup、jp / us）。切り替わりは未確認。
 - 残り: ストア表示の切り替わり確認（新しい名前・英語ページ）。実機での確認。課金アイテムの英語名は未確認。検索順位は測っていない。
+
+## 2026-11-15: Web 版の提供をやめる（計算アプリの画面の配信を止め、Web 向けのコードを整理）
+- 本人「web版はもういいや」→ 確認して「Web 版そのものを止める」。続けて「web版はユーザーに使わせる予定ないので色々やっといて」。ブランチ `feat/close-web-app` → PR #86。
+- 配信: `wrangler.jsonc` に Worker（`worker/index.ts`、中身は `worker/gate.ts`）を追加。`/support` と `/legal`（と画像）だけ通し、それ以外は「iOS アプリで提供しています」の案内を 410 で返す。`/sw.js` は以前のキャッシュを消して登録を外すものを返す。サポートページと利用規約は App Store に登録している URL なので残した。
+- アプリ側（iOS では元から動いていなかった Web 向けの部分）: Service Worker の登録と更新通知、「ホーム画面に追加」の案内とボタン、その文言・CSS を削除。`index.html` から manifest・OGP・canonical を外し、noindex を付け、title を「Poker ICM」に。`public/` の `sw.js` / `manifest.json` / `og-image.png` を削除。
+- 設定・文書: `wrangler.full.jsonc`（Pro 解放版を別 Worker に配る設定。配信先は 404 で未使用だった）を削除。`FULL_VERSION=1` のビルド自体は手元確認用に残した。README、`docs/APP_STORE_LISTING.md`、`docs/ANNOUNCEMENT_DRAFT.md`（使わない旨を冒頭に追記）、`docs/TERMS_PRIVACY_DRAFT.md` を更新。
+- 検証: 型チェック、単体 93 + 330、ビルド、E2E 17 件成功。`wrangler dev` で `/`・`/index.html`・`/assets/*`・`/three-way-equity.bin`・`/manifest.json` が 410、`/support`・`/legal`・`/icon.svg` が 200、`/sw.js` が片付け用スクリプトを返すことを確認。Worker の入口ファイルはハンドラ以外を export すると起動時に落ちる（判定と文面を `gate.ts` に分けた理由）。
+- iOS アプリへの影響: 公開中の 1.4.1 は同梱の資産で動くので変わらない。今回のアプリ側の整理は次の iOS ビルドから入る（動きは変わらない想定。実機・シミュレーターでは未確認）。
+- これから画面を確認する方法: `npm run dev`、または `npm run build` のあと preview（README）。Web の URL ではもう見られない。
+- 残り: マージ後の本番確認の結果はこの追記の時点では未記録（チャットで報告）。未使用の `icon-192.png` / `icon-512.png`、保存キー `iosInstallHint` は残してある。旧 Nash 表示コードの削除、CI ランナー固定を戻す件は未着手。

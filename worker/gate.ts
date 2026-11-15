@@ -20,7 +20,6 @@ const PUBLIC_FILES = [
   "/icon-192.png",
   "/icon-512.png",
   "/apple-touch-icon.png",
-  "/og-image.png",
 ];
 
 const SERVICE_WORKER_PATH = "/sw.js";
