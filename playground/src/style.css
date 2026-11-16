@@ -263,9 +263,19 @@ html[lang="en"] .presets.saved:empty::before {
   font-family: var(--mono);
 }
 
-.presets button:hover {
+/* 指で押した後も hover が残る端末 (iPhone など) では、押しただけのボタンが選択中に見えてしまう。
+   hover の色はマウスのある端末だけにし、選択中は .active で示す。 */
+@media (hover: hover) {
+  .presets button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+}
+.presets:not(.saved) button.active {
   border-color: var(--accent);
-  color: var(--accent);
+  color: #14241a;
+  background: var(--accent);
+  font-weight: 700;
 }
 
 /* ===== ICM 結果テーブル ===== */
