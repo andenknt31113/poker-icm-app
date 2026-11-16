@@ -110,6 +110,10 @@ export function renderHeroSummary(a: HeroSummaryArg): void {
     ? `<span class="hero-summary-sample-badge">${t("calc.summary.sample")}</span>`
     : "";
   const cev = a.requiredEq - a.rp;
+  // 相手がいない / スタックが 0 のときは計算の前提が欠けている。数字を出すと
+  // 「必要勝率 44.8%・BF 1.00」のように正しそうな値に見えてしまうので、— にして理由を添える。
+  const missing = !hasVillain ? "calc.summary.needVillain" : !(heroStack > 0 && villainStack > 0) ? "calc.summary.needStack" : null;
+  const num = (text: string): string => (missing ? "—" : text);
 
   heroSummaryEl.innerHTML = `
     <div class="hero-summary-body">
@@ -123,19 +127,19 @@ export function renderHeroSummary(a: HeroSummaryArg): void {
       <div class="hero-summary-grid">
         <div class="hero-summary-item primary" data-info="必要勝率">
           <div class="hero-summary-label tappable">${t("calc.summary.reqLabel")}</div>
-          <div class="hero-summary-value">${(a.requiredEq * 100).toFixed(1)}<span class="unit">%</span></div>
-          <div class="hero-summary-sub">${t("calc.summary.chipOnly", { v: (cev * 100).toFixed(1) })}</div>
+          <div class="hero-summary-value">${num(`${(a.requiredEq * 100).toFixed(1)}<span class="unit">%</span>`)}</div>
+          ${missing ? "" : `<div class="hero-summary-sub">${t("calc.summary.chipOnly", { v: (cev * 100).toFixed(1) })}</div>`}
         </div>
         <div class="hero-summary-item" data-info="RP">
           <div class="hero-summary-label tappable">${t("calc.summary.rpLabel")}</div>
-          <div class="hero-summary-value warn">${a.rp >= 0 ? "+" : ""}${(a.rp * 100).toFixed(1)}<span class="unit">%</span></div>
+          <div class="hero-summary-value warn">${num(`${a.rp >= 0 ? "+" : ""}${(a.rp * 100).toFixed(1)}<span class="unit">%</span>`)}</div>
         </div>
         <div class="hero-summary-item" data-info="BF">
           <div class="hero-summary-label tappable">${t("calc.summary.bfLabel")}</div>
-          <div class="hero-summary-value ${bfClass}">${a.bf.toFixed(2)}</div>
+          <div class="hero-summary-value ${missing ? "" : bfClass}">${num(a.bf.toFixed(2))}</div>
         </div>
       </div>
-      ${verdictLineHtml(hasVillain, a.rangeVerdict)}
+      ${missing ? `<p class="hint hero-summary-missing" role="status">${t(missing)}</p>` : verdictLineHtml(hasVillain, a.rangeVerdict)}
     </div>
   `;
 }

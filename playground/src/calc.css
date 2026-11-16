@@ -211,7 +211,18 @@
   /* PC: 左に局面、右に結果を並べる */
   .workspace section.spot-card[data-tab="analyze"]:not(#sec-hand):not(.workspace-section-head) { grid-column: 1; grid-row: auto; align-self: start; }
   .workspace .container > #hero-summary { grid-column: 2; align-self: start; }
+  /* 賞金・BF: 左に「賞金期待値 → チョップ」、右に BF マップ、下に必要勝率の内訳を全幅で置く。
+     並び順を指定しないと、片側だけ空いた段ができる。 */
+  /* (:not(#sec-hand) は workspace.css の order: 4 の指定に勝つために付けている) */
+  .workspace .container > #sec-icm:not(#sec-hand) { grid-column: 1; order: 3; align-self: start; }
+  .workspace .container > #sec-bf:not(#sec-hand) { grid-column: 2; grid-row: span 2; order: 3; align-self: start; }
+  .workspace .container > #sec-chop { grid-column: 1; align-self: start; }
+  .workspace .container > #sec-equity { grid-column: 1 / -1; }
+  /* 広い画面でハンド表が横いっぱいに伸びると、マスだけ大きく文字が小さいままになる */
+  .workspace #sec-hand .hand-grid:not(.mini),
+  .workspace .nash-row-grid { max-width: 640px; font-size: 12px; }
 }
+.nash-more { display: block; width: 100%; padding: 10px 12px; border: 0; border-top: 1px solid var(--border); background: transparent; color: var(--accent); font-size: 12px; font-weight: 600; text-align: left; cursor: pointer; }
 @media (max-width: 359px) {
   .spot-columns,
   .workspace .spot-card .player-row { grid-template-columns: 54px minmax(44px, 1fr) auto 26px; gap: 4px; padding-left: 4px; padding-right: 4px; }
@@ -315,3 +326,7 @@ body.no-practice.workspace .container { padding-bottom: 40px; }
 .nash-row.overcall .nash-row-label { font-weight: 500; padding-left: 14px; font-size: 13px; }
 .nash-row.overcall .nash-row-pct { color: var(--warn); font-size: 14px; }
 .nash-row.overcall .nash-row-text { padding-left: 46px; }
+
+/* 結果サマリー: 相手がいない・スタックが 0 などで計算できないときの説明 */
+.hero-summary-missing { margin: 10px 0 0; color: var(--warn); }
+.hero-summary.floating .hero-summary-missing { display: none; }

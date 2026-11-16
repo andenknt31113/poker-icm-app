@@ -18,7 +18,7 @@ export const en: Record<string, string> = {
   "setup.player.position.aria": "Player {n} position",
   "setup.player.remove.aria": "Remove player {n}",
   "hand.legend.title": "Reading colors and numbers",
-  "hand.emptyRange": "The opponent range is empty. Select hands or load the preset.",
+  "hand.emptyRange": "The opponent range is empty. Select hands on the chart or tap “Load from top range”.",
   "calc.err.positivePrize": "Enter at least one prize greater than zero.",
   "nash.details": "Prizes, blinds and remaining players",
   "seat.number": "Seat {n}",
@@ -94,7 +94,7 @@ export const en: Record<string, string> = {
   "setup.presets.hu": "Final 2 · 10 BB each",
   "setup.presets.huShort": "Final 2 · you 5 BB / opponent 18 BB",
   "setup.presets.satellite3": "5 left · top 3 paid equally",
-  "setup.presets.userLabel": "Your scenarios",
+  "setup.presets.userLabel": "Saved spots",
   "setup.presets.saveBtn": "+ Save current situation",
 
   // ===== セットアップ 動的部分 (setup.ts) =====
@@ -106,8 +106,8 @@ export const en: Record<string, string> = {
   "setup.player.role.otherText": "None", // fable レビュー済: 役割なしを自然な英語で
   "setup.payout.rank": "#{n}",
   "setup.userScenarios.empty": "No saves yet. Tap “+ Save current situation” to add one.",
-  "setup.prompt.scenarioName": "Enter a scenario name",
-  "setup.confirm.deleteScenario": "Delete this scenario?",
+  "setup.prompt.scenarioName": "Name this saved spot",
+  "setup.confirm.deleteScenario": "Delete this saved spot?",
   "setup.prompt.savePayout": "Save with a name (e.g. JOPT / APT / My HU)",
 
   // ===== index.html: セットアップ - プレイヤー =====
@@ -173,7 +173,7 @@ export const en: Record<string, string> = {
   "result.bf.hint.html": "Rows are you, columns are the opponent. Bottom = BF, top = RP in an even-money all-in. Values assume a two-player all-in for the effective stack.",
   "result.bf.matrixTitle": "Everyone vs everyone BF map 🆕",
   "result.bf.matrixHint.html": "\n          Rows = Hero (you), columns = Villain.\n          Top = Risk Premium at a 1:1 pot, bottom = BF value.\n        ",
-  "result.bf.howto.summary": "📖 How to read the table (click to expand)",
+  "result.bf.howto.summary": "📖 How to read the table (tap to expand)",
   "result.bf.howto.body.html":
     "\n            <h4>1. The numbers in each cell</h4>\n            <p>The <strong>BF (Bubble Factor) on the bottom row</strong> is the main metric: <strong>how many times more losing hurts than winning feels good</strong> against this opponent.</p>\n            <ul>\n              <li><strong>1.00</strong> = pain equals joy — play your chips at face value (no ICM pressure)</li>\n              <li><strong>1.16</strong> = losing hurts 1.16×. In a 1:1 pot, 50% equity is not enough — you need <strong>about 53.7% (+3.7pt)</strong> to break even</li>\n              <li><strong>1.41</strong> = losing hurts 1.41×. Same spot needs <strong>about 58.5% (+8.5pt)</strong> — premium hands only (yikes)</li>\n            </ul>\n            <p>The <strong>Risk Premium on the top row</strong> is exactly that surcharge: <strong>how many extra points above 50%</strong> you need when the call is pot-sized (1:1 odds).</p>\n            <h4>2. What the colors mean</h4>\n            <p>The color deepens continuously from BF <strong>1.0 (yellow) to 2.0 and above (red)</strong>. Because of how ICM works, <strong>BF never drops below 1.00</strong>, so in practice you only ever see yellow through red. As a rule of thumb:</p>\n            <ul>\n              <li>🟡 Yellow (BF ≈ 1.0): almost no ICM pressure, play close to cEV</li>\n              <li>🟠 Orange (1.2–1.5): ICM pressure, play tight</li>\n              <li>🔴 Red (around 1.7+): very dangerous, premiums only</li>\n            </ul>\n            <h4>3. Reading it strategically</h4>\n            <ul>\n              <li>If an opponent in a <strong>red cell</strong> gets involved → weight toward folding</li>\n              <li>Opponents in <strong>near-yellow cells (BF around 1.0)</strong> → leaning a bit looser is OK</li>\n              <li>Your row <strong>when you're the shortest stack</strong> has low BFs overall (= little to lose) → you can gamble relatively freely</li>\n              <li>The <strong>chip leader vs. second stack</strong> cell has a spiking BF → clashes between big stacks call for caution (the highest BF in the whole table is usually the second stack facing the leader)</li>\n              <li>Unless you are the leader, the <strong>chip leader's column</strong> tends to be the highest BF in your row → the bigger the stack you tangle with, the tighter you play (classic ICM pressure)</li>\n            </ul>\n            <h4>4. Using it in play</h4>\n            <ol>\n              <li>Once seated, enter every player's stack</li>\n              <li>Look at <strong>your row</strong> on the far left to see who to play tight/loose against</li>\n              <li>Mid-hand, when you think \"wait, is this opponent dangerous?\", check the matching cell</li>\n            </ol>\n            <p class=\"howto-note\">Note: the table is not symmetric (swapping hero/villain changes the BF). The same chip transfer affects each player's $ equity differently depending on their stacks and payout position (e.g. the short stack busts when losing, while the covering stack survives).</p>\n          ",
   "result.bf.scrollHint": "→ Scroll sideways",
@@ -192,7 +192,7 @@ export const en: Record<string, string> = {
 
   // ===== index.html: ナッシュ均衡 =====
   "nash.h2": "Nash (push or fold)",
-  "nash.table.lead": "For each player who could shove first: the range they can shove and the range each player behind can call with. Tap a row to open its chart.",
+  "nash.table.lead": "For each player who could shove first: the range they can shove and the range each player behind can call with. Tap a row to open its chart. On larger tables, your row and the opponent’s row are shown first.",
   "nash.table.push": "{pos} shoves",
   "nash.table.call": "{pos} calls",
   "nash.table.overcall": "{pos} also calls",
@@ -200,6 +200,8 @@ export const en: Record<string, string> = {
   "nash.table.loading": "Loading equity table…",
   "nash.table.noOvercall": "The three-way equity table could not be loaded, so second calls (over-calls) are not included.",
   "nash.table.none": "none",
+  "nash.table.showMore": "Show calls from {n} other players",
+  "nash.table.showLess": "Hide the other players’ calls",
   "nash.table.calculating": "Calculating… ({done}/{total})",
   "nash.table.deep": "Effective {eff}BB is deeper than push-or-fold play. Treat this as reference only.",
   "nash.table.needPositions": "Some seats have no position (BTN, SB, BB, …). The table appears once every seat has one.",
@@ -222,11 +224,11 @@ export const en: Record<string, string> = {
   "hand.preset.top": "Top",
   "hand.mode.preset": "Choose top range",
   "hand.mode.custom": "\n            Custom edit\n          ",
-  "hand.custom.hint": "Tap grid cells to add/remove hands from the villain’s range.",
+  "hand.custom.hint": "Tap cells on the chart (or drag across them) to add or remove hands from the opponent’s range.",
   "hand.custom.selected.html": "Selected: <strong>{n}</strong> hand types / {combos} combos (<strong>{pct}%</strong>)",
   "hand.custom.actions.all": "Select all",
   "hand.custom.actions.clear": "Clear all",
-  "hand.custom.actions.fromPreset": "\n              Load from preset\n            ",
+  "hand.custom.actions.fromPreset": "\n              Load from top range\n            ",
   "hand.title.villainPush": "Range they shove 🔴",
   "hand.title.heroCall": "Hands you can call 🟢",
   "hand.label.villainPush": "Range they shove",
@@ -238,8 +240,8 @@ export const en: Record<string, string> = {
   "hand.inspect.verdict.call": "Call",
   "hand.inspect.verdict.marginal": "Borderline",
   "hand.inspect.verdict.fold": "Fold",
-  "hand.callStats.callBack": "<strong>{callable}</strong> hand types, <strong>{callPct}%</strong> of all hands ({callCombos} combos): hands at or above the required equity of <strong>{req}%</strong>. Borderline: {marginal} types",
-  "hand.callStats.pushBack": "<strong>{n}</strong> hand types, <strong>{pPct}%</strong> of all hands ({pushCombos} combos): hands where shoving beats folding if they call <strong>{villainPct}%</strong>. Borderline: {marginal} types",
+  "hand.callStats.callBack": "<strong>{callable}</strong> hand types, <strong>{callPct}%</strong> of all hands ({callCombos} combos): hands at or above the required equity of <strong>{req}%</strong>. Borderline hands: {marginal}",
+  "hand.callStats.pushBack": "<strong>{n}</strong> hand types, <strong>{pPct}%</strong> of all hands ({pushCombos} combos): hands where shoving beats folding if they call <strong>{villainPct}%</strong>. Borderline hands: {marginal}",
   "hand.banner.callerLabel.hero": "hero (you)",
   "hand.banner.noBehind.html": "\n      ✅ {label} = <strong>{pos}</strong>: nobody left to act, so this 1-vs-1 model applies exactly.\n    ",
   "hand.banner.behind.html": "\n      <details class=\"hand-caveat\">\n        <summary>⚠ {label} = <strong>{pos}</strong>: over-calls from {n} player(s) behind are not reflected — play a bit tighter</summary>\n        <div class=\"hand-caveat-body\">\n          This is a 1-vs-1 all-in model. It does not include the risk of the {n} players ({list}) behind {label} coming over the top. {note}\n        </div>\n      </details>\n    ",
@@ -331,7 +333,7 @@ export const en: Record<string, string> = {
   "onboarding.skip": "Skip",
   "onboarding.next": "Next →",
   "onboarding.cta.practice": "🎲 Start practicing",
-  "onboarding.cta.setup": "⚙️ Set it up myself",
+  "onboarding.cta.setup": "Enter my own table",
 
   // ===== 使い方ガイド (guide.ts) =====
   "guide.title": "📖 How-to guide",
@@ -450,7 +452,7 @@ export const en: Record<string, string> = {
             </p>
             <h4>Nash equilibrium</h4>
             <p>
-              A push/fold strategy pair where neither the 🎯 pusher nor the ⚔️ caller gains by
+              A push/fold strategy pair where neither the player who shoves nor the player who calls gains by
               deviating alone — a mutually unexploitable combination.
             </p>
           </div>
@@ -578,14 +580,14 @@ export const en: Record<string, string> = {
   // ===== 計算結果 (calculator.ts) =====
   "calc.err.needPlayer": "Add at least one player",
   "calc.err.needPayout": "Add at least one prize",
-  "calc.bf.err.needHV": "Set exactly one 🎯 you and one ⚔️ villain",
-  "calc.bf.err.sameHV": "🎯 you and ⚔️ villain must be different players",
-  "calc.bf.err.zeroStack": "Stack is 0, so BF can’t be computed",
+  "calc.bf.err.needHV": "Choose one “You” and one “Villain”",
+  "calc.bf.err.sameHV": "“You” and “Villain” must be different players",
+  "calc.bf.err.zeroStack": "A player has a stack of 0, so this can’t be calculated",
   "calc.bf.label.bf": "You vs villain BF",
   "calc.bf.label.risk": "Chips at risk",
   "calc.autofill.summaryLine": "✓ Added call <strong>{call}</strong> / net gain <strong>{pot}</strong> BB",
   "calc.autofill.detailsSummary": "▸ Calculation breakdown",
-  "calc.autofill.err.needHV": "⚠ Set exactly one 🎯 you and one ⚔️ villain",
+  "calc.autofill.err.needHV": "⚠ Choose one “You” and one “Villain”",
   "calc.autofill.err.zeroStack": "⚠ Stack is 0",
   "calc.autofill.result": "✓ Call <strong>{risk}</strong>, net gain <strong>{pot}</strong> = risk {risk2} + dead money {dead} (SB {sb} + BB {bb} + ante {ante})",
   // 「▸ 計算の内訳」details 本体 (Phase B 抽出)
@@ -617,7 +619,9 @@ export const en: Record<string, string> = {
   "calc.summary.allIn": "All-in",
   "calc.summary.assumedCall": "Assumed caller",
   "calc.summary.villain": "Villain",
-  "calc.summary.villainUnset": "⚔️ Villain unset",
+  "calc.summary.villainUnset": "Villain not set",
+  "calc.summary.needVillain": "Choose one “Villain” to calculate the required equity.",
+  "calc.summary.needStack": "Set your stack and the villain’s stack above 0 to calculate.",
   "calc.summary.aroundHtml": "<span>👥 Around <strong>{stacks}</strong> BB</span>",
   "calc.summary.bfLabel": "BF ⓘ",
   "calc.eq.approxNote": "With a manually entered call amount, or when no seat is the BB, this is an estimate based on the Bubble Factor.",
@@ -665,11 +669,11 @@ export const en: Record<string, string> = {
       <p>In an even-money all-in: <code>RP = BF ÷ (BF + 1) − 50%</code></p>
     `,
   // ===== ナッシュ均衡 (nashUI.ts) =====
-  "nash.err.needHV": "Set exactly one 🎯 you and one ⚔️ villain",
-  "nash.err.needPayout": "Enter a payout structure",
-  "nash.err.sb": "Invalid SB",
-  "nash.err.bb": "Invalid BB",
-  "nash.err.ante": "Invalid ante",
+  "nash.err.needHV": "Choose one “You” and one “Villain”",
+  "nash.err.needPayout": "Enter the payouts",
+  "nash.err.sb": "Check the SB value",
+  "nash.err.bb": "Check the BB value",
+  "nash.err.ante": "Check the ante value",
   "nash.calculating": "Calculating…",
   "nash.notConverged": "Not converged",
   "nash.depthNote.html": "⚠ Effective <strong>{eff}BB</strong>: at this depth, min-raises and limps are normal options. This result only holds if your choice is limited to shove or fold; in real play you should shove fewer hands than shown.",
@@ -842,9 +846,9 @@ export const en: Record<string, string> = {
   // ===== ペイウォール (freemium ゲート, paywall.ts) =====
   "paywall.title": "🔓 Recreate your own table",
   "paywall.lead": "With Pro, recreate your exact table and analyze it.",
-  "paywall.feature.editStacks": "Recreate full tables with 5+ players (stacks & payouts)",
-  "paywall.feature.replay": "Recreate and analyze real hands",
-  "paywall.feature.save": "Save scenarios and reload them anytime",
+  "paywall.feature.editStacks": "Edit tables with 5+ players freely (stacks and payouts)",
+  "paywall.feature.replay": "Check required equity, hand charts and Nash with your own numbers, up to 9 players",
+  "paywall.feature.save": "Save spots and payouts and reload them anytime",
   "paywall.price": "Price: {price}",
   "paywall.cta.upgrade": "Upgrade to Pro",
   "paywall.cta.restore": "Restore purchases",

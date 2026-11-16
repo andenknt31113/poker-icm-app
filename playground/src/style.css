@@ -196,6 +196,9 @@ input:focus {
   min-height: 28px;
 }
 
+html[lang="en"] .presets.saved:empty::before {
+  content: "(nothing saved yet)";
+}
 .presets.saved:empty::before {
   content: "（保存済みなし）";
   font-size: 11px;
@@ -926,6 +929,10 @@ body {
   padding: 6px 8px;
   border: 1px solid var(--border);
   border-radius: 8px;
+}
+/* 編集できない行 (無料で 5 人以上の卓) は鍵の列が 1 つ増える。列を足さないと ✕ が次の行に落ちる */
+.payout-row:has(.lock-badge) {
+  grid-template-columns: 44px 1fr 16px 34px;
 }
 .payout-num {
   font-family: var(--mono);

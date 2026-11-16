@@ -19,6 +19,23 @@ beforeEach(() => {
 });
 
 describe("サマリーの視点と役割", () => {
+  it("相手がいないときは数字を出さず、相手を選ぶよう案内する", async () => {
+    const { renderHeroSummary } = await import("../src/heroSummary.js");
+    renderHeroSummary({ ...SCENARIO, villainIndex: -1, bf: 1, requiredEq: 0.448, rp: 0 });
+    const metrics = document.querySelector(".hero-summary-grid")?.textContent ?? "";
+    expect(metrics).not.toContain("44.8");
+    expect(metrics).not.toContain("1.00");
+    expect(metrics).toContain("—");
+    expect(document.querySelector(".hero-summary-missing")?.textContent).toContain("相手");
+    expect(document.getElementById("hero-summary-verdict-btn")).toBeNull();
+  });
+  it("スタックが 0 のときも数字を出さず、理由を出す", async () => {
+    const { renderHeroSummary } = await import("../src/heroSummary.js");
+    renderHeroSummary({ ...SCENARIO, stacks: [0, 14], bf: 1, requiredEq: 0.448, rp: 0 });
+    const metrics = document.querySelector(".hero-summary-grid")?.textContent ?? "";
+    expect(metrics).not.toContain("44.8");
+    expect(document.querySelector(".hero-summary-missing")?.textContent).toContain("スタック");
+  });
   it("相手レンジが空ならコール可能率を表示しない", async () => {
     const { renderHeroSummary } = await import("../src/heroSummary.js");
     renderHeroSummary({ ...SCENARIO, rangeVerdict: { ...SCENARIO.rangeVerdict, available: false } });

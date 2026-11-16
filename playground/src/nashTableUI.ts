@@ -19,6 +19,7 @@ import { t } from "./i18n.js";
 import { players, parseList, DEFAULT_SB, DEFAULT_BB } from "./appState.js";
 import { payoutsInput, nashSbInput, nashBbInput, nashAnteInput } from "./domRefs.js";
 import { noteNashFinishedForReview } from "./reviewPrompt.js";
+import { NASH_COLLAPSE_MIN_CALLERS, isCallerRowPinned } from "./nashRows.js";
 
 interface TableState {
   key: string;
@@ -38,6 +39,8 @@ interface TableState {
 let state: TableState | null = null;
 /** 開いている行。"p{pusher}" か "p{pusher}c{caller}"。 */
 let openRow: string | null = null;
+/** コールする人をすべて出している押す人 (index)。局面が変わったら空に戻す。 */
+const expandedGroups = new Set<number>();
 let timer: ReturnType<typeof setTimeout> | null = null;
 let threeWayTried = false;
 let threeWayLoading = false;
@@ -116,11 +119,22 @@ function render(): void {
     const pushKey = `p${pusher}`;
     ranges.set(pushKey, { range: result.pushRange, kind: "push" });
     html.push(`<div class="nash-group">${rowHtml(pushKey, "push", pusher, result.pushRange)}`);
+    const collapsible = result.callers.length >= NASH_COLLAPSE_MIN_CALLERS;
+    const showAll = !collapsible || expandedGroups.has(pusher);
+    let hiddenCount = 0;
     for (const caller of result.callers) {
       const key = `p${pusher}c${caller.index}`;
       ranges.set(key, { range: caller.range, kind: "call" });
       for (const o of caller.overcalls) ranges.set(`${key}o${o.index}`, { range: o.range, kind: "overcall" });
+      if (!showAll && !isCallerRowPinned(players[caller.index]?.role, key, openRow)) {
+        hiddenCount++;
+        continue;
+      }
       html.push(rowHtml(key, "call", caller.index, caller.range, caller));
+    }
+    if (collapsible && (hiddenCount > 0 || expandedGroups.has(pusher))) {
+      const label = hiddenCount > 0 ? t("nash.table.showMore", { n: hiddenCount }) : t("nash.table.showLess");
+      html.push(`<button type="button" class="nash-more" data-nash-more="${pusher}" aria-expanded="${hiddenCount === 0}">${label}</button>`);
     }
     if (eff > PUSH_FOLD_CAUTION_MAX_BB) html.push(`<p class="hint nash-group-note">${t("nash.table.deep", { eff: String(Number(eff.toFixed(1))) })}</p>`);
     if (!result.withOvercall && result.callers.length > 1) html.push(`<p class="hint nash-group-note">${t("nash.table.noOvercall")}</p>`);
@@ -206,6 +220,8 @@ export function ensureNashTable(): void {
       needPositions = true;
     }
   }
+  // 局面が変わったら、開いていた「ほかの人のコール」は畳み直す
+  expandedGroups.clear();
   state = { key, pushers: chain?.pushers ?? [], chain, solved: new Map(), finished: false, error, needPositions };
   render();
   if (!error) timer = setTimeout(solveNext, 0);
@@ -216,6 +232,14 @@ export function initNashTable(): void {
   const el = document.getElementById("nash-table");
   if (!el) return;
   el.addEventListener("click", (event) => {
+    const more = (event.target as HTMLElement).closest<HTMLButtonElement>("[data-nash-more]");
+    if (more) {
+      const pusher = Number(more.dataset.nashMore);
+      if (expandedGroups.has(pusher)) expandedGroups.delete(pusher);
+      else expandedGroups.add(pusher);
+      render();
+      return;
+    }
     const row = (event.target as HTMLElement).closest<HTMLButtonElement>("[data-nash-row]");
     if (!row) return;
     const key = row.dataset.nashRow ?? null;
