@@ -234,9 +234,9 @@ export function recompute(): void {
                 <div class="autofill-h">${t("calc.autofill.callVsFold")}</div>
                 <table class="autofill-table">
                   ${t("calc.autofill.tableHead")}
-                  <tr><td>fold</td><td>${stackIfFold.toFixed(1)}</td><td>±0</td><td class="${netFold >= 0 ? 'good' : 'bad'}">${fmtSigned(netFold)}</td></tr>
-                  <tr><td>call+win</td><td>${stackIfWin.toFixed(1)}</td><td class="good">+${r.potIfWin.toFixed(1)}</td><td class="${netWin >= 0 ? 'good' : 'bad'}">${fmtSigned(netWin)}</td></tr>
-                  <tr><td>call+lose</td><td>${stackIfLose.toFixed(1)}</td><td class="bad">-${r.callAmount.toFixed(1)}</td><td class="bad">${fmtSigned(netLose)}</td></tr>
+                  <tr><td>${t("calc.autofill.row.fold")}</td><td>${stackIfFold.toFixed(1)}</td><td>±0</td><td class="${netFold >= 0 ? 'good' : 'bad'}">${fmtSigned(netFold)}</td></tr>
+                  <tr><td>${t("calc.autofill.row.win")}</td><td>${stackIfWin.toFixed(1)}</td><td class="good">+${r.potIfWin.toFixed(1)}</td><td class="${netWin >= 0 ? 'good' : 'bad'}">${fmtSigned(netWin)}</td></tr>
+                  <tr><td>${t("calc.autofill.row.lose")}</td><td>${stackIfLose.toFixed(1)}</td><td class="bad">-${r.callAmount.toFixed(1)}</td><td class="bad">${fmtSigned(netLose)}</td></tr>
                 </table>
               </div>
             </div>

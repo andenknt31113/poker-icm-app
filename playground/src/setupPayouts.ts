@@ -25,8 +25,25 @@ const WINNER_TAKES_ALL: readonly number[] = [100];
 /** 保存するペイ構造名の最大長。 */
 const SAVED_PAYOUT_NAME_MAX = 24;
 
+/** プリセットの中身 (data-preset="50,30,20") が、いまの賞金と同じか。 */
+export function payoutsMatchPreset(payouts: readonly number[], preset: string | undefined): boolean {
+  return preset !== undefined && preset !== "" && payouts.join(",") === preset.replace(/\s/g, "");
+}
+
+/** いまの賞金と同じ中身のプリセットに「選択中」の印を付ける。手で書き換えて一致しなくなったら外す。 */
+function markActivePreset(): void {
+  document
+    .querySelectorAll<HTMLButtonElement>(".presets:not(.saved) button[data-preset]")
+    .forEach((btn) => {
+      const on = payoutsMatchPreset(payoutsArr, btn.dataset.preset);
+      btn.classList.toggle("active", on);
+      btn.setAttribute("aria-pressed", String(on));
+    });
+}
+
 function syncPayoutsInput(): void {
   payoutsInput.value = payoutsArr.join(", ");
+  markActivePreset();
 }
 
 export function renderPayouts(): void {
@@ -51,6 +68,7 @@ export function renderPayouts(): void {
     .querySelectorAll<HTMLButtonElement>(".presets:not(.saved) button")
     .forEach((btn) => btn.classList.toggle("locked-pro", locked));
   addPayoutBtn.disabled = !locked && payoutsArr.length >= MAX_PAYOUTS;
+  markActivePreset();
 }
 
 /**
