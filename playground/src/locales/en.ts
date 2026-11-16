@@ -316,7 +316,7 @@ export const en: Record<string, string> = {
       <p>Start by changing the numbers.</p>
       <ol>
         <li>
-          Change the stacks in <strong>📊 Calculator</strong> (or pick from “Examples and saved spots”) →
+          Change the stacks in <strong>“Spot”</strong> (or pick from “Examples and saved spots”) →
           check the required equity and hand chart right below
         </li>
         <li data-feature="practice">
@@ -338,7 +338,7 @@ export const en: Record<string, string> = {
   "guide.close.aria": "Close",
   // アプリ版のみ表示 (guide.ts proNoteHtml)。価格は書かない。
   "guide.proNote.html":
-    "ℹ️ Scenario presets, results and Nash equilibrium are all free. <strong>Tables with up to 4 players are fully editable (stacks & payouts)</strong>. Editing tables with 5+ players and saving scenarios are 🔒 Pro (one-time purchase) features.",
+    "ℹ️ Examples, results and Nash are all free. <strong>Tables with up to 4 players are fully editable (stacks and payouts)</strong>. Editing tables with 5+ players and saving spots or payouts are 🔒 Pro (one-time purchase).",
   "guide.body.html": `
         <p class="guide-intro">
           This tool focuses on short-stack (~20bb) all-in spots.
@@ -355,37 +355,38 @@ export const en: Record<string, string> = {
           </div>
         </details>
         <details class="howto">
-          <summary>📊 Analyze: Results — what it does & how to use</summary>
+          <summary>📊 Calculator: Prizes / BF — what it does & how to use</summary>
           <div class="howto-body">
-            <p>Auto-calculates ICM equity, Bubble Factor, and required equity (cEV / $EV / RP).</p>
+            <p>Shows prize equity (ICM), chop amounts, Bubble Factor, and how the required equity and RP are built.</p>
             <ol>
               <li>Enter a situation in “Spot” (examples are fine)</li>
-              <li>Check each player’s $ value in the “ICM equity” table</li>
-              <li>Check the 🎯 vs ⚔️ cell in the “everyone vs everyone BF map”</li>
-              <li>Call amount / net gain auto-calc from 🎯⚔️ (after editing, “🔄 Back to auto-calc” restores them)</li>
+              <li>Check each player’s share in the “Prize equity (ICM)” table</li>
+              <li>Under “If you chop (make a deal)”, compare the ICM chop and the chip-proportional split (enter real prize amounts in Payouts to use the numbers as they are)</li>
+              <li>In the “BF map”, find the cell on your row and the opponent’s column</li>
+              <li>Call amount and net gain are filled in automatically (after editing them, “🔄 Back to auto-calc” restores them)</li>
             </ol>
           </div>
         </details>
         <details class="howto">
-          <summary>🃏 Analyze: Ranges — what it does & how to use</summary>
+          <summary>🃏 Calculator: Hands — what it does & how to use</summary>
           <div class="howto-body">
-            <p>Compare the villain’s push/call range with yours via Top X% or custom editing.</p>
+            <p>Set the opponent’s range and see on a chart which hands you can call with (or shove).</p>
             <ol>
-              <li>Choose “Find my call range” or “Find my push range”</li>
-              <li>For presets, adjust Top X% with the slider; for custom, tap grid cells to select</li>
-              <li>Use the grid colors to see which hands you should call/push</li>
+              <li>Who shoves is decided by seat order (the player who acts first shoves). You only choose it yourself when positions are not set</li>
+              <li>Adjust the opponent’s range with the slider or the 10–100% buttons. Tap the small chart on the left to open the full chart. With “Custom edit”, tap cells to select hands</li>
+              <li>Use the chart colors to see which hands you should call or shove</li>
             </ol>
           </div>
         </details>
         <details class="howto">
-          <summary>🎯 Analyze: Nash — what it does & how to use</summary>
+          <summary>🎯 Calculator: Nash — what it does & how to use</summary>
           <div class="howto-body">
-            <p>Computes the HU push/fold Nash equilibrium (ICM included).</p>
+            <p>Lists the Nash ranges (ICM included) for the whole table. For each player who could shove first, it shows the range they can shove and the range each player behind can call with.</p>
             <ol>
-              <li>Set 🎯 you (pusher) and ⚔️ villain (caller) in ⚙️</li>
-              <li>Set SB / BB / total ante</li>
-              <li>Press “Solve Nash”</li>
-              <li>Compare the push-range and call-range grids</li>
+              <li>Enter everyone’s position (BTN, SB, BB, …) and stack in “Spot”</li>
+              <li>If needed, open the “Blinds” row and change SB / total ante</li>
+              <li>Open “Nash” and it is calculated automatically (larger tables take a little longer)</li>
+              <li>Tap a row to open its hand chart. “Then also call” is the range a second player can call with after one player has already called</li>
             </ol>
           </div>
         </details>
@@ -469,7 +470,7 @@ export const en: Record<string, string> = {
       `,
 
   // ===== 初回ヒントバー (guide.ts) =====
-  "firstHint.html": "👋 New here? Tap a <strong>preset</strong> → see results in <strong>📊</strong>, or practice in <strong>🎲</strong>",
+  "firstHint.html": "👋 New here? Pick one from <strong>“Examples and saved spots”</strong> → check the required equity and hand chart right below",
   "calc.limitsLink": "Assumptions and limits ›",
   "firstHint.close.aria": "Close",
 
