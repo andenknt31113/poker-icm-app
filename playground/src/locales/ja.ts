@@ -312,7 +312,7 @@ export const ja: Record<string, string> = {
       <p>まずは数字を動かしてみてください。</p>
       <ol>
         <li>
-          <strong>📊 計算</strong>でスタックを打ち換える（「例題・保存した局面」から選んでも OK）→
+          <strong>「局面」</strong>でスタックを打ち換える（「例題・保存した局面」から選んでも OK）→
           すぐ下の必要勝率とハンド表を確認する
         </li>
         <li data-feature="practice">
@@ -334,7 +334,7 @@ export const ja: Record<string, string> = {
   "guide.close.aria": "閉じる",
   // アプリ版のみ表示 (guide.ts proNoteHtml)。価格は書かない。
   "guide.proNote.html":
-    "ℹ️ シナリオプリセット・計算結果・ナッシュ均衡はすべて無料。<strong>4人までのテーブルはスタック・ペイ構造とも自由に編集できます</strong>。5人以上のテーブルの編集とシナリオ保存は 🔒 Pro（買い切り）機能です。",
+    "ℹ️ 例題・計算結果・Nash はすべて無料。<strong>4人までの卓はスタックも賞金も自由に編集できます</strong>。5人以上の卓の編集と、局面・賞金の保存は 🔒 Pro（買い切り）です。",
   "guide.body.html": `
         <p class="guide-intro">
           このツールはショートスタック（〜20bb）のオールイン局面に特化しています。
@@ -353,10 +353,11 @@ export const ja: Record<string, string> = {
         <details class="howto">
           <summary>📊 計算: 賞金・BF — できること・使い方</summary>
           <div class="howto-body">
-            <p>賞金期待値 (ICM)、Bubble Factor、必要勝率と RP の内訳を見る画面。</p>
+            <p>賞金期待値 (ICM)、チョップの配分、Bubble Factor、必要勝率と RP の内訳を見る画面。</p>
             <ol>
               <li>「局面」で状況を入力（例題でも OK）</li>
               <li>「賞金期待値 (ICM)」の表で各プレイヤーの取り分を確認</li>
+              <li>「チョップ（ディール）するなら」で、ICM チョップとチップ比例の配分を確認（賞金に実際の金額を入れるとそのまま使える）</li>
               <li>「BF マップ」で自分の行・相手の列のセルを確認</li>
               <li>コール額と純利得は自動で入る（手で書き換えた後は「🔄 自動算出に戻す」で戻せる）</li>
             </ol>
@@ -376,12 +377,12 @@ export const ja: Record<string, string> = {
         <details class="howto">
           <summary>🎯 計算: Nash — できること・使い方</summary>
           <div class="howto-body">
-            <p>HU push/fold の Nash 均衡（ICM 反映済み）を計算する画面。</p>
+            <p>卓の全員ぶんの Nash（ICM 込み）を一覧で見る画面。「誰が最初に押すか」ごとに、押せるレンジと、後ろの人がコールできるレンジが並びます。</p>
             <ol>
-              <li>「局面」で自分と相手を指定（先に動く方が押す側になる）</li>
+              <li>「局面」で全員の位置（BTN・SB・BB など）とスタックを入れる</li>
               <li>必要なら「ブラインド」行を開いて SB / アンティ合計を変える</li>
-              <li>「Nash」を開くと自動で計算される</li>
-              <li>push レンジと call レンジのグリッドを見比べる</li>
+              <li>「Nash」を開くと自動で計算される（人数が多いと少し時間がかかる）</li>
+              <li>行をタップするとハンド表が開く。「さらにコール」は、1人コールしたあとにもう1人がコールできるレンジ</li>
             </ol>
           </div>
         </details>
@@ -466,7 +467,7 @@ export const ja: Record<string, string> = {
       `,
 
   // ===== 初回ヒントバー (guide.ts) =====
-  "firstHint.html": "👋 はじめてなら: <strong>プリセット</strong>をタップ → <strong>📊</strong>で結果を見る、か <strong>🎲</strong>で練習",
+  "firstHint.html": "👋 はじめてなら: <strong>「例題・保存した局面」</strong>から1つ選ぶ → すぐ下の必要勝率とハンド表を見る",
   "calc.limitsLink": "計算の前提と限界を見る ›",
   "firstHint.close.aria": "閉じる",
 

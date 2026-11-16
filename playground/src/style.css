@@ -73,6 +73,13 @@
   box-sizing: border-box;
 }
 
+/* 続けて素早くタップしたとき (＋/− や % のボタンなど) に、iOS が「ダブルタップで拡大」と
+   受け取って画面がずれるのを防ぐ。ピンチでの拡大とスクロールはそのまま使える。
+   ハンド表のなぞり選択は個別に touch-action: none を指定している。 */
+html {
+  touch-action: manipulation;
+}
+
 body {
   margin: 0;
   padding: 0;
