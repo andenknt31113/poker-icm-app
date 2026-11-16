@@ -452,6 +452,13 @@ export function updateHandPositionBanner(heroIndex: number): void {
 
 // ===== 初期化 (イベント配線) =====
 // onChange: レンジ/方向/カスタムレンジが変わるたびに呼ぶ再計算コールバック (calculator.recompute)。
+/** いまの「上位 X%」のレンジをカスタム編集の中身にして保存する。 */
+function seedCustomRangeFromPreset(): void {
+  customVillainRange.clear();
+  for (const h of topRangeByComboPct(Number(pushRangeInput.value))) customVillainRange.add(h);
+  saveCustomRange();
+}
+
 // calculator.ts と handRange.ts の循環 import を避けるため、呼び出し元 (main.ts) から注入する。
 export function initHandRange(onChange: () => void): void {
   // モード切替
@@ -462,6 +469,9 @@ export function initHandRange(onChange: () => void): void {
         .forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       villainRangeMode = btn.dataset.mode as RangeMode;
+      // カスタム編集を空のまま開くと「レンジが空です」の注意だけが出て、何をすればいいか分かりにくい。
+      // まだ何も選んでいなければ、いま見ていた上位レンジを出発点として入れておく。
+      if (villainRangeMode === "custom" && customVillainRange.size === 0) seedCustomRangeFromPreset();
       const rangeDetails = document.getElementById("villain-range-details") as HTMLDetailsElement | null;
       if (rangeDetails) rangeDetails.open = villainRangeMode === "custom";
       document.getElementById("sec-hand")?.classList.toggle("custom-range-mode", villainRangeMode === "custom");
@@ -559,11 +569,7 @@ export function initHandRange(onChange: () => void): void {
   });
 
   customFromPresetBtn.addEventListener("click", () => {
-    customVillainRange.clear();
-    for (const h of topRangeByComboPct(Number(pushRangeInput.value))) {
-      customVillainRange.add(h);
-    }
-    saveCustomRange();
+    seedCustomRangeFromPreset();
     onChange();
   });
 

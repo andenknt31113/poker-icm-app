@@ -11,7 +11,7 @@ export const ja: Record<string, string> = {
   "setup.player.position.aria": "プレイヤー{n}のポジション",
   "setup.player.remove.aria": "プレイヤー{n}を削除",
   "hand.legend.title": "色と数字の見方",
-  "hand.emptyRange": "相手のレンジが空です。ハンドを選ぶか「プリセットから読み込む」を押してください。",
+  "hand.emptyRange": "相手のレンジが空です。表でハンドを選ぶか「上位レンジから読み込む」を押してください。",
   "calc.err.positivePrize": "賞金を1つ以上、0より大きい値で入力してください。",
   "nash.details": "賞金・ブラインド・残りのプレイヤー",
   "seat.number": "席 {n}",
@@ -87,7 +87,7 @@ export const ja: Record<string, string> = {
   "setup.presets.hu": "最後の2人・10 BBずつ",
   "setup.presets.huShort": "最後の2人・自分5 BB／相手18 BB",
   "setup.presets.satellite3": "5人残り・上位3人が同額入賞",
-  "setup.presets.userLabel": "自分のシナリオ",
+  "setup.presets.userLabel": "保存した局面",
   "setup.presets.saveBtn": "＋ 現在の状況を保存",
 
   // ===== セットアップ 動的部分 (setup.ts) =====
@@ -99,8 +99,8 @@ export const ja: Record<string, string> = {
   "setup.player.role.otherText": "他",
   "setup.payout.rank": "{n}位",
   "setup.userScenarios.empty": "まだ保存なし。「＋ 現在の状況を保存」を押すと追加",
-  "setup.prompt.scenarioName": "シナリオ名を入力",
-  "setup.confirm.deleteScenario": "このシナリオを削除しますか？",
+  "setup.prompt.scenarioName": "保存する局面の名前を入力",
+  "setup.confirm.deleteScenario": "保存したこの局面を削除しますか？",
   "setup.prompt.savePayout": "名前を付けて保存（例: JOPT / APT / マイHU）",
 
   // ===== index.html: セットアップ - プレイヤー =====
@@ -167,7 +167,7 @@ export const ja: Record<string, string> = {
   "result.bf.hint.html": "行が自分、列が相手。下段が BF、上段は同額を賭け合うときの RP。2人が実効スタックでオールインした場合の値です。",
   "result.bf.matrixTitle": "全員 vs 全員 BF マップ 🆕",
   "result.bf.matrixHint.html": "\n          縦軸 = Hero（自分）、横軸 = Villain（相手）。\n          上段=1:1ポット時のRisk Premium、下段=BF値。\n        ",
-  "result.bf.howto.summary": "📖 表の見方（クリックで展開）",
+  "result.bf.howto.summary": "📖 表の見方（タップで開く）",
   "result.bf.howto.body.html":
     "\n            <h4>1. 各セルの数字</h4>\n            <p><strong>下段の BF（Bubble Factor）</strong>がメイン指標。「この相手との勝負は、<strong>負けた痛みが勝った嬉しさの何倍か</strong>」を表す。</p>\n            <ul>\n              <li><strong>1.00</strong> = 痛み＝嬉しさ。チップの価値どおり戦ってよい（ICM圧ゼロ）</li>\n              <li><strong>1.16</strong> = 痛みが 1.16 倍。1:1 のポットなら勝率 50% では足りず、<strong>約 53.7%（+3.7pt）</strong>ないと割に合わない</li>\n              <li><strong>1.41</strong> = 痛みが 1.41 倍。同じ条件で<strong>約 58.5%（+8.5pt）</strong>必要。プレミアハンド級でないと合わない（やばい）</li>\n            </ul>\n            <p><strong>上段の Risk Premium</strong> は、まさにこの「上乗せ分」。コール額＝ポット（1:1オッズ）のとき、50% より<strong>何pt余分に勝率が必要か</strong>をそのまま表示している。</p>\n            <h4>2. 色の意味</h4>\n            <p>色は BF <strong>1.0（黄）→ 2.0 以上（赤）</strong>と連続的に濃くなる。ICM の性質上 <strong>BF が 1.00 を下回ることはない</strong>ため、実際に出るのは黄〜赤の範囲。読み方の目安:</p>\n            <ul>\n              <li>🟡 黄 (BF ≈ 1.0): ICM圧ほぼゼロ、ほぼ cEV 通りに戦ってよい</li>\n              <li>🟠 オレンジ (1.2〜1.5): ICM圧、タイトに</li>\n              <li>🔴 赤 (1.7 前後〜): 超危険、プレミア限定</li>\n            </ul>\n            <h4>3. 戦略的な読み方</h4>\n            <ul>\n              <li><strong>赤いセル</strong>の相手が絡んできたら → 降りる方向にウェイト</li>\n              <li><strong>黄色に近い（BF が 1.0 前後の）セル</strong>の相手 → ややルース寄せOK</li>\n              <li><strong>自分が最短スタック</strong>の行は全体的にBFが低い（=失うものが少ない）→ 比較的気楽に勝負できる</li>\n              <li><strong>チップリーダー対 2番手</strong>のセルは BF が跳ね上がる → リーダー同士の絡みは慎重に（表全体で BF 最大になりやすいのは、2番手がリーダーに絡まれるセル）</li>\n              <li>自分がリーダーでないなら、自分の行の中で<strong>チップリーダーの列</strong>が最も BF が高くなりやすい → 大きいスタックに絡まれた時ほどタイトに（典型的な ICM プレッシャー）</li>\n            </ul>\n            <h4>4. 実戦での使い方</h4>\n            <ol>\n              <li>テーブル着席後、全員のスタックを入力</li>\n              <li>左端の<strong>自分の行</strong>を見て「誰に対してタイト/ルース打つべきか」を把握</li>\n              <li>ハンド中に「あれ、この相手ヤバい？」となったら該当セルを確認</li>\n            </ol>\n            <p class=\"howto-note\">※ 表は左右対称ではない（hero/villain を入れ替えると BF が変わる）。同じチップ移動でも、双方のスタック量と順位状況で $ への影響が違うため（例: ショート側は負けると飛ぶが、カバーしている側は負けても生き残る）。</p>\n          ",
   "result.bf.scrollHint": "→ 横にスクロール",
@@ -186,7 +186,7 @@ export const ja: Record<string, string> = {
 
   // ===== index.html: ナッシュ均衡 =====
   "nash.h2": "Nash（押すか降りるか）",
-  "nash.table.lead": "誰が最初に押すかごとに、押せるレンジと、後ろの人がコールできるレンジです。行をタップすると表が開きます。",
+  "nash.table.lead": "誰が最初に押すかごとに、押せるレンジと、後ろの人がコールできるレンジです。行をタップすると表が開きます。人数が多い卓では、自分と相手の行を先に出します。",
   "nash.table.push": "{pos} が押す",
   "nash.table.call": "{pos} がコール",
   "nash.table.overcall": "{pos} もコール",
@@ -194,6 +194,8 @@ export const ja: Record<string, string> = {
   "nash.table.loading": "勝率表を読み込み中…",
   "nash.table.noOvercall": "3人の勝率表を読めなかったため、2人目のコール（オーバーコール）は入っていません。",
   "nash.table.none": "なし",
+  "nash.table.showMore": "ほか {n} 人のコールを表示",
+  "nash.table.showLess": "ほかの人のコールを閉じる",
   "nash.table.calculating": "計算中… ({done}/{total})",
   "nash.table.deep": "実効 {eff}BB は、押すか降りるかの2択で考える深さを超えています。参考値として見てください。",
   "nash.table.needPositions": "位置（BTN・SB・BB など）が決まっていない席があります。全員ぶんの位置が決まると表示されます。",
@@ -216,11 +218,11 @@ export const ja: Record<string, string> = {
   "hand.preset.top": "上位",
   "hand.mode.preset": "上位レンジを指定",
   "hand.mode.custom": "\n            カスタム編集\n          ",
-  "hand.custom.hint": "グリッドのセルをタップして相手のレンジに追加/削除。",
+  "hand.custom.hint": "表のマスをタップ（なぞっても OK）して、相手のレンジに追加・削除します。",
   "hand.custom.selected.html": "選択中: <strong>{n}</strong> 種類 / {combos} コンボ (<strong>{pct}%</strong>)",
   "hand.custom.actions.all": "全選択",
   "hand.custom.actions.clear": "全消去",
-  "hand.custom.actions.fromPreset": "\n              プリセットから読み込む\n            ",
+  "hand.custom.actions.fromPreset": "\n              上位レンジから読み込む\n            ",
   // ハンド比較のグリッド見出し・統計・バナー (handRange.ts)
   "hand.title.villainPush": "相手が押すレンジ 🔴",
   "hand.title.heroCall": "コールできるハンド 🟢",
@@ -327,7 +329,7 @@ export const ja: Record<string, string> = {
   "onboarding.skip": "スキップ",
   "onboarding.next": "次へ →",
   "onboarding.cta.practice": "🎲 練習を始める",
-  "onboarding.cta.setup": "⚙️ 自分で設定する",
+  "onboarding.cta.setup": "自分の卓を入れてみる",
 
   // ===== 使い方ガイド (guide.ts) =====
   "guide.title": "📖 使い方ガイド",
@@ -370,7 +372,7 @@ export const ja: Record<string, string> = {
             <ol>
               <li>向きは席順で自動で決まる（先に動く方がオールイン）。位置が未設定のときだけ自分で選ぶ</li>
               <li>スライダーか 10〜100% のボタンで相手のレンジを調整。左の小さい表をタップすると大きい表が開く。カスタム編集ならセルをタップして選択</li>
-              <li>グリッドの色分けで自分がコール/プッシュすべきハンドを確認</li>
+              <li>表の色分けで、自分がコールできる（押せる）ハンドを確認</li>
             </ol>
           </div>
         </details>
@@ -447,7 +449,7 @@ export const ja: Record<string, string> = {
             </p>
             <h4>Nash 均衡</h4>
             <p>
-              🎯push 側も ⚔️call 側も、片方だけ戦略を変えても得をしない
+              押す側もコールする側も、片方だけ戦略を変えても得をしない
               「お互いに搾取されない」push/fold 戦略の組み合わせのことです。
             </p>
           </div>
@@ -576,14 +578,14 @@ export const ja: Record<string, string> = {
   // ===== 計算結果 (calculator.ts) =====
   "calc.err.needPlayer": "プレイヤーを1人以上入れてください",
   "calc.err.needPayout": "賞金を1つ以上入れてください",
-  "calc.bf.err.needHV": "🎯自分と⚔️相手を1人ずつ指定してください",
-  "calc.bf.err.sameHV": "🎯自分と⚔️相手は別の人にしてください",
-  "calc.bf.err.zeroStack": "スタックが0なのでBF計算不可",
+  "calc.bf.err.needHV": "「自分」と「相手」を1人ずつ選んでください",
+  "calc.bf.err.sameHV": "「自分」と「相手」は別の人にしてください",
+  "calc.bf.err.zeroStack": "スタックが 0 の人がいるので計算できません",
   "calc.bf.label.bf": "自分 vs 相手の BF",
   "calc.bf.label.risk": "リスクチップ",
   "calc.autofill.summaryLine": "✓ 追加 call <strong>{call}</strong> / 純利得 <strong>{pot}</strong> BB",
   "calc.autofill.detailsSummary": "▸ 計算の内訳",
-  "calc.autofill.err.needHV": "⚠ 🎯自分と⚔️相手を1人ずつ指定してください",
+  "calc.autofill.err.needHV": "⚠ 「自分」と「相手」を1人ずつ選んでください",
   "calc.autofill.err.zeroStack": "⚠ スタックが0です",
   "calc.autofill.result": "✓ コール <strong>{risk}</strong>, 純利得 <strong>{pot}</strong> = リスク {risk2} + 死に金 {dead} (SB {sb} + BB {bb} + アンティ {ante})",
   // 「▸ 計算の内訳」details 本体 (Phase B 抽出)
@@ -616,6 +618,8 @@ export const ja: Record<string, string> = {
   "calc.summary.assumedCall": "コールを想定",
   "calc.summary.villain": "相手",
   "calc.summary.villainUnset": "相手未指定",
+  "calc.summary.needVillain": "「相手」を1人選ぶと、必要勝率を計算します。",
+  "calc.summary.needStack": "自分と相手のスタックを 0 より大きい値にすると計算します。",
   "calc.summary.aroundHtml": "<span>👥 周り <strong>{stacks}</strong> BB</span>",
   "calc.summary.bfLabel": "BF ⓘ",
   "calc.eq.approxNote": "コール額を手入力したとき・BB の人が決まっていない卓では、BF を使った概算になります。",
@@ -663,11 +667,11 @@ export const ja: Record<string, string> = {
       <p>同額を賭け合う勝負では: <code>RP = BF ÷ (BF + 1) − 50%</code></p>
     `,
   // ===== ナッシュ均衡 (nashUI.ts) =====
-  "nash.err.needHV": "🎯自分と⚔️相手をそれぞれ1人ずつ指定してください",
-  "nash.err.needPayout": "ペイ構造を入力してください",
-  "nash.err.sb": "SB が不正",
-  "nash.err.bb": "BB が不正",
-  "nash.err.ante": "アンティが不正",
+  "nash.err.needHV": "「自分」と「相手」を1人ずつ選んでください",
+  "nash.err.needPayout": "賞金を入力してください",
+  "nash.err.sb": "SB の値を確認してください",
+  "nash.err.bb": "BB の値を確認してください",
+  "nash.err.ante": "アンティの値を確認してください",
   "nash.calculating": "計算中…",
   "nash.notConverged": "未収束",
   "nash.depthNote.html": "⚠ 実効 <strong>{eff}BB</strong>：実戦では 2BB オープンやリンプも普通に選ばれる深さです。この結果は「押すか降りるかの2択に限った場合」で、実際に押すべきハンドはこれより少なくなります。",
@@ -841,9 +845,9 @@ export const ja: Record<string, string> = {
   // ===== ペイウォール (freemium ゲート, paywall.ts) =====
   "paywall.title": "🔓 自分のテーブルを再現しよう",
   "paywall.lead": "Pro なら、自分の卓をそのまま再現して分析できます。",
-  "paywall.feature.editStacks": "5人以上のフルテーブルを自由に再現 (スタック・ペイ構造)",
-  "paywall.feature.replay": "実戦のハンドを再現して分析",
-  "paywall.feature.save": "シナリオを保存していつでも呼び出し",
+  "paywall.feature.editStacks": "5人以上の卓を自由に編集（スタック・賞金）",
+  "paywall.feature.replay": "9人までの卓で、必要勝率・ハンド表・Nash を自分の数字で確認",
+  "paywall.feature.save": "局面と賞金を保存して、いつでも呼び出し",
   "paywall.price": "価格: {price}",
   "paywall.cta.upgrade": "Pro にアップグレード",
   "paywall.cta.restore": "購入を復元",
