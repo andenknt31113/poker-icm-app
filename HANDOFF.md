@@ -745,3 +745,9 @@
 - ASC: 1.4.2 の version id 7b316dbe-40a2-459a-b9b7-15166d89c4c0（手動リリース）。ja loc id 91ecb288-ea16-4f7b-a07f-58be712f16d4、en-US loc id 8b5ada4d-40fe-4862-920a-e2ebeba57435、reviewDetail id d2e8ce9e-03ec-4ca0-abfc-058f3b2a10eb。更新説明を ja / en で登録（`docs/RELEASE_1_4_2.md`）。名前・説明・キーワード・スクショ（各言語 iPhone 5 / iPad 5、COMPLETE）は 1.4.1 から引き継ぎ。送った内容は `artifacts/release-1.4.2/asc/`。
 - 審査に提出（reviewSubmission 4e12d578-9031-4c99-926e-9aff9be1c997、WAITING_FOR_REVIEW）。1.4.1 は公開中のまま。
 - 残り: 審査結果待ち → 承認後に公開操作（手動。取り消せないので本人に確認してから）。実機・iPad シミュレーターでの確認、ダブルタップ拡大の対策が実機で効くかは未確認。iPad のスクショにはヘッダーの「STUDY ROOM」が写ったまま（アプリからは外した。次にスクショを撮り直すときに消える）。旧 Nash 表示コードの削除、CI ランナー固定を戻す件は未着手。
+
+## 2026-11-17: iOS 1.4.2(1) を公開
+- 審査通過（PENDING_DEVELOPER_RELEASE）を API で確認して報告。本人「お願いします」→ `POST /v1/appStoreVersionReleaseRequests` で公開操作、状態は READY_FOR_DISTRIBUTION。
+- 公開ストアの表示（iTunes lookup、jp / us）は操作直後はまだ 1.4.1。切り替わりの確認結果はこの追記の時点では未記録（チャットで報告）。
+- scratchpad が消えていたので、ASC API 用のスクリプト（`asc.mjs` / `env.sh`）は作り直した。キーの場所とIDはメモリ（appstore-submission-state）にある。
+- 残り: 実機・iPad シミュレーターでの確認、ダブルタップ拡大の対策が実機で効くか。iPad のスクショの「STUDY ROOM」。旧 Nash 表示コードの削除、CI ランナー固定を戻す件は未着手。
