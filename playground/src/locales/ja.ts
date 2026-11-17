@@ -24,13 +24,13 @@ export const ja: Record<string, string> = {
   "seat.setButton": "ここをBTNに",
   "nash.otherSeats": "ほかのプレイヤーを見る",
   "nash.prizes": "賞金配分",
-  "nash.youPush": "自分：プッシュ",
+  "nash.youPush": "自分：オールイン",
   "nash.theyCall": "相手：コール",
   "nash.youCall": "自分：コール",
-  "nash.theyPush": "相手：プッシュ",
-  "nash.title.youPush": "自分が押すレンジ 🔴",
+  "nash.theyPush": "相手：オールイン",
+  "nash.title.youPush": "自分のオールインレンジ 🔴",
   "nash.title.theyCall": "相手がコールするレンジ 🟢",
-  "nash.title.theyPush": "相手が押すレンジ 🔴",
+  "nash.title.theyPush": "相手のオールインレンジ 🔴",
   "nash.title.youCall": "自分がコールするレンジ 🟢",
   "flow.equityDetails": "コール額・必要勝率の内訳を見る →",
   "flow.example": "例題から試す",
@@ -136,10 +136,10 @@ export const ja: Record<string, string> = {
   "setup.presets.open": "選ぶ",
   "hand.quick.aria": "レンジの目安",
   "hand.nashRange.btn": "この局面の Nash を相手レンジに入れる",
-  "hand.nashRange.donePush": "相手が Nash どおりに押すレンジ（全ハンドの {pct}%）を入れました。局面を変えたら、もう一度押してください。",
+  "hand.nashRange.donePush": "相手が Nash どおりのオールインレンジ（全ハンドの {pct}%）を入れました。局面を変えたら、もう一度押してください。",
   "hand.nashRange.doneCall": "相手が Nash どおりにコールするレンジ（全ハンドの {pct}%）を入れました。局面を変えたら、もう一度押してください。",
   "hand.nashRange.failed": "この局面では Nash を計算できません。自分と相手、スタック、賞金を確認してください。",
-  "hand.nashRange.multiway": "押す人の後ろにいるあと {n} 人のコールも入れて解いています。",
+  "hand.nashRange.multiway": "オールインする人の後ろにいるあと {n} 人のコールも入れて解いています。",
   "hand.thumb.aria": "相手のレンジを表で見る",
   "hand.thumb.caption": "表で見る",
   "calc.summary.chipOnly": "チップだけなら {v}%",
@@ -185,9 +185,9 @@ export const ja: Record<string, string> = {
   "result.eq.autofillBtn": "\n          🔄 自動算出に戻す\n        ",
 
   // ===== index.html: ナッシュ均衡 =====
-  "nash.h2": "Nash（押すか降りるか）",
-  "nash.table.lead": "誰が最初に押すかごとに、押せるレンジと、後ろの人がコールできるレンジです。行をタップすると表が開きます。人数が多い卓では、自分と相手の行を先に出します。",
-  "nash.table.push": "{pos} が押す",
+  "nash.h2": "Nash（オールインかフォールドか）",
+  "nash.table.lead": "誰が最初にオールインするかごとに、オールインできるレンジと、後ろの人がコールできるレンジです。行をタップすると表が開きます。人数が多い卓では、自分と相手の行を先に出します。",
+  "nash.table.push": "{pos} がオールイン",
   "nash.table.call": "{pos} がコール",
   "nash.table.overcall": "{pos} もコール",
   "nash.table.overcallSummary": "さらにコール: {list}",
@@ -197,12 +197,12 @@ export const ja: Record<string, string> = {
   "nash.table.showMore": "ほか {n} 人のコールを表示",
   "nash.table.showLess": "ほかの人のコールを閉じる",
   "nash.table.calculating": "計算中… ({done}/{total})",
-  "nash.table.deep": "実効 {eff}BB は、押すか降りるかの2択で考える深さを超えています。参考値として見てください。",
+  "nash.table.deep": "実効 {eff}BB は、オールインかフォールドかの2択で考える深さを超えています。参考値として見てください。",
   "nash.table.needPositions": "位置（BTN・SB・BB など）が決まっていない席があります。全員ぶんの位置が決まると表示されます。",
   "nash.table.fillPositions": "空いている位置を自動で入れる",
   "nash.others": "後ろのほかの人がコールするレンジ: {list}",
-  "nash.multiway.note.html": "押す人の後ろにいる {n} 人（{list}）のコールも入れて解いています。",
-  "nash.hint.html": "先に動く方が押し、後ろの人がコールするか降りるかを決める Nash 均衡を、賞金期待値 (ICM) で計算します。<br />押す人の後ろに残っている全員のコールと、誰かがコールした後の2人目のコール（オーバーコール）まで入れて解きます。3人目以降のコール（4人以上の同時オールイン）は入れていません。<br />※ <strong>押すか降りるかの2択</strong>を前提にした均衡です。目安は実効 12BB 以下。実効 20BB を超える組には「参考値」の注意を出します（実戦では 2BB オープンやリンプが入るため）。<br />ブラインドとアンティは実際のポジションの人が払う前提です（BTN から押すなら自分はブラインドなし、BB アンティは BB の人）。この画面を開くと自動で計算します。",
+  "nash.multiway.note.html": "オールインする人の後ろにいる {n} 人（{list}）のコールも入れて解いています。",
+  "nash.hint.html": "先に動く方がオールインし、後ろの人がコールするか降りるかを決める Nash 均衡を、賞金期待値 (ICM) で計算します。<br />オールインする人の後ろに残っている全員のコールと、誰かがコールした後の2人目のコール（オーバーコール）まで入れて解きます。3人目以降のコール（4人以上の同時オールイン）は入れていません。<br />※ <strong>オールインかフォールドかの2択</strong>を前提にした均衡です。目安は実効 12BB 以下。実効 20BB を超える組には「参考値」の注意を出します（実戦では 2BB オープンやリンプが入るため）。<br />ブラインドとアンティは実際のポジションの人が払う前提です（BTN からオールインするなら自分はブラインドなし、BB アンティは BB の人）。この画面を開くと自動で計算します。",
   "nash.ante.label": "\n            アンティ合計\n            ",
   "nash.solveBtn": "再計算",
   "nash.explanation": "計算の前提・注意点を見る",
@@ -210,7 +210,7 @@ export const ja: Record<string, string> = {
 
   // ===== index.html: ハンド比較 =====
   "hand.h2": "ハンドの判断",
-  "hand.hint.html": "相手のレンジを仮定して、自分がコール・プッシュできるハンドを調べます。",
+  "hand.hint.html": "相手のレンジを仮定して、自分がコール・オールインできるハンドを調べます。",
   "hand.direction.callBack": "相手のオールインを受ける",
   "hand.direction.pushBack": "自分からオールイン",
   "hand.direction.autoHero": "席順で自動選択：自分（{pos}）が先に動きます",
@@ -224,24 +224,24 @@ export const ja: Record<string, string> = {
   "hand.custom.actions.clear": "全消去",
   "hand.custom.actions.fromPreset": "\n              上位レンジから読み込む\n            ",
   // ハンド比較のグリッド見出し・統計・バナー (handRange.ts)
-  "hand.title.villainPush": "相手が押すレンジ 🔴",
+  "hand.title.villainPush": "相手のオールインレンジ 🔴",
   "hand.title.heroCall": "コールできるハンド 🟢",
-  "hand.label.villainPush": "相手が押すレンジ",
+  "hand.label.villainPush": "相手のオールインレンジ",
   "hand.title.villainCall": "相手がコールするレンジ 🟢",
-  "hand.title.heroPush": "押せるハンド 🔴",
+  "hand.title.heroPush": "オールインできるハンド 🔴",
   "hand.label.villainCall": "相手がコールするレンジ",
-  "hand.legend.html": "👆 <strong>マスをタップ</strong>すると、そのハンドの勝率と「コール可／フォールド」が表の上に出ます。<br />相手のオールインを受けるとき: 🟩 必要勝率+0.1pt以上 = コール可 ／ 🟨 ±0.1pt = ボーダー (ほぼ完全に五分) ／ 無色 = フォールド。<br />自分からオールインするとき: 🟩 = 押したほうが、降りるより賞金期待値が高いハンド ／ 🟨 = ほぼ互角のボーダー ／ 無色 = フォールド。",
+  "hand.legend.html": "👆 <strong>マスをタップ</strong>すると、そのハンドの勝率と「コール可／フォールド」が表の上に出ます。<br />相手のオールインを受けるとき: 🟩 必要勝率+0.1pt以上 = コール可 ／ 🟨 ±0.1pt = ボーダー (ほぼ完全に五分) ／ 無色 = フォールド。<br />自分からオールインするとき: 🟩 = オールインしたほうが、降りるより賞金期待値が高いハンド ／ 🟨 = ほぼ互角のボーダー ／ 無色 = フォールド。",
   "hand.inspect.detail.html": "<strong>{hand}</strong>: 勝率 {eq}% − 必要 {req}% = <strong>{margin}pt</strong> → {verdict}",
   "hand.inspect.verdict.call": "コール可",
   "hand.inspect.verdict.marginal": "五分 (ボーダー)",
   "hand.inspect.verdict.fold": "フォールド",
   "hand.callStats.callBack": "<strong>{callable}</strong> 種類・全ハンドの <strong>{callPct}%</strong>（{callCombos} コンボ）。必要勝率 <strong>{req}%</strong> 以上のハンドです。ボーダー: {marginal} 種類",
-  "hand.callStats.pushBack": "<strong>{n}</strong> 種類・全ハンドの <strong>{pPct}%</strong>（{pushCombos} コンボ）。相手が <strong>{villainPct}%</strong> でコールする前提で、押した方が得なハンドです。ボーダー: {marginal} 種類",
+  "hand.callStats.pushBack": "<strong>{n}</strong> 種類・全ハンドの <strong>{pPct}%</strong>（{pushCombos} コンボ）。相手が <strong>{villainPct}%</strong> でコールする前提で、オールインした方が得なハンドです。ボーダー: {marginal} 種類",
   "hand.banner.callerLabel.hero": "hero (自分)",
   "hand.banner.noBehind.html": "\n      ✅ {label}=<strong>{pos}</strong>: 後ろにプレイヤーがいないので、この 1 対 1 モデルがそのまま当てはまります。\n    ",
   "hand.banner.behind.html": "\n      <details class=\"hand-caveat\">\n        <summary>⚠ {label}=<strong>{pos}</strong>: 後ろの {n} 人ぶんの over-call は未反映 — 実戦はもう少し硬めに</summary>\n        <div class=\"hand-caveat-body\">\n          この計算は「1 対 1 のオールイン」モデルです。{label} の後ろに残っている {n} 人 ({list}) が\n          割り込んでくるリスクは含まれていません。{note}\n        </div>\n      </details>\n    ",
   "hand.banner.note.callBack": "ここで「call OK」と出ても実戦ではより硬い range で受けるべきです。",
-  "hand.banner.note.pushBack": "ここで「push OK」と出ても実戦では over-call の可能性を加味してより硬い range で push するべきです。",
+  "hand.banner.note.pushBack": "ここで「オールインできる」と出ても、実戦では後ろの人にもコールされる可能性があるので、もう少し強いハンドに絞るのが安全です。",
 
   // ===== index.html: 練習 =====
   "practice.h2": "🎲 練習問題",
@@ -307,7 +307,7 @@ export const ja: Record<string, string> = {
         <li><span class="onboarding-tab-icon">📊</span> 計算（スタックと賞金を入れると、必要勝率・コールできるハンド・Nash がその場で出る）</li>
         <li data-feature="practice"><span class="onboarding-tab-icon">🎲</span> 練習（クイズで実戦感覚）</li>
       </ul>
-      <p class="hint">扱うのはオールインが絡む判断（相手のオールインにコールするか、ショートスタックで押すか）です。2BB オープンやリンプは計算しません。</p>
+      <p class="hint">扱うのはオールインが絡む判断（相手のオールインにコールするか、ショートスタックでオールインするか）です。2BB オープンやリンプは計算しません。</p>
     `,
   "onboarding.step2.title": "⚡ まず触ってみる",
   "onboarding.step2.body": `
@@ -368,18 +368,18 @@ export const ja: Record<string, string> = {
         <details class="howto">
           <summary>🃏 計算: ハンド — できること・使い方</summary>
           <div class="howto-body">
-            <p>相手のレンジを置いて、自分がコールできる（または押せる）ハンドを表で見る画面。</p>
+            <p>相手のレンジを置いて、自分がコールできる（またはオールインできる）ハンドを表で見る画面。</p>
             <ol>
               <li>向きは席順で自動で決まる（先に動く方がオールイン）。位置が未設定のときだけ自分で選ぶ</li>
               <li>スライダーか 10〜100% のボタンで相手のレンジを調整。左の小さい表をタップすると大きい表が開く。カスタム編集ならセルをタップして選択</li>
-              <li>表の色分けで、自分がコールできる（押せる）ハンドを確認</li>
+              <li>表の色分けで、自分がコールできる（オールインできる）ハンドを確認</li>
             </ol>
           </div>
         </details>
         <details class="howto">
           <summary>🎯 計算: Nash — できること・使い方</summary>
           <div class="howto-body">
-            <p>卓の全員ぶんの Nash（ICM 込み）を一覧で見る画面。「誰が最初に押すか」ごとに、押せるレンジと、後ろの人がコールできるレンジが並びます。</p>
+            <p>卓の全員ぶんの Nash（ICM 込み）を一覧で見る画面。「誰が最初にオールインするか」ごとに、オールインできるレンジと、後ろの人がコールできるレンジが並びます。</p>
             <ol>
               <li>「局面」で全員の位置（BTN・SB・BB など）とスタックを入れる</li>
               <li>必要なら「ブラインド」行を開いて SB / アンティ合計を変える</li>
@@ -407,14 +407,14 @@ export const ja: Record<string, string> = {
               <li><strong>ICM は Malmuth-Harville 方式</strong>。スタックの比で各順位の確率を決め、賞金期待値に直します。</li>
               <li><strong>必要勝率</strong>は、降りた時・コールして勝った時・負けた時の3通りを ICM で比べて出します。コール額を手入力したときと、BB の人が決まっていない卓だけ、BF を使った概算になります。</li>
               <li><strong>ハンドの勝率</strong>は 169 種類どうしの対戦表（1組あたり 100 万回のシミュレーション）を、手札でカードが減る分も数えて使います。</li>
-              <li><strong>Nash</strong> は「押すか降りるか／コールするか降りるか」の均衡を、賞金期待値で解きます。押す人の後ろに残っている全員のコールと、2人目のコール（オーバーコール）まで入れます。3人が同時にオールインしたときの勝率は、3つ組 約82万通りを事前に計算した表を使います。</li>
+              <li><strong>Nash</strong> は「オールインかフォールドか／コールするか降りるか」の均衡を、賞金期待値で解きます。オールインする人の後ろに残っている全員のコールと、2人目のコール（オーバーコール）まで入れます。3人が同時にオールインしたときの勝率は、3つ組 約82万通りを事前に計算した表を使います。</li>
               <li>ブラインドは <strong>BB アンティ</strong>（BB の人が全員分のアンティを払う）前提です。</li>
             </ul>
             <h4>計算していないこと</h4>
             <ul>
               <li><strong>4人以上が同時にオールインになる場合は計算しません</strong>。Nash は3人の同時オールインまで入れます。必要勝率とハンド表（コールの判断）は、自分と相手の2人だけで計算します。</li>
               <li><strong>次のハンド以降は見ません</strong>。ICM の性質上、すぐブラインドが回ってくるか、プレイヤーの上手さの差などは入りません。</li>
-              <li><strong>オールイン以外の選択肢</strong>（2BB オープン、リンプ、3ベット）は扱いません。自分から押す計算は実効 12BB 以下が目安で、20BB を超えると参考表示にします。</li>
+              <li><strong>オールイン以外の選択肢</strong>（2BB オープン、リンプ、3ベット）は扱いません。自分からオールインする計算は実効 12BB 以下が目安で、20BB を超えると参考表示にします。</li>
               <li><strong>プレイヤーは 9 人まで</strong>。複数卓にまたがるバブルは入力できません。</li>
               <li>相手レンジの<strong>「上位 X%」は対ランダム勝率の順</strong>です。実際の相手はスーテッドコネクターや小さいペアを多めに含むことがあるので、気になるときは「カスタム編集」で相手のレンジを直接選んでください。</li>
             </ul>
@@ -422,8 +422,8 @@ export const ja: Record<string, string> = {
             <ul>
               <li>ICM: 全順列を数える別の実装と 402 局面（2〜9人）で突き合わせ、差は 0.000000001 未満。</li>
               <li>ハンドの勝率: AA vs KK 82.0%、AKo vs QQ 43.2%、AA 対ランダム 85.2% など、よく知られた値と一致。</li>
-              <li>Nash: 2人・10BB・勝者総取りで push 58.1% / call 37.4%。どちらが戦略を変えても 0.001BB も得をしないことを別の計算で確認。</li>
-              <li>3人以上の Nash: HoldemResources の無料 Nash ICM 計算と、3人・10BB の局面で照合（押す 33.0% / 32.1%、コール 18.1% / 17.8%、オーバーコール 13.1% / 12.8%、最後の人のコール 24.3% / 24.3%）。差は、押しても降りてもほぼ同じ損得の境界のハンドです。</li>
+              <li>Nash: 2人・10BB・勝者総取りで オールイン 58.1% / コール 37.4%。どちらが戦略を変えても 0.001BB も得をしないことを別の計算で確認。</li>
+              <li>3人以上の Nash: HoldemResources の無料 Nash ICM 計算と、3人・10BB の局面で照合（オールイン 33.0% / 32.1%、コール 18.1% / 17.8%、オーバーコール 13.1% / 12.8%、最後の人のコール 24.3% / 24.3%）。差は、押しても降りてもほぼ同じ損得の境界のハンドです。</li>
             </ul>
             <p class="hint">計算結果は判断の目安です。実戦では相手の傾向や後ろの人数も合わせて考えてください。</p>
           </div>
@@ -449,8 +449,8 @@ export const ja: Record<string, string> = {
             </p>
             <h4>Nash 均衡</h4>
             <p>
-              押す側もコールする側も、片方だけ戦略を変えても得をしない
-              「お互いに搾取されない」push/fold 戦略の組み合わせのことです。
+              オールインする側もコールする側も、片方だけ戦略を変えても得をしない
+              「お互いに搾取されない」オールインかフォールドかの戦略の組み合わせのことです。
             </p>
           </div>
         </details>
@@ -459,7 +459,7 @@ export const ja: Record<string, string> = {
           <div class="howto-body">
             <p>
               相手のレンジを決める「上位 X%」は、<strong>ランダムなハンドに対する勝率が高い順</strong>に、全ハンドの組合せの X% ぶんを取ったものです。
-              他のツールの順位（プッシュ向きの順位など）とは並びが違うため、<strong>同じ X% でも中身のハンドが一致しないことがあります</strong>。
+              他のツールの順位（オールイン向きの順位など）とは並びが違うため、<strong>同じ X% でも中身のハンドが一致しないことがあります</strong>。
               実際の相手に合わせたいときは「カスタム編集」で直接選んでください。
             </p>
           </div>
@@ -616,7 +616,7 @@ export const ja: Record<string, string> = {
   "calc.summary.pushReference": "※ BF・必要勝率・RP はコールする場合の値です。",
   "nash.inputsChanged": "局面が変わりました。現在の条件でNashを再計算してください。",
   "calc.summary.considerCall": "コールを検討",
-  "calc.summary.considerPush": "プッシュを検討",
+  "calc.summary.considerPush": "オールインを検討",
   "calc.summary.allIn": "オールイン",
   "calc.summary.assumedCall": "コールを想定",
   "calc.summary.villain": "相手",
@@ -630,8 +630,8 @@ export const ja: Record<string, string> = {
   "calc.summary.rpLabel": "RP ⓘ",
   "calc.summary.verdict.call": "相手のレンジを {villain}% と仮定すると、コールできるのは全ハンドの約 <strong>{hero}%</strong>",
   "calc.summary.verdict.callNone": "相手のレンジを {villain}% と仮定すると、コールできるハンドはほぼ無し",
-  "calc.summary.verdict.push": "相手のコールレンジを {villain}% と仮定すると、押せるのは全ハンドの約 <strong>{hero}%</strong>",
-  "calc.summary.verdict.pushNone": "相手のコールレンジを {villain}% と仮定すると、押せるハンドはほぼ無し",
+  "calc.summary.verdict.push": "相手のコールレンジを {villain}% と仮定すると、オールインできるのは全ハンドの約 <strong>{hero}%</strong>",
+  "calc.summary.verdict.pushNone": "相手のコールレンジを {villain}% と仮定すると、オールインできるハンドはほぼ無し",
   "calc.summary.verdict.link": "ハンド表 ›",
 
   // ===== 警告 (calculator.ts) =====
@@ -677,11 +677,11 @@ export const ja: Record<string, string> = {
   "nash.err.ante": "アンティの値を確認してください",
   "nash.calculating": "計算中…",
   "nash.notConverged": "未収束",
-  "nash.depthNote.html": "⚠ 実効 <strong>{eff}BB</strong>：実戦では 2BB オープンやリンプも普通に選ばれる深さです。この結果は「押すか降りるかの2択に限った場合」で、実際に押すべきハンドはこれより少なくなります。",
-  "nash.depthOut.html": "⚠ 実効 <strong>{eff}BB</strong> は push/fold で判断する深さではありません。この深さでは 2BB オープン・リンプ・3ベットを含めて考えるのが普通で、本アプリはそれらを計算しません。下の結果を実戦の判断にそのまま使わないでください。",
+  "nash.depthNote.html": "⚠ 実効 <strong>{eff}BB</strong>：実戦では 2BB オープンやリンプも普通に選ばれる深さです。この結果は「オールインかフォールドかの2択に限った場合」で、実際にオールインするべきハンドはこれより少なくなります。",
+  "nash.depthOut.html": "⚠ 実効 <strong>{eff}BB</strong> はオールインかフォールドかで判断する深さではありません。この深さでは 2BB オープン・リンプ・3ベットを含めて考えるのが普通で、本アプリはそれらを計算しません。下の結果を実戦の判断にそのまま使わないでください。",
   "nash.depthOut.reveal": "2択に限った参考値を見る",
-  "hand.pushDepth.caution.html": "⚠ 実効 <strong>{eff}BB</strong>：実戦では 2BB オープンやリンプも選ばれる深さです。ここの push 可能ハンドは「押すか降りるかの2択に限った場合」の上限です。",
-  "hand.pushDepth.out.html": "⚠ 実効 <strong>{eff}BB</strong> は push/fold の範囲外です（2BB オープン・リンプ・3ベットを計算していません）。この push 判定を実戦の判断にそのまま使わないでください。",
+  "hand.pushDepth.caution.html": "⚠ 実効 <strong>{eff}BB</strong>：実戦では 2BB オープンやリンプも選ばれる深さです。ここのオールインできるハンドは「オールインかフォールドかの2択に限った場合」の上限です。",
+  "hand.pushDepth.out.html": "⚠ 実効 <strong>{eff}BB</strong> はオールインかフォールドかで考える範囲の外です（2BB オープン・リンプ・3ベットを計算していません）。このオールインの判定を実戦の判断にそのまま使わないでください。",
   "nash.stats": "{n} 種類 / {combos} コンボ (<strong>{pct}%</strong>)",
   "nash.matrixMissing": "⚠ HU equity matrix が未生成です（hu-equity-matrix.json）。`npx tsx scripts/build-hu-matchups.mts` を実行してください。",
 

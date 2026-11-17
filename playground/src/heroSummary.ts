@@ -114,6 +114,8 @@ export function renderHeroSummary(a: HeroSummaryArg): void {
   // 「必要勝率 44.8%・BF 1.00」のように正しそうな値に見えてしまうので、— にして理由を添える。
   const missing = !hasVillain ? "calc.summary.needVillain" : !(heroStack > 0 && villainStack > 0) ? "calc.summary.needStack" : null;
   const num = (text: string): string => (missing ? "—" : text);
+  // 表示の桁 (小数 1 桁) に丸めてから符号を決める。丸める前の -0.00001 をそのまま出すと「-0.0%」になる。
+  const rpPct = Math.round(a.rp * 1000) / 10 || 0;
 
   heroSummaryEl.innerHTML = `
     <div class="hero-summary-body">
@@ -132,7 +134,7 @@ export function renderHeroSummary(a: HeroSummaryArg): void {
         </div>
         <div class="hero-summary-item" data-info="RP">
           <div class="hero-summary-label tappable">${t("calc.summary.rpLabel")}</div>
-          <div class="hero-summary-value warn">${num(`${a.rp >= 0 ? "+" : ""}${(a.rp * 100).toFixed(1)}<span class="unit">%</span>`)}</div>
+          <div class="hero-summary-value warn">${num(`${rpPct >= 0 ? "+" : ""}${rpPct.toFixed(1)}<span class="unit">%</span>`)}</div>
         </div>
         <div class="hero-summary-item" data-info="BF">
           <div class="hero-summary-label tappable">${t("calc.summary.bfLabel")}</div>

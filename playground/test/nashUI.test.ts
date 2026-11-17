@@ -80,8 +80,8 @@ describe("Nashの結果と現在の入力を一致させる", () => {
     expect(solve.mock.calls[0]![0]).toMatchObject({ sbIndex: 1, bbIndex: 0, pusherBlind: 0.5, callerBlind: 1 });
     renderNashContext();
     expect(context.textContent).toContain("自分：コール");
-    expect(context.textContent).toContain("相手：プッシュ");
-    expect(document.getElementById("nash-push-title")!.textContent).toContain("相手が押す");
+    expect(context.textContent).toContain("相手：オールイン");
+    expect(document.getElementById("nash-push-title")!.textContent).toContain("相手のオールイン");
     expect(document.getElementById("nash-call-title")!.textContent).toContain("自分がコールする");
     // 席順どおりなので入れ替えの案内は出さない
     updateNashOvercallWarn();
@@ -142,7 +142,7 @@ describe("Nashの結果と現在の入力を一致させる", () => {
     expect(solve).not.toHaveBeenCalled();
     renderNashContext();
     expect(context.textContent).toContain("18 BB");
-    expect(context.textContent).toContain("自分：プッシュ");
+    expect(context.textContent).toContain("自分：オールイン");
     expect(context.textContent).toContain("相手：コール");
     players[0]!.stack = 7;
     renderNashContext();
@@ -265,7 +265,7 @@ describe("実効スタックの深さで Nash の見せ方を変える", () => {
 
   it("20BB 超は範囲外として結果を隠し、ボタンで参考表示できる", async () => {
     await solveWithStacks(25, 30);
-    expect(note().textContent).toContain("push/fold で判断する深さではありません");
+    expect(note().textContent).toContain("オールインかフォールドかで判断する深さではありません");
     expect(results().classList.contains("hidden")).toBe(true);
     (document.getElementById("nash-show-deep") as HTMLButtonElement).click();
     expect(results().classList.contains("hidden")).toBe(false);

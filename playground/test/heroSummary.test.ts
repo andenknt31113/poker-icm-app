@@ -19,6 +19,13 @@ beforeEach(() => {
 });
 
 describe("サマリーの視点と役割", () => {
+  it("RP がごく小さい負の値でも「-0.0%」と出さない", async () => {
+    const { renderHeroSummary } = await import("../src/heroSummary.js");
+    renderHeroSummary({ ...SCENARIO, bf: 1, requiredEq: 0.4, rp: -0.00001 });
+    const metrics = document.querySelector(".hero-summary-grid")?.textContent ?? "";
+    expect(metrics).toContain("+0.0");
+    expect(metrics).not.toContain("-0.0");
+  });
   it("相手がいないときは数字を出さず、相手を選ぶよう案内する", async () => {
     const { renderHeroSummary } = await import("../src/heroSummary.js");
     renderHeroSummary({ ...SCENARIO, villainIndex: -1, bf: 1, requiredEq: 0.448, rp: 0 });
@@ -60,7 +67,7 @@ describe("サマリーの視点と役割", () => {
   });
   it.each([
     ["callBack", "オールイン", "コールを検討"],
-    ["pushBack", "コールを想定", "プッシュを検討"],
+    ["pushBack", "コールを想定", "オールインを検討"],
   ] as const)("%sでも相手が上・自分が下", async (direction, villainRole, heroRole) => {
     const { renderHeroSummary } = await import("../src/heroSummary.js");
     renderHeroSummary({ ...SCENARIO, rangeVerdict: { ...SCENARIO.rangeVerdict, direction } });
