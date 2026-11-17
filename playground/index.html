@@ -401,8 +401,8 @@
       </section>
 
       <section class="card" data-tab="analyze" data-analysis-panel="nash" id="sec-nash">
-        <h2 data-i18n="nash.h2">Nash（押すか降りるか）</h2>
-        <p class="hint" data-i18n="nash.table.lead">誰が最初に押すかごとに、押せるレンジと、後ろの人がコールできるレンジです。行をタップすると表が開きます。</p>
+        <h2 data-i18n="nash.h2">Nash（オールインかフォールドか）</h2>
+        <p class="hint" data-i18n="nash.table.lead">誰が最初にオールインするかごとに、オールインできるレンジと、後ろの人がコールできるレンジです。行をタップすると表が開きます。</p>
         <p id="nash-table-status" class="hint" role="status"></p>
         <div id="nash-table" class="nash-table"></div>
         <div class="nash-actions">
@@ -417,7 +417,7 @@
 
         <div id="nash-results" class="range-grids">
           <div>
-            <!-- 見出しは押す側が自分か相手かで nashUI.ts が書き換える -->
+            <!-- 見出しはオールインする側が自分か相手かで nashUI.ts が書き換える -->
             <h3 id="nash-push-title">🎯自分の push レンジ 🔴</h3>
             <p class="hint" id="nash-sb-stats"></p>
             <div id="nash-sb-grid" class="hand-grid"></div>
