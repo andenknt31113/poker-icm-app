@@ -804,3 +804,10 @@
 - 検証: 型チェック、単体テスト（規約の同期テストを含む）成功。ASC の releaseType を読み直して AFTER_APPROVAL を確認。
 - できなかったこと: 課金アイテム（pro_lifetime）の説明の更新。API は「Cannot edit InAppPurchaseLocalization when it is in ACTIVE state」（409）で拒否。App Store Connect の画面からなら編集できる見込みだが、Chrome が ASC にサインインしておらず未実施。入れる予定だった文面は `artifacts/release-1.5/asc/p-iap-ja.json` / `p-iap-en.json`（ja「5人以上の卓、局面の保存、バウンティ計算を無期限で使えます。」/ en「Lifetime: 5+ player tables, saved spots, bounty calc.」）。
 - 残件: 審査中の 1.5(1) のビルドに入っているアプリ内の規約は前の文面のまま（次のビルドから新しい文面）。公開ページ `/legal` はこの PR のデプロイで新しい文面になる。
+
+## 2026-11-18: 課金アイテム（pro_lifetime）の説明にバウンティを追記して審査提出
+
+- 結果: 本人が Chrome で App Store Connect にサインインしたあと、画面から説明を書き換えて審査に提出（16:08、reviewSubmission d82ed5eb-5a96-45b4-8728-cb58bab6f743、WAITING_FOR_REVIEW）。ja「5人以上の卓、局面の保存、バウンティ計算を無期限で使えます。」/ en-US「Lifetime: 5+ player tables, saved spots, bounty calc.」。表示名は変えていない。
+- 仕組み: 承認済みの文面は API では編集できない（409）が、画面で編集すると同じ言語の行がもう1つ「提出準備中」で作られ、「審査用に追加」→「審査へ提出」で出せる。承認されるまでは前の文面が使われる。
+- 検証: API で読み直し、新しい文面が ja / en-US に入っていること、1.5 の提出（02c8e7ba…）が WAITING_FOR_REVIEW・AFTER_APPROVAL のままであることを確認。
+- 残件: 1.5 と課金アイテムの説明、2つの審査結果待ち。
