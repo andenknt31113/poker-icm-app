@@ -49,3 +49,7 @@
 - Bounty tournaments (KO / PKO) - Pro
 Enter the bounty on each player and the required equity, hand charts, Bubble Factor and Nash all take it into account. KO pays the full bounty at once; PKO pays half at once and adds half to your own bounty. Bounties still on the table are valued by chip share, which is an approximation. For mystery bounties, enter the average value.
 ```
+
+## スクショ（2026-11-18 追記）
+
+バウンティの画面（`07-bounty.png`）を ja / en の iPhone・iPad に足し、2枚目に並べた。ほかの5枚は 1.4.2 から引き継ぎ。追加のために一度審査を取り下げ、同じ日に出し直した。
