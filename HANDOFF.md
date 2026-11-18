@@ -790,3 +790,10 @@
 - 検証: シミュレーター（iPhone 17、Release）でバウンティ行、無料で KO を押したときの課金画面、Pro 状態で KO・全員 10 を入れたときの必要勝率（49.8% → 42.9%）、Nash の表示を確認（`artifacts/release-1.5/sim-*.png`）。Pro 状態は検証用にコピーした .app に開発用の裏口を仕込んで作った（Archive には入れていない）。Archive は codesign 成功、同梱 public は `playground/dist` と一致。
 - 未確認: 実機、iPad のシミュレーター、購入・復元、PKO のシミュレーター表示、他のバウンティ対応ツールとの数字の突き合わせ。
 - 残件: 審査結果待ち。承認後の公開は本人の指示を確認してから（POST /v1/appStoreVersionReleaseRequests）。課金アイテム（pro_lifetime）の説明と利用規約にはバウンティを書いていない。ストアスクショにバウンティの画面は無い。
+
+## 2026-11-18: 1.5 のストアスクショにバウンティの画面を追加して出し直し
+
+- 結果: 審査提出をいったん取り下げ（reviewSubmission f435d4fc… を cancel、バージョンは DEVELOPER_REJECTED）、ja / en-US の iPhone 6.9 / iPad 13 の各セットに `07-bounty.png` を足して2枚目に並べ（各セット6枚、全枚 COMPLETE）、出し直した。WAITING_FOR_REVIEW（手動リリース）、新しい reviewSubmission は 02c8e7ba-9e7e-4a51-8c03-7a0fe2639caf。
+- スクショ: `artifacts/release-1.5/screenshots/{ja,en}/{iphone-6.9,ipad-13}/07-bounty.png`。既定の3人卓、Pro 状態、PKO、額 10 / 25 / 15（必要勝率 42.5%）。Playwright で `playground/dist` を撮った（iPhone 440×956 @3x = 1320×2868、iPad 1032×1376 @2x = 2064×2752）。
+- 検証: 4枚を目視（iPhone ja、iPad en は拡大して確認）。ASC の並び順を読み直して `01-spot 07-bounty 03-range 06-nash 04-prizes 05-chop` を確認。
+- 残件: 審査結果待ち。ほかの5枚は 1.4 / 1.4.1 のときのまま（「押す」の表記、iPad の「STUDY ROOM」が残る）。承認後の公開は本人の指示を確認してから。
