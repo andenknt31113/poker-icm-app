@@ -16,6 +16,7 @@ import { hasThreeWayTable, loadThreeWayTable } from "./threeWay.js";
 import { rangeToText } from "./rangeText.js";
 import { PUSH_FOLD_CAUTION_MAX_BB } from "./pushSpot.js";
 import { t } from "./i18n.js";
+import { activeBounty, bountyKey } from "./bountyState.js";
 import { players, parseList, DEFAULT_SB, DEFAULT_BB } from "./appState.js";
 import { payoutsInput, nashSbInput, nashBbInput, nashAnteInput } from "./domRefs.js";
 import { noteNashFinishedForReview } from "./reviewPrompt.js";
@@ -49,6 +50,7 @@ function inputKey(): string {
   return JSON.stringify([
     players.map(({ stack, position }) => [stack, position]),
     payoutsInput.value, nashSbInput.value, nashBbInput.value, nashAnteInput.value,
+    bountyKey(),
   ]);
 }
 
@@ -214,6 +216,7 @@ export function ensureNashTable(): void {
       Number(nashSbInput.value) || DEFAULT_SB,
       Number(nashBbInput.value) || DEFAULT_BB,
       Number(nashAnteInput.value) || 0,
+      activeBounty(),
     );
     if (!chain) {
       error = t("nash.table.needPositions");

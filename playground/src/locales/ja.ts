@@ -145,6 +145,20 @@ export const ja: Record<string, string> = {
   "calc.summary.chipOnly": "チップだけなら {v}%",
   "setup.blinds.hint": "スタックは BB 単位なので BB は 1 で固定です。アンティ有りの卓は「アンティ合計」を入力。",
 
+  // ===== バウンティ (setupBounty.ts) =====
+  "setup.bounty.h2": "バウンティ",
+  "setup.bounty.mode.aria": "バウンティの形式",
+  "setup.bounty.mode.off": "なし",
+  "setup.bounty.mode.ko": "KO",
+  "setup.bounty.mode.pko": "PKO",
+  "setup.bounty.hint": "相手を飛ばすともらえる額を、賞金と同じ単位で入れます。KO は全額、PKO は半分がその場の現金で、半分が自分の首に乗ります。",
+  "setup.bounty.all.label": "全員に同じ額",
+  "setup.bounty.all.apply": "入れる",
+  "setup.bounty.amount.aria": "{name} のバウンティ",
+  "setup.bounty.summary.locked": "🔒 Pro",
+  "setup.bounty.summary.off": "なし",
+  "setup.bounty.summary.empty": "額を入れてください",
+
 
   // ===== index.html: 計算結果 - ICM エクイティ =====
   "chop.h2": "チョップ（ディール）するなら",
@@ -336,7 +350,7 @@ export const ja: Record<string, string> = {
   "guide.close.aria": "閉じる",
   // アプリ版のみ表示 (guide.ts proNoteHtml)。価格は書かない。
   "guide.proNote.html":
-    "ℹ️ 例題・計算結果・Nash はすべて無料。<strong>4人までの卓はスタックも賞金も自由に編集できます</strong>。5人以上の卓の編集と、局面・賞金の保存は 🔒 Pro（買い切り）です。",
+    "ℹ️ 例題・計算結果・Nash はすべて無料。<strong>4人までの卓はスタックも賞金も自由に編集できます</strong>。5人以上の卓の編集、局面・賞金の保存、バウンティ（KO / PKO）の計算は 🔒 Pro（買い切り）です。",
   "guide.body.html": `
         <p class="guide-intro">
           このツールはショートスタック（〜20bb）のオールイン局面に特化しています。
@@ -388,6 +402,18 @@ export const ja: Record<string, string> = {
             </ol>
           </div>
         </details>
+        <details class="howto">
+          <summary>💰 計算: バウンティ（KO / PKO）— できること・使い方 🔒 Pro</summary>
+          <div class="howto-body">
+            <p>相手を飛ばすともらえるバウンティを計算に入れます。必要勝率・ハンド表・BF・Nash のすべてに反映されます。</p>
+            <ol>
+              <li>「局面」の「バウンティ」行を開いて、KO か PKO を選ぶ</li>
+              <li>各プレイヤーの首にかかっている額を、賞金と同じ単位で入れる（「全員に同じ額」でまとめて入れられる）</li>
+              <li>相手を飛ばせる（自分のスタックが相手以上の）ときは、必要勝率が下がり、コールもオールインも広くなる</li>
+            </ol>
+            <p class="hint">賞金を % で入れているときは、バウンティも同じ % の単位で入れてください（例: 賞金総額の 2% ぶんなら 2）。</p>
+          </div>
+        </details>
         <details class="howto" data-feature="practice">
           <summary>🎲 練習 — できること・使い方</summary>
           <div class="howto-body">
@@ -409,6 +435,7 @@ export const ja: Record<string, string> = {
               <li><strong>ハンドの勝率</strong>は 169 種類どうしの対戦表（1組あたり 100 万回のシミュレーション）を、手札でカードが減る分も数えて使います。</li>
               <li><strong>Nash</strong> は「オールインかフォールドか／コールするか降りるか」の均衡を、賞金期待値で解きます。オールインする人の後ろに残っている全員のコールと、2人目のコール（オーバーコール）まで入れます。3人が同時にオールインしたときの勝率は、3つ組 約82万通りを事前に計算した表を使います。</li>
               <li>ブラインドは <strong>BB アンティ</strong>（BB の人が全員分のアンティを払う）前提です。</li>
+              <li><strong>バウンティ（Pro）</strong>は、賞金期待値に次の2つを足します。①このハンドで相手を飛ばして、その場で受け取る額（KO は全額、PKO は半分）。②卓に残っているバウンティの取り分（チップの比率 × 残りの合計）。PKO で自分の首に乗った半分は、②の中で数えます。</li>
             </ul>
             <h4>計算していないこと</h4>
             <ul>
@@ -416,6 +443,7 @@ export const ja: Record<string, string> = {
               <li><strong>次のハンド以降は見ません</strong>。ICM の性質上、すぐブラインドが回ってくるか、プレイヤーの上手さの差などは入りません。</li>
               <li><strong>オールイン以外の選択肢</strong>（2BB オープン、リンプ、3ベット）は扱いません。自分からオールインする計算は実効 12BB 以下が目安で、20BB を超えると参考表示にします。</li>
               <li><strong>プレイヤーは 9 人まで</strong>。複数卓にまたがるバブルは入力できません。</li>
+              <li><strong>バウンティの近似</strong>: 残っているバウンティを誰が取るかは、チップの比率で決まるとみなします。ミステリーバウンティは中身が分からないので、平均の額を入れてください。引き分けでの分け合いは入りません。</li>
               <li>相手レンジの<strong>「上位 X%」は対ランダム勝率の順</strong>です。実際の相手はスーテッドコネクターや小さいペアを多めに含むことがあるので、気になるときは「カスタム編集」で相手のレンジを直接選んでください。</li>
             </ul>
             <h4>確かめたこと</h4>
@@ -626,6 +654,8 @@ export const ja: Record<string, string> = {
   "calc.summary.aroundHtml": "<span>👥 周り <strong>{stacks}</strong> BB</span>",
   "calc.summary.bfLabel": "BF ⓘ",
   "calc.eq.approxNote": "コール額を手入力したとき・BB の人が決まっていない卓では、BF を使った概算になります。",
+  "calc.eq.bountyNote.ko": "バウンティ（KO）を入れた数字です。相手を飛ばせるときは、その分だけ必要勝率が下がります。",
+  "calc.eq.bountyNote.pko": "バウンティ（PKO）を入れた数字です。相手を飛ばせるときは、その分だけ必要勝率が下がります。",
   "calc.summary.reqLabel": "必要勝率 ⓘ",
   "calc.summary.rpLabel": "RP ⓘ",
   "calc.summary.verdict.call": "相手のレンジを {villain}% と仮定すると、コールできるのは全ハンドの約 <strong>{hero}%</strong>",
@@ -851,6 +881,7 @@ export const ja: Record<string, string> = {
   "paywall.feature.editStacks": "5人以上の卓を自由に編集（スタック・賞金）",
   "paywall.feature.replay": "9人までの卓で、必要勝率・ハンド表・Nash を自分の数字で確認",
   "paywall.feature.save": "局面と賞金を保存して、いつでも呼び出し",
+  "paywall.feature.bounty": "バウンティ（KO / PKO）を入れた必要勝率・ハンド表・Nash",
   "paywall.price": "価格: {price}",
   "paywall.cta.upgrade": "Pro にアップグレード",
   "paywall.cta.restore": "購入を復元",

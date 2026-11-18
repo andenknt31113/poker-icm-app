@@ -18,7 +18,7 @@
  *   - 均衡は基本的に pure だが、境界（無差別）ハンドの混合頻度は frequency map に保持する。
  */
 
-import { calculateICM } from "./icm.js";
+import { equitiesWithBounty, type BountySpec, type Knockout } from "./bounty.js";
 import type { Payouts, Stacks } from "./types.js";
 
 /** 表記は文字列にしておき、上位コードで HandNotation を流し込む。 */
@@ -74,6 +74,8 @@ export interface HUNashInput {
    * 注入すると best response の精度が上がる。
    */
   readonly comboWeight?: ComboWeightFn;
+  /** バウンティ。渡すと、飛ばしたときの受け取りと残っている首の取り分を $ に足す。 */
+  readonly bounty?: BountySpec;
 }
 
 export interface HUNashResult {
@@ -159,6 +161,7 @@ function buildHUGame(input: HUNashInput): HUGame {
     huEquity,
     allHands,
     comboWeight,
+    bounty,
   } = input;
 
   // ----- バリデーション -----
@@ -213,11 +216,15 @@ function buildHUGame(input: HUNashInput): HUGame {
   const matched = Math.min(baseStacks[sbIndex]!, baseStacks[bbIndex]!);
 
   // 任意の (sbStack, bbStack) を所与に ICM を評価。
-  function icmAt(sbStack: number, bbStack: number): { sbEq: number; bbEq: number } {
+  function icmAt(
+    sbStack: number,
+    bbStack: number,
+    knockouts: readonly Knockout[] = [],
+  ): { sbEq: number; bbEq: number } {
     const s: number[] = baseStacks.slice();
     s[sbIndex] = Math.max(0, sbStack);
     s[bbIndex] = Math.max(0, bbStack);
-    const eq = calculateICM(s, payouts);
+    const eq = equitiesWithBounty(s, payouts, bounty, knockouts);
     return { sbEq: eq[sbIndex]!, bbEq: eq[bbIndex]! };
   }
 
@@ -234,11 +241,11 @@ function buildHUGame(input: HUNashInput): HUGame {
 
   const winSbStack = baseStacks[sbIndex]! + matched + totalAnte;
   const winBbStack = baseStacks[bbIndex]! - matched;
-  const winICM = icmAt(winSbStack, winBbStack);
+  const winICM = icmAt(winSbStack, winBbStack, [{ winner: sbIndex, loser: bbIndex }]);
 
   const loseSbStack = baseStacks[sbIndex]! - matched;
   const loseBbStack = baseStacks[bbIndex]! + matched + totalAnte;
-  const loseICM = icmAt(loseSbStack, loseBbStack);
+  const loseICM = icmAt(loseSbStack, loseBbStack, [{ winner: bbIndex, loser: sbIndex }]);
 
   // ----- コンボ重み行列 W[hi*n+vi] = comboWeight(hero=hi, villain=vi) -----
   const n = allHands.length;

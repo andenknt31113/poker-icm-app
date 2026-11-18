@@ -11,6 +11,7 @@ import {
   type PersistedState,
 } from "./appState.js";
 import { STORAGE_KEYS, writeJson } from "./storage.js";
+import { getBountyMode, sanitizeBounty } from "./bountyState.js";
 
 /** #payouts が空・不正だった場合に使う既定のペイ構造 (Top3)。 */
 export const DEFAULT_PAYOUTS: readonly number[] = [50, 30, 20];
@@ -37,10 +38,12 @@ export const nashAnteInput = $<HTMLInputElement>("nash-ante");
 
 export function saveState(): void {
   const state: PersistedState = {
+    // バウンティは使っているときだけ書く (使っていなければ以前と同じ保存形式のまま)
     players: players.map((p) => ({
       stack: p.stack,
       role: p.role,
       position: p.position,
+      ...(sanitizeBounty(p.bounty) > 0 ? { bounty: sanitizeBounty(p.bounty) } : {}),
     })),
     payouts: payoutsArr.length > 0 ? payoutsArr : [...DEFAULT_PAYOUTS],
     nash: {
@@ -48,6 +51,7 @@ export function saveState(): void {
       bb: Number(nashBbInput.value) || DEFAULT_BB,
       ante: Number(nashAnteInput.value) || 0,
     },
+    ...(getBountyMode() !== "off" ? { bounty: { mode: getBountyMode() } } : {}),
   };
   writeJson(STORAGE_KEYS.appState, state);
 }

@@ -1,5 +1,7 @@
 export { calculateICM, headsUpEquity, MAX_PLAYERS } from "./icm.js";
 export { calculateBubbleFactor } from "./bf.js";
+export { bountyEquities, equitiesWithBounty, PROGRESSIVE_CASH_SHARE } from "./bounty.js";
+export type { BountySpec, Knockout } from "./bounty.js";
 export { calculateRequiredEquity } from "./equity.js";
 export { calculatePotOdds } from "./potOdds.js";
 export type { PotOddsInput, PotOddsResult, PotOddsPosition } from "./potOdds.js";

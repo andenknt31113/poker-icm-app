@@ -6,6 +6,7 @@ const { players } = vi.hoisted(() => ({
 }));
 vi.mock("../src/appState.js", () => ({
   players,
+  persistedState: null,
   parseList: (value: string) => value.split(",").filter(Boolean).map(Number),
   DEFAULT_SB: 0.5,
   DEFAULT_BB: 1,

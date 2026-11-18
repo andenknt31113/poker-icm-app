@@ -108,6 +108,8 @@ export interface Player {
   stack: number;
   role: Role;
   position: Position;
+  /** この人の首にかかっているバウンティ (賞金と同じ単位)。未設定は 0。 */
+  bounty?: number;
 }
 
 export function assignRole(table: Player[], playerId: number, role: Role): boolean {
@@ -153,10 +155,12 @@ export function allocPlayerId(): number {
 export const players: Player[] = [];
 
 export interface PersistedState {
-  players: { stack: number; role: Role; position: Position }[];
+  players: { stack: number; role: Role; position: Position; bounty?: number }[];
   payouts: number[];
   // ante は常にテーブル合計 (アンティ入力は「アンティ合計」1つだけ)
   nash: { sb: number; bb: number; ante: number };
+  /** バウンティの設定 (off / ko / pko)。古い保存データには無い。 */
+  bounty?: { mode: string };
 }
 
 /**
@@ -198,7 +202,7 @@ function loadState(): PersistedState | null {
 // 「—」(未割当) 表示になってしまうため、有効な UTG に修正。
 // 初期状態は 3-handed (ft3 プリセット相当)。freemium の無料枠が「3人まで自由編集」
 // のため、初回起動をロックされた画面ではなく「触って編集できる卓」から始める。
-const DEFAULT_PLAYERS: { stack: number; role: Role; position: Position }[] = [
+const DEFAULT_PLAYERS: { stack: number; role: Role; position: Position; bounty?: number }[] = [
   { stack: 18, role: "hero", position: "BB" },
   { stack: 14, role: "villain", position: "SB" },
   { stack: 20, role: "other", position: "BTN" },
@@ -208,12 +212,10 @@ const DEFAULT_PLAYERS: { stack: number; role: Role; position: Position }[] = [
 export const persistedState = loadState();
 const initialPlayers = persistedState?.players ?? DEFAULT_PLAYERS;
 for (const p of initialPlayers) {
-  players.push({
-    id: nextId++,
-    stack: p.stack,
-    role: p.role,
-    position: p.position,
-  });
+  const player: Player = { id: nextId++, stack: p.stack, role: p.role, position: p.position };
+  // バウンティは入っているときだけ持つ (古い保存データと同じ形を保つ)
+  if (typeof p.bounty === "number" && Number.isFinite(p.bounty) && p.bounty > 0) player.bounty = p.bounty;
+  players.push(player);
 }
 
 // ===== 数値リストのパース =====

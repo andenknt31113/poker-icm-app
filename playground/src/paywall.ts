@@ -63,6 +63,7 @@ function ensurePaywallModal(): HTMLDivElement {
           <li>${t("paywall.feature.editStacks")}</li>
           <li>${t("paywall.feature.replay")}</li>
           <li>${t("paywall.feature.save")}</li>
+          <li>${t("paywall.feature.bounty")}</li>
         </ul>
         <p class="paywall-price">${t("paywall.price", { price: PRICE_PLACEHOLDER })}</p>
         ${actionsHtml}

@@ -41,6 +41,8 @@ import { updatePositionWarn, updateDepthWarn } from "./warnings.js";
 import { initInfoModal } from "./infoModal.js";
 import { exactCallRequiredEquity } from "./callSpot.js";
 import { renderChop, clearChop, initChop } from "./chopView.js";
+import { activeBounty } from "./bountyState.js";
+import { renderBountySummary } from "./setupBounty.js";
 
 // ===== DOM参照 (計算結果タブ) =====
 const callInput = $<HTMLInputElement>("call");
@@ -86,8 +88,11 @@ function renderSpotFoldSummaries(): void {
 export function recompute(): void {
   invalidateChangedNash();
   renderSpotFoldSummaries();
+  renderBountySummary();
   try {
     const stacks = players.map((p) => p.stack);
+    // バウンティ (Pro)。設定なし・無料のときは undefined で、従来どおりの計算になる
+    const bounty = activeBounty();
     const payouts = parseList(payoutsInput.value);
 
     if (stacks.length === 0) throw new Error(t("calc.err.needPlayer"));
@@ -152,6 +157,7 @@ export function recompute(): void {
           heroIndex,
           villainIndex,
           riskChips: safeRisk,
+          bounty,
         });
         bf = r.bf;
         // 生の $ エクイティ数値 (equityNow/equityWin/equityLose) は単位が伝わりにくく
@@ -165,7 +171,7 @@ export function recompute(): void {
     }
 
     // BF マトリックス（全員 vs 全員）
-    renderBFMatrix(stacks, payouts);
+    renderBFMatrix(stacks, payouts, bounty);
 
     // 必要勝率: hero/villain あれば自動更新 (BB ante 構造、ante は dead)
     // スタック0のプレイヤーが hero/villain の場合 calculatePotOdds が throw する
@@ -263,6 +269,7 @@ export function recompute(): void {
             Number(nashSbInput.value) || DEFAULT_SB,
             Number(nashBbInput.value) || DEFAULT_BB,
             Number(nashAnteInput.value) || 0,
+            bounty,
           )
         : null;
     const eq =
@@ -289,6 +296,7 @@ export function recompute(): void {
         </div>
       </div>
       ${exactReq === null ? `<p class="hint eq-approx-note">${t("calc.eq.approxNote")}</p>` : ""}
+      ${bounty ? `<p class="hint eq-bounty-note">${t(bounty.progressive ? "calc.eq.bountyNote.pko" : "calc.eq.bountyNote.ko")}</p>` : ""}
     `;
 
     // レンジ比較 (戻り値の要約は状況サマリーの一行判定に使う)

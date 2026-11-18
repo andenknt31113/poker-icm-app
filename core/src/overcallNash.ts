@@ -24,6 +24,7 @@
  */
 
 import { calculateICM } from "./icm.js";
+import { bountyEquities, type Knockout } from "./bounty.js";
 import { buildMultiwayTerminals, computeNodeValues, type MultiwayPushFoldInput } from "./multiwayNash.js";
 import type { ComboWeightFn, HandLabel } from "./nash.js";
 
@@ -89,6 +90,7 @@ export function solveOvercallPushFold(input: OvercallPushFoldInput): OvercallPus
     allHands,
     comboWeight,
     threeWay,
+    bounty,
     maxIterations = DEFAULT_MAX_ITER,
     convergenceTolerance = DEFAULT_TOLERANCE,
     outerIterations = DEFAULT_OUTER,
@@ -187,6 +189,20 @@ export function solveOvercallPushFold(input: OvercallPushFoldInput): OvercallPus
         const sideWinner = perm.find((role) => role !== smallestRole)!;
         final[ids[sideWinner]!]! += sidePot;
         const icm = icmWithBustOrder(final, ids);
+        if (bounty) {
+          // 飛んだ人の最後のチップが入っていたポットを取った人が、その首を受け取る。
+          // いちばん小さい人 (同額を含む) はメインポット、それ以外はサイドポット。
+          const knockouts: Knockout[] = [];
+          ids.forEach((i, role) => {
+            if (final[i]! > 0) return;
+            const winnerRole = lives[role]! <= small ? perm[0] : sideWinner;
+            if (winnerRole !== role) knockouts.push({ winner: ids[winnerRole]!, loser: i });
+          });
+          const extra = bountyEquities(final, bounty, knockouts);
+          extra.forEach((value, i) => {
+            icm[i]! += value;
+          });
+        }
         perRole.push([icm[ids[0]!]!, icm[ids[1]!]!, icm[ids[2]!]!]);
       }
       T3[k]!.push(perRole);

@@ -330,3 +330,30 @@ body.no-practice.workspace .container { padding-bottom: 40px; }
 /* 結果サマリー: 相手がいない・スタックが 0 などで計算できないときの説明 */
 .hero-summary-missing { margin: 10px 0 0; color: var(--warn); }
 .hero-summary.floating .hero-summary-missing { display: none; }
+
+/* ===== バウンティ (局面カードの折りたたみ行) ===== */
+.bounty-all {
+  display: grid;
+  grid-template-columns: 1fr 96px auto;
+  gap: 8px;
+  align-items: center;
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.bounty-all input,
+.bounty-row input { width: 100%; min-width: 0; }
+.bounty-list { display: flex; flex-direction: column; gap: 6px; }
+.bounty-row {
+  display: grid;
+  grid-template-columns: 1fr 96px;
+  gap: 8px;
+  align-items: center;
+  background: var(--bg);
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+}
+.bounty-name { font-family: var(--mono); }
+.eq-bounty-note { margin: 8px 0 0; }

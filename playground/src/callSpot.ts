@@ -3,7 +3,7 @@
 // 分析タブの必要勝率は以前、BF の線形近似 (calculateRequiredEquity) だった。
 // 練習タブと同じ厳密 ICM (fold / コール勝ち / コール負けの3終端を直接解く) に
 // そろえるため、実際のポジションから core の入力を組み立てる (DOM 非依存)。
-import { calculateExactCallEquity, type Payouts } from "@poker-icm/core";
+import { calculateExactCallEquity, type BountySpec, type Payouts } from "@poker-icm/core";
 import { posToPotOddsPos, type Player } from "./appState.js";
 
 type SeatLike = Pick<Player, "stack" | "position">;
@@ -22,6 +22,7 @@ export function exactCallRequiredEquity(
   sb: number,
   bb: number,
   totalAnte: number,
+  bounty?: BountySpec,
 ): number | null {
   const n = table.length;
   const kinds = table.map((seat) => posToPotOddsPos(seat.position, n));
@@ -49,6 +50,7 @@ export function exactCallRequiredEquity(
     sb,
     bb,
     ante: totalAnte,
+    bounty,
   });
   return Number.isFinite(result.requiredEquity) ? result.requiredEquity : null;
 }

@@ -1,7 +1,7 @@
 // ===== BF マトリックス (全員 vs 全員の Bubble Factor 表) =====
 // 計算結果タブの 1 セクション。calculator.ts の recompute() から
 // renderBFMatrix() を呼ばれるだけの独立した描画モジュール。
-import { calculateBubbleFactor } from "@poker-icm/core";
+import { calculateBubbleFactor, type BountySpec } from "@poker-icm/core";
 import { $ } from "./dom.js";
 import { players } from "./appState.js";
 
@@ -52,7 +52,7 @@ function updateBFMatrixScrollState(): void {
   hint?.classList.toggle("hidden", !scrollable);
 }
 
-export function renderBFMatrix(stacks: number[], payouts: number[]): void {
+export function renderBFMatrix(stacks: number[], payouts: number[], bounty?: BountySpec): void {
   const n = stacks.length;
   if (n < 2) {
     bfMatrix.innerHTML = "";
@@ -104,6 +104,7 @@ export function renderBFMatrix(stacks: number[], payouts: number[]): void {
           heroIndex: i,
           villainIndex: j,
           riskChips: risk,
+          bounty,
         });
         const bg = bfBackground(r.bf);
         const rp = bfRiskPremiumPct(r.bf);

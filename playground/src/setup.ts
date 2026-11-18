@@ -14,6 +14,8 @@ import { recompute, getCallManualOverride, setCallManualOverride } from "./calcu
 import { renderPlayers, initPlayersUI, getPositionAutoLink, setPositionAutoLink } from "./setupPlayers.js";
 import { initScenariosUI } from "./setupScenarios.js";
 import { renderPayouts, initPayoutsUI } from "./setupPayouts.js";
+import { renderBounty, initBountyUI } from "./setupBounty.js";
+import { getBountyMode, setBountyMode } from "./bountyState.js";
 import { STORAGE_KEYS, readRaw, writeRaw, type StorageKey } from "./storage.js";
 
 // 既存の import 元 (main.ts / practice/interactions.ts) を変えずに済むよう再公開する。
@@ -35,6 +37,7 @@ export { setPayouts } from "./setupPayouts.js";
 export function refreshProGatedUi(): void {
   renderPlayers();
   renderPayouts();
+  renderBounty();
   const saveScenarioBtn = document.getElementById("save-scenario-btn") as HTMLButtonElement | null;
   saveScenarioBtn?.classList.toggle("locked-pro", !isPro());
 }
@@ -71,7 +74,9 @@ export function initSetup(): void {
     const pot = document.querySelector<HTMLInputElement>("#potwin")!;
     const amounts = [call.value, pot.value];
     const manual = getCallManualOverride();
+    const bountyMode = getBountyMode();
     return () => {
+      setBountyMode(bountyMode);
       players.splice(0, players.length, ...savedPlayers);
       setPositionAutoLink(autoLink);
       replacePayouts(prizes);
@@ -89,7 +94,7 @@ export function initSetup(): void {
   undo?.addEventListener("click", undoSetup);
   document.addEventListener("focusin", event => {
     const input = event.target;
-    if (input instanceof HTMLInputElement && !input.readOnly && input.matches(".player-stack, .payout-amount, #nash-sb, #nash-bb, #nash-ante, #call, #potwin")) stageSetupInput(input);
+    if (input instanceof HTMLInputElement && !input.readOnly && input.matches(".player-stack, .payout-amount, .bounty-amount, #bounty-all, #nash-sb, #nash-bb, #nash-ante, #call, #potwin")) stageSetupInput(input);
   });
   document.addEventListener("input", event => {
     const input = event.target;
@@ -100,6 +105,7 @@ export function initSetup(): void {
   initPlayersUI();
   initScenariosUI();
   initPayoutsUI();
+  initBountyUI();
 
   initCollapsibleSection("scenario-presets-toggle", STORAGE_KEYS.collapseScenarioPresets, false);
   initCollapsibleSection("payout-presets-toggle", STORAGE_KEYS.collapsePayoutPresets);

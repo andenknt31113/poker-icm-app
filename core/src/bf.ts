@@ -1,4 +1,4 @@
-import { calculateICM } from "./icm.js";
+import { equitiesWithBounty } from "./bounty.js";
 import type { BubbleFactorInput, BubbleFactorResult } from "./types.js";
 
 /**
@@ -35,7 +35,7 @@ const EPS = 1e-9;
 export function calculateBubbleFactor(
   input: BubbleFactorInput,
 ): BubbleFactorResult {
-  const { stacks, payouts, heroIndex, villainIndex, riskChips } = input;
+  const { stacks, payouts, heroIndex, villainIndex, riskChips, bounty } = input;
 
   if (heroIndex === villainIndex) {
     throw new Error("BF: hero と villain が同じ index です");
@@ -60,17 +60,21 @@ export function calculateBubbleFactor(
     );
   }
 
-  const equityNow = calculateICM(stacks, payouts)[heroIndex]!;
+  const equityNow = equitiesWithBounty(stacks, payouts, bounty)[heroIndex]!;
 
   const winStacks = stacks.slice();
   winStacks[heroIndex] = stacks[heroIndex]! + riskChips;
   winStacks[villainIndex] = stacks[villainIndex]! - riskChips;
-  const equityWin = calculateICM(winStacks, payouts)[heroIndex]!;
+  const equityWin = equitiesWithBounty(winStacks, payouts, bounty, [
+    { winner: heroIndex, loser: villainIndex },
+  ])[heroIndex]!;
 
   const loseStacks = stacks.slice();
   loseStacks[heroIndex] = stacks[heroIndex]! - riskChips;
   loseStacks[villainIndex] = stacks[villainIndex]! + riskChips;
-  const equityLose = calculateICM(loseStacks, payouts)[heroIndex]!;
+  const equityLose = equitiesWithBounty(loseStacks, payouts, bounty, [
+    { winner: villainIndex, loser: heroIndex },
+  ])[heroIndex]!;
 
   const gain = equityWin - equityNow;
   const rawLoss = equityNow - equityLose;
