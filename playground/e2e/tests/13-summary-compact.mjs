@@ -30,6 +30,8 @@ export default async function testSummaryCompact({ baseURL, createContext }) {
         verdictHidden: hidden("#hero-summary-verdict-btn"),
         gridVisible: !hidden(".hero-summary-grid"),
         spotVisible: !hidden(".hero-summary-row-stack"),
+        shortRoles: [...el.querySelectorAll(".role-short")].filter((r) => r.offsetParent !== null).map((r) => r.textContent),
+        longRolesHidden: [...el.querySelectorAll(".role-long")].every((r) => r.offsetParent === null),
         heightPct: el.getBoundingClientRect().height / window.innerHeight,
       };
     });
@@ -38,6 +40,9 @@ export default async function testSummaryCompact({ baseURL, createContext }) {
     }
     if (!compact.gridVisible || !compact.spotVisible) {
       throw new Error("floating 中に 必要勝率/RP/BF or 局面の1行 (スタック) が消えている");
+    }
+    if (compact.shortRoles.length !== 2 || compact.shortRoles[0] !== "オールイン" || !compact.longRolesHidden) {
+      throw new Error(`floating 中にオールイン → コールの短い役割が出ていない: ${JSON.stringify(compact.shortRoles)}`);
     }
     if (compact.heightPct > 0.15) {
       throw new Error(`floating 中の占有率が想定超え: ${(compact.heightPct * 100).toFixed(0)}%`);

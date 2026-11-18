@@ -66,18 +66,21 @@ describe("サマリーの視点と役割", () => {
     expect(metrics).toContain("4.4");
   });
   it.each([
-    ["callBack", "オールイン", "コールを検討"],
-    ["pushBack", "コールを想定", "オールインを検討"],
-  ] as const)("%sでも相手が上・自分が下", async (direction, villainRole, heroRole) => {
+    ["callBack", "villain", "hero"],
+    ["pushBack", "hero", "villain"],
+  ] as const)("%s: オールインする人が先、コールする人が後に並ぶ", async (direction, first, second) => {
     const { renderHeroSummary } = await import("../src/heroSummary.js");
     renderHeroSummary({ ...SCENARIO, rangeVerdict: { ...SCENARIO.rangeVerdict, direction } });
     const rows = document.querySelectorAll(".hero-summary-row");
-    expect(rows[0]?.classList.contains("villain")).toBe(true);
-    expect(rows[0]?.textContent).toContain(villainRole);
-    expect(rows[0]?.textContent).toContain("14");
-    expect(rows[1]?.classList.contains("hero")).toBe(true);
-    expect(rows[1]?.textContent).toContain(heroRole);
-    expect(rows[1]?.textContent).toContain("18");
+    expect(rows[0]?.classList.contains(first)).toBe(true);
+    expect(rows[1]?.classList.contains(second)).toBe(true);
+    // 先頭はオールイン、後ろはコール (長い形・スクロール中の短い形とも)
+    expect(rows[0]?.querySelector(".role-long")?.textContent).toContain("オールイン");
+    expect(rows[0]?.querySelector(".role-short")?.textContent).toBe("オールイン");
+    expect(rows[1]?.querySelector(".role-long")?.textContent).toContain("コール");
+    expect(rows[1]?.querySelector(".role-short")?.textContent).toContain("コール");
+    expect(document.querySelector(".hero")?.textContent).toContain("18");
+    expect(document.querySelector(".villain")?.textContent).toContain("14");
     const reference = document.querySelector(".hero-summary-push-note");
     if (direction === "pushBack") expect(reference?.textContent).toContain("コールする場合");
     else expect(reference).toBeNull();

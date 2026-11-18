@@ -85,23 +85,29 @@ export function renderHeroSummary(a: HeroSummaryArg): void {
   const villainPos = hasVillain ? players[a.villainIndex]?.position || "—" : "—";
 
   const bfClass = bfColorClass(a.bf);
-  const heroRole = a.rangeVerdict.direction === "callBack" ? "calc.summary.considerCall" : "calc.summary.considerPush";
-  const villainRole = a.rangeVerdict.direction === "callBack" ? "calc.summary.allIn" : "calc.summary.assumedCall";
+  const heroPushes = a.rangeVerdict.direction === "pushBack";
+  const heroRole = heroPushes ? "calc.summary.considerPush" : "calc.summary.considerCall";
+  const villainRole = heroPushes ? "calc.summary.assumedCall" : "calc.summary.allIn";
+  // スクロール中の短い役割。長い方は隠れるので、どちらがオールインかはこれで分かるようにする。
+  const heroRoleShort = heroPushes ? "calc.summary.roleShort.push" : "calc.summary.roleShort.callQ";
+  const villainRoleShort = heroPushes ? "calc.summary.roleShort.call" : "calc.summary.roleShort.push";
+  const roleHtml = (long: string, short: string): string =>
+    `<span class="hero-summary-role"><span class="role-long">${t(long)}</span><span class="role-short">${t(short)}</span></span>`;
 
-  // 局面は1行で: 相手 → 自分 (役割つき)。入力欄はこのカードのすぐ上にある。
+  // 局面は1行で、動く順 (オールインする人 › コールする人) に並べる。入力欄はこのカードのすぐ上にある。
   const villainRow = hasVillain
     ? `
       <div class="hero-summary-row villain">
         <span class="hero-summary-row-label">${t("calc.summary.villain")}</span>
         <span class="hero-summary-row-stat">${villainPos}<span class="hero-summary-row-stack"> ${villainStack}<span class="unit">BB</span></span></span>
-        <span class="hero-summary-role">${t(villainRole)}</span>
+        ${roleHtml(villainRole, villainRoleShort)}
       </div>`
     : `<div class="hero-summary-row villain muted-row">${t("calc.summary.villainUnset")}</div>`;
   const heroRow = `
       <div class="hero-summary-row hero">
         <span class="hero-summary-row-label">${t("calc.summary.hero")}</span>
         <span class="hero-summary-row-stat">${heroPos}<span class="hero-summary-row-stack"> ${heroStack}<span class="unit">BB</span></span></span>
-        ${hasVillain ? `<span class="hero-summary-role">${t(heroRole)}</span>` : ""}
+        ${hasVillain ? roleHtml(heroRole, heroRoleShort) : ""}
       </div>`;
 
   // 初回 (オンボーディング未完了) はサンプル局面が説明なく表示されるため、
@@ -120,9 +126,9 @@ export function renderHeroSummary(a: HeroSummaryArg): void {
   heroSummaryEl.innerHTML = `
     <div class="hero-summary-body">
       <div class="hero-summary-spot">
-        ${villainRow}
+        ${heroPushes && hasVillain ? heroRow : villainRow}
         <span class="hero-summary-arrow" aria-hidden="true">›</span>
-        ${heroRow}
+        ${heroPushes && hasVillain ? villainRow : heroRow}
         ${sampleBadge}
       </div>
       ${a.rangeVerdict.direction === "pushBack" ? `<p class="hint hero-summary-push-note">${t("calc.summary.pushReference")}</p>` : ""}
