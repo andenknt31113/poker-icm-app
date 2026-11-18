@@ -781,3 +781,12 @@
 - 例（例題「9人卓」、全員の首 10）: 必要勝率 59.8% → KO 47.1% / PKO 49.5%。
 - 検証: 型チェック、単体 core 112 + playground 361、ビルド、E2E 18 件成功（バウンティの E2E を追加: 無料はペイウォール、Pro は必要勝率が下がる・再読み込みで残る・「なし」で戻る）。スマホ幅の画面で入力欄の見た目とコンソールエラー 0 件を確認。
 - 未確認・残り: iOS の実機・シミュレーター。他のバウンティ対応ツールとの数字の突き合わせ。利用規約と App Store の説明文・課金の説明にはバウンティをまだ書いていない（規約は「…などは Pro」の範囲）。3人以上の同時オールインでの引き分け、ミステリーバウンティの中身は扱わない（平均額を入れてもらう）。
+
+## 2026-11-18: 1.5(1) を審査提出（バウンティ対応）
+
+- 結果: `MARKETING_VERSION` を 1.5 に上げ、署名付き Archive（`artifacts/release-1.5/PokerICM-1.5-build1.xcarchive`、1.5 / 1、同梱の Web 資産は build 76f6366）を App Store Connect へアップロード（14:01 Upload succeeded、処理済み VALID、build id 68c96149-b060-4173-b687-009cda0cf32b）。1.5 を審査提出し WAITING_FOR_REVIEW（手動リリース）。
+- ASC: version id 19dab166-bbe3-4292-9a9f-b8e1179ef702 / ja loc ee779b8b-01b6-49a5-8464-e7acf8034008 / en-US loc 95cb056a-322c-4328-8ad6-7d1b145dedce / reviewDetail 8adf6ad2-7de7-4417-afef-1ba684c046e3 / reviewSubmission f435d4fc-8aa0-49b4-a3d2-8ae2ad945658。送った内容は `artifacts/release-1.5/asc/`、文面は `docs/RELEASE_1_5.md`。
+- ストア文面: 更新説明（ja / en）を登録。説明文にバウンティの節と Pro の範囲を追加し、日本語の「プッシュレンジ」「押す」を「オールイン」に直した。審査メモを 1.5 の内容に書き直した。名前・サブタイトル・キーワード・スクショ（各言語 iPhone 5 / iPad 5、COMPLETE）は 1.4.2 から引き継ぎ。
+- 検証: シミュレーター（iPhone 17、Release）でバウンティ行、無料で KO を押したときの課金画面、Pro 状態で KO・全員 10 を入れたときの必要勝率（49.8% → 42.9%）、Nash の表示を確認（`artifacts/release-1.5/sim-*.png`）。Pro 状態は検証用にコピーした .app に開発用の裏口を仕込んで作った（Archive には入れていない）。Archive は codesign 成功、同梱 public は `playground/dist` と一致。
+- 未確認: 実機、iPad のシミュレーター、購入・復元、PKO のシミュレーター表示、他のバウンティ対応ツールとの数字の突き合わせ。
+- 残件: 審査結果待ち。承認後の公開は本人の指示を確認してから（POST /v1/appStoreVersionReleaseRequests）。課金アイテム（pro_lifetime）の説明と利用規約にはバウンティを書いていない。ストアスクショにバウンティの画面は無い。
