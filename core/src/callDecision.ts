@@ -1,4 +1,4 @@
-import { calculateICM } from "./icm.js";
+import { equitiesWithBounty, type BountySpec } from "./bounty.js";
 import type { Payouts, Stacks } from "./types.js";
 import type { PotOddsPosition } from "./potOdds.js";
 
@@ -51,6 +51,8 @@ export interface ExactCallEquityInput {
   readonly bb: number;
   /** ante 合計 (BB ante 構造のため BB が全額負担)。 */
   readonly ante: number;
+  /** バウンティ。渡すと、飛ばしたときの受け取りと残っている首の取り分を $ に足す。 */
+  readonly bounty?: BountySpec;
 }
 
 export interface ExactCallEquityResult {
@@ -91,6 +93,7 @@ export function calculateExactCallEquity(
     sb,
     bb,
     ante,
+    bounty,
   } = input;
 
   if (heroIndex === villainIndex) {
@@ -183,9 +186,13 @@ export function calculateExactCallEquity(
   stacksLose[villainIndex] = villainLive - matched + pot;
   applyThirdPartySb(stacksLose);
 
-  const equityFold = calculateICM(stacksFold, payouts)[heroIndex]!;
-  const equityWin = calculateICM(stacksWin, payouts)[heroIndex]!;
-  const equityLose = calculateICM(stacksLose, payouts)[heroIndex]!;
+  const equityFold = equitiesWithBounty(stacksFold, payouts, bounty)[heroIndex]!;
+  const equityWin = equitiesWithBounty(stacksWin, payouts, bounty, [
+    { winner: heroIndex, loser: villainIndex },
+  ])[heroIndex]!;
+  const equityLose = equitiesWithBounty(stacksLose, payouts, bounty, [
+    { winner: villainIndex, loser: heroIndex },
+  ])[heroIndex]!;
 
   const denom = equityWin - equityLose;
   // 勝っても $ エクイティが増えない (payouts 頭打ち / サテライトロック等):

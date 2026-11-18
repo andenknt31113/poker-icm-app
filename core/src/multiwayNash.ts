@@ -19,6 +19,7 @@
  */
 
 import { calculateICM } from "./icm.js";
+import { equitiesWithBounty, type BountySpec, type Knockout } from "./bounty.js";
 import type { ComboWeightFn, HandLabel } from "./nash.js";
 import type { Payouts, Stacks } from "./types.js";
 
@@ -54,6 +55,8 @@ export interface MultiwayPushFoldInput {
    * 選ぶ続きの局面を別に解いてあれば、その結果 (values) を渡すと、降りたあとの攻防まで入る。
    */
   readonly foldEquities?: readonly number[];
+  /** バウンティ。渡すと、飛ばしたときの受け取りと残っている首の取り分を $ に足す。 */
+  readonly bounty?: BountySpec;
 }
 
 export interface MultiwayPushFoldResult {
@@ -140,10 +143,10 @@ function validate(input: MultiwayPushFoldInput): void {
 export function buildMultiwayTerminals(
   input: Pick<
     MultiwayPushFoldInput,
-    "stacks" | "payouts" | "pusherIndex" | "callerIndices" | "blinds" | "antes" | "foldWinnerIndex" | "foldEquities"
+    "stacks" | "payouts" | "pusherIndex" | "callerIndices" | "blinds" | "antes" | "foldWinnerIndex" | "foldEquities" | "bounty"
   >,
 ): MultiwayTerminals {
-  const { stacks, payouts, pusherIndex, callerIndices, blinds, antes, foldWinnerIndex, foldEquities } = input;
+  const { stacks, payouts, pusherIndex, callerIndices, blinds, antes, foldWinnerIndex, foldEquities, bounty } = input;
   if (foldEquities && foldEquities.length !== stacks.length) {
     throw new Error("MultiwayNash: foldEquities の長さが stacks と一致しません");
   }
@@ -179,12 +182,13 @@ export function buildMultiwayTerminals(
     loseStacks.push(lose);
   }
 
-  const icm = (s: readonly number[]): number[] => calculateICM(s.map((v) => Math.max(0, v)), payouts).slice();
+  const icm = (s: readonly number[], knockouts: readonly Knockout[] = []): number[] =>
+    equitiesWithBounty(s, payouts, bounty, knockouts);
   return {
     fold: foldEquities ? foldEquities.slice() : icm(foldStacks),
     steal: icm(stealStacks),
-    pusherWins: winStacks.map(icm),
-    pusherLoses: loseStacks.map(icm),
+    pusherWins: winStacks.map((s, k) => icm(s, [{ winner: pusherIndex, loser: callerIndices[k]! }])),
+    pusherLoses: loseStacks.map((s, k) => icm(s, [{ winner: callerIndices[k]!, loser: pusherIndex }])),
     stacks: { fold: foldStacks, steal: stealStacks, pusherWins: winStacks, pusherLoses: loseStacks },
   };
 }

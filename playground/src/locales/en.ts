@@ -151,6 +151,20 @@ export const en: Record<string, string> = {
   "calc.summary.chipOnly": "Chips only: {v}%",
   "setup.blinds.hint": "Stacks are in BB units, so BB is fixed at 1. For ante games, enter the table total.",
 
+  // ===== Bounty (setupBounty.ts) =====
+  "setup.bounty.h2": "Bounty",
+  "setup.bounty.mode.aria": "Bounty format",
+  "setup.bounty.mode.off": "None",
+  "setup.bounty.mode.ko": "KO",
+  "setup.bounty.mode.pko": "PKO",
+  "setup.bounty.hint": "Enter what you win for knocking each player out, in the same unit as the payouts. KO pays the full amount; PKO pays half in cash and adds half to your own bounty.",
+  "setup.bounty.all.label": "Same for everyone",
+  "setup.bounty.all.apply": "Apply",
+  "setup.bounty.amount.aria": "Bounty on {name}",
+  "setup.bounty.summary.locked": "🔒 Pro",
+  "setup.bounty.summary.off": "None",
+  "setup.bounty.summary.empty": "enter amounts",
+
 
   // ===== index.html: 計算結果 - ICM エクイティ =====
   "chop.h2": "If you chop (make a deal)",
@@ -340,7 +354,7 @@ export const en: Record<string, string> = {
   "guide.close.aria": "Close",
   // アプリ版のみ表示 (guide.ts proNoteHtml)。価格は書かない。
   "guide.proNote.html":
-    "ℹ️ Examples, results and Nash are all free. <strong>Tables with up to 4 players are fully editable (stacks and payouts)</strong>. Editing tables with 5+ players and saving spots or payouts are 🔒 Pro (one-time purchase).",
+    "ℹ️ Examples, results and Nash are all free. <strong>Tables with up to 4 players are fully editable (stacks and payouts)</strong>. Editing tables with 5+ players, saving spots or payouts, and bounty (KO / PKO) calculations are 🔒 Pro (one-time purchase).",
   "guide.body.html": `
         <p class="guide-intro">
           This tool focuses on short-stack (~20bb) all-in spots.
@@ -392,6 +406,18 @@ export const en: Record<string, string> = {
             </ol>
           </div>
         </details>
+        <details class="howto">
+          <summary>💰 Calculator: Bounty (KO / PKO) — what it does & how to use 🔒 Pro</summary>
+          <div class="howto-body">
+            <p>Adds knockout bounties to the calculation. Required equity, the hand chart, BF and Nash all reflect them.</p>
+            <ol>
+              <li>Open the “Bounty” row in the spot card and choose KO or PKO</li>
+              <li>Enter the bounty on each player in the same unit as the payouts (“Same for everyone” fills them all)</li>
+              <li>When you cover the villain, your required equity drops, so both calling and shoving get wider</li>
+            </ol>
+            <p class="hint">If your payouts are in %, enter bounties in the same % unit (e.g. 2 for a bounty worth 2% of the prize pool).</p>
+          </div>
+        </details>
         <details class="howto" data-feature="practice">
           <summary>🎲 Practice — what it does & how to use</summary>
           <div class="howto-body">
@@ -413,6 +439,7 @@ export const en: Record<string, string> = {
               <li><strong>Hand equity</strong> comes from a 169 × 169 matchup table (1,000,000 simulated deals per matchup), weighted for the cards your hand removes.</li>
               <li><strong>Nash</strong> solves the push-or-fold / call-or-fold equilibrium in prize equity, including calls from every player still behind the shover and one over-call. Three-way all-in equities come from a precomputed table of about 820,000 hand triples.</li>
               <li>Blinds assume a <strong>big blind ante</strong> (the BB posts the ante for the table).</li>
+              <li><strong>Bounties (Pro)</strong> add two things to prize equity: (1) what you collect on the spot for knocking the villain out in this hand (the full amount in KO, half in PKO), and (2) your share of the bounties still on the table (chip share × the remaining total). The half that goes onto your own head in a PKO is counted inside (2).</li>
             </ul>
             <h4>What is not calculated</h4>
             <ul>
@@ -420,6 +447,7 @@ export const en: Record<string, string> = {
               <li><strong>Future hands are ignored.</strong> By the nature of ICM, upcoming blinds and skill differences are not included.</li>
               <li><strong>Options other than all-in</strong> (2BB opens, limps, 3-bets) are not handled. Shoving results are meant for effective stacks of 12BB or less and are shown as reference only above 20BB.</li>
               <li><strong>Up to 9 players.</strong> Multi-table bubbles cannot be entered.</li>
+              <li><strong>Bounty approximation</strong>: who eventually collects the remaining bounties is assumed to follow chip share. For mystery bounties, enter the average value. Split pots are not modeled.</li>
               <li>The villain’s <strong>“Top X%” is ordered by equity against a random hand</strong>. Real villains may include more suited connectors and small pairs; use “Custom edit” to pick their range directly.</li>
             </ul>
             <h4>What has been checked</h4>
@@ -628,6 +656,8 @@ export const en: Record<string, string> = {
   "calc.summary.aroundHtml": "<span>👥 Around <strong>{stacks}</strong> BB</span>",
   "calc.summary.bfLabel": "BF ⓘ",
   "calc.eq.approxNote": "With a manually entered call amount, or when no seat is the BB, this is an estimate based on the Bubble Factor.",
+  "calc.eq.bountyNote.ko": "Includes bounties (KO). When you cover the villain, your required equity drops accordingly.",
+  "calc.eq.bountyNote.pko": "Includes bounties (PKO). When you cover the villain, your required equity drops accordingly.",
   "calc.summary.reqLabel": "Req. eq ⓘ", // fable レビュー済: ピル幅優先の短縮形
   "calc.summary.rpLabel": "RP ⓘ",
   "calc.summary.verdict.call": "Assuming they shove {villain}% of hands, you can call with about <strong>{hero}%</strong> of hands",
@@ -852,6 +882,7 @@ export const en: Record<string, string> = {
   "paywall.feature.editStacks": "Edit tables with 5+ players freely (stacks and payouts)",
   "paywall.feature.replay": "Check required equity, hand charts and Nash with your own numbers, up to 9 players",
   "paywall.feature.save": "Save spots and payouts and reload them anytime",
+  "paywall.feature.bounty": "Required equity, hand charts and Nash with bounties (KO / PKO)",
   "paywall.price": "Price: {price}",
   "paywall.cta.upgrade": "Upgrade to Pro",
   "paywall.cta.restore": "Restore purchases",

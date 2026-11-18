@@ -31,6 +31,7 @@ import testWorkspaceFlow from "./tests/14-workspace-flow.mjs";
 import testNashInvalidation from "./tests/15-nash-invalidation.mjs";
 import testCompactUsability from "./tests/16-compact-usability.mjs";
 import testPracticeHidden from "./tests/17-practice-hidden.mjs";
+import testBounty from "./tests/18-bounty.mjs";
 
 async function main() {
   const t0 = Date.now();
@@ -108,6 +109,7 @@ async function main() {
   ];
 
   let results = [];
+  tests.push({ name: "バウンティ: Pro 限定・必要勝率への反映・保存", run: () => testBounty({ baseURL, createContext }) });
   tests.push({ name: "Nash: 条件変更で旧結果を消去して再計算", run: () => testNashInvalidation({ baseURL, createContext }) });
   tests.push({ name: "新しい画面: 入力→レンジ確認→練習・再読み込み", run: () => testWorkspaceFlow({ baseURL, createContext }) });
   try {

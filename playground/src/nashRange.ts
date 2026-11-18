@@ -4,7 +4,7 @@
 //   - 押す人の後ろに 2 人以上残っているときは、全員のコールを入れた多人数モデル
 //     (core solveMultiwayPushFold。2 人目のコール = オーバーコールは扱わない)
 //   - 後ろが 1 人、またはポジション未設定の卓は、従来の 2 人モデル (solveHUNash)
-import { solveHUNash, solveMultiwayPushFold, solveOvercallPushFold, type Payouts } from "@poker-icm/core";
+import { solveHUNash, solveMultiwayPushFold, solveOvercallPushFold, type BountySpec, type Payouts } from "@poker-icm/core";
 import { ALL_169_HANDS, type HandNotation } from "./handRanking.js";
 import { huEquity } from "./huEquityMatrix.js";
 import { comboCountVsHero } from "./rangeEquity.js";
@@ -42,10 +42,11 @@ export function solveSpotNash(
   sb: number,
   bb: number,
   totalAnte: number,
+  bounty?: BountySpec,
 ): SpotNashResult {
   const multi = buildMultiwaySpot(table, pusherIndex, sb, bb, totalAnte);
   if (multi && multi.callerIndices.length > 1 && multi.callerIndices.includes(callerIndex)) {
-    const all = solvePusherNash(table, payouts, pusherIndex, sb, bb, totalAnte)!;
+    const all = solvePusherNash(table, payouts, pusherIndex, sb, bb, totalAnte, bounty)!;
     const mine = all.callers.find((caller) => caller.index === callerIndex)!;
     return {
       pushFreq: new Map([...all.pushRange].map((hand) => [hand, 1])),
@@ -70,6 +71,7 @@ export function solveSpotNash(
     pusherBlind: spot.pusherBlind,
     callerBlind: spot.callerBlind,
     deadMoney: spot.deadMoney,
+    bounty,
     huEquity,
     allHands: ALL_169_HANDS,
     // カードリムーバル込みのコンボ重みで best response を厳密化（被搾取度を低減）。
@@ -100,11 +102,12 @@ export function nashRangeForSpot(
   bb: number,
   totalAnte: number,
   want: "push" | "call",
+  bounty?: BountySpec,
 ): Set<HandNotation> | null {
   if (pusherIndex < 0 || callerIndex < 0 || pusherIndex === callerIndex) return null;
   if (payouts.length === 0 || !(sb > 0) || !(bb > 0) || !(totalAnte >= 0)) return null;
   try {
-    const result = solveSpotNash(table, payouts, pusherIndex, callerIndex, sb, bb, totalAnte);
+    const result = solveSpotNash(table, payouts, pusherIndex, callerIndex, sb, bb, totalAnte, bounty);
     return new Set(want === "push" ? result.pushRange : result.callRange);
   } catch {
     return null;
@@ -143,6 +146,7 @@ function solveNode(
   multi: MultiwaySpot,
   bb: number,
   foldEquities: readonly number[] | undefined,
+  bounty: BountySpec | undefined,
 ): PusherNash {
   const common = {
     stacks: table.map((seat) => seat.stack),
@@ -153,6 +157,7 @@ function solveNode(
     antes: multi.antes,
     foldWinnerIndex: multi.foldWinnerIndex,
     foldEquities,
+    bounty,
     huEquity,
     allHands: ALL_169_HANDS,
     comboWeight: comboCountVsHero,
@@ -230,6 +235,7 @@ export function createNashChain(
   sb: number,
   bb: number,
   totalAnte: number,
+  bounty?: BountySpec,
 ): NashChain | null {
   const pushers = pusherOrder(table);
   if (!pushers || pushers.length === 0) return null;
@@ -242,7 +248,7 @@ export function createNashChain(
         const pusher = pushers[cursor--]!;
         const multi = buildMultiwaySpot(table, pusher, sb, bb, totalAnte);
         if (!multi) continue;
-        const result = solveNode(table, payouts, multi, bb, foldEquities);
+        const result = solveNode(table, payouts, multi, bb, foldEquities, bounty);
         foldEquities = result.values;
         return result;
       }
@@ -263,8 +269,9 @@ export function solvePusherNash(
   sb: number,
   bb: number,
   totalAnte: number,
+  bounty?: BountySpec,
 ): PusherNash | null {
-  const chain = createNashChain(table, payouts, sb, bb, totalAnte);
+  const chain = createNashChain(table, payouts, sb, bb, totalAnte, bounty);
   if (!chain || !chain.pushers.includes(pusherIndex)) return null;
   for (let result = chain.next(); result; result = chain.next()) {
     if (result.pusherIndex === pusherIndex) return result;

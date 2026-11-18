@@ -1,4 +1,5 @@
-import { calculateICM } from "@poker-icm/core";
+import { equitiesWithBounty, type Knockout } from "@poker-icm/core";
+import { activeBounty } from "./bountyState.js";
 import {
   ALL_169_HANDS,
   topRangeByComboPct,
@@ -104,18 +105,23 @@ function computePushBackRange(villainCallRange: Set<HandNotation>): PushBackResu
   }
   const matched = Math.min(baseStacks[heroIdx]!, baseStacks[villainIdx]!);
 
-  function icmAt(hStack: number, vStack: number): number {
+  const bounty = activeBounty();
+  function icmAt(hStack: number, vStack: number, knockouts: readonly Knockout[] = []): number {
     const s = baseStacks.slice();
     s[heroIdx] = Math.max(0, hStack);
     s[villainIdx] = Math.max(0, vStack);
-    return calculateICM(s, payouts)[heroIdx]!;
+    return equitiesWithBounty(s, payouts, bounty, knockouts)[heroIdx]!;
   }
 
   // hero(=pusher) 視点の各シナリオ ICM
   const foldEq = icmAt(baseStacks[heroIdx]! - pusherBlind, baseStacks[villainIdx]! + pusherBlind + deadMoney);
   const stealEq = icmAt(baseStacks[heroIdx]! + callerBlind + deadMoney, baseStacks[villainIdx]! - callerBlind);
-  const winEq = icmAt(baseStacks[heroIdx]! + matched + deadMoney, baseStacks[villainIdx]! - matched);
-  const loseEq = icmAt(baseStacks[heroIdx]! - matched, baseStacks[villainIdx]! + matched + deadMoney);
+  const winEq = icmAt(baseStacks[heroIdx]! + matched + deadMoney, baseStacks[villainIdx]! - matched, [
+    { winner: heroIdx, loser: villainIdx },
+  ]);
+  const loseEq = icmAt(baseStacks[heroIdx]! - matched, baseStacks[villainIdx]! + matched + deadMoney, [
+    { winner: villainIdx, loser: heroIdx },
+  ]);
 
   // コンボ重みは hero の実カードを考慮したカードリムーバル込みで数える
   // (hero が A を持てば villain の AX コンボは減る → fold 率が上がる)。
@@ -618,6 +624,7 @@ export function initHandRange(onChange: () => void): void {
       Number(nashBbInput.value) || DEFAULT_BB,
       Number(nashAnteInput.value) || 0,
       villainPushes ? "push" : "call",
+      activeBounty(),
     );
     if (note) note.classList.remove("hidden");
     if (!range) {

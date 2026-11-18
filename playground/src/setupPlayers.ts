@@ -9,6 +9,8 @@ import { isPro, FREE_MAX_PLAYERS } from "./entitlement.js";
 import { openPaywall } from "./paywall.js";
 import { recompute } from "./calculator.js";
 import { checkpointSetup } from "./setupUndo.js";
+import { sanitizeBounty } from "./bountyState.js";
+import { renderBounty } from "./setupBounty.js";
 import { renderPayouts } from "./setupPayouts.js";
 import {
   players,
@@ -81,15 +83,17 @@ export function renderPlayers(): void {
     players.length >= MAX_PLAYERS
       ? tr("setup.players.addMax", { n: MAX_PLAYERS })
       : tr("setup.players.add");
+  // 人数・位置が変わると、バウンティの入力行も変わる
+  renderBounty();
 }
 
 /** プレイヤー配列を丸ごと置き換える (プリセット適用・ユーザーシナリオ復元の共通処理)。 */
 export function replacePlayers(
-  next: readonly { stack: number; role: Role; position: Position }[],
+  next: readonly { stack: number; role: Role; position: Position; bounty?: number }[],
 ): void {
   players.length = 0;
   for (const p of next) {
-    players.push({ id: allocPlayerId(), stack: p.stack, role: p.role, position: p.position });
+    players.push({ id: allocPlayerId(), stack: p.stack, role: p.role, position: p.position, bounty: sanitizeBounty(p.bounty) });
   }
   // 卓を丸ごと入れ替えたので、次のポジション選択はリング自動連動に戻す
   ringAutoLinkArmed = true;
@@ -144,6 +148,7 @@ function addPlayer(): void {
     stack: Math.round(avg * 10) / 10,
     role: "other",
     position,
+    bounty: 0,
   });
   repairPositions();
   renderPlayers();

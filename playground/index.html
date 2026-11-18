@@ -120,6 +120,29 @@
           </div>
         </details>
 
+        <details class="spot-fold bounty-card" id="bounty-fold">
+          <summary>
+            <span class="spot-fold-label" data-i18n="setup.bounty.h2">バウンティ</span>
+            <span class="spot-fold-value" id="bounty-summary"></span>
+          </summary>
+          <div class="spot-fold-body">
+            <div class="presets bounty-modes" role="group" aria-label="バウンティの形式" data-i18n-attr="aria-label:setup.bounty.mode.aria">
+              <button type="button" data-bounty-mode="off" aria-pressed="true" data-i18n="setup.bounty.mode.off">なし</button>
+              <button type="button" data-bounty-mode="ko" aria-pressed="false" data-i18n="setup.bounty.mode.ko">KO</button>
+              <button type="button" data-bounty-mode="pko" aria-pressed="false" data-i18n="setup.bounty.mode.pko">PKO</button>
+            </div>
+            <p class="hint" data-i18n="setup.bounty.hint">相手を飛ばすともらえる額を、賞金と同じ単位で入れます。KO は全額、PKO は半分がその場の現金で、半分が自分の首に乗ります。</p>
+            <div id="bounty-inputs" hidden>
+              <div class="bounty-all">
+                <label for="bounty-all" data-i18n="setup.bounty.all.label">全員に同じ額</label>
+                <input id="bounty-all" type="number" inputmode="decimal" min="0" step="1" placeholder="0" />
+                <button id="bounty-all-apply" type="button" class="save-btn" data-i18n="setup.bounty.all.apply">入れる</button>
+              </div>
+              <div id="bounty-list" class="bounty-list"></div>
+            </div>
+          </div>
+        </details>
+
         <div id="setup-examples" class="spot-fold-wrap">
           <details class="spot-fold" id="scenario-presets-toggle">
             <summary>

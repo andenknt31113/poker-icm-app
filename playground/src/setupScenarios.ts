@@ -24,6 +24,7 @@ import {
 import { renderPlayers, replacePlayers } from "./setupPlayers.js";
 import { setPayouts } from "./setupPayouts.js";
 import { escapeHtml } from "./html.js";
+import { getBountyMode, setBountyMode, isBountyMode, sanitizeBounty } from "./bountyState.js";
 import { STORAGE_KEYS, readJson, writeJson } from "./storage.js";
 
 /** 保存するシナリオ名の最大長。 */
@@ -32,7 +33,9 @@ const USER_SCENARIO_NAME_MAX = 30;
 // ===== シナリオプリセット =====
 
 interface Scenario {
-  players: { stack: number; role: Role; position: Position }[];
+  players: { stack: number; role: Role; position: Position; bounty?: number }[];
+  /** バウンティの設定 (off / ko / pko)。例題と古い保存データには無い (= off)。 */
+  bountyMode?: string;
   payouts: number[];
   sb: number;
   bb: number;
@@ -147,6 +150,8 @@ function applyScenario(scenarioId: string): void {
   const scenario = SCENARIOS[scenarioId];
   if (!scenario) return;
   checkpointSetup();
+  // 例題にバウンティは無い
+  setBountyMode("off");
   // プレイヤーリスト置換
   replacePlayers(scenario.players);
   renderPlayers();
@@ -188,7 +193,9 @@ function captureCurrentScenario(): Scenario {
       stack: p.stack,
       role: p.role,
       position: p.position,
+      bounty: sanitizeBounty(p.bounty),
     })),
+    bountyMode: getBountyMode(),
     payouts: payoutsArr.slice(),
     sb: sbV,
     bb: bbV,
@@ -255,6 +262,7 @@ export function initScenariosUI(): void {
       const s = list[idx]?.s;
       if (s) {
         checkpointSetup();
+        setBountyMode(isBountyMode(s.bountyMode) ? s.bountyMode : "off");
         replacePlayers(s.players);
         renderPlayers();
         setPayouts(s.payouts);

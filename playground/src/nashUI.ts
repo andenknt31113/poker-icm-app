@@ -6,6 +6,7 @@ import { hasHUMatrix } from "./huEquityMatrix.js";
 import { renderGrid } from "./grid.js";
 import { pushDepthTier, type PushDepthTier } from "./pushSpot.js";
 import { solveSpotNash } from "./nashRange.js";
+import { activeBounty, bountyKey } from "./bountyState.js";
 import { ensureNashTable } from "./nashTableUI.js";
 import { fmt } from "./format.js";
 import { t } from "./i18n.js";
@@ -116,6 +117,7 @@ function currentInputKey(): string {
   return JSON.stringify([
     players.map(({ stack, role, position }) => [stack, role, position]),
     payoutsInput.value, nashSbInput.value, nashBbInput.value, nashAnteInput.value,
+    bountyKey(),
   ]);
 }
 
@@ -294,7 +296,7 @@ function runNash(): void {
         return;
       }
       // 押す人の後ろに 2 人以上いれば全員のコールを入れて解く (それ以外は 2 人モデル)
-      const result = solveSpotNash(players, payouts, pusherIndex, callerIndex, sb, bb, anteRaw);
+      const result = solveSpotNash(players, payouts, pusherIndex, callerIndex, sb, bb, anteRaw, activeBounty());
 
       // 描画: frequency に応じて濃淡（mixed strategy 表示）
       renderNashGridWithFreq(nashSbGrid, result.pushFreq, "push");

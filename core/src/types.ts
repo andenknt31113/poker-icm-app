@@ -3,6 +3,7 @@
  * 計算コアは数値配列ベースで動くシンプルな関数群とし、
  * 上位（UI）でドメインモデル（Player など）に変換する想定。
  */
+import type { BountySpec } from "./bounty.js";
 
 /** プレイヤーの順位別賞金（0-indexed: payouts[0] = 1位賞金）。 */
 export type Payouts = readonly number[];
@@ -21,6 +22,8 @@ export interface BubbleFactorInput {
   readonly villainIndex: number;
   /** リスクするチップ量。通常は all-in なら min(heroStack, villainStack)。 */
   readonly riskChips: number;
+  /** バウンティ。渡すと、勝ち負けの $ にバウンティぶんを足して BF を出す。 */
+  readonly bounty?: BountySpec;
 }
 
 export interface BubbleFactorResult {
