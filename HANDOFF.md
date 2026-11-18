@@ -797,3 +797,10 @@
 - スクショ: `artifacts/release-1.5/screenshots/{ja,en}/{iphone-6.9,ipad-13}/07-bounty.png`。既定の3人卓、Pro 状態、PKO、額 10 / 25 / 15（必要勝率 42.5%）。Playwright で `playground/dist` を撮った（iPhone 440×956 @3x = 1320×2868、iPad 1032×1376 @2x = 2064×2752）。
 - 検証: 4枚を目視（iPhone ja、iPad en は拡大して確認）。ASC の並び順を読み直して `01-spot 07-bounty 03-range 06-nash 04-prizes 05-chop` を確認。
 - 残件: 審査結果待ち。ほかの5枚は 1.4 / 1.4.1 のときのまま（「押す」の表記、iPad の「STUDY ROOM」が残る）。承認後の公開は本人の指示を確認してから。
+
+## 2026-11-18: 1.5 を自動公開に変更、利用規約にバウンティを追記
+
+- 結果: 本人の指示で、1.5 の releaseType を MANUAL → AFTER_APPROVAL に変更（審査待ちのまま変更できた。承認されたら自動で公開される）。利用規約の Pro の範囲に「バウンティ（KO / PKO）の計算」を追記（`playground/src/legalContent.ts` と `playground/public/legal.html`）。
+- 検証: 型チェック、単体テスト（規約の同期テストを含む）成功。ASC の releaseType を読み直して AFTER_APPROVAL を確認。
+- できなかったこと: 課金アイテム（pro_lifetime）の説明の更新。API は「Cannot edit InAppPurchaseLocalization when it is in ACTIVE state」（409）で拒否。App Store Connect の画面からなら編集できる見込みだが、Chrome が ASC にサインインしておらず未実施。入れる予定だった文面は `artifacts/release-1.5/asc/p-iap-ja.json` / `p-iap-en.json`（ja「5人以上の卓、局面の保存、バウンティ計算を無期限で使えます。」/ en「Lifetime: 5+ player tables, saved spots, bounty calc.」）。
+- 残件: 審査中の 1.5(1) のビルドに入っているアプリ内の規約は前の文面のまま（次のビルドから新しい文面）。公開ページ `/legal` はこの PR のデプロイで新しい文面になる。
