@@ -168,7 +168,10 @@
 /* スクロール中: 1行の局面 + 3つの数字だけ */
 .hero-summary.floating .hero-summary-spot { display: flex; }
 .workspace .hero-summary.floating .hero-summary-spot .hero-summary-row { display: inline-flex; padding: 2px 6px; }
-.hero-summary.floating .hero-summary-role,
+/* 役割はスクロール中も短い形で残す (どちらがオールインか分からなくなるため) */
+.hero-summary-role .role-short { display: none; }
+.hero-summary.floating .hero-summary-role .role-long { display: none; }
+.hero-summary.floating .hero-summary-role .role-short { display: inline; color: var(--muted); font-size: 11px; }
 .hero-summary.floating .hero-summary-sub,
 .hero-summary.floating .hero-summary-push-note,
 .hero-summary.floating .hero-summary-verdict,
