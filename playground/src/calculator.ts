@@ -34,7 +34,7 @@ import {
   nashAnteInput,
   saveState,
 } from "./domRefs.js";
-import { fmt, fmtPct, fmtSigned } from "./format.js";
+import { fmt, fmtInputNumber, fmtPct, fmtSigned } from "./format.js";
 import { renderHeroSummary, hideHeroSummary, initHeroSummary } from "./heroSummary.js";
 import { renderBFMatrix, initBFMatrix } from "./bfMatrix.js";
 import { updatePositionWarn, updateDepthWarn } from "./warnings.js";
@@ -78,9 +78,9 @@ function renderSpotFoldSummaries(): void {
   const blindsEl = document.getElementById("blinds-summary");
   if (blindsEl) {
     blindsEl.textContent = t("setup.blinds.summary", {
-      sb: nashSbInput.value || String(DEFAULT_SB),
-      bb: nashBbInput.value || String(DEFAULT_BB),
-      ante: nashAnteInput.value || "0",
+      sb: fmtInputNumber(nashSbInput.value, String(DEFAULT_SB)),
+      bb: fmtInputNumber(nashBbInput.value, String(DEFAULT_BB)),
+      ante: fmtInputNumber(nashAnteInput.value, "0"),
     });
   }
 }

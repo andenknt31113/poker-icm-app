@@ -2,7 +2,7 @@
 // ユニットテスト。どちらも画面に出る文字列を直接作る純関数で、
 // 非有限値の扱い ("∞" / "—") が UI の取り決めそのものなので固定しておく。
 import { describe, it, expect } from "vitest";
-import { fmt, fmtPct, fmtSigned } from "../src/format.js";
+import { fmt, fmtInputNumber, fmtPct, fmtSigned } from "../src/format.js";
 import { escapeHtml } from "../src/html.js";
 
 describe("fmt", () => {
@@ -86,5 +86,19 @@ describe("escapeHtml", () => {
   it("通常の日本語・空文字はそのまま", () => {
     expect(escapeHtml("バブル 4人卓")).toBe("バブル 4人卓");
     expect(escapeHtml("")).toBe("");
+  });
+});
+
+describe("fmtInputNumber", () => {
+  it("入力欄の余分な 0 を落とす (アンティの 1.0 と 1 を揃える)", () => {
+    expect(fmtInputNumber("1.0", "0")).toBe("1");
+    expect(fmtInputNumber("1", "0")).toBe("1");
+    expect(fmtInputNumber("0.50", "0")).toBe("0.5");
+    expect(fmtInputNumber("0.125", "0")).toBe("0.125");
+  });
+  it("空欄・数値でないときは fallback", () => {
+    expect(fmtInputNumber("", "0")).toBe("0");
+    expect(fmtInputNumber("  ", "1")).toBe("1");
+    expect(fmtInputNumber("abc", "0.5")).toBe("0.5");
   });
 });
