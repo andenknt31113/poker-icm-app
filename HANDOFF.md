@@ -818,3 +818,10 @@
 - 変更: `playground/src/heroSummary.ts` で、自分がオールインする側（pushBack）のときは自分を先に並べる。役割は長い形（オールインを検討 など）と短い形（オールイン / コール / コール？）の2つを持たせ、`calc.css` でスクロール中は短い形だけ出す。文言は `locales/ja.ts` / `en.ts` の `calc.summary.roleShort.*`。
 - 検証: `npm run typecheck`、`npm test`（core 112 / playground 361）、`npm run build`、e2e 18件すべて成功。`heroSummary.test.ts` の並び順テストを新しい順に書き換え、e2e `13-summary-compact` にスクロール中の短い役割の確認を追加。402px 幅で両方向を撮って1行に収まることを確認。
 - 残件: iOS には次のビルド（1.5.1 など）から入る。審査中の 1.5 には入っていない。
+
+## 2026-11-19 アンティ表示の「1.0」と「1」のゆれを直す
+
+- 原因: 局面カードのブラインド行が入力欄の文字をそのまま出していた。`index.html` の初期値は `1.0`、例題や保存した局面を読むと `String(1)` で `1` になり、表示がゆれていた。
+- 変更: `format.ts` に `fmtInputNumber`（数値にして余分な 0 を落とす。空欄・不正値は fallback）を足し、`calculator.ts` のブラインド行（SB / BB / アンティ）で使う。計算には触らない。
+- 検証: `format.test.ts` に2件追加。typecheck、unit（core 112 / playground 363）、build、e2e 18件成功。
+- 残件: iOS には次のビルドから。1.5 は IN_REVIEW（2026-11-19 確認）。課金アイテムの説明は ja / en-US とも APPROVED。

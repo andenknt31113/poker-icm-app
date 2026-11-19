@@ -20,3 +20,12 @@ export function fmtPct(n: number, digits = 1): string {
 export function fmtSigned(n: number, digits = 1): string {
   return (n >= 0 ? "+" : "") + n.toFixed(digits);
 }
+
+/**
+ * 入力欄の数値を、余分な 0 を付けずに出す ("1.0" → "1"、"0.50" → "0.5")。
+ * 空欄や数値でないときは fallback。
+ */
+export function fmtInputNumber(raw: string, fallback: string): string {
+  const n = Number(raw);
+  return raw.trim() !== "" && Number.isFinite(n) ? String(n) : fallback;
+}
