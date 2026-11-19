@@ -826,3 +826,10 @@
 - 検証: `format.test.ts` に2件追加。typecheck、unit（core 112 / playground 363）、build、e2e 18件成功。
 - 残件: iOS には次のビルドから。1.5 は IN_REVIEW（2026-11-19 確認）。課金アイテムの説明は ja / en-US とも APPROVED。
 - 追記: 1.5.1 用のストアスクショを撮り直した（`node playground/e2e/capture-release.mjs artifacts/release-1.5.1/screenshots/{ja,en} {ja,en}`、git 管理外）。「オールイン」表記、上部カードの新しい並び、iPad の「STUDY ROOM」なしを目視で確認。1.5 が審査を抜けたら、01-spot / 03-range / 04-prizes / 05-chop / 06-nash をこれに差し替える（07-bounty は 1.5 のまま）。
+
+## 2026-11-19 1.5.1(1) を審査に提出（自動公開）
+
+- 前提: 1.5 は承認されて公開済み（READY_FOR_SALE）。
+- 結果: `MARKETING_VERSION = 1.5.1`（build 1）で Archive → アップロード → VALID。ASC に 1.5.1（version d1e12047-62cb-46f9-b60a-6f688bf573ac、build 0584f330-5ffe-49cf-8cac-6bb76119fa94）を作り、更新説明（ja / en-US）、スクショ5枚の差し替え（各セット6枚）、審査メモに 1.5.1 の変更を足して提出。reviewSubmission cde82616-eec5-4d61-aefc-c107302b5a54、WAITING_FOR_REVIEW、AFTER_APPROVAL。内容は `docs/RELEASE_1_5_1.md`。
+- 検証: シミュレーター（iPhone 17）で Release ビルドを起動し、スクロール中のカードの「オールイン › コール？」を確認。
+- 残件: 審査結果待ち（承認されたら自動で公開）。実機・iPad・購入と復元は未確認。
