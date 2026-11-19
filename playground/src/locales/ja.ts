@@ -180,10 +180,10 @@ export const ja: Record<string, string> = {
   "result.bf.h2": "BF マップ（全員 vs 全員）",
   "result.bf.hint.html": "行が自分、列が相手。下段が BF、上段は同額を賭け合うときの RP。2人が実効スタックでオールインした場合の値です。",
   "result.bf.matrixTitle": "全員 vs 全員 BF マップ 🆕",
-  "result.bf.matrixHint.html": "\n          縦軸 = Hero（自分）、横軸 = Villain（相手）。\n          上段=1:1ポット時のRisk Premium、下段=BF値。\n        ",
+  "result.bf.matrixHint.html": "\n          縦軸 = Hero（自分）、横軸 = Villain（相手）。上段=1:1ポット時のRisk Premium、下段=BF値。\n        ",
   "result.bf.howto.summary": "📖 表の見方（タップで開く）",
   "result.bf.howto.body.html":
-    "\n            <h4>1. 各セルの数字</h4>\n            <p><strong>下段の BF（Bubble Factor）</strong>がメイン指標。「この相手との勝負は、<strong>負けた痛みが勝った嬉しさの何倍か</strong>」を表す。</p>\n            <ul>\n              <li><strong>1.00</strong> = 痛み＝嬉しさ。チップの価値どおり戦ってよい（ICM圧ゼロ）</li>\n              <li><strong>1.16</strong> = 痛みが 1.16 倍。1:1 のポットなら勝率 50% では足りず、<strong>約 53.7%（+3.7pt）</strong>ないと割に合わない</li>\n              <li><strong>1.41</strong> = 痛みが 1.41 倍。同じ条件で<strong>約 58.5%（+8.5pt）</strong>必要。プレミアハンド級でないと合わない（やばい）</li>\n            </ul>\n            <p><strong>上段の Risk Premium</strong> は、まさにこの「上乗せ分」。コール額＝ポット（1:1オッズ）のとき、50% より<strong>何pt余分に勝率が必要か</strong>をそのまま表示している。</p>\n            <h4>2. 色の意味</h4>\n            <p>色は BF <strong>1.0（黄）→ 2.0 以上（赤）</strong>と連続的に濃くなる。ICM の性質上 <strong>BF が 1.00 を下回ることはない</strong>ため、実際に出るのは黄〜赤の範囲。読み方の目安:</p>\n            <ul>\n              <li>🟡 黄 (BF ≈ 1.0): ICM圧ほぼゼロ、ほぼ cEV 通りに戦ってよい</li>\n              <li>🟠 オレンジ (1.2〜1.5): ICM圧、タイトに</li>\n              <li>🔴 赤 (1.7 前後〜): 超危険、プレミア限定</li>\n            </ul>\n            <h4>3. 戦略的な読み方</h4>\n            <ul>\n              <li><strong>赤いセル</strong>の相手が絡んできたら → 降りる方向にウェイト</li>\n              <li><strong>黄色に近い（BF が 1.0 前後の）セル</strong>の相手 → ややルース寄せOK</li>\n              <li><strong>自分が最短スタック</strong>の行は全体的にBFが低い（=失うものが少ない）→ 比較的気楽に勝負できる</li>\n              <li><strong>チップリーダー対 2番手</strong>のセルは BF が跳ね上がる → リーダー同士の絡みは慎重に（表全体で BF 最大になりやすいのは、2番手がリーダーに絡まれるセル）</li>\n              <li>自分がリーダーでないなら、自分の行の中で<strong>チップリーダーの列</strong>が最も BF が高くなりやすい → 大きいスタックに絡まれた時ほどタイトに（典型的な ICM プレッシャー）</li>\n            </ul>\n            <h4>4. 実戦での使い方</h4>\n            <ol>\n              <li>テーブル着席後、全員のスタックを入力</li>\n              <li>左端の<strong>自分の行</strong>を見て「誰に対してタイト/ルース打つべきか」を把握</li>\n              <li>ハンド中に「あれ、この相手ヤバい？」となったら該当セルを確認</li>\n            </ol>\n            <p class=\"howto-note\">※ 表は左右対称ではない（hero/villain を入れ替えると BF が変わる）。同じチップ移動でも、双方のスタック量と順位状況で $ への影響が違うため（例: ショート側は負けると飛ぶが、カバーしている側は負けても生き残る）。</p>\n          ",
+    "\n            <h4>1. 各セルの数字</h4>\n            <p><strong>下段の BF（Bubble Factor）</strong>がメイン指標。「この相手との勝負は、<strong>負けた痛みが勝った嬉しさの何倍か</strong>」を表す。</p>\n            <ul>\n              <li><strong>1.00</strong> = 痛み＝嬉しさ。チップの価値どおり戦ってよい（ICM圧ゼロ）</li>\n              <li><strong>1.16</strong> = 痛みが 1.16 倍。1:1 のポットなら勝率 50% では足りず、<strong>約 53.7%（+3.7pt）</strong>ないと割に合わない</li>\n              <li><strong>1.41</strong> = 痛みが 1.41 倍。同じ条件で<strong>約 58.5%（+8.5pt）</strong>必要。プレミアハンド級でないと合わない（やばい）</li>\n            </ul>\n            <p><strong>上段の Risk Premium</strong> は、まさにこの「上乗せ分」。コール額＝ポット（1:1オッズ）のとき、50% より<strong>何pt余分に勝率が必要か</strong>をそのまま表示している。</p>\n            <h4>2. 色の意味</h4>\n            <p>色は BF <strong>1.0（黄）→ 2.0 以上（赤）</strong>と連続的に濃くなる。バウンティなしなら ICM の性質上 <strong>BF が 1.00 を下回ることはない</strong>ため、実際に出るのは黄〜赤の範囲（バウンティありで相手を飛ばせるときは 1.00 を下回ることがある）。読み方の目安:</p>\n            <ul>\n              <li>🟡 黄 (BF ≈ 1.0): ICM圧ほぼゼロ、ほぼ cEV 通りに戦ってよい</li>\n              <li>🟠 オレンジ (1.2〜1.5): ICM圧、タイトに</li>\n              <li>🔴 赤 (1.7 前後〜): 超危険、プレミア限定</li>\n            </ul>\n            <h4>3. 戦略的な読み方</h4>\n            <ul>\n              <li><strong>赤いセル</strong>の相手が絡んできたら → 降りる方向にウェイト</li>\n              <li><strong>黄色に近い（BF が 1.0 前後の）セル</strong>の相手 → ややルース寄せOK</li>\n              <li><strong>自分が最短スタック</strong>の行は全体的にBFが低い（=失うものが少ない）→ 比較的気楽に勝負できる</li>\n              <li><strong>チップリーダー対 2番手</strong>のセルは BF が跳ね上がる → リーダー同士の絡みは慎重に（表全体で BF 最大になりやすいのは、2番手がリーダーに絡まれるセル）</li>\n              <li>自分がリーダーでないなら、自分の行の中で<strong>チップリーダーの列</strong>が最も BF が高くなりやすい → 大きいスタックに絡まれた時ほどタイトに（典型的な ICM プレッシャー）</li>\n            </ul>\n            <h4>4. 実戦での使い方</h4>\n            <ol>\n              <li>テーブル着席後、全員のスタックを入力</li>\n              <li>左端の<strong>自分の行</strong>を見て「誰に対してタイト/ルース打つべきか」を把握</li>\n              <li>ハンド中に「あれ、この相手ヤバい？」となったら該当セルを確認</li>\n            </ol>\n            <p class=\"howto-note\">※ 表は左右対称ではない（自分と相手を入れ替えると BF が変わる）。同じチップ移動でも、双方のスタック量と順位状況で $ への影響が違うため（例: ショート側は負けると飛ぶが、カバーしている側は負けても生き残る）。</p>\n          ",
   "result.bf.scrollHint": "→ 横にスクロール",
 
   // ===== index.html: 計算結果 - 必要勝率 =====
@@ -253,7 +253,7 @@ export const ja: Record<string, string> = {
   "hand.callStats.pushBack": "<strong>{n}</strong> 種類・全ハンドの <strong>{pPct}%</strong>（{pushCombos} コンボ）。相手が <strong>{villainPct}%</strong> でコールする前提で、オールインした方が得なハンドです。ボーダー: {marginal} 種類",
   "hand.banner.callerLabel.hero": "hero (自分)",
   "hand.banner.noBehind.html": "\n      ✅ {label}=<strong>{pos}</strong>: 後ろにプレイヤーがいないので、この 1 対 1 モデルがそのまま当てはまります。\n    ",
-  "hand.banner.behind.html": "\n      <details class=\"hand-caveat\">\n        <summary>⚠ {label}=<strong>{pos}</strong>: 後ろの {n} 人ぶんの over-call は未反映 — 実戦はもう少し硬めに</summary>\n        <div class=\"hand-caveat-body\">\n          この計算は「1 対 1 のオールイン」モデルです。{label} の後ろに残っている {n} 人 ({list}) が\n          割り込んでくるリスクは含まれていません。{note}\n        </div>\n      </details>\n    ",
+  "hand.banner.behind.html": "\n      <details class=\"hand-caveat\">\n        <summary>⚠ {label}=<strong>{pos}</strong>: 後ろの {n} 人ぶんのオーバーコールは未反映 — 実戦はもう少し硬めに</summary>\n        <div class=\"hand-caveat-body\">\n          この計算は「1 対 1 のオールイン」モデルです。{label} の後ろに残っている {n} 人 ({list}) が割り込んでくるリスクは含まれていません。{note}\n        </div>\n      </details>\n    ",
   "hand.banner.note.callBack": "ここで「call OK」と出ても実戦ではより硬い range で受けるべきです。",
   "hand.banner.note.pushBack": "ここで「オールインできる」と出ても、実戦では後ろの人にもコールされる可能性があるので、もう少し強いハンドに絞るのが安全です。",
 
@@ -311,12 +311,9 @@ export const ja: Record<string, string> = {
   "practice.tutorial.nextBtn": "次の問題へ →",
 
   // ===== オンボーディング (guide.ts) =====
-  "onboarding.step1.title": "🎰 これは何？",
+  "onboarding.step1.title": "♠ これは何？",
   "onboarding.step1.body": `
-      <p>
-        トーナメントの「チップ枚数」と「賞金への価値」は同じではありません。
-        本アプリはこの <strong>ICM プレッシャー</strong>を、数字で『計算』します。<span data-feature="practice">クイズで『練習』もできます。</span>
-      </p>
+      <p>トーナメントの「チップ枚数」と「賞金への価値」は同じではありません。本アプリはこの <strong>ICM プレッシャー</strong>を数字で計算します。<span data-feature="practice">クイズで練習もできます。</span></p>
       <ul class="onboarding-tab-list">
         <li><span class="onboarding-tab-icon">📊</span> 計算（スタックと賞金を入れると、必要勝率・コールできるハンド・Nash がその場で出る）</li>
         <li data-feature="practice"><span class="onboarding-tab-icon">🎲</span> 練習（クイズで実戦感覚）</li>
@@ -325,20 +322,9 @@ export const ja: Record<string, string> = {
     `,
   "onboarding.step2.title": "⚡ まず触ってみる",
   "onboarding.step2.body": `
-      <p>まずは数字を動かしてみてください。</p>
-      <ol>
-        <li>
-          <strong>「局面」</strong>でスタックを打ち換える（「例題・保存した局面」から選んでも OK）→
-          すぐ下の必要勝率とハンド表を確認する
-        </li>
-        <li data-feature="practice">
-          <strong>🎲 練習</strong>タブでクイズに答えながら感覚を掴む
-        </li>
-      </ol>
-      <p class="hint">
-        困ったときはヘッダー右上の <strong>❓</strong> から、
-        いつでも使い方ガイドと用語解説を開けます。
-      </p>
+      <p>まずは数字を動かしてみてください。<strong>「局面」</strong>でスタックを打ち換える（「例題・保存した局面」から選んでも OK）と、すぐ下に必要勝率とハンド表が出ます。</p>
+      <p data-feature="practice"><strong>🎲 練習</strong>タブでは、クイズに答えながら感覚をつかめます。</p>
+      <p class="hint">困ったときはヘッダー右上の <strong>❓</strong> から、いつでも使い方ガイドと用語解説を開けます。</p>
     `,
   "onboarding.skip": "スキップ",
   "onboarding.next": "次へ →",
@@ -353,7 +339,7 @@ export const ja: Record<string, string> = {
     "ℹ️ 例題・計算結果・Nash はすべて無料。<strong>4人までの卓はスタックも賞金も自由に編集できます</strong>。5人以上の卓の編集、局面・賞金の保存、バウンティ（KO / PKO）の計算は 🔒 Pro（買い切り）です。",
   "guide.body.html": `
         <p class="guide-intro">
-          このツールはショートスタック（〜20bb）のオールイン局面に特化しています。
+          このツールはショートスタック（〜20BB）のオールイン局面に特化しています。
         </p>
         <details class="howto">
           <summary>📊 計算: 局面の入力 — できること・使い方</summary>
@@ -451,7 +437,7 @@ export const ja: Record<string, string> = {
               <li>ICM: 全順列を数える別の実装と 402 局面（2〜9人）で突き合わせ、差は 0.000000001 未満。</li>
               <li>ハンドの勝率: AA vs KK 82.0%、AKo vs QQ 43.2%、AA 対ランダム 85.2% など、よく知られた値と一致。</li>
               <li>Nash: 2人・10BB・勝者総取りで オールイン 58.1% / コール 37.4%。どちらが戦略を変えても 0.001BB も得をしないことを別の計算で確認。</li>
-              <li>3人以上の Nash: HoldemResources の無料 Nash ICM 計算と、3人・10BB の局面で照合（オールイン 33.0% / 32.1%、コール 18.1% / 17.8%、オーバーコール 13.1% / 12.8%、最後の人のコール 24.3% / 24.3%）。差は、押しても降りてもほぼ同じ損得の境界のハンドです。</li>
+              <li>3人以上の Nash: HoldemResources の無料 Nash ICM 計算と、3人・10BB の局面で照合（オールイン 33.0% / 32.1%、コール 18.1% / 17.8%、オーバーコール 13.1% / 12.8%、最後の人のコール 24.3% / 24.3%）。差は、オールインしても降りてもほぼ同じ損得の境界のハンドです。</li>
             </ul>
             <p class="hint">計算結果は判断の目安です。実戦では相手の傾向や後ろの人数も合わせて考えてください。</p>
           </div>
@@ -462,8 +448,7 @@ export const ja: Record<string, string> = {
             <h4>ICM (Independent Chip Model)</h4>
             <p>
               トナメのチップは賞金と1:1では換算できません（<strong>チップ ≠ 賞金価値</strong>）。
-              ICM は、いまのチップ量が賞金にするといくら分かを見積もる計算モデルです。
-              例: ICM% が 25% なら、平均して総賞金の 1/4 を持っていける期待値ということ。
+              ICM は、いまのチップ量が賞金にするといくら分かを見積もる計算モデルです。例: ICM% が 25% なら、平均して総賞金の 1/4 を持っていける期待値ということ。
             </p>
             <h4>Bubble Factor (BF)</h4>
             <p>
@@ -477,8 +462,7 @@ export const ja: Record<string, string> = {
             </p>
             <h4>Nash 均衡</h4>
             <p>
-              オールインする側もコールする側も、片方だけ戦略を変えても得をしない
-              「お互いに搾取されない」オールインかフォールドかの戦略の組み合わせのことです。
+              オールインする側もコールする側も、片方だけ戦略を変えても得をしない「お互いに搾取されない」オールインかフォールドかの戦略の組み合わせのことです。
             </p>
           </div>
         </details>
@@ -486,9 +470,7 @@ export const ja: Record<string, string> = {
           <summary>❓ 「上位 X%」とは</summary>
           <div class="howto-body">
             <p>
-              相手のレンジを決める「上位 X%」は、<strong>ランダムなハンドに対する勝率が高い順</strong>に、全ハンドの組合せの X% ぶんを取ったものです。
-              他のツールの順位（オールイン向きの順位など）とは並びが違うため、<strong>同じ X% でも中身のハンドが一致しないことがあります</strong>。
-              実際の相手に合わせたいときは「カスタム編集」で直接選んでください。
+              相手のレンジを決める「上位 X%」は、<strong>ランダムなハンドに対する勝率が高い順</strong>に、全ハンドの組合せの X% ぶんを取ったものです。他のツールの順位（オールイン向きの順位など）とは並びが違うため、<strong>同じ X% でも中身のハンドが一致しないことがあります</strong>。実際の相手に合わせたいときは「カスタム編集」で直接選んでください。
             </p>
           </div>
         </details>
@@ -609,28 +591,41 @@ export const ja: Record<string, string> = {
   "calc.bf.err.needHV": "「自分」と「相手」を1人ずつ選んでください",
   "calc.bf.err.sameHV": "「自分」と「相手」は別の人にしてください",
   "calc.bf.err.zeroStack": "スタックが 0 の人がいるので計算できません",
+  "calc.err.noCall": "この局面ではコールする額がありません。自分か相手が、ブラインドやアンティを払った時点でオールインになっています。スタックを確かめてください。",
+  "calc.err.callInput": "コール額と勝った時の純利得には、0 より大きい数を入れてください。",
+  "calc.note.pushDirection.html": "自分{hero}が先に動くので、<strong>自分がオールインして相手{villain}にコールされた場合</strong>の数字です。「コール額」は自分が追加で出す額で、相手に降りてもらえる分は入っていません。",
   "calc.bf.label.bf": "自分 vs 相手の BF",
   "calc.bf.label.risk": "リスクチップ",
   "calc.autofill.summaryLine": "✓ コール額 <strong>{call}</strong> / 勝った時の純利得 <strong>{pot}</strong> BB",
+  "calc.autofill.summaryLinePush": "✓ 追加で出す額 <strong>{call}</strong> / 勝った時の純利得 <strong>{pot}</strong> BB",
   "calc.autofill.detailsSummary": "▸ 計算の内訳",
   "calc.autofill.err.needHV": "⚠ 「自分」と「相手」を1人ずつ選んでください",
   "calc.autofill.err.zeroStack": "⚠ スタックが0です",
   "calc.autofill.result": "✓ コール <strong>{risk}</strong>, 純利得 <strong>{pot}</strong> = リスク {risk2} + 死に金 {dead} (SB {sb} + BB {bb} + アンティ {ante})",
   // 「▸ 計算の内訳」details 本体 (Phase B 抽出)
   "calc.autofill.potComp": "📊 ポット構成",
-  "calc.autofill.heroBlind": "自分({pos}) のブラインド: <code>{v}</code> <span class=\"muted\">(支払い済み)</span>",
-  "calc.autofill.heroAnte": "自分({pos}) のアンティ: <code>{v}</code> <span class=\"muted\">(支払い済み。BB が全員分を払う)</span>",
-  "calc.autofill.villainAnte": "相手({pos}) のアンティ: <code>{v}</code> <span class=\"muted\">(支払い済み。BB が全員分を払う)</span>",
+  "calc.autofill.heroBlind": "自分{pos}のブラインド: <code>{v}</code> <span class=\"muted\">(支払い済み)</span>",
+  "calc.autofill.heroAnte": "自分{pos}のアンティ: <code>{v}</code> <span class=\"muted\">(支払い済み。BB が全員分を払う)</span>",
+  "calc.autofill.villainAnte": "相手{pos}のアンティ: <code>{v}</code> <span class=\"muted\">(支払い済み。BB が全員分を払う)</span>",
   "calc.autofill.anteDead": "場に出ているアンティ: <code>{v}</code> <span class=\"muted\">(払った BB は降りている)</span>",
   "calc.autofill.heroToPay": "自分がこれから払う<strong>コール額</strong>: <code>{v}</code>",
-  "calc.autofill.villainPush": "相手({pos}) のオールイン（勝負になる分）: <code>{live}</code>{blind} = <code>{matched}</code>",
+  "calc.autofill.heroToPush": "自分がオールインで<strong>追加で出す額</strong>: <code>{v}</code>",
+  "calc.autofill.villainPush": "相手{pos}のオールイン（勝負になる分）: <code>{live}</code>{blind} = <code>{matched}</code>",
+  "calc.autofill.villainPushNoBlind": "相手{pos}のオールイン（勝負になる分）: <code>{matched}</code>",
+  "calc.autofill.villainCall": "相手{pos}のコール（勝負になる分）: <code>{live}</code>{blind} = <code>{matched}</code>",
+  "calc.autofill.villainCallNoBlind": "相手{pos}のコール（勝負になる分）: <code>{matched}</code>",
+  "calc.autofill.sbDead": "SB のブラインド: <code>{v}</code> <span class=\"muted\">(SB は降りている)</span>",
+  "calc.autofill.bbDead": "BB のブラインド: <code>{v}</code> <span class=\"muted\">(BB は降りている)</span>",
   "calc.autofill.villainPushBlind": " + 出してあるブラインド {v}",
   "calc.autofill.totalPot": "ポットの合計: {v} BB",
   "calc.autofill.callVsFold": "⚖️ コール vs フォールド",
-  "calc.autofill.tableHead": "<tr><th>選択</th><th>残りスタック</th><th>降りた時との差</th><th>ハンド開始時との差</th></tr>",
+  "calc.autofill.pushVsFold": "⚖️ オールイン vs フォールド",
+  "calc.autofill.tableHead": "<tr><th>選択</th><th>残り</th><th>降りるより</th><th>開始時より</th></tr>",
   "calc.autofill.row.fold": "降りる",
   "calc.autofill.row.win": "コールして勝つ",
   "calc.autofill.row.lose": "コールして負ける",
+  "calc.autofill.row.pushWin": "コールされて勝つ",
+  "calc.autofill.row.pushLose": "コールされて負ける",
 
   // ===== 状況サマリー (calculator.ts renderHeroSummary) =====
   "calc.summary.title": "この局面",
@@ -641,7 +636,7 @@ export const ja: Record<string, string> = {
   "calc.summary.hero": "自分",
   "calc.summary.prizeShare": "賞金の取り分",
   "calc.summary.prizeExplanation": "取り分は賞金総額に対する目安（ICM）です。33%なら総額1万円に対し約3,300円相当。ハンドの勝率や確定賞金ではありません。",
-  "calc.summary.pushReference": "※ BF・必要勝率・RP はコールする場合の値です。",
+  "calc.summary.pushReference": "※ BF・必要勝率・RP は、相手にコールされた場合の値です。",
   "nash.inputsChanged": "局面が変わりました。現在の条件でNashを再計算してください。",
   "calc.summary.considerCall": "コールを検討",
   "calc.summary.considerPush": "オールインを検討",
@@ -668,7 +663,6 @@ export const ja: Record<string, string> = {
   "calc.summary.verdict.link": "ハンド表 ›",
 
   // ===== 警告 (calculator.ts) =====
-  "calc.warn.position.html": "\n      ⚠ <strong>ポジション逆転</strong>: 行動順は <code>{heroPos}({heroAct}) → {villainPos}({villainAct})</code>。\n      実戦では <strong>hero ({heroPos}) が先に行動</strong>するため、villain ({villainPos}) の open push に対して call することはあり得ません。\n      (call 計算は math 上は動きますが、ポジを入れ替える方が現実的)\n    ",
   "calc.warn.depth.html": "⚠️ 実効 {eff}bb：オールインされた後のコール判断なので、この計算はそのまま使えます。ただ、この深さでいきなりオールインしてくる相手はかなり強いハンドに絞られることが多いので、相手レンジは狭めに設定してください。",
 
   // ===== 用語解説モーダル (calculator.ts INFO_TEXTS) =====
@@ -877,6 +871,7 @@ export const ja: Record<string, string> = {
   // ===== 規約モーダル: EN モード時のみ表示する注記 (guide.ts, Phase B) =====
   // 規約本文 (legalContent.ts) は日本語のまま。EN モードでは冒頭にこの一文を足す。
   "legal.enOnlyNote": "The terms below are currently available in Japanese only.",
+  "legal.title": "📄 利用規約・プライバシーポリシー",
 
   // ===== ペイウォール (freemium ゲート, paywall.ts) =====
   "paywall.title": "🔓 自分のテーブルを再現しよう",

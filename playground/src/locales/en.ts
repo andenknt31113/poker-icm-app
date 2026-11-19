@@ -189,7 +189,7 @@ export const en: Record<string, string> = {
   "result.bf.matrixHint.html": "\n          Rows = Hero (you), columns = Villain.\n          Top = Risk Premium at a 1:1 pot, bottom = BF value.\n        ",
   "result.bf.howto.summary": "📖 How to read the table (tap to expand)",
   "result.bf.howto.body.html":
-    "\n            <h4>1. The numbers in each cell</h4>\n            <p>The <strong>BF (Bubble Factor) on the bottom row</strong> is the main metric: <strong>how many times more losing hurts than winning feels good</strong> against this villain.</p>\n            <ul>\n              <li><strong>1.00</strong> = pain equals joy — play your chips at face value (no ICM pressure)</li>\n              <li><strong>1.16</strong> = losing hurts 1.16×. In a 1:1 pot, 50% equity is not enough — you need <strong>about 53.7% (+3.7pt)</strong> to break even</li>\n              <li><strong>1.41</strong> = losing hurts 1.41×. Same spot needs <strong>about 58.5% (+8.5pt)</strong> — premium hands only (yikes)</li>\n            </ul>\n            <p>The <strong>Risk Premium on the top row</strong> is exactly that surcharge: <strong>how many extra points above 50%</strong> you need when the call is pot-sized (1:1 odds).</p>\n            <h4>2. What the colors mean</h4>\n            <p>The color deepens continuously from BF <strong>1.0 (yellow) to 2.0 and above (red)</strong>. Because of how ICM works, <strong>BF never drops below 1.00</strong>, so in practice you only ever see yellow through red. As a rule of thumb:</p>\n            <ul>\n              <li>🟡 Yellow (BF ≈ 1.0): almost no ICM pressure, play close to cEV</li>\n              <li>🟠 Orange (1.2–1.5): ICM pressure, play tight</li>\n              <li>🔴 Red (around 1.7+): very dangerous, premiums only</li>\n            </ul>\n            <h4>3. Reading it strategically</h4>\n            <ul>\n              <li>If a villain in a <strong>red cell</strong> gets involved → weight toward folding</li>\n              <li>Villains in <strong>near-yellow cells (BF around 1.0)</strong> → leaning a bit looser is OK</li>\n              <li>Your row <strong>when you're the shortest stack</strong> has low BFs overall (= little to lose) → you can gamble relatively freely</li>\n              <li>The <strong>chip leader vs. second stack</strong> cell has a spiking BF → clashes between big stacks call for caution (the highest BF in the whole table is usually the second stack facing the leader)</li>\n              <li>Unless you are the leader, the <strong>chip leader's column</strong> tends to be the highest BF in your row → the bigger the stack you tangle with, the tighter you play (classic ICM pressure)</li>\n            </ul>\n            <h4>4. Using it in play</h4>\n            <ol>\n              <li>Once seated, enter every player's stack</li>\n              <li>Look at <strong>your row</strong> on the far left to see who to play tight/loose against</li>\n              <li>Mid-hand, when you think \"wait, is this villain dangerous?\", check the matching cell</li>\n            </ol>\n            <p class=\"howto-note\">Note: the table is not symmetric (swapping hero/villain changes the BF). The same chip transfer affects each player's $ equity differently depending on their stacks and payout position (e.g. the short stack busts when losing, while the covering stack survives).</p>\n          ",
+    "\n            <h4>1. The numbers in each cell</h4>\n            <p>The <strong>BF (Bubble Factor) on the bottom row</strong> is the main metric: <strong>how many times more losing hurts than winning feels good</strong> against this villain.</p>\n            <ul>\n              <li><strong>1.00</strong> = pain equals joy — play your chips at face value (no ICM pressure)</li>\n              <li><strong>1.16</strong> = losing hurts 1.16×. In a 1:1 pot, 50% equity is not enough — you need <strong>about 53.7% (+3.7pt)</strong> to break even</li>\n              <li><strong>1.41</strong> = losing hurts 1.41×. Same spot needs <strong>about 58.5% (+8.5pt)</strong> — premium hands only (yikes)</li>\n            </ul>\n            <p>The <strong>Risk Premium on the top row</strong> is exactly that surcharge: <strong>how many extra points above 50%</strong> you need when the call is pot-sized (1:1 odds).</p>\n            <h4>2. What the colors mean</h4>\n            <p>The color deepens continuously from BF <strong>1.0 (yellow) to 2.0 and above (red)</strong>. Without bounties, <strong>BF never drops below 1.00</strong> because of how ICM works, so in practice you only see yellow through red (with bounties it can drop below 1.00 when you cover the villain). As a rule of thumb:</p>\n            <ul>\n              <li>🟡 Yellow (BF ≈ 1.0): almost no ICM pressure, play close to cEV</li>\n              <li>🟠 Orange (1.2–1.5): ICM pressure, play tight</li>\n              <li>🔴 Red (around 1.7+): very dangerous, premiums only</li>\n            </ul>\n            <h4>3. Reading it strategically</h4>\n            <ul>\n              <li>If a villain in a <strong>red cell</strong> gets involved → weight toward folding</li>\n              <li>Villains in <strong>near-yellow cells (BF around 1.0)</strong> → leaning a bit looser is OK</li>\n              <li>Your row <strong>when you're the shortest stack</strong> has low BFs overall (= little to lose) → you can gamble relatively freely</li>\n              <li>The <strong>chip leader vs. second stack</strong> cell has a spiking BF → clashes between big stacks call for caution (the highest BF in the whole table is usually the second stack facing the leader)</li>\n              <li>Unless you are the leader, the <strong>chip leader's column</strong> tends to be the highest BF in your row → the bigger the stack you tangle with, the tighter you play (classic ICM pressure)</li>\n            </ul>\n            <h4>4. Using it in play</h4>\n            <ol>\n              <li>Once seated, enter every player's stack</li>\n              <li>Look at <strong>your row</strong> on the far left to see who to play tight/loose against</li>\n              <li>Mid-hand, when you think \"wait, is this villain dangerous?\", check the matching cell</li>\n            </ol>\n            <p class=\"howto-note\">Note: the table is not symmetric (swapping you and the villain changes the BF). The same chip transfer affects each player's $ equity differently depending on their stacks and payout position (e.g. the short stack busts when losing, while the covering stack survives).</p>\n          ",
   "result.bf.scrollHint": "→ Scroll sideways",
 
   // ===== index.html: 計算結果 - 必要勝率 =====
@@ -315,7 +315,7 @@ export const en: Record<string, string> = {
   "practice.tutorial.nextBtn": "Next hand →",
 
   // ===== オンボーディング (guide.ts) =====
-  "onboarding.step1.title": "🎰 What is this?",
+  "onboarding.step1.title": "♠ What is this?",
   "onboarding.step1.body": `
       <p>
         In tournaments, your <strong>chip count</strong> and its <strong>prize value</strong> aren’t the same.
@@ -329,20 +329,9 @@ export const en: Record<string, string> = {
     `,
   "onboarding.step2.title": "⚡ Try it first",
   "onboarding.step2.body": `
-      <p>Start by changing the numbers.</p>
-      <ol>
-        <li>
-          Change the stacks in <strong>“Spot”</strong> (or pick from “Examples and saved spots”) →
-          check the required equity and hand chart right below
-        </li>
-        <li data-feature="practice">
-          Answer quizzes in the <strong>🎲 Practice</strong> tab to build a feel
-        </li>
-      </ol>
-      <p class="hint">
-        If you get stuck, the <strong>❓</strong> at the
-        top right opens the how-to guide and term explanations anytime.
-      </p>
+      <p>Start by changing the numbers. Edit the stacks in <strong>“Spot”</strong> (or pick one from “Examples and saved spots”), and the required equity and hand chart appear right below.</p>
+      <p data-feature="practice">In the <strong>🎲 Practice</strong> tab you can build a feel by answering quizzes.</p>
+      <p class="hint">If you get stuck, the <strong>❓</strong> at the top right opens the how-to guide and term explanations anytime.</p>
     `,
   "onboarding.skip": "Skip",
   "onboarding.next": "Next →",
@@ -357,7 +346,7 @@ export const en: Record<string, string> = {
     "ℹ️ Examples, results and Nash are all free. <strong>Tables with up to 4 players are fully editable (stacks and payouts)</strong>. Editing tables with 5+ players, saving spots or payouts, and bounty (KO / PKO) calculations are 🔒 Pro (one-time purchase).",
   "guide.body.html": `
         <p class="guide-intro">
-          This tool focuses on short-stack (~20bb) all-in spots.
+          This tool focuses on short-stack (~20BB) all-in spots.
         </p>
         <details class="howto">
           <summary>📊 Calculator: entering the spot — what it does & how to use</summary>
@@ -455,6 +444,7 @@ export const en: Record<string, string> = {
               <li>ICM: compared with a separate brute-force implementation on 402 spots (2–9 players); differences below 0.000000001.</li>
               <li>Hand equity: matches well-known values such as AA vs KK 82.0%, AKo vs QQ 43.2%, AA vs random 85.2%.</li>
               <li>Nash: heads-up, 10BB, winner takes all gives push 58.1% / call 37.4%; a separate calculation confirms neither side gains even 0.001BB by deviating.</li>
+              <li>Nash with 3+ players: compared with HoldemResources’ free Nash ICM calculator on a 3-player, 10BB spot (shove 33.0% / 32.1%, call 18.1% / 17.8%, over-call 13.1% / 12.8%, last player’s call 24.3% / 24.3%). The differences are border hands where shoving and folding are worth almost the same.</li>
             </ul>
             <p class="hint">Results are a guide. At the table, also weigh the villain’s tendencies and the players behind.</p>
           </div>
@@ -611,28 +601,41 @@ export const en: Record<string, string> = {
   "calc.bf.err.needHV": "Choose one “You” and one “Villain”",
   "calc.bf.err.sameHV": "“You” and “Villain” must be different players",
   "calc.bf.err.zeroStack": "A player has a stack of 0, so this can’t be calculated",
+  "calc.err.noCall": "There is nothing left to call in this spot: you or the villain are already all-in after posting the blinds or ante. Check the stacks.",
+  "calc.err.callInput": "Enter a call amount and a net gain greater than 0.",
+  "calc.note.pushDirection.html": "You {hero} act first, so these are the numbers <strong>if you shove and the villain {villain} calls</strong>. The call amount is what you add, and fold equity is not included.",
   "calc.bf.label.bf": "You vs villain BF",
   "calc.bf.label.risk": "Chips at risk",
   "calc.autofill.summaryLine": "✓ Call amount <strong>{call}</strong> / net gain if you win <strong>{pot}</strong> BB",
+  "calc.autofill.summaryLinePush": "✓ You add <strong>{call}</strong> / net gain if you win <strong>{pot}</strong> BB",
   "calc.autofill.detailsSummary": "▸ Calculation breakdown",
   "calc.autofill.err.needHV": "⚠ Choose one “You” and one “Villain”",
   "calc.autofill.err.zeroStack": "⚠ Stack is 0",
   "calc.autofill.result": "✓ Call <strong>{risk}</strong>, net gain <strong>{pot}</strong> = risk {risk2} + dead money {dead} (SB {sb} + BB {bb} + ante {ante})",
   // 「▸ 計算の内訳」details 本体 (Phase B 抽出)
   "calc.autofill.potComp": "📊 Pot composition",
-  "calc.autofill.heroBlind": "You ({pos}) blind: <code>{v}</code> <span class=\"muted\">(already paid)</span>",
-  "calc.autofill.heroAnte": "You ({pos}) ante: <code>{v}</code> <span class=\"muted\">(already paid; the BB posts everyone’s ante)</span>",
-  "calc.autofill.villainAnte": "Villain ({pos}) ante: <code>{v}</code> <span class=\"muted\">(already paid; the BB posts everyone’s ante)</span>",
+  "calc.autofill.heroBlind": "You {pos} blind: <code>{v}</code> <span class=\"muted\">(already paid)</span>",
+  "calc.autofill.heroAnte": "You {pos} ante: <code>{v}</code> <span class=\"muted\">(already paid; the BB posts everyone’s ante)</span>",
+  "calc.autofill.villainAnte": "Villain {pos} ante: <code>{v}</code> <span class=\"muted\">(already paid; the BB posts everyone’s ante)</span>",
   "calc.autofill.anteDead": "Ante in the pot: <code>{v}</code> <span class=\"muted\">(the BB who posted it has folded)</span>",
   "calc.autofill.heroToPay": "You still have to pay the <strong>call</strong>: <code>{v}</code>",
-  "calc.autofill.villainPush": "Villain ({pos}) push (live): <code>{live}</code>{blind} = <code>{matched}</code>",
+  "calc.autofill.heroToPush": "What you add to <strong>shove</strong>: <code>{v}</code>",
+  "calc.autofill.villainPush": "Villain {pos} push (live): <code>{live}</code>{blind} = <code>{matched}</code>",
+  "calc.autofill.villainPushNoBlind": "Villain {pos} push (live): <code>{matched}</code>",
+  "calc.autofill.villainCall": "Villain {pos} call (live): <code>{live}</code>{blind} = <code>{matched}</code>",
+  "calc.autofill.villainCallNoBlind": "Villain {pos} call (live): <code>{matched}</code>",
+  "calc.autofill.sbDead": "SB dead: <code>{v}</code> <span class=\"muted\">(the SB folded)</span>",
+  "calc.autofill.bbDead": "BB dead: <code>{v}</code> <span class=\"muted\">(the BB folded)</span>",
   "calc.autofill.villainPushBlind": " + posted blind {v}",
   "calc.autofill.totalPot": "Total pot: {v} BB",
   "calc.autofill.callVsFold": "⚖️ Call vs fold",
+  "calc.autofill.pushVsFold": "⚖️ Shove vs fold",
   "calc.autofill.tableHead": "<tr><th>Choice</th><th>Stack left</th><th>vs fold</th><th>vs start</th></tr>",
   "calc.autofill.row.fold": "Fold",
   "calc.autofill.row.win": "Call and win",
   "calc.autofill.row.lose": "Call and lose",
+  "calc.autofill.row.pushWin": "Called and win",
+  "calc.autofill.row.pushLose": "Called and lose",
 
   // ===== 状況サマリー (calculator.ts renderHeroSummary) =====
   "calc.summary.title": "This spot",
@@ -643,7 +646,7 @@ export const en: Record<string, string> = {
   "calc.summary.hero": "You",
   "calc.summary.prizeShare": "Prize share",
   "calc.summary.prizeExplanation": "Estimated share of the total prize pool (ICM). 33% of a $100 pool means about $33 in value, not your hand's win rate or a guaranteed payout.",
-  "calc.summary.pushReference": "BF, required equity and RP are values for calling.",
+  "calc.summary.pushReference": "BF, required equity and RP assume the villain calls.",
   "nash.inputsChanged": "The spot has changed. Recalculate Nash for the current conditions.",
   "calc.summary.considerCall": "Considering call",
   "calc.summary.considerPush": "Considering push",
@@ -670,7 +673,6 @@ export const en: Record<string, string> = {
   "calc.summary.verdict.link": "Hand chart ›",
 
   // ===== 警告 (calculator.ts) =====
-  "calc.warn.position.html": "\n      ⚠ <strong>Position reversed</strong>: action order is <code>{heroPos}({heroAct}) → {villainPos}({villainAct})</code>.\n      In practice <strong>hero ({heroPos}) acts first</strong>, so calling a villain ({villainPos}) open shove can’t happen.\n      (The call math still runs, but swapping positions is more realistic.)\n    ",
   "calc.warn.depth.html": "⚠️ Effective {eff}bb: this is a call decision after an all-in, so the math still applies. But players who shove this deep usually have a narrow, strong range, so set the villain range tighter.",
 
   // ===== 用語解説モーダル (calculator.ts INFO_TEXTS) =====
@@ -878,6 +880,7 @@ export const en: Record<string, string> = {
 
   // ===== 規約モーダル: EN モード時のみ表示する注記 (guide.ts, Phase B) =====
   "legal.enOnlyNote": "The terms below are currently available in Japanese only.",
+  "legal.title": "📄 Terms & Privacy Policy",
 
   // ===== ペイウォール (freemium ゲート, paywall.ts) =====
   "paywall.title": "🔓 Recreate your own table",

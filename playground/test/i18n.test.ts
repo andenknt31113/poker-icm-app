@@ -23,16 +23,17 @@ describe("i18n t()", () => {
   });
 
   it("同じプレースホルダが複数回あってもすべて置換する", () => {
-    const out = t("calc.warn.position.html", {
-      heroPos: "BB",
-      heroAct: 2,
-      villainPos: "SB",
-      villainAct: 1,
+    const out = t("hand.banner.behind.html", {
+      label: "自分",
+      pos: "BTN",
+      n: 2,
+      list: "SB (10BB), BB (12BB)",
+      note: "",
     });
-    // heroPos は文中に複数回登場する
-    expect(out.match(/BB/g)?.length).toBeGreaterThanOrEqual(2);
-    expect(out).not.toContain("{heroPos}");
-    expect(out).not.toContain("{villainPos}");
+    // label と n は文中に複数回登場する
+    expect(out.match(/自分/g)?.length).toBeGreaterThanOrEqual(2);
+    expect(out).not.toContain("{label}");
+    expect(out).not.toContain("{n}");
   });
 
   it("params を渡さなければテンプレートはそのまま返る", () => {

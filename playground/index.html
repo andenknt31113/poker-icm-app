@@ -245,7 +245,7 @@
               <strong>上段の Risk Premium</strong> は、まさにこの「上乗せ分」。コール額＝ポット（1:1オッズ）のとき、50% より<strong>何pt余分に勝率が必要か</strong>をそのまま表示している。
             </p>
             <h4>2. 色の意味</h4>
-            <p>色は BF <strong>1.0（黄）→ 2.0 以上（赤）</strong>と連続的に濃くなる。ICM の性質上 <strong>BF が 1.00 を下回ることはない</strong>ため、実際に出るのは黄〜赤の範囲。読み方の目安:</p>
+            <p>色は BF <strong>1.0（黄）→ 2.0 以上（赤）</strong>と連続的に濃くなる。バウンティなしなら ICM の性質上 <strong>BF が 1.00 を下回ることはない</strong>ため、実際に出るのは黄〜赤の範囲（バウンティありで相手を飛ばせるときは 1.00 を下回ることがある）。読み方の目安:</p>
             <ul>
               <li>🟡 黄 (BF ≈ 1.0): ICM圧ほぼゼロ、ほぼ cEV 通りに戦ってよい</li>
               <li>🟠 オレンジ (1.2〜1.5): ICM圧、タイトに</li>
@@ -277,7 +277,7 @@
               <li>ハンド中に「あれ、この相手ヤバい？」となったら該当セルを確認</li>
             </ol>
             <p class="howto-note">
-              ※ 表は左右対称ではない（hero/villain を入れ替えると BF が変わる）。
+              ※ 表は左右対称ではない（自分と相手を入れ替えると BF が変わる）。
               同じチップ移動でも、双方のスタック量と順位状況で $ への影響が違うため（例: ショート側は負けると飛ぶが、カバーしている側は負けても生き残る）。
             </p>
           </div>
@@ -318,7 +318,7 @@
         <button id="autofill-call" type="button" class="save-btn" style="margin-top: 10px;" data-i18n="result.eq.autofillBtn">
           🔄 自動算出に戻す
         </button>
-        <div id="position-warn" class="warn-box hidden"></div>
+        <p id="position-warn" class="hint push-direction-note hidden"></p>
         <div id="depth-warn-eq" class="warn-box hidden"></div>
         <div id="eq-result" class="result"></div>
 
@@ -362,7 +362,7 @@
           </button>
           <div class="villain-range-controls">
           <label class="range-label">
-            <span id="villain-range-label">相手のpushレンジ</span>: <span data-i18n="hand.preset.top">上位</span> <span id="push-pct">25</span>%
+            <span id="villain-range-label">相手のオールインレンジ</span>: <span class="range-pct"><span data-i18n="hand.preset.top">上位</span> <span id="push-pct">25</span>%</span>
             <input
               id="push-range"
               type="range"

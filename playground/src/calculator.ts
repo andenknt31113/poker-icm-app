@@ -15,7 +15,7 @@ import {
   calculatePotOdds,
   calculateRequiredEquity,
 } from "@poker-icm/core";
-import { renderRangeComparison, updateHandPositionBanner, setRangeUnavailable } from "./handRange.js";
+import { renderRangeComparison, updateHandPositionBanner, setRangeUnavailable, currentDirection } from "./handRange.js";
 import { updateNashOvercallWarn, invalidateChangedNash, ensureNashCalculated } from "./nashUI.js";
 import { t } from "./i18n.js";
 import { checkpointSetup } from "./setupUndo.js";
@@ -196,7 +196,16 @@ export function recompute(): void {
         villainPosition: posToPotOddsPos(villainPos, players.length),
         sb: sbV, bb: bbV, ante: totalAnteV,
       });
-      if (r.matched > 0 && !callManualOverride) {
+      // 自分か相手がブラインド・アンティを払った時点でオールインになっていると、
+      // コールする額が残らない (判断する場面がない)。古い値を残すと別の局面の数字が出るので空にする。
+      if (!callManualOverride && !(r.matched > r.heroLiveCommit)) {
+        callInput.value = "";
+        potWinInput.value = "";
+        autofillHint.innerHTML = "";
+      } else if (!callManualOverride) {
+        const pushes = currentDirection() === "pushBack";
+        // 位置が未設定の人は括弧ごと省く (「相手()」と出さない)
+        const seat = (pos: string | undefined): string => (pos ? `(${pos})` : "");
         callInput.value = r.callAmount.toFixed(1);
         potWinInput.value = r.potIfWin.toFixed(1);
         const heroStackV = stacks[heroIndex]!;
@@ -211,38 +220,45 @@ export function recompute(): void {
         const netWin = stackIfWin - heroStackV;
         const netLose = stackIfLose - heroStackV;
         const netFold = stackIfFold - heroStackV;
-        // ante は会計上 dead だが「誰が払ったか」をラベルで明示する
-        const anteOwnerLabel = heroAntePaid > 0
-          ? `自分(${heroPos})`
-          : villainAntePaid > 0
-            ? `相手(${villainPos})`
-            : null; // どちらも BB じゃない (前任 BB folded)
+        // 「誰が払ったか」が分かる行 (自分・相手のアンティ) が無いときだけ、場のアンティを別に出す
+        const anteShownAsOwn = heroAntePaid > 0 || villainAntePaid > 0;
+        const villainStake = r.villainLiveCommit > 0
+          ? t(pushes ? "calc.autofill.villainCall" : "calc.autofill.villainPush", {
+              pos: seat(villainPos),
+              live: (r.matched - r.villainLiveCommit).toFixed(1),
+              blind: t("calc.autofill.villainPushBlind", { v: r.villainLiveCommit.toFixed(1) }),
+              matched: r.matched.toFixed(1),
+            })
+          : t(pushes ? "calc.autofill.villainCallNoBlind" : "calc.autofill.villainPushNoBlind", {
+              pos: seat(villainPos),
+              matched: r.matched.toFixed(1),
+            });
         autofillHint.innerHTML = `
-          <div class="autofill-summary-line">${t("calc.autofill.summaryLine", { call: r.callAmount.toFixed(1), pot: r.potIfWin.toFixed(1) })}</div>
+          <div class="autofill-summary-line">${t(pushes ? "calc.autofill.summaryLinePush" : "calc.autofill.summaryLine", { call: r.callAmount.toFixed(1), pot: r.potIfWin.toFixed(1) })}</div>
           <details class="autofill-details">
             <summary>${t("calc.autofill.detailsSummary")}</summary>
             <div class="autofill-body">
               <div class="autofill-section">
                 <div class="autofill-h">${t("calc.autofill.potComp")}</div>
                 <ul class="autofill-list">
-                  ${heroBlindPaid > 0 ? `<li>${t("calc.autofill.heroBlind", { pos: heroPos ?? "", v: heroBlindPaid.toFixed(1) })}</li>` : ""}
-                  ${heroAntePaid > 0 ? `<li>${t("calc.autofill.heroAnte", { pos: heroPos ?? "", v: heroAntePaid.toFixed(1) })}</li>` : ""}
-                  ${r.deadBreakdown.sbDead > 0 ? `<li>SB dead: <code>${r.deadBreakdown.sbDead.toFixed(1)}</code> <span class="muted">(SB folded)</span></li>` : ""}
-                  ${r.deadBreakdown.bbDead > 0 ? `<li>BB dead: <code>${r.deadBreakdown.bbDead.toFixed(1)}</code> <span class="muted">(BB folded)</span></li>` : ""}
-                  ${villainAntePaid > 0 ? `<li>${t("calc.autofill.villainAnte", { pos: villainPos ?? "", v: villainAntePaid.toFixed(1) })}</li>` : ""}
-                  ${r.deadBreakdown.anteDead > 0 && anteOwnerLabel === null ? `<li>${t("calc.autofill.anteDead", { v: r.deadBreakdown.anteDead.toFixed(1) })}</li>` : ""}
-                  <li>${t("calc.autofill.heroToPay", { v: r.callAmount.toFixed(1) })}</li>
-                  <li>${t("calc.autofill.villainPush", { pos: villainPos ?? "", live: (r.matched - r.villainLiveCommit).toFixed(1), blind: r.villainLiveCommit > 0 ? t("calc.autofill.villainPushBlind", { v: r.villainLiveCommit.toFixed(1) }) : "", matched: r.matched.toFixed(1) })}</li>
+                  ${heroBlindPaid > 0 ? `<li>${t("calc.autofill.heroBlind", { pos: seat(heroPos), v: heroBlindPaid.toFixed(1) })}</li>` : ""}
+                  ${heroAntePaid > 0 ? `<li>${t("calc.autofill.heroAnte", { pos: seat(heroPos), v: heroAntePaid.toFixed(1) })}</li>` : ""}
+                  ${r.deadBreakdown.sbDead > 0 ? `<li>${t("calc.autofill.sbDead", { v: r.deadBreakdown.sbDead.toFixed(1) })}</li>` : ""}
+                  ${r.deadBreakdown.bbDead > 0 ? `<li>${t("calc.autofill.bbDead", { v: r.deadBreakdown.bbDead.toFixed(1) })}</li>` : ""}
+                  ${villainAntePaid > 0 ? `<li>${t("calc.autofill.villainAnte", { pos: seat(villainPos), v: villainAntePaid.toFixed(1) })}</li>` : ""}
+                  ${r.deadBreakdown.anteDead > 0 && !anteShownAsOwn ? `<li>${t("calc.autofill.anteDead", { v: r.deadBreakdown.anteDead.toFixed(1) })}</li>` : ""}
+                  <li>${t(pushes ? "calc.autofill.heroToPush" : "calc.autofill.heroToPay", { v: r.callAmount.toFixed(1) })}</li>
+                  <li>${villainStake}</li>
                   <li><strong>${t("calc.autofill.totalPot", { v: r.potAtShowdown.toFixed(1) })}</strong></li>
                 </ul>
               </div>
               <div class="autofill-section">
-                <div class="autofill-h">${t("calc.autofill.callVsFold")}</div>
+                <div class="autofill-h">${t(pushes ? "calc.autofill.pushVsFold" : "calc.autofill.callVsFold")}</div>
                 <table class="autofill-table">
                   ${t("calc.autofill.tableHead")}
                   <tr><td>${t("calc.autofill.row.fold")}</td><td>${stackIfFold.toFixed(1)}</td><td>±0</td><td class="${netFold >= 0 ? 'good' : 'bad'}">${fmtSigned(netFold)}</td></tr>
-                  <tr><td>${t("calc.autofill.row.win")}</td><td>${stackIfWin.toFixed(1)}</td><td class="good">+${r.potIfWin.toFixed(1)}</td><td class="${netWin >= 0 ? 'good' : 'bad'}">${fmtSigned(netWin)}</td></tr>
-                  <tr><td>${t("calc.autofill.row.lose")}</td><td>${stackIfLose.toFixed(1)}</td><td class="bad">-${r.callAmount.toFixed(1)}</td><td class="bad">${fmtSigned(netLose)}</td></tr>
+                  <tr><td>${t(pushes ? "calc.autofill.row.pushWin" : "calc.autofill.row.win")}</td><td>${stackIfWin.toFixed(1)}</td><td class="good">+${r.potIfWin.toFixed(1)}</td><td class="${netWin >= 0 ? 'good' : 'bad'}">${fmtSigned(netWin)}</td></tr>
+                  <tr><td>${t(pushes ? "calc.autofill.row.pushLose" : "calc.autofill.row.lose")}</td><td>${stackIfLose.toFixed(1)}</td><td class="bad">-${r.callAmount.toFixed(1)}</td><td class="bad">${fmtSigned(netLose)}</td></tr>
                 </table>
               </div>
             </div>
@@ -252,15 +268,26 @@ export function recompute(): void {
     }
     const callAmount = Number(callInput.value);
     const potIfWin = Number(potWinInput.value);
-    const approxEq = calculateRequiredEquity({
-      callAmount,
-      potIfWin,
-      bubbleFactor: bf,
-    });
-    // 必要勝率は厳密 ICM (fold / コール勝ち / コール負けの3終端) で出す。練習タブと同じ計算。
-    // コール額・純利得を手入力したときと、BB の人が決まらない卓は BF 近似に戻す。
-    const exactReq =
-      !callManualOverride && !decisionUnavailable
+    // 判断できない局面では必要勝率を出さず、理由だけを出す。
+    // core の calculateRequiredEquity は 0 以下の額で例外を投げるので、呼ぶ前にここで止める
+    // (以前は例外が ICM の表ごとエラー文に置き換えていた)。
+    const callUnavailable =
+      decisionUnavailable ??
+      (callAmount > 0 && potIfWin > 0 ? null : t(callManualOverride ? "calc.err.callInput" : "calc.err.noCall"));
+
+    if (callUnavailable) {
+      eqResult.innerHTML = `<p class="hint eq-unavailable" role="status">${callUnavailable}</p>`;
+      setRangeUnavailable(callUnavailable);
+      hideHeroSummary();
+    } else {
+      const approxEq = calculateRequiredEquity({
+        callAmount,
+        potIfWin,
+        bubbleFactor: bf,
+      });
+      // 必要勝率は厳密 ICM (fold / コール勝ち / コール負けの3終端) で出す。練習タブと同じ計算。
+      // コール額・純利得を手入力したときと、BB の人が決まらない卓は BF 近似に戻す。
+      const exactReq = !callManualOverride
         ? exactCallRequiredEquity(
             players,
             payouts,
@@ -272,57 +299,56 @@ export function recompute(): void {
             bounty,
           )
         : null;
-    const eq =
-      exactReq === null
-        ? approxEq
-        : { cEV: approxEq.cEV, dollarEV: exactReq, riskPremium: exactReq - approxEq.cEV };
+      const eq =
+        exactReq === null
+          ? approxEq
+          : { cEV: approxEq.cEV, dollarEV: exactReq, riskPremium: exactReq - approxEq.cEV };
 
-    const rpSign = eq.riskPremium >= 0 ? "+" : "";
-    eqResult.innerHTML = `
-      <div class="eq-flow">
-        <div class="eq-flow-item eq-flow-cev">
-          <div class="eq-flow-label">${t("calc.eq.flow.chip")}</div>
-          <div class="eq-flow-value">${fmtPct(eq.cEV)}</div>
+      const rpSign = eq.riskPremium >= 0 ? "+" : "";
+      eqResult.innerHTML = `
+        <div class="eq-flow">
+          <div class="eq-flow-item eq-flow-cev">
+            <div class="eq-flow-label">${t("calc.eq.flow.chip")}</div>
+            <div class="eq-flow-value">${fmtPct(eq.cEV)}</div>
+          </div>
+          <div class="eq-flow-arrow" aria-hidden="true">→</div>
+          <div class="eq-flow-item eq-flow-rp">
+            <div class="eq-flow-label">${t("calc.eq.flow.rp")}</div>
+            <div class="eq-flow-value">${rpSign}${fmtPct(eq.riskPremium, 2)}</div>
+          </div>
+          <div class="eq-flow-arrow" aria-hidden="true">→</div>
+          <div class="eq-flow-item eq-flow-final">
+            <div class="eq-flow-label">${t("calc.eq.flow.icm")}</div>
+            <div class="eq-flow-value">${fmtPct(eq.dollarEV)}</div>
+          </div>
         </div>
-        <div class="eq-flow-arrow">→</div>
-        <div class="eq-flow-item eq-flow-rp">
-          <div class="eq-flow-label">${t("calc.eq.flow.rp")}</div>
-          <div class="eq-flow-value">${rpSign}${fmtPct(eq.riskPremium, 2)}</div>
-        </div>
-        <div class="eq-flow-arrow">→</div>
-        <div class="eq-flow-item eq-flow-final">
-          <div class="eq-flow-label">${t("calc.eq.flow.icm")}</div>
-          <div class="eq-flow-value">${fmtPct(eq.dollarEV)}</div>
-        </div>
-      </div>
-      ${exactReq === null ? `<p class="hint eq-approx-note">${t("calc.eq.approxNote")}</p>` : ""}
-      ${bounty ? `<p class="hint eq-bounty-note">${t(bounty.progressive ? "calc.eq.bountyNote.pko" : "calc.eq.bountyNote.ko")}</p>` : ""}
-    `;
+        ${exactReq === null ? `<p class="hint eq-approx-note">${t("calc.eq.approxNote")}</p>` : ""}
+        ${bounty ? `<p class="hint eq-bounty-note">${t(bounty.progressive ? "calc.eq.bountyNote.pko" : "calc.eq.bountyNote.ko")}</p>` : ""}
+      `;
 
-    // レンジ比較 (戻り値の要約は状況サマリーの一行判定に使う)
-    const rangeVerdict = renderRangeComparison(eq.dollarEV);
-    if (decisionUnavailable) setRangeUnavailable(decisionUnavailable);
+      // レンジ比較 (戻り値の要約は状況サマリーの一行判定に使う)
+      const rangeVerdict = renderRangeComparison(eq.dollarEV);
 
-    // Hero サマリー
-    renderHeroSummary({
-      heroIndex,
-      villainIndex,
-      stacks,
-      payouts,
-      heroEq: heroIndex >= 0 ? equities[heroIndex] ?? 0 : 0,
-      villainEq: villainIndex >= 0 ? equities[villainIndex] ?? 0 : 0,
-      totalPrize,
-      bf,
-      requiredEq: eq.dollarEV,
-      rp: eq.riskPremium,
-      rangeVerdict,
-    });
-    if (decisionUnavailable) hideHeroSummary();
+      // Hero サマリー
+      renderHeroSummary({
+        heroIndex,
+        villainIndex,
+        stacks,
+        payouts,
+        heroEq: heroIndex >= 0 ? equities[heroIndex] ?? 0 : 0,
+        villainEq: villainIndex >= 0 ? equities[villainIndex] ?? 0 : 0,
+        totalPrize,
+        bf,
+        requiredEq: eq.dollarEV,
+        rp: eq.riskPremium,
+        rangeVerdict,
+      });
+    }
 
     // 状態を保存
     saveState();
     updateNashOvercallWarn();
-    updatePositionWarn(heroIndex, villainIndex);
+    updatePositionWarn(callUnavailable ? null : currentDirection(), heroIndex, villainIndex);
     updateDepthWarn(heroIndex, villainIndex, stacks);
     updateHandPositionBanner(heroIndex);
     ensureNashCalculated();

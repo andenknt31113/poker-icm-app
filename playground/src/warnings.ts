@@ -3,49 +3,29 @@
 // 「この数値はそのままでは使えない」と伝える 2 種類の警告。
 // どちらも recompute() の最後に呼ばれ、条件を満たさなければ .hidden で隠す。
 import { t } from "./i18n.js";
-import { players, actionOrderIdx } from "./appState.js";
+import { players } from "./appState.js";
 import { fmt } from "./format.js";
 
-// ===== ポジション逆転警告 (Section 5 用) =====
-// この計算機は open-shove (push or fold) モデルを前提とし、
-// hero の既出 commit を blind+ante のみと仮定する。
-// hero が villain より先に行動するポジ (例: hero=SB, villain=BB) は
-// villain が直接 push する余地がないため、このモデルでは成立しない。
-// 3-bet shove (hero open → villain re-shove) は hero の raise 額が
-// pot に含まれるが、本計算機はそれをモデル化しないため警告対象。
-export function updatePositionWarn(heroIndex: number, villainIndex: number): void {
-  const warnEl = document.getElementById("position-warn");
-  if (!warnEl) return;
-  const hide = (): void => warnEl.classList.add("hidden");
-
-  if (heroIndex < 0 || villainIndex < 0) {
-    hide();
+// ===== 自分からオールインする向きの説明 (必要勝率と RP のカード) =====
+// 自分が先に動く局面 (例: 自分 SB / 相手 BB) は、自分がオールインして相手がコールする向きで計算する
+// (向きは handRange.currentDirection)。このカードの「コール額」は自分が追加で出す額になり、
+// 必要勝率は「コールされたときに要る勝率」で、降りてもらえる分は入らない。それをここで断る。
+// 以前は同じ局面に「ポジション逆転: ありえない」という警告を出していたが、
+// 向きを席順で自動で決めるようになってからは計算と食い違うので、説明に置き換えた。
+export function updatePositionWarn(direction: "callBack" | "pushBack" | null, heroIndex: number, villainIndex: number): void {
+  const noteEl = document.getElementById("position-warn");
+  if (!noteEl) return;
+  if (direction !== "pushBack" || heroIndex < 0 || villainIndex < 0) {
+    noteEl.classList.add("hidden");
+    noteEl.innerHTML = "";
     return;
   }
-  const heroPos = players[heroIndex]?.position;
-  const villainPos = players[villainIndex]?.position;
-  if (!heroPos || !villainPos) {
-    hide();
-    return;
-  }
-  const heroAct = actionOrderIdx(heroPos);
-  const villainAct = actionOrderIdx(villainPos);
-  // ポジション未割当 (-1) は判定不可 → 警告を出さない
-  if (heroAct < 0 || villainAct < 0) {
-    hide();
-    return;
-  }
-  if (heroAct >= villainAct) {
-    hide();
-    return;
-  }
-  warnEl.classList.remove("hidden");
-  warnEl.innerHTML = t("calc.warn.position.html", {
-    heroPos,
-    heroAct: heroAct + 1,
-    villainPos,
-    villainAct: villainAct + 1,
+  const seat = (pos: string | undefined): string => (pos ? `(${pos})` : "");
+  noteEl.innerHTML = t("calc.note.pushDirection.html", {
+    hero: seat(players[heroIndex]?.position),
+    villain: seat(players[villainIndex]?.position),
   });
+  noteEl.classList.remove("hidden");
 }
 
 // ===== 深さ警告 (必要勝率カード = 相手のオールインへのコール判断) =====
