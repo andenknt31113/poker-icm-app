@@ -825,3 +825,4 @@
 - 変更: `format.ts` に `fmtInputNumber`（数値にして余分な 0 を落とす。空欄・不正値は fallback）を足し、`calculator.ts` のブラインド行（SB / BB / アンティ）で使う。計算には触らない。
 - 検証: `format.test.ts` に2件追加。typecheck、unit（core 112 / playground 363）、build、e2e 18件成功。
 - 残件: iOS には次のビルドから。1.5 は IN_REVIEW（2026-11-19 確認）。課金アイテムの説明は ja / en-US とも APPROVED。
+- 追記: 1.5.1 用のストアスクショを撮り直した（`node playground/e2e/capture-release.mjs artifacts/release-1.5.1/screenshots/{ja,en} {ja,en}`、git 管理外）。「オールイン」表記、上部カードの新しい並び、iPad の「STUDY ROOM」なしを目視で確認。1.5 が審査を抜けたら、01-spot / 03-range / 04-prizes / 05-chop / 06-nash をこれに差し替える（07-bounty は 1.5 のまま）。
