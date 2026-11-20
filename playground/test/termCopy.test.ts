@@ -59,4 +59,9 @@ describe("用語説明の文言", () => {
     expect((ja as Record<string, string>)["guide.body.html"]).toContain("チョップ（ディール）するなら");
     expect((en as Record<string, string>)["guide.body.html"]).toContain("If you chop (make a deal)");
   });
+
+  it("ja: バウンティを「首」と表現しない", () => {
+    const text = Object.values(ja as Record<string, string>).join("\n");
+    expect(text).not.toContain("首");
+  });
 });
