@@ -82,7 +82,7 @@ describe("サマリーの視点と役割", () => {
     expect(document.querySelector(".hero")?.textContent).toContain("18");
     expect(document.querySelector(".villain")?.textContent).toContain("14");
     const reference = document.querySelector(".hero-summary-push-note");
-    if (direction === "pushBack") expect(reference?.textContent).toContain("コールする場合");
+    if (direction === "pushBack") expect(reference?.textContent).toContain("コールされた場合");
     else expect(reference).toBeNull();
   });
 

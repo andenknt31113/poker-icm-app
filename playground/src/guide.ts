@@ -1,6 +1,6 @@
 import { applyTab, getActiveTab } from "./tabs.js";
 import { t, getLang } from "./i18n.js";
-import { LEGAL_CONTENT_HTML, LEGAL_CONTENT_TITLE } from "./legalContent.js";
+import { LEGAL_CONTENT_HTML } from "./legalContent.js";
 import { STORAGE_KEYS, readFlag, writeFlag } from "./storage.js";
 
 // ===== オンボーディング（初回ガイド）& 使い方ガイド =====
@@ -191,7 +191,7 @@ function ensureLegalModal(): HTMLDivElement {
   modal.innerHTML = `
     <div class="guide-modal-content">
       <div class="guide-modal-header">
-        <h3>${LEGAL_CONTENT_TITLE}</h3>
+        <h3>${t("legal.title")}</h3>
         <button type="button" class="guide-modal-close" id="legal-modal-close" aria-label="${t("guide.close.aria")}">✕</button>
       </div>
       <div class="guide-modal-body legal-modal-body">

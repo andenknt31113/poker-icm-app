@@ -412,6 +412,27 @@ th {
   background: color-mix(in srgb, var(--accent) 8%, var(--bg));
   border-color: var(--accent);
 }
+/* 狭い画面では3つが1行に入らず、2つ目の矢印が行末に取り残される。
+   チップだけなら → RP を1行目、↓ の下に必要勝率 (ICM) を全幅で置く。 */
+@media (max-width: 520px) {
+  .eq-flow {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 6px;
+  }
+  .eq-flow > .eq-flow-arrow:nth-child(4) {
+    grid-column: 1 / -1;
+    transform: rotate(90deg);
+    line-height: 1;
+  }
+  .eq-flow-final {
+    grid-column: 1 / -1;
+  }
+}
+/* 「上位 25%」の途中で折り返さない */
+.range-pct {
+  white-space: nowrap;
+}
 .eq-flow-final .eq-flow-value {
   font-size: clamp(16px, 5vw, 22px);
   color: var(--accent);

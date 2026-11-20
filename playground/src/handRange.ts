@@ -231,6 +231,11 @@ export function directionFromPositions(): Direction | null {
   return heroAct < villainAct ? "pushBack" : "callBack";
 }
 
+/** 今の向き。席順で決まるときはそれ、決まらないときは自分で選んだ向き。 */
+export function currentDirection(): Direction {
+  return directionFromPositions() ?? direction;
+}
+
 /** 席順で向きが決まるときはそれに合わせ、ありえない側のボタンを押せなくする。 */
 function syncDirectionWithPositions(): void {
   const forced = directionFromPositions();
