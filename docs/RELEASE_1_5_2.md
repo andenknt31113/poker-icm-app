@@ -31,13 +31,17 @@
 - ブラウザ (390px・iOS 相当の判定) で、自分 SB / 相手 BB の内訳と説明、相手 SB 0.3 の案内、英語の初回案内と規約タイトル、日本語の規約に空白が残っていないこと、課金画面を目で確認。
 - 実機・iPad・購入と復元は未確認。
 
-## ストア文面 (案)
+## ストア文面
+
+1.5.1 は審査中に取り下げて公開しないので、1.5.1 の変更 (上のカードの並び、アンティの表示) も 1.5.2 の更新説明に入れた。
 
 更新説明（ja）:
 
 ```
 ・自分か相手がブラインドだけでオールインになるスタックや、相手を選んでいない卓を開き直したときに、計算結果がエラー文に置き換わることがあるのを直しました
 ・自分が先に動く局面（例: 自分 SB・相手 BB）の内訳と説明を、自分からオールインする向きの言葉にしました
+・上のカードを「オールインする人 › コールする人」の順に並べました。スクロール中も、どちらがオールインかが分かります
+・ブラインドの表示で、アンティが「1.0」と「1」で揺れることがあるのを直しました
 ・利用規約やガイドなどの表示を整えました
 ```
 
@@ -46,11 +50,19 @@
 ```
 - Fixed results sometimes being replaced by an error message (for example when a player is all-in from the blinds, or when reopening a table with no villain selected)
 - When you act first (e.g. you in the SB vs the BB), the breakdown and notes now describe your shove
+- The summary card now lists the player going all-in first and the caller second, and keeps the roles visible while scrolling
 - Minor display fixes
 ```
 
-スクショは変えない (変わった画面がストアのスクショに写っていない)。
+審査メモは「What is new in 1.5.1」の節を「What is new in 1.5.2」に置き換えた (1.5.1 の2項目も含む)。説明文・キーワード・スクショは 1.5.1 で入れたもののまま (スクショは 1.5.1 で撮り直した5枚 + 07-bounty)。
 
 ## 提出
 
-2026-11-20 時点で 1.5.1 が審査待ち (WAITING_FOR_REVIEW、承認後に自動公開)。1.5.2 は 1.5.1 が公開されてから出すか、1.5.1 を取り下げて 1.5.2 だけ出すかを決めてから提出する。
+2026-11-20、本人の判断で 1.5.1 を審査中に取り下げ、1.5.2 だけを出した (1.5.1 の変更も 1.5.2 に入っている)。
+
+- 1.5.1 の取り下げ: reviewSubmission `cde82616-eec5-4d61-aefc-c107302b5a54` を `canceled: true` → COMPLETE。バージョンは DEVELOPER_REJECTED になった。
+- 同じバージョン (id `d1e12047-62cb-46f9-b60a-6f688bf573ac`) の versionString を 1.5.2 に変え、更新説明 (ja / en-US) と審査メモ (「What is new in 1.5.2」の節) を差し替えた。説明文・スクショは 1.5.1 のまま。
+- ビルド: main `9262f08` から `npm run cap:sync` → Archive (`artifacts/release-1.5.2/PokerICM-1.5.2-build1.xcarchive`、1.5.2 / 1) → `-exportArchive` でアップロード。build `0ca1ee7c-2c16-4eea-a228-928f391acbca` が VALID、usesNonExemptEncryption は false。
+- シミュレーター (iPhone 17、Release 構成、同梱の画面は build 9262f08) で、自分 SB / 相手 BB の内訳 (「追加で出す額」) と説明、自分 SB 0.3 での「コールする額がありません」の案内 (ICM の表と BF マップは出たまま) を確認。
+- 提出: reviewSubmission `6cba888e-06a9-4091-912c-0ea56f06358a`、2026-11-20 02:25 UTC に WAITING_FOR_REVIEW。releaseType は AFTER_APPROVAL (承認されたら自動で公開)。
+- ASC の補助スクリプトと ID は `artifacts/release-1.5.2/asc/` (git 管理外。認証の値は入れていない)。
