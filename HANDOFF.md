@@ -850,3 +850,11 @@
 - バージョン: `MARKETING_VERSION = 1.5.2`（build 1）。内容とストア文面の案は `docs/RELEASE_1_5_2.md`。
 - 検証: typecheck、unit（core 112 / playground 363）、build、e2e 19件成功（`19-no-call-spots` を追加）。端のケースを流し直して内部エラー文 0 件。
 - 残件: 1.5.2 の Archive・アップロード・提出はしていない（1.5.1 の公開を待つか、取り下げて 1.5.2 だけ出すかを本人が決める）。実機・iPad・購入と復元は未確認。ストアのスクショは変えない。
+
+## 2026-11-20 1.5.1 を取り下げて 1.5.2(1) を審査に提出（自動公開）
+
+- 本人の判断: 1.5.1 の承認を待たず、取り下げて 1.5.2 だけ出す。
+- 結果: PR #101 を CI（push / pull_request とも success）確認後にマージ（main `9262f08`）。1.5.1 の reviewSubmission を取り下げ（COMPLETE、DEVELOPER_REJECTED）、同じバージョンを 1.5.2 に改名して更新説明と審査メモを差し替え。Archive → アップロード → build `0ca1ee7c…` が VALID → 紐付けて提出。reviewSubmission `6cba888e-06a9-4091-912c-0ea56f06358a`、WAITING_FOR_REVIEW、AFTER_APPROVAL。詳細は `docs/RELEASE_1_5_2.md`。
+- 検証: シミュレーター（iPhone 17、Release）で、自分 SB / 相手 BB の内訳と説明、コールする額が無い局面の案内を確認。同梱の画面は build 9262f08。
+- その他: 引き継ぎプロンプトを `artifacts/handoff-prompt-2026-11-20.md`（git 管理外）に作成。ASC の補助スクリプトを `artifacts/release-1.5.2/asc/` に置いた（認証の値は入れていない）。
+- 残件: 審査結果待ち（承認されたら自動で公開）。実機・iPad・購入と復元は未確認。
