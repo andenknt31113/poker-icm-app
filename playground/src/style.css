@@ -195,15 +195,10 @@ input:focus {
 .presets.saved {
   min-height: 28px;
 }
-
-html[lang="en"] .presets.saved:empty::before {
-  content: "(nothing saved yet)";
-}
-.presets.saved:empty::before {
-  content: "（保存済みなし）";
+.saved-empty-hint {
   font-size: 11px;
   color: var(--muted);
-  font-style: italic;
+  margin: 0;
 }
 
 .saved-preset {
@@ -407,6 +402,12 @@ th {
 }
 .eq-flow-rp .eq-flow-value {
   color: var(--warn);
+}
+.eq-flow-rp.is-good .eq-flow-value {
+  color: var(--good);
+}
+.eq-flow-rp.is-neutral .eq-flow-value {
+  color: var(--accent);
 }
 .eq-flow-final {
   background: color-mix(in srgb, var(--accent) 8%, var(--bg));
@@ -2603,6 +2604,22 @@ body.tutorial-active #practice-next-btn-top {
 }
 .warn-box strong {
   color: #ffd54f;
+}
+.ok-box {
+  background: color-mix(in srgb, var(--good) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--good) 40%, transparent);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--good);
+}
+.ok-box.hidden {
+  display: none;
+}
+.ok-box strong {
+  color: var(--text);
 }
 
 .hand-cell {

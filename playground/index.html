@@ -26,7 +26,7 @@
       </header>
 
       <div id="hero-summary" class="hero-summary"></div>
-      <div id="info-modal" class="info-modal hidden">
+      <div id="info-modal" class="info-modal hidden" role="dialog" aria-modal="true" aria-labelledby="info-modal-title">
         <div class="info-modal-content">
           <div class="info-modal-header">
             <h3 id="info-modal-title"></h3>
@@ -189,6 +189,7 @@
           </thead>
           <tbody id="icm-rows"></tbody>
         </table>
+        <p class="hint hidden" id="icm-bounty-note" style="margin-top: 8px;" data-i18n="result.icm.bountyNote"></p>
       </section>
 
       <section class="card" data-tab="analyze" data-analysis-panel="equity" id="sec-chop">
@@ -213,6 +214,7 @@
           <tbody id="chop-rows"></tbody>
         </table>
         <p class="hint" id="chop-total"></p>
+        <p class="hint hidden" id="chop-bounty-note" data-i18n="chop.bountyNote"></p>
         <p class="hint" data-i18n="chop.note">ICM チョップは各自の賞金期待値どおりに分ける、一般に公平とされる方法です。チップ比例は最下位ぶんを全員に保証して残りをチップの比で分けるもので、チップリーダーに有利になります。</p>
       </section>
 

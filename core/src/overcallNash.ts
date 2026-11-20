@@ -24,8 +24,13 @@
  */
 
 import { calculateICM } from "./icm.js";
-import { bountyEquities, type Knockout } from "./bounty.js";
-import { buildMultiwayTerminals, computeNodeValues, type MultiwayPushFoldInput } from "./multiwayNash.js";
+import { bountyEquities, equitiesWithBounty, type Knockout } from "./bounty.js";
+import {
+  buildMultiwayTerminals,
+  computeNodeValues,
+  validateMultiwayInput,
+  type MultiwayPushFoldInput,
+} from "./multiwayNash.js";
 import type { ComboWeightFn, HandLabel } from "./nash.js";
 
 /**
@@ -98,8 +103,8 @@ export function solveOvercallPushFold(input: OvercallPushFoldInput): OvercallPus
   } = input;
 
   // 入力の検証と 2 人対決の終端は multiwayNash と共通
+  validateMultiwayInput(input);
   const terminals = buildMultiwayTerminals(input);
-  if (callerIndices.length === 0) throw new Error("OvercallNash: callerIndices が空");
   const n = allHands.length;
   const K = callerIndices.length;
 
@@ -146,11 +151,15 @@ export function solveOvercallPushFold(input: OvercallPushFoldInput): OvercallPus
   function icmWithBustOrder(final: readonly number[], involved: readonly number[]): number[] {
     const clipped = final.map((v) => Math.max(0, v));
     const icm = calculateICM(clipped, payouts).slice();
-    const busted = involved.filter((i) => clipped[i]! <= 0);
-    if (busted.length < 2) return icm;
+    const allZero = clipped.map((v, i) => (v <= 0 ? i : -1)).filter((i) => i >= 0);
+    if (allZero.length < 2) return icm;
+    const involvedSet = new Set(involved);
+    const bustedHere = involved.filter((i) => clipped[i]! <= 0);
+    if (bustedHere.length < 2 && allZero.length === bustedHere.length) return icm;
+    const priorZero = allZero.filter((i) => !involvedSet.has(i));
     const alive = clipped.filter((v) => v > 0).length;
-    // 開始スタックの多い順に、残っている人の次の順位から割り当てる
-    const ordered = busted.slice().sort((a, b) => stacks[b]! - stacks[a]!);
+    // 今回飛んだ人を開始スタックの多い順に割り当て、もともと 0 だった人はその後ろの順位にする
+    const ordered = bustedHere.slice().sort((a, b) => stacks[b]! - stacks[a]!);
     let place = alive;
     for (let i = 0; i < ordered.length; ) {
       let j = i;
@@ -160,6 +169,11 @@ export function solveOvercallPushFold(input: OvercallPushFoldInput): OvercallPus
       for (let q = i; q <= j; q++) icm[ordered[q]!] = sum / (j - i + 1);
       place += j - i + 1;
       i = j + 1;
+    }
+    if (priorZero.length > 0) {
+      let sum = 0;
+      for (let q = 0; q < priorZero.length; q++) sum += payouts[place + q] ?? 0;
+      for (const idx of priorZero) icm[idx] = sum / priorZero.length;
     }
     return icm;
   }
@@ -320,7 +334,7 @@ export function solveOvercallPushFold(input: OvercallPushFoldInput): OvercallPus
     const down = stacks.slice();
     up[i] = stacks[i]! + d;
     down[i] = Math.max(0, stacks[i]! - d);
-    const s = (calculateICM(up, payouts)[i]! - calculateICM(down, payouts)[i]!) / (up[i]! - down[i]!);
+    const s = (equitiesWithBounty(up, payouts, bounty)[i]! - equitiesWithBounty(down, payouts, bounty)[i]!) / (up[i]! - down[i]!);
     return Math.abs(s) > 1e-12 ? Math.abs(s) * bigBlind : 1;
   };
   const slopeP = slopeOf(P);

@@ -42,6 +42,9 @@ function ensureOnboardingModal(): HTMLDivElement {
   const modal = document.createElement("div");
   modal.id = "onboarding-modal";
   modal.className = "onboarding-modal hidden";
+  modal.setAttribute("role", "dialog");
+  modal.setAttribute("aria-modal", "true");
+  modal.setAttribute("aria-labelledby", "onboarding-title");
   modal.innerHTML = `
     <div class="onboarding-modal-content">
       <div class="onboarding-modal-header">
@@ -116,6 +119,8 @@ export function openOnboardingModal(): void {
 function closeOnboardingModal(): void {
   onboardingModalEl?.classList.add("hidden");
   markOnboardingDone();
+  // 初回案内を閉じた直後に「サンプル」札が残らないよう、その場で外す
+  document.querySelector(".hero-summary-sample-badge")?.remove();
 }
 
 // ===== 使い方ガイド（❓ ボタン、常設） =====
@@ -139,10 +144,13 @@ function ensureGuideModal(): HTMLDivElement {
   const modal = document.createElement("div");
   modal.id = "guide-modal";
   modal.className = "guide-modal hidden";
+  modal.setAttribute("role", "dialog");
+  modal.setAttribute("aria-modal", "true");
+  modal.setAttribute("aria-labelledby", "guide-modal-title");
   modal.innerHTML = `
     <div class="guide-modal-content">
       <div class="guide-modal-header">
-        <h3>${t("guide.title")}</h3>
+        <h3 id="guide-modal-title">${t("guide.title")}</h3>
         <button type="button" class="guide-modal-close" id="guide-modal-close" aria-label="${t("guide.close.aria")}">✕</button>
       </div>
       <div class="guide-modal-body">${proNoteHtml()}${t("guide.body.html")}</div>
@@ -188,10 +196,13 @@ function ensureLegalModal(): HTMLDivElement {
   const modal = document.createElement("div");
   modal.id = "legal-modal";
   modal.className = "guide-modal hidden";
+  modal.setAttribute("role", "dialog");
+  modal.setAttribute("aria-modal", "true");
+  modal.setAttribute("aria-labelledby", "legal-modal-title");
   modal.innerHTML = `
     <div class="guide-modal-content">
       <div class="guide-modal-header">
-        <h3>${t("legal.title")}</h3>
+        <h3 id="legal-modal-title">${t("legal.title")}</h3>
         <button type="button" class="guide-modal-close" id="legal-modal-close" aria-label="${t("guide.close.aria")}">✕</button>
       </div>
       <div class="guide-modal-body legal-modal-body">

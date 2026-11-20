@@ -4,6 +4,7 @@
 import { calculateBubbleFactor, type BountySpec } from "@poker-icm/core";
 import { $ } from "./dom.js";
 import { players } from "./appState.js";
+import { fmt } from "./format.js";
 
 const bfMatrix = $<HTMLDivElement>("bf-matrix");
 
@@ -13,15 +14,26 @@ const BF_CELL_BG_ERROR = "#444";
 const BF_CELL_BG_NO_RISK = "#222";
 
 /**
- * BF を hue（黄 → 赤）に対応付けて HSL 文字列を返す。
- * ICM では BF が 1.0 を下回らないので 1.0 (黄) から 2.0 (赤) に割り当てる。
- * 以前は 1.4 で赤が頭打ちになり、バブルの卓 (BF 1.5〜2.0) が全セル同じ赤になっていた。
+ * BF を色に対応付けて HSL 文字列を返す。
+ *   - 1.0 → 2.0 以上: 黄 (60) → 赤 (0)。+∞ も最高危険度の赤。
+ *   - 1.0 未満 (バウンティありで相手をカバーして飛ばせる有利局面): 黄 (60) → 緑 (135)。
  */
+const BF_COLOR_FAVORABLE = 0.5;
 const BF_COLOR_MIN = 1.0;
 const BF_COLOR_MAX = 2.0;
+const HUE_GREEN = 135;
 const HUE_YELLOW = 60;
 export function bfBackground(bf: number): string {
-  if (!Number.isFinite(bf)) return BF_CELL_BG_ERROR;
+  if (bf === Number.POSITIVE_INFINITY) return `hsl(0, 75%, 28%)`;
+  if (!Number.isFinite(bf) || bf < 0) return BF_CELL_BG_ERROR;
+  if (bf < BF_COLOR_MIN) {
+    const clamped = Math.max(BF_COLOR_FAVORABLE, bf);
+    const t = (BF_COLOR_MIN - clamped) / (BF_COLOR_MIN - BF_COLOR_FAVORABLE);
+    const hue = HUE_YELLOW + (HUE_GREEN - HUE_YELLOW) * t;
+    const sat = 46 + t * 14;
+    const light = 30 - t * 2;
+    return `hsl(${hue.toFixed(0)}, ${sat.toFixed(0)}%, ${light.toFixed(0)}%)`;
+  }
   const clamped = Math.max(BF_COLOR_MIN, Math.min(BF_COLOR_MAX, bf));
   const t = (clamped - BF_COLOR_MIN) / (BF_COLOR_MAX - BF_COLOR_MIN);
   const hue = HUE_YELLOW * (1 - t);
@@ -33,6 +45,7 @@ export function bfBackground(bf: number): string {
 
 /** BF を所与に、1:1ポット時の Risk Premium を返す（百分率）。 */
 function bfRiskPremiumPct(bf: number): number {
+  if (bf === Number.POSITIVE_INFINITY) return 50;
   if (!Number.isFinite(bf)) return 0;
   // cEV breakeven (1:1 ポット) = 50%
   // $EV breakeven = bf / (bf + 1)
@@ -107,10 +120,11 @@ export function renderBFMatrix(stacks: number[], payouts: number[], bounty?: Bou
           bounty,
         });
         const bg = bfBackground(r.bf);
-        const rp = bfRiskPremiumPct(r.bf);
+        const rawRp = bfRiskPremiumPct(r.bf);
+        const rp = Math.round(rawRp * 10) / 10 || 0;
         const rpStr = (rp >= 0 ? "+" : "") + rp.toFixed(1);
         cells.push(
-          `<div class="bf-cell" style="background:${bg}"><span class="bf-rp">${rpStr}%</span><span class="bf-val">${r.bf.toFixed(2)}</span></div>`,
+          `<div class="bf-cell" style="background:${bg}"><span class="bf-rp">${rpStr}%</span><span class="bf-val">${fmt(r.bf, 2)}</span></div>`,
         );
       } catch {
         cells.push(`<div class="bf-cell" style="background:${BF_CELL_BG_ERROR}">—</div>`);

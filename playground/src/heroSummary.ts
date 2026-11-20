@@ -8,6 +8,7 @@ import { isOnboardingDone } from "./guide.js";
 import { openInfoModal } from "./infoModal.js";
 import { applyTab } from "./tabs.js";
 import { setAnalysisView } from "./analysisView.js";
+import { fmt } from "./format.js";
 import type { RangeVerdictSummary } from "./handRange.js";
 
 const heroSummaryEl = $<HTMLDivElement>("hero-summary");
@@ -122,6 +123,7 @@ export function renderHeroSummary(a: HeroSummaryArg): void {
   const num = (text: string): string => (missing ? "—" : text);
   // 表示の桁 (小数 1 桁) に丸めてから符号を決める。丸める前の -0.00001 をそのまま出すと「-0.0%」になる。
   const rpPct = Math.round(a.rp * 1000) / 10 || 0;
+  const rpClass = missing ? "" : rpPct < 0 ? "good" : rpPct === 0 ? "accent" : "warn";
 
   heroSummaryEl.innerHTML = `
     <div class="hero-summary-body">
@@ -140,11 +142,11 @@ export function renderHeroSummary(a: HeroSummaryArg): void {
         </div>
         <div class="hero-summary-item" data-info="RP">
           <div class="hero-summary-label tappable">${t("calc.summary.rpLabel")}</div>
-          <div class="hero-summary-value warn">${num(`${rpPct >= 0 ? "+" : ""}${rpPct.toFixed(1)}<span class="unit">%</span>`)}</div>
+          <div class="hero-summary-value ${rpClass}">${num(`${rpPct >= 0 ? "+" : ""}${rpPct.toFixed(1)}<span class="unit">%</span>`)}</div>
         </div>
         <div class="hero-summary-item" data-info="BF">
           <div class="hero-summary-label tappable">${t("calc.summary.bfLabel")}</div>
-          <div class="hero-summary-value ${missing ? "" : bfClass}">${num(a.bf.toFixed(2))}</div>
+          <div class="hero-summary-value ${missing ? "" : bfClass}">${num(fmt(a.bf, 2))}</div>
         </div>
       </div>
       ${missing ? `<p class="hint hero-summary-missing" role="status">${t(missing)}</p>` : verdictLineHtml(hasVillain, a.rangeVerdict)}

@@ -858,3 +858,25 @@
 - 検証: シミュレーター（iPhone 17、Release）で、自分 SB / 相手 BB の内訳と説明、コールする額が無い局面の案内を確認。同梱の画面は build 9262f08。
 - その他: 引き継ぎプロンプトを `artifacts/handoff-prompt-2026-11-20.md`（git 管理外）に作成。ASC の補助スクリプトを `artifacts/release-1.5.2/asc/` に置いた（認証の値は入れていない）。
 - 残件: 審査結果待ち（承認されたら自動で公開）。実機・iPad・購入と復元は未確認。
+
+## 2026-11-20 全体レビューと一括改善（fix/full-review-polish）
+
+- 背景: 本人依頼「一旦このアプリの全体レビューして改善しまくってください」。core / playground / CSS / locales / support.html の全コード精査と Playwright（375px・390px・1032px / 日英 / Free・Pro / 各種エッジケース）の実画面目視で洗い出した不具合と UX 課題をまとめて修正。
+- 計算コア・エッジケース修正:
+  - 負のブラインド・アンティ入力で `calculatePotOdds` が例外を投げ、英語 UI でも日本語生エラーで ICM 表ごと消滅していたのを `readBlindParams()` と blur 正規化で防御（スタック・賞金入力の負数も blur 時に表示を正規化、`catch` 表示も `escapeHtml`）。
+  - 自分からオールイン (`pushBack`) で相手がショート BB（例: 1.5BB, ante 1）のとき、`pushSpot.ts` の `callerBlind` 未クランプで 0%（AA も不可）になるバグを修正。あわせて `core/src/callDecision.ts`, `potOdds.ts`, `pushDecision.ts` でブラインド・アンティ支払いを所持スタック上限にクランプし、全終端の非負・チップ総量保存を保証。
+  - `core/src/overcallNash.ts` に `validateMultiwayInput` 呼び出しと既0チップ席混在時の順位補正を追加。`multiwayNash.ts` / `overcallNash.ts` の `slopeOf` でバウンティも考慮。
+  - 均等賞金（サテライト等）で `BF = Infinity` のとき、サマリーに `Infinity` 生文字列、BF マップに灰セル `+0.0% / Infinity` が出ていたのを、サマリー `∞`・BF マップ赤セル `+50.0% / ∞` に修正。
+  - Nash 一覧 (`nashTableUI.ts`) で、計算途中にタブ離脱→復帰すると未完了のまま止まるレース条件と、全員スタック 0 時に「位置が足りない」誤表示・自動入力ボタンが出る不具合を修正。
+- UI / UX / 課金 / 文言修正:
+  - `handRange.ts`: 自分からオールイン時の凡例色が 🟩（実際は赤）だった矛盾を 🟥 に修正、`pushBack` でもハンドセルタップで数値検分（相手コール率・コール時勝率・賞金期待値差・判定）を表示可能に（向き切替時は選択をクリア）。`#use-nash-range` の連打防止・stale ノート自動消去・multiway 注釈の厳密化。ドラッグ塗りを rAF でバッチ化。後ろに誰もいないときのバナーを緑トーン (`.ok-box`) に変更し、日本語「hero (自分)」を「自分」に統一。
+  - `bfMatrix.ts` / `heroSummary.ts` / `calculator.ts`: バウンティありで BF < 1.0 の有利セルを緑寄りグラデーションに、負 RP を `.good` 色に。RP の桁を上のカード・内訳とも小数 1 桁に統一し `-0.0%` を防止。ICM 表・チョップにバウンティ ON 時の注記を追加。
+  - `calculator.ts`: 相手未指定・手入力時に古い自動算出の内訳 (`#autofill-hint`) が居座る不具合を修正し、`#autofill-call` のデッドコードを整理。
+  - `calc.css`: 375px 英語・無料・5人以上ロック時に `None` ボタンが右端で切れていたのを、🔒 をスタック入力欄内に重ねる 4 列維持レイアウトで解消（列ヘッダーズレも解消）。
+  - `guide.ts`: 初回案内を閉じた直後に「サンプル」バッジを即削除。各モーダルに `role="dialog" aria-modal="true"` を付与。
+  - `setupPayouts.ts` / `setupScenarios.ts` / `setupPlayers.ts`: Pro 切替時に `#save-payout` のロックが外れない漏れを修正。賞金と局面で「保存なし」文言を辞書キーで統一。空白のみ保存名・破損保存データ・シナリオ切替時の二重 `recompute()`・変化なしの `[data-fill-positions]` Undo 履歴を修正。
+  - `entitlement.ts` / `paywall.ts`: 起動直後の `Purchases.configure()` 完了前呼び出しレースを `ensurePurchasesConfigured()` で防止し、購入/復元処理中はボタンを `disabled` + `aria-busy` に。
+  - `public/support.html`: `🎰` → `♠` に統一、FAQ に賞金保存とバウンティ (KO/PKO) を追記。`calc.warn.depth.html` の `bb` → `BB` 統一。
+- 検証: `npm run typecheck`、unit（core 116 / playground 368）、`npm run build`、e2e 20件（`20-review-improvements.mjs` を追加、Chrome 実行）すべて成功。修正後の画面スクショ 4 種（pushBack 検分・バウンティ BF・均等賞金 ∞・375px 英語 9人卓）を目視確認。
+- 残件: 1.5.2 は別途審査待ち（WAITING_FOR_REVIEW）のため、本修正は次期 iOS リリース（1.5.3 等）のビルドに含める想定。実機・iPad・購入と復元は未確認。
+

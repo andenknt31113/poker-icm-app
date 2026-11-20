@@ -83,4 +83,9 @@ describe("solveOvercallPushFold", () => {
     expect(result.callRanges[0]!.has("AA")).toBe(true);
     expect(result.overcallRanges[0]![0]!.has("AA")).toBe(true);
   });
+
+  it("不正入力 (callerIndices 重複など) は例外を投げる", () => {
+    expect(() => solveOvercallPushFold({ ...base, callerIndices: [1, 1], threeWay })).toThrow();
+    expect(() => solveOvercallPushFold({ ...base, callerIndices: [], threeWay })).toThrow();
+  });
 });

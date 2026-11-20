@@ -157,6 +157,22 @@ describe("calculatePotOdds (BB ante 構造)", () => {
     expect(r.callAmount).toBeCloseTo(0.01, 6);
   });
 
+  it("BB が ante 未満のショートスタックでも live / pot が負にならない", () => {
+    const r = calculatePotOdds({
+      heroStack: 0.5,
+      villainStack: 10,
+      heroPosition: "BB",
+      villainPosition: "SB",
+      sb: 0.5,
+      bb: 1,
+      ante: 1,
+    });
+    expect(r.matched).toBe(0);
+    expect(r.heroLiveCommit).toBe(0);
+    expect(r.deadBreakdown.anteDead).toBeCloseTo(0.5, 6);
+    expect(r.potAtShowdown).toBeCloseTo(0.5, 6);
+  });
+
   it("不正値はエラー", () => {
     expect(() =>
       calculatePotOdds({

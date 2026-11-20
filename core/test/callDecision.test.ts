@@ -284,4 +284,26 @@ describe("calculateExactCallEquity", () => {
     expect(sum(r.stacksWin)).toBeCloseTo(3620, 6);
     expect(r.stacksWin[1]).toBe(3120);
   });
+
+  it("hero (BB) が ante + bb 未満のショートスタックでも負にならずチップ総量を保存する", () => {
+    const stacks = [10, 10, 1.5];
+    const total = sum(stacks);
+    const r = calculateExactCallEquity({
+      stacks,
+      payouts: [50, 30, 20],
+      heroIndex: 2,
+      villainIndex: 0,
+      heroPosition: "BB",
+      villainPosition: "OTHER",
+      sbPlayerIndex: 1,
+      sb: 0.5,
+      bb: 1,
+      ante: 1,
+    });
+    for (const st of [r.stacksFold, r.stacksWin, r.stacksLose]) {
+      expect(st.every((v) => v >= 0)).toBe(true);
+      expect(sum(st)).toBeCloseTo(total, 6);
+    }
+    expect(r.stacksFold[2]).toBe(0);
+  });
 });
