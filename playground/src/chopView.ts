@@ -3,6 +3,7 @@
 // 金額を表にする。刻み (丸め) だけこの画面の状態として持つ。
 import { calculateChop } from "./chop.js";
 import { players } from "./appState.js";
+import { hapticSelection } from "./haptics.js";
 import { t } from "./i18n.js";
 
 /** 刻みを選べるのは、賞金の合計がその刻みの何倍以上あるときか。 */
@@ -66,7 +67,9 @@ export function clearChop(): void {
 export function initChop(): void {
   document.querySelectorAll<HTMLButtonElement>("[data-chop-unit]").forEach((button) => {
     button.addEventListener("click", () => {
-      roundingUnit = Number(button.dataset.chopUnit) || 0;
+      const next = Number(button.dataset.chopUnit) || 0;
+      if (next !== roundingUnit) hapticSelection();
+      roundingUnit = next;
       renderChop(lastStacks, lastPayouts);
     });
   });

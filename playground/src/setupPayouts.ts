@@ -11,6 +11,8 @@ import { recompute } from "./calculator.js";
 import { parseList, sanitizePayoutsArray, players } from "./appState.js";
 import { payoutsInput, payoutsArr, replacePayouts } from "./domRefs.js";
 import { escapeHtml } from "./html.js";
+import { openPromptModal } from "./dialogModal.js";
+import { hapticLight, hapticSuccess } from "./haptics.js";
 import { STORAGE_KEYS, readJson, writeJson } from "./storage.js";
 
 const payoutsList = $<HTMLDivElement>("payouts-list");
@@ -181,6 +183,7 @@ export function initPayoutsUI(): void {
     if (payoutsArr.length > 1) {
       const i = Number(remove.dataset.i);
       if (Number.isFinite(i) && i >= 0 && i < payoutsArr.length) {
+        hapticLight();
         checkpointSetup();
         payoutsArr.splice(i, 1);
         syncPayoutsInput();
@@ -193,6 +196,7 @@ export function initPayoutsUI(): void {
   addPayoutBtn.addEventListener("click", () => {
     if (!isPro() && players.length > FREE_MAX_PLAYERS) return openPaywall();
     if (payoutsArr.length >= MAX_PAYOUTS) return;
+    hapticLight();
     checkpointSetup();
     payoutsArr.push(0);
     syncPayoutsInput();
@@ -210,7 +214,7 @@ export function initPayoutsUI(): void {
       btn.addEventListener("click", () => {
         if (!isPro() && players.length > FREE_MAX_PLAYERS) return openPaywall();
         const v = btn.dataset.preset;
-        if (v) { checkpointSetup(); setPayouts(parseList(v)); }
+        if (v) { hapticLight(); checkpointSetup(); setPayouts(parseList(v)); }
       });
     });
 
@@ -225,12 +229,14 @@ export function initPayoutsUI(): void {
     const idx = Number(wrap.dataset.i);
     const list = loadSavedPayouts();
     if (target.classList.contains("del")) {
+      hapticLight();
       list.splice(idx, 1);
       persistSavedPayouts(list);
       renderSavedPayouts();
       return;
     }
     if (target.classList.contains("load")) {
+      hapticLight();
       checkpointSetup();
       setPayouts(parseList(target.dataset.value ?? ""));
     }
@@ -241,16 +247,18 @@ export function initPayoutsUI(): void {
     if (!isPro()) return openPaywall();
     const value = payoutsInput.value.trim();
     if (!value) return;
-    const rawName = window.prompt(
-      tr("setup.prompt.savePayout"),
-      "",
-    );
-    const name = rawName?.trim();
-    if (!name) return;
-    const list = loadSavedPayouts();
-    list.push({ name: name.slice(0, SAVED_PAYOUT_NAME_MAX), value });
-    persistSavedPayouts(list);
-    renderSavedPayouts();
+    void openPromptModal({
+      title: tr("setup.prompt.savePayout"),
+      placeholder: tr("setup.prompt.payoutPlaceholder"),
+      maxLength: SAVED_PAYOUT_NAME_MAX,
+    }).then((name) => {
+      if (!name) return;
+      const list = loadSavedPayouts();
+      list.push({ name: name.slice(0, SAVED_PAYOUT_NAME_MAX), value });
+      persistSavedPayouts(list);
+      renderSavedPayouts();
+      hapticSuccess();
+    });
   });
 
   renderSavedPayouts();

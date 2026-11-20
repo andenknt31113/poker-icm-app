@@ -26,6 +26,8 @@ import {
 import { renderPlayers, replacePlayers } from "./setupPlayers.js";
 import { setPayouts } from "./setupPayouts.js";
 import { escapeHtml } from "./html.js";
+import { openConfirmModal, openPromptModal } from "./dialogModal.js";
+import { hapticLight, hapticSuccess } from "./haptics.js";
 import { getBountyMode, setBountyMode, isBountyMode, sanitizeBounty } from "./bountyState.js";
 import { STORAGE_KEYS, readJson, writeJson } from "./storage.js";
 
@@ -238,7 +240,10 @@ export function initScenariosUI(): void {
   document.querySelectorAll<HTMLButtonElement>(".scenario-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const id = btn.dataset.scenario;
-      if (id) applyScenario(id);
+      if (id) {
+        hapticLight();
+        applyScenario(id);
+      }
     });
   });
 
@@ -246,13 +251,18 @@ export function initScenariosUI(): void {
   saveScenarioBtn?.classList.toggle("locked-pro", !isPro());
   saveScenarioBtn?.addEventListener("click", () => {
     if (!isPro()) return openPaywall();
-    const rawName = window.prompt(tr("setup.prompt.scenarioName"), "");
-    const name = rawName?.trim();
-    if (!name) return;
-    const list = loadUserScenarios();
-    list.push({ name: name.slice(0, USER_SCENARIO_NAME_MAX), s: captureCurrentScenario() });
-    saveUserScenarios(list);
-    renderUserScenarios();
+    void openPromptModal({
+      title: tr("setup.prompt.scenarioName"),
+      placeholder: tr("setup.prompt.scenarioPlaceholder"),
+      maxLength: USER_SCENARIO_NAME_MAX,
+    }).then((name) => {
+      if (!name) return;
+      const list = loadUserScenarios();
+      list.push({ name: name.slice(0, USER_SCENARIO_NAME_MAX), s: captureCurrentScenario() });
+      saveUserScenarios(list);
+      renderUserScenarios();
+      hapticSuccess();
+    });
   });
 
   document.getElementById("user-scenarios")?.addEventListener("click", (e) => {
@@ -260,19 +270,29 @@ export function initScenariosUI(): void {
     const wrap = target.closest<HTMLSpanElement>(".user-scenario-item");
     if (!wrap) return;
     const idx = Number(wrap.dataset.i);
-    const list = loadUserScenarios();
     if (target.classList.contains("user-del")) {
-      if (window.confirm(tr("setup.confirm.deleteScenario"))) {
+      void openConfirmModal({
+        title: tr("setup.confirm.deleteScenarioTitle"),
+        message: tr("setup.confirm.deleteScenario"),
+        confirmLabel: tr("dialog.delete"),
+        danger: true,
+      }).then((confirmed) => {
+        if (!confirmed) return;
+        const list = loadUserScenarios();
+        if (idx < 0 || idx >= list.length) return;
         list.splice(idx, 1);
         saveUserScenarios(list);
         renderUserScenarios();
-      }
+        hapticLight();
+      });
       return;
     }
+    const list = loadUserScenarios();
     if (target.classList.contains("user-load")) {
       const s = list[idx]?.s;
       const sanitizedPlayers = s ? sanitizePlayersArray(s.players) : [];
       if (s && sanitizedPlayers.length > 0) {
+        hapticLight();
         checkpointSetup();
         setBountyMode(isBountyMode(s.bountyMode) ? s.bountyMode : "off");
         replacePlayers(sanitizedPlayers);

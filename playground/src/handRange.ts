@@ -27,6 +27,7 @@ import { buildPushSpot, pushDepthTier } from "./pushSpot.js";
 import { fmt } from "./format.js";
 import { solveSpotNash } from "./nashRange.js";
 import { loadThreeWayTable } from "./threeWay.js";
+import { hapticLight, hapticSelection } from "./haptics.js";
 
 // ===== DOM 参照 (ハンド比較タブ) =====
 const pushRangeInput = $<HTMLInputElement>("push-range");
@@ -589,7 +590,10 @@ export function initHandRange(onChange: () => void): void {
         .forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       const next = btn.dataset.direction as Direction;
-      if (next !== direction) inspectedHand = null;
+      if (next !== direction) {
+        inspectedHand = null;
+        hapticSelection();
+      }
       direction = next;
       onChange();
     });
@@ -707,6 +711,7 @@ export function initHandRange(onChange: () => void): void {
   heroGrid.addEventListener("click", (e) => {
     const cell = (e.target as HTMLElement).closest<HTMLDivElement>(".hand-cell");
     if (!cell || !cell.title) return;
+    hapticSelection();
     inspectedHand = inspectedHand === cell.title ? null : (cell.title as HandNotation);
     onChange();
     if (inspectedHand) document.getElementById("hand-cell-detail")?.scrollIntoView({ block: "center", behavior: "smooth" });
@@ -753,6 +758,7 @@ export function initHandRange(onChange: () => void): void {
       customVillainRange.clear();
       for (const hand of range) customVillainRange.add(hand);
       saveCustomRange();
+      hapticLight();
       if (note) {
         note.textContent =
           t(villainPushes ? "hand.nashRange.donePush" : "hand.nashRange.doneCall", {
@@ -786,6 +792,7 @@ export function initHandRange(onChange: () => void): void {
   // レンジの目安ボタン (スライダーはスマホで狙った値に合わせにくい)
   document.querySelectorAll<HTMLButtonElement>("[data-range-pct]").forEach((button) => {
     button.addEventListener("click", () => {
+      hapticSelection();
       pushRangeInput.value = button.dataset.rangePct ?? pushRangeInput.value;
       onChange();
     });

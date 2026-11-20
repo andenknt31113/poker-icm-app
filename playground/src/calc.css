@@ -380,3 +380,60 @@ body.no-practice.workspace .container { padding-bottom: 40px; }
 }
 .bounty-name { font-family: var(--mono); }
 .eq-bounty-note { margin: 8px 0 0; }
+
+/* ===== アプリ内入力・確認ダイアログ (dialogModal.ts) ===== */
+.dialog-modal .dialog-modal-content {
+  max-width: 420px;
+  width: calc(100% - 32px);
+}
+.dialog-modal-body {
+  padding: 16px 20px 20px;
+}
+.dialog-modal-message {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text);
+  white-space: pre-line;
+}
+.dialog-modal-input {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 12px;
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--text);
+  background: #0d1611;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.dialog-modal-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.dialog-modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 16px;
+}
+.dialog-modal-actions button {
+  min-height: 44px;
+  width: 100%;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 10px;
+}
+.dialog-modal-actions .dialog-btn-confirm:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.dialog-btn-danger {
+  background: #8c3d35;
+  color: #fff4f2;
+  border: 1px solid #c26a5e;
+  cursor: pointer;
+}
+.dialog-btn-danger:hover {
+  background: #a3473e;
+}

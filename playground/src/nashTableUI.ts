@@ -21,6 +21,7 @@ import { players, parseList } from "./appState.js";
 import { payoutsInput, readBlindParams } from "./domRefs.js";
 import { noteNashFinishedForReview } from "./reviewPrompt.js";
 import { NASH_COLLAPSE_MIN_CALLERS, isCallerRowPinned } from "./nashRows.js";
+import { hapticSelection } from "./haptics.js";
 
 interface TableState {
   key: string;
@@ -253,6 +254,7 @@ export function initNashTable(): void {
   el.addEventListener("click", (event) => {
     const more = (event.target as HTMLElement).closest<HTMLButtonElement>("[data-nash-more]");
     if (more) {
+      hapticSelection();
       const pusher = Number(more.dataset.nashMore);
       if (expandedGroups.has(pusher)) expandedGroups.delete(pusher);
       else expandedGroups.add(pusher);
@@ -261,6 +263,7 @@ export function initNashTable(): void {
     }
     const row = (event.target as HTMLElement).closest<HTMLButtonElement>("[data-nash-row]");
     if (!row) return;
+    hapticSelection();
     const key = row.dataset.nashRow ?? null;
     openRow = openRow === key ? null : key;
     render();

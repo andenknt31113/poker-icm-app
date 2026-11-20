@@ -9,6 +9,7 @@ import { isPro } from "./entitlement.js";
 import { openPaywall } from "./paywall.js";
 import { recompute } from "./calculator.js";
 import { checkpointSetup } from "./setupUndo.js";
+import { hapticLight, hapticSelection } from "./haptics.js";
 import { players } from "./appState.js";
 import {
   BOUNTY_MODES,
@@ -76,6 +77,7 @@ function chooseMode(next: BountyMode): void {
     return;
   }
   if (next === getBountyMode()) return;
+  hapticSelection();
   checkpointSetup();
   setBountyMode(next);
   renderBounty();
@@ -126,6 +128,7 @@ export function initBountyUI(): void {
     const head = parseBountyInput(all.value);
     if (all.value.trim() !== "" && !(Number(all.value) >= 0)) all.value = "";
     if (players.every((player) => sanitizeBounty(player.bounty) === head)) return;
+    hapticLight();
     checkpointSetup();
     for (const player of players) player.bounty = head;
     renderBounty();

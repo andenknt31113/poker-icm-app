@@ -1,3 +1,5 @@
+import { hapticSelection } from "./haptics.js";
+
 export const ANALYSIS_TARGETS = {
   "sec-hand": "hand",
   "sec-icm": "equity",
@@ -30,6 +32,7 @@ export function initAnalysisView(): void {
       const target = (button.dataset.jump ?? button.dataset.analysisTarget) as keyof typeof ANALYSIS_TARGETS;
       const view = ANALYSIS_TARGETS[target];
       if (!view) return;
+      if (view !== currentView) hapticSelection();
       setAnalysisView(view);
       document.querySelector(".analyze-jump")?.scrollIntoView({ block: "start", behavior: "smooth" });
     });

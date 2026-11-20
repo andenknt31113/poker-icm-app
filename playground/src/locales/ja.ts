@@ -102,8 +102,17 @@ export const ja: Record<string, string> = {
   "setup.userScenarios.empty": "まだ保存なし。「＋ 現在の状況を保存」を押すと追加",
   "setup.savedPayouts.empty": "まだ保存なし。「＋ 現在の値を保存」を押すと追加",
   "setup.prompt.scenarioName": "保存する局面の名前を入力",
+  "setup.prompt.scenarioPlaceholder": "例: FT バブル 4人残り",
+  "setup.confirm.deleteScenarioTitle": "保存した局面を削除",
   "setup.confirm.deleteScenario": "保存したこの局面を削除しますか？",
-  "setup.prompt.savePayout": "名前を付けて保存（例: JOPT / APT / マイHU）",
+  "setup.prompt.savePayout": "賞金配分に名前を付けて保存",
+  "setup.prompt.payoutPlaceholder": "例: JOPT / APT / マイHU",
+  "dialog.cancel": "キャンセル",
+  "dialog.save": "保存",
+  "dialog.ok": "OK",
+  "dialog.delete": "削除する",
+  "dialog.reset": "リセットする",
+  "dialog.close.aria": "閉じる",
 
   // ===== index.html: セットアップ - プレイヤー =====
   "setup.players.h2": "局面",
@@ -591,6 +600,7 @@ export const ja: Record<string, string> = {
   "practice.progress.mode.rp": "RP 当て",
   "practice.progress.mode.push": "push 判定",
   "practice.progress.resetBtn": "🗑️ 履歴をリセット",
+  "practice.progress.resetTitle": "練習履歴をリセット",
   "practice.progress.resetConfirm": "練習履歴（成績の推移データ）をリセットしますか？\n※連続正解数・累計正解率・復習リストは変更されません。",
 
   // ===== 計算結果 (calculator.ts) =====

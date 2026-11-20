@@ -109,8 +109,17 @@ export const en: Record<string, string> = {
   "setup.userScenarios.empty": "No saves yet. Tap “+ Save current situation” to add one.",
   "setup.savedPayouts.empty": "No saves yet. Tap “+ Save current values” to add one.",
   "setup.prompt.scenarioName": "Name this saved spot",
+  "setup.prompt.scenarioPlaceholder": "e.g. FT bubble 4 left",
+  "setup.confirm.deleteScenarioTitle": "Delete saved spot",
   "setup.confirm.deleteScenario": "Delete this saved spot?",
-  "setup.prompt.savePayout": "Save with a name (e.g. JOPT / APT / My HU)",
+  "setup.prompt.savePayout": "Name this saved payout",
+  "setup.prompt.payoutPlaceholder": "e.g. JOPT / APT / My HU",
+  "dialog.cancel": "Cancel",
+  "dialog.save": "Save",
+  "dialog.ok": "OK",
+  "dialog.delete": "Delete",
+  "dialog.reset": "Reset",
+  "dialog.close.aria": "Close",
 
   // ===== index.html: セットアップ - プレイヤー =====
   "setup.players.h2": "Spot",
@@ -601,6 +610,7 @@ export const en: Record<string, string> = {
   "practice.progress.mode.rp": "Guess the RP",
   "practice.progress.mode.push": "Push decision",
   "practice.progress.resetBtn": "🗑️ Reset history",
+  "practice.progress.resetTitle": "Reset practice history",
   "practice.progress.resetConfirm": "Reset practice history (progress-trend data)?\n※ Streak, cumulative accuracy, and the review list are unaffected.",
 
   // ===== 計算結果 (calculator.ts) =====
