@@ -64,6 +64,7 @@ export function renderPayouts(): void {
     payoutsList.appendChild(row);
   });
   addPayoutBtn.classList.toggle("locked-pro", locked);
+  savePayoutBtn.classList.toggle("locked-pro", !isPro());
   document
     .querySelectorAll<HTMLButtonElement>(".presets:not(.saved) button")
     .forEach((btn) => btn.classList.toggle("locked-pro", locked));
@@ -76,12 +77,12 @@ export function renderPayouts(): void {
  * プリセットピルの共通出口。不正値はサニタイズで捨て、全滅した場合のみ
  * WTA (=[100]) にフォールバックする (ペイ 0 件は ICM 計算が成立しないため)。
  */
-export function setPayouts(values: number[]): void {
+export function setPayouts(values: number[], shouldRecompute = true): void {
   const sanitized = sanitizePayoutsArray(values);
   replacePayouts(sanitized.length > 0 ? sanitized : [...WINNER_TAKES_ALL]);
   syncPayoutsInput();
   renderPayouts();
-  recompute();
+  if (shouldRecompute) recompute();
 }
 
 // ===== ペイ構造の保存・復元 =====
@@ -111,6 +112,10 @@ function persistSavedPayouts(list: SavedPayout[]): void {
 
 function renderSavedPayouts(): void {
   const list = loadSavedPayouts();
+  if (list.length === 0) {
+    savedPayoutsContainer.innerHTML = `<span class="hint saved-empty-hint">${tr("setup.savedPayouts.empty")}</span>`;
+    return;
+  }
   savedPayoutsContainer.innerHTML = list
     .map(
       (p, i) => `
@@ -152,6 +157,16 @@ export function initPayoutsUI(): void {
       payoutsArr[i] = Number.isFinite(v) && v >= 0 ? v : 0;
       syncPayoutsInput();
       recompute();
+    }
+  });
+  payoutsList.addEventListener("focusout", (e) => {
+    const target = e.target as HTMLInputElement;
+    if (!target.classList.contains("payout-amount") || target.readOnly) return;
+    const i = Number(target.dataset.i);
+    if (!Number.isFinite(i) || i < 0 || i >= payoutsArr.length) return;
+    const v = Number(target.value);
+    if (!Number.isFinite(v) || v < 0 || target.value.trim() === "") {
+      target.value = String(payoutsArr[i]);
     }
   });
 
@@ -226,10 +241,11 @@ export function initPayoutsUI(): void {
     if (!isPro()) return openPaywall();
     const value = payoutsInput.value.trim();
     if (!value) return;
-    const name = window.prompt(
+    const rawName = window.prompt(
       tr("setup.prompt.savePayout"),
       "",
     );
+    const name = rawName?.trim();
     if (!name) return;
     const list = loadSavedPayouts();
     list.push({ name: name.slice(0, SAVED_PAYOUT_NAME_MAX), value });

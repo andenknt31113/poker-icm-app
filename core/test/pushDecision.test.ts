@@ -175,6 +175,26 @@ describe("evaluatePushDecision", () => {
     ).toThrow();
   });
 
+  it("ショートスタック (SB < sb, BB < ante + bb) でも負スタックにならずチップ総量を保存する", () => {
+    const stacks = [0.3, 1.4];
+    const total = sum(stacks);
+    const r = evaluatePushDecision({
+      stacks,
+      payouts: [100],
+      heroIndex: 0,
+      villainIndex: 1,
+      sb: 0.5,
+      bb: 1,
+      ante: 1,
+      pCall: 0.5,
+      eqVsCallRange: 0.5,
+    });
+    for (const st of [r.stacksFold, r.stacksSteal, r.stacksWin, r.stacksLose]) {
+      expect(st.every((v) => v >= 0)).toBe(true);
+      expect(sum(st)).toBeCloseTo(total, 6);
+    }
+  });
+
   it("eqVsCallRange が 0..1 の範囲外はエラー", () => {
     expect(() =>
       evaluatePushDecision({

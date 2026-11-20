@@ -17,7 +17,7 @@
 import { t } from "./i18n.js";
 import { isCapacitorNative } from "./capacitorEnv.js";
 import { isIapConfigured } from "./iapConfig.js";
-import { applyRevenueCatCustomerInfo } from "./entitlement.js";
+import { applyRevenueCatCustomerInfo, ensurePurchasesConfigured } from "./entitlement.js";
 
 // RevenueCat から実価格を取得できないあいだの価格プレースホルダ。
 const PRICE_PLACEHOLDER = "—";
@@ -39,6 +39,9 @@ function ensurePaywallModal(): HTMLDivElement {
   const modal = document.createElement("div");
   modal.id = "paywall-modal";
   modal.className = "guide-modal paywall-modal hidden";
+  modal.setAttribute("role", "dialog");
+  modal.setAttribute("aria-modal", "true");
+  modal.setAttribute("aria-labelledby", "paywall-title");
 
   const actionsHtml = isCapacitorNative()
     ? `
@@ -54,7 +57,7 @@ function ensurePaywallModal(): HTMLDivElement {
   modal.innerHTML = `
     <div class="guide-modal-content">
       <div class="guide-modal-header">
-        <h3>${t("paywall.title")}</h3>
+        <h3 id="paywall-title">${t("paywall.title")}</h3>
         <button type="button" class="guide-modal-close" id="paywall-close" aria-label="${t("paywall.close.aria")}">✕</button>
       </div>
       <div class="guide-modal-body">
@@ -120,6 +123,7 @@ function pickProPackage(
  */
 async function loadOfferingPrice(): Promise<void> {
   try {
+    if (!(await ensurePurchasesConfigured())) return;
     const { Purchases } = await import("@revenuecat/purchases-capacitor");
     const offerings = await Purchases.getOfferings();
     const pkg = pickProPackage(offerings);
@@ -133,11 +137,26 @@ async function loadOfferingPrice(): Promise<void> {
 /** ユーザー操作から購入をブロックしないよう、多重タップを抑止する。 */
 let purchaseInFlight = false;
 
+function setBusy(busy: boolean): void {
+  purchaseInFlight = busy;
+  const upgrade = paywallEl?.querySelector<HTMLButtonElement>("#paywall-upgrade");
+  const restore = paywallEl?.querySelector<HTMLButtonElement>("#paywall-restore");
+  for (const btn of [upgrade, restore]) {
+    if (!btn) continue;
+    btn.disabled = busy;
+    btn.setAttribute("aria-busy", String(busy));
+  }
+}
+
 async function onUpgradeClick(): Promise<void> {
   if (!useRealIap()) return showComingSoonToast();
   if (purchaseInFlight) return;
-  purchaseInFlight = true;
+  setBusy(true);
   try {
+    if (!(await ensurePurchasesConfigured())) {
+      showToast(t("paywall.error"));
+      return;
+    }
     const { Purchases } = await import("@revenuecat/purchases-capacitor");
     // 価格取得前にタップされた場合に備え、パッケージ未取得なら取り直す。
     let pkg = cachedProPackage;
@@ -163,15 +182,19 @@ async function onUpgradeClick(): Promise<void> {
     // ユーザーキャンセルは黙って何もしない。それ以外はエラートースト。
     if (!isUserCancelled(e)) showToast(t("paywall.error"));
   } finally {
-    purchaseInFlight = false;
+    setBusy(false);
   }
 }
 
 async function onRestoreClick(): Promise<void> {
   if (!useRealIap()) return showComingSoonToast();
   if (purchaseInFlight) return;
-  purchaseInFlight = true;
+  setBusy(true);
   try {
+    if (!(await ensurePurchasesConfigured())) {
+      showToast(t("paywall.error"));
+      return;
+    }
     const { Purchases } = await import("@revenuecat/purchases-capacitor");
     const { customerInfo } = await Purchases.restorePurchases();
     const active = applyRevenueCatCustomerInfo(customerInfo);
@@ -184,7 +207,7 @@ async function onRestoreClick(): Promise<void> {
   } catch {
     showToast(t("paywall.error"));
   } finally {
-    purchaseInFlight = false;
+    setBusy(false);
   }
 }
 

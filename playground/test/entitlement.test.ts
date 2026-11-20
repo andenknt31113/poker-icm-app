@@ -198,4 +198,13 @@ describe("initEntitlements の dynamic import ガード", () => {
     expect(isPro()).toBe(true);
     expect(seen).toEqual([true]);
   });
+
+  it("ensurePurchasesConfigured の並行呼び出しでも configure は 1 回しか呼ばれない", async () => {
+    purchasesMock.configure.mockResolvedValue(undefined);
+    const { ensurePurchasesConfigured } = await loadEntitlement({ key: "appl_test", native: true });
+    const [a, b] = await Promise.all([ensurePurchasesConfigured(), ensurePurchasesConfigured()]);
+    expect(a).toBe(true);
+    expect(b).toBe(true);
+    expect(purchasesMock.configure).toHaveBeenCalledTimes(1);
+  });
 });

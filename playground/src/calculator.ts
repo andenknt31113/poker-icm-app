@@ -23,8 +23,6 @@ import { $ } from "./dom.js";
 import {
   players,
   parseList,
-  DEFAULT_SB,
-  DEFAULT_BB,
   posToPotOddsPos,
 } from "./appState.js";
 import {
@@ -32,9 +30,11 @@ import {
   nashSbInput,
   nashBbInput,
   nashAnteInput,
+  readBlindParams,
   saveState,
 } from "./domRefs.js";
-import { fmt, fmtInputNumber, fmtPct, fmtSigned } from "./format.js";
+import { escapeHtml } from "./html.js";
+import { fmt, fmtPct, fmtSigned } from "./format.js";
 import { renderHeroSummary, hideHeroSummary, initHeroSummary } from "./heroSummary.js";
 import { renderBFMatrix, initBFMatrix } from "./bfMatrix.js";
 import { updatePositionWarn, updateDepthWarn } from "./warnings.js";
@@ -77,10 +77,11 @@ function renderSpotFoldSummaries(): void {
   }
   const blindsEl = document.getElementById("blinds-summary");
   if (blindsEl) {
+    const { sb, bb, ante } = readBlindParams();
     blindsEl.textContent = t("setup.blinds.summary", {
-      sb: fmtInputNumber(nashSbInput.value, String(DEFAULT_SB)),
-      bb: fmtInputNumber(nashBbInput.value, String(DEFAULT_BB)),
-      ante: fmtInputNumber(nashAnteInput.value, "0"),
+      sb: String(sb),
+      bb: String(bb),
+      ante: String(ante),
     });
   }
 }
@@ -133,6 +134,9 @@ export function recompute(): void {
       .join("");
 
     renderChop(stacks, payouts);
+    const hasBounty = bounty !== undefined;
+    document.getElementById("icm-bounty-note")?.classList.toggle("hidden", !hasBounty);
+    document.getElementById("chop-bounty-note")?.classList.toggle("hidden", !hasBounty);
 
     // BF
     let bf = 1.0;
@@ -176,17 +180,21 @@ export function recompute(): void {
     // 必要勝率: hero/villain あれば自動更新 (BB ante 構造、ante は dead)
     // スタック0のプレイヤーが hero/villain の場合 calculatePotOdds が throw する
     // ため、自動算出はスキップ (throw で ICM 表全体が生エラーに置き換わるのを防ぐ)。
+    const { sb: sbV, bb: bbV, ante: totalAnteV } = readBlindParams();
+    autofillBtn.classList.toggle("is-manual", callManualOverride);
     if (
-      heroIndex >= 0 &&
-      villainIndex >= 0 &&
-      heroIndex !== villainIndex &&
-      stacks[heroIndex]! > 0 &&
-      stacks[villainIndex]! > 0
+      heroIndex < 0 ||
+      villainIndex < 0 ||
+      heroIndex === villainIndex ||
+      stacks[heroIndex]! <= 0 ||
+      stacks[villainIndex]! <= 0
     ) {
-      // nashSbInput 等は $() 取得済みで必ず存在するため optional chaining は不要。
-      const sbV = Number(nashSbInput.value) || DEFAULT_SB;
-      const bbV = Number(nashBbInput.value) || DEFAULT_BB;
-      const totalAnteV = Number(nashAnteInput.value) || 0;
+      // 相手未指定やスタック 0 のときは、前の局面の内訳が残らないように空にする
+      autofillHint.innerHTML = "";
+    } else if (callManualOverride) {
+      // 手入力中は、自動算出時の古い内訳を表示しない (混同防止)
+      autofillHint.innerHTML = `<span class="autofill-manual-note">${t("calc.autofill.manualMode")}</span>`;
+    } else {
       const heroPos = players[heroIndex]?.position;
       const villainPos = players[villainIndex]?.position;
       const r = calculatePotOdds({
@@ -198,19 +206,19 @@ export function recompute(): void {
       });
       // 自分か相手がブラインド・アンティを払った時点でオールインになっていると、
       // コールする額が残らない (判断する場面がない)。古い値を残すと別の局面の数字が出るので空にする。
-      if (!callManualOverride && !(r.matched > r.heroLiveCommit)) {
+      if (!(r.matched > r.heroLiveCommit)) {
         callInput.value = "";
         potWinInput.value = "";
         autofillHint.innerHTML = "";
-      } else if (!callManualOverride) {
+      } else {
         const pushes = currentDirection() === "pushBack";
         // 位置が未設定の人は括弧ごと省く (「相手()」と出さない)
         const seat = (pos: string | undefined): string => (pos ? `(${pos})` : "");
         callInput.value = r.callAmount.toFixed(1);
         potWinInput.value = r.potIfWin.toFixed(1);
         const heroStackV = stacks[heroIndex]!;
-        const heroAntePaid = heroPos === "BB" ? totalAnteV : 0;
-        const villainAntePaid = villainPos === "BB" ? totalAnteV : 0;
+        const heroAntePaid = heroPos === "BB" ? Math.min(totalAnteV, heroStackV) : 0;
+        const villainAntePaid = villainPos === "BB" ? Math.min(totalAnteV, stacks[villainIndex]!) : 0;
         const heroBlindPaid = r.heroLiveCommit;
         const heroSunk = heroAntePaid + heroBlindPaid;
         const heroLive = heroStackV - heroSunk;
@@ -225,7 +233,7 @@ export function recompute(): void {
         const villainStake = r.villainLiveCommit > 0
           ? t(pushes ? "calc.autofill.villainCall" : "calc.autofill.villainPush", {
               pos: seat(villainPos),
-              live: (r.matched - r.villainLiveCommit).toFixed(1),
+              live: Math.max(0, r.matched - r.villainLiveCommit).toFixed(1),
               blind: t("calc.autofill.villainPushBlind", { v: r.villainLiveCommit.toFixed(1) }),
               matched: r.matched.toFixed(1),
             })
@@ -293,9 +301,9 @@ export function recompute(): void {
             payouts,
             heroIndex,
             villainIndex,
-            Number(nashSbInput.value) || DEFAULT_SB,
-            Number(nashBbInput.value) || DEFAULT_BB,
-            Number(nashAnteInput.value) || 0,
+            sbV,
+            bbV,
+            totalAnteV,
             bounty,
           )
         : null;
@@ -304,7 +312,10 @@ export function recompute(): void {
           ? approxEq
           : { cEV: approxEq.cEV, dollarEV: exactReq, riskPremium: exactReq - approxEq.cEV };
 
-      const rpSign = eq.riskPremium >= 0 ? "+" : "";
+      // 上のカードと桁を揃えて小数 1 桁にし、微小な負値で「-0.0%」が出ないようにする
+      const rpPct = Math.round(eq.riskPremium * 1000) / 10 || 0;
+      const rpSign = rpPct >= 0 ? "+" : "";
+      const rpTone = rpPct < 0 ? " is-good" : rpPct === 0 ? " is-neutral" : "";
       eqResult.innerHTML = `
         <div class="eq-flow">
           <div class="eq-flow-item eq-flow-cev">
@@ -312,9 +323,9 @@ export function recompute(): void {
             <div class="eq-flow-value">${fmtPct(eq.cEV)}</div>
           </div>
           <div class="eq-flow-arrow" aria-hidden="true">→</div>
-          <div class="eq-flow-item eq-flow-rp">
+          <div class="eq-flow-item eq-flow-rp${rpTone}">
             <div class="eq-flow-label">${t("calc.eq.flow.rp")}</div>
-            <div class="eq-flow-value">${rpSign}${fmtPct(eq.riskPremium, 2)}</div>
+            <div class="eq-flow-value">${rpSign}${rpPct.toFixed(1)}%</div>
           </div>
           <div class="eq-flow-arrow" aria-hidden="true">→</div>
           <div class="eq-flow-item eq-flow-final">
@@ -354,7 +365,7 @@ export function recompute(): void {
     ensureNashCalculated();
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    icmRows.innerHTML = `<tr><td colspan="4" class="error">${msg}</td></tr>`;
+    icmRows.innerHTML = `<tr><td colspan="4" class="error">${escapeHtml(msg)}</td></tr>`;
     bfResult.innerHTML = "";
     eqResult.innerHTML = "";
     clearChop();
@@ -377,12 +388,18 @@ export function initCalculator(): void {
   });
 
   // SB/BB/アンティの編集も即時再計算 (必要勝率の自動算出とサマリーが追従する)。
-  // 従来は保存のみで、他の操作が起きるまで計算結果に反映されない潜在バグだった。
+  // 負数・不正値が入力欄に残ったままにならないよう blur 時にサニタイズ値へ戻す。
   [nashSbInput, nashBbInput, nashAnteInput].forEach((el) => {
     el.addEventListener("input", recompute);
+    el.addEventListener("blur", () => {
+      const { sb, bb, ante } = readBlindParams();
+      if (el === nashSbInput && !(Number(el.value) > 0)) el.value = String(sb);
+      if (el === nashBbInput && !(Number(el.value) > 0)) el.value = String(bb);
+      if (el === nashAnteInput && (!(Number(el.value) >= 0) || el.value.trim() === "")) el.value = String(ante);
+    });
   });
 
-  // 🎯⚔️スタック + Nash blinds から call / potWin を自動算出
+  // 自動算出に戻す (recompute が現在の局面・ブラインドから call / potWin と内訳を再構築する)
   autofillBtn.addEventListener("click", () => {
     const heroIdx = players.findIndex((p) => p.role === "hero");
     const villainIdx = players.findIndex((p) => p.role === "villain");
@@ -390,37 +407,13 @@ export function initCalculator(): void {
       autofillHint.textContent = t("calc.autofill.err.needHV");
       return;
     }
-    const heroStack = players[heroIdx]!.stack;
-    const villainStack = players[villainIdx]!.stack;
-    const risk = Math.min(heroStack, villainStack);
+    const risk = Math.min(players[heroIdx]!.stack, players[villainIdx]!.stack);
     if (risk <= 0) {
       autofillHint.textContent = t("calc.autofill.err.zeroStack");
       return;
     }
-
-    // 注意: ここのフォールバックは recompute() 側と意図的に異なる。
-    // autofill は「入力欄が空/0 ならブラインド 0 として計算する」= `|| 0`、
-    // recompute の自動追従は「空なら標準ブラインドで概算を出す」= `|| DEFAULT_SB`。
-    // 表示される数値が変わるため統一しないこと。
-    const sb = Number(nashSbInput.value) || 0;
-    const bb = Number(nashBbInput.value) || 0;
-    const totalAnte = Number(nashAnteInput.value) || 0; // アンティ入力は常にテーブル合計
-    const dead = sb + bb + totalAnte;
-
     checkpointSetup();
-    callInput.value = risk.toFixed(1);
-    potWinInput.value = (risk + dead).toFixed(1);
-    callManualOverride = false; // autofill 押したら自動追従モードに戻す
-
-    autofillHint.innerHTML = t("calc.autofill.result", {
-      risk,
-      pot: (risk + dead).toFixed(1),
-      risk2: risk,
-      dead: dead.toFixed(1),
-      sb,
-      bb,
-      ante: totalAnte.toFixed(1),
-    });
+    callManualOverride = false;
     recompute();
   });
 

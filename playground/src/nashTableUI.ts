@@ -11,14 +11,14 @@
 import { comboPctOfRange, type HandNotation } from "./handRanking.js";
 import { hasHUMatrix } from "./huEquityMatrix.js";
 import { renderGrid } from "./grid.js";
-import { createNashChain, type CallerNash, type NashChain, type PusherNash } from "./nashRange.js";
+import { createNashChain, pusherOrder, type CallerNash, type NashChain, type PusherNash } from "./nashRange.js";
 import { hasThreeWayTable, loadThreeWayTable } from "./threeWay.js";
 import { rangeToText } from "./rangeText.js";
 import { PUSH_FOLD_CAUTION_MAX_BB } from "./pushSpot.js";
 import { t } from "./i18n.js";
 import { activeBounty, bountyKey } from "./bountyState.js";
-import { players, parseList, DEFAULT_SB, DEFAULT_BB } from "./appState.js";
-import { payoutsInput, nashSbInput, nashBbInput, nashAnteInput } from "./domRefs.js";
+import { players, parseList } from "./appState.js";
+import { payoutsInput, readBlindParams } from "./domRefs.js";
 import { noteNashFinishedForReview } from "./reviewPrompt.js";
 import { NASH_COLLAPSE_MIN_CALLERS, isCallerRowPinned } from "./nashRows.js";
 
@@ -46,10 +46,15 @@ let timer: ReturnType<typeof setTimeout> | null = null;
 let threeWayTried = false;
 let threeWayLoading = false;
 
+function isNashVisible(): boolean {
+  return document.body.dataset.activeTab === "analyze" && document.body.dataset.analysisView === "nash";
+}
+
 function inputKey(): string {
+  const { sb, bb, ante } = readBlindParams();
   return JSON.stringify([
     players.map(({ stack, position }) => [stack, position]),
-    payoutsInput.value, nashSbInput.value, nashBbInput.value, nashAnteInput.value,
+    payoutsInput.value, sb, bb, ante,
     bountyKey(),
   ]);
 }
@@ -155,6 +160,8 @@ function render(): void {
 
 function solveNext(): void {
   timer = null;
+  // 別タブに離れている間はバックグラウンド計算を一時停止し、戻ったときに途中から再開する
+  if (!isNashVisible()) return;
   const current = state;
   if (!current || current.error || current.finished || !current.chain) return;
   if (current.key !== inputKey()) {
@@ -177,7 +184,13 @@ function solveNext(): void {
 
 /** Nash タブが表示中で、入力が変わっていれば一覧を作り直す。recompute とビュー切替から呼ぶ。 */
 export function ensureNashTable(): void {
-  if (document.body.dataset.activeTab !== "analyze" || document.body.dataset.analysisView !== "nash") return;
+  if (!isNashVisible()) {
+    if (timer !== null) {
+      clearTimeout(timer);
+      timer = null;
+    }
+    return;
+  }
   // 3 人の勝率表 (オーバーコール用) をまだ読んでいなければ、先に読む。読めなくても計算は続ける
   // 読み込み中に別の呼び出し (同じ画面切替で 2 回来る) が計算を始めると、表なしで一度解いてから
   // 読み込み後に解き直すことになり、結果が一瞬出て消える。読み終わるまで待つ。
@@ -196,8 +209,12 @@ export function ensureNashTable(): void {
   }
   const key = inputKey();
   if (state?.key === key) {
-    // 計算は同じでも、自分 / 相手の印は変わっていることがあるので描き直す
+    // 計算は同じでも、自分 / 相手の印は変わっていることがあるので描き直す。
+    // タブ離脱で一時停止していた未完了の計算があれば、ここから再開する。
     render();
+    if (!state.finished && !state.error && timer === null) {
+      timer = setTimeout(solveNext, 0);
+    }
     return;
   }
   if (timer !== null) clearTimeout(timer);
@@ -210,17 +227,16 @@ export function ensureNashTable(): void {
   if (!hasHUMatrix()) error = t("nash.matrixMissing");
   else if (payouts.length === 0 || !payouts.some((p) => p > 0)) error = t("nash.err.needPayout");
   else {
-    chain = createNashChain(
-      players,
-      payouts,
-      Number(nashSbInput.value) || DEFAULT_SB,
-      Number(nashBbInput.value) || DEFAULT_BB,
-      Number(nashAnteInput.value) || 0,
-      activeBounty(),
-    );
-    if (!chain) {
+    const order = pusherOrder(players);
+    if (order === null) {
       error = t("nash.table.needPositions");
       needPositions = true;
+    } else if (order.length === 0) {
+      error = t("nash.table.noPushers");
+    } else {
+      const { sb, bb, ante } = readBlindParams();
+      chain = createNashChain(players, payouts, sb, bb, ante, activeBounty());
+      if (!chain) error = t("nash.table.noPushers");
     }
   }
   // 局面が変わったら、開いていた「ほかの人のコール」は畳み直す

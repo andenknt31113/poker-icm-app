@@ -129,15 +129,15 @@ export function calculateExactCallEquity(
   const heroStack = stacks[heroIndex]!;
   const villainStack = stacks[villainIndex]!;
 
-  // BB ante 構造: BB が ante 全額を払う → その live stack は ante 分減る
-  const heroAntePaid = heroPosition === "BB" ? ante : 0;
-  const villainAntePaid = villainPosition === "BB" ? ante : 0;
+  // BB ante 構造: BB が ante 全額を払う (持っている分まで) → その live stack は ante 分減る
+  const heroAntePaid = heroPosition === "BB" ? Math.min(ante, heroStack) : 0;
+  const villainAntePaid = villainPosition === "BB" ? Math.min(ante, villainStack) : 0;
 
   const heroLive = heroStack - heroAntePaid;
   const villainLive = villainStack - villainAntePaid;
   const matched = Math.min(heroLive, villainLive);
 
-  const heroBlind = liveCommit(heroPosition, sb, bb);
+  const heroBlind = Math.min(liveCommit(heroPosition, sb, bb), heroLive);
 
   // SB が hero/villain どちらでもない第三者なら、その SB は dead money になる
   const sbIsThirdParty =
@@ -155,7 +155,7 @@ export function calculateExactCallEquity(
     ? Math.min(bb, stacks[bbPlayerIndex!]! - bbThirdAnte)
     : 0;
   // ante は BB ante 構造上つねに dead money (誰の commit でもない)
-  const dead = sbDead + (bbIsThirdParty ? bbThirdAnte + bbThirdBlind : ante);
+  const dead = sbDead + (bbIsThirdParty ? bbThirdAnte + bbThirdBlind : heroAntePaid + villainAntePaid);
 
   const pot = 2 * matched + dead;
 

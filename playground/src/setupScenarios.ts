@@ -20,6 +20,7 @@ import {
   nashSbInput,
   nashBbInput,
   nashAnteInput,
+  readBlindParams,
 } from "./domRefs.js";
 import { renderPlayers, replacePlayers } from "./setupPlayers.js";
 import { setPayouts } from "./setupPayouts.js";
@@ -155,8 +156,8 @@ function applyScenario(scenarioId: string): void {
   // プレイヤーリスト置換
   replacePlayers(scenario.players);
   renderPlayers();
-  // ペイアウト
-  setPayouts(scenario.payouts);
+  // ペイアウト (次の applyNashParams のあとに 1 回だけ recompute する)
+  setPayouts(scenario.payouts, false);
   // Nash パラメータ
   applyNashParams(scenario);
   // コール額/純利得を自動追従モードに戻す
@@ -170,9 +171,17 @@ interface UserScenario {
   s: Scenario;
 }
 
-/** 保存名だけ検証する緩い判定 (中身の Scenario は読み出し側の ?? で防御)。 */
+/** 保存名と中身の最低限の形を検証する (壊れた localStorage で落ちないようにする)。 */
 function isUserScenario(x: unknown): x is UserScenario {
-  return typeof x === "object" && x !== null && typeof (x as UserScenario).name === "string";
+  if (typeof x !== "object" || x === null) return false;
+  const o = x as Partial<UserScenario>;
+  return (
+    typeof o.name === "string" &&
+    typeof o.s === "object" &&
+    o.s !== null &&
+    Array.isArray(o.s.players) &&
+    Array.isArray(o.s.payouts)
+  );
 }
 
 function loadUserScenarios(): UserScenario[] {
@@ -185,9 +194,7 @@ function saveUserScenarios(list: UserScenario[]): void {
 }
 
 function captureCurrentScenario(): Scenario {
-  const sbV = Number(nashSbInput.value) || DEFAULT_SB;
-  const bbV = Number(nashBbInput.value) || DEFAULT_BB;
-  const anteV = Number(nashAnteInput.value) || 0;
+  const { sb, bb, ante } = readBlindParams();
   return {
     players: players.map((p) => ({
       stack: p.stack,
@@ -197,9 +204,9 @@ function captureCurrentScenario(): Scenario {
     })),
     bountyMode: getBountyMode(),
     payouts: payoutsArr.slice(),
-    sb: sbV,
-    bb: bbV,
-    ante: anteV,
+    sb,
+    bb,
+    ante,
   };
 }
 
@@ -208,7 +215,7 @@ function renderUserScenarios(): void {
   if (!container) return;
   const list = loadUserScenarios();
   if (list.length === 0) {
-    container.innerHTML = `<span class="hint" style="font-size:11px;color:var(--muted);">${tr("setup.userScenarios.empty")}</span>`;
+    container.innerHTML = `<span class="hint saved-empty-hint">${tr("setup.userScenarios.empty")}</span>`;
     return;
   }
   container.innerHTML = list
@@ -236,7 +243,8 @@ export function initScenariosUI(): void {
   saveScenarioBtn?.classList.toggle("locked-pro", !isPro());
   saveScenarioBtn?.addEventListener("click", () => {
     if (!isPro()) return openPaywall();
-    const name = window.prompt(tr("setup.prompt.scenarioName"), "");
+    const rawName = window.prompt(tr("setup.prompt.scenarioName"), "");
+    const name = rawName?.trim();
     if (!name) return;
     const list = loadUserScenarios();
     list.push({ name: name.slice(0, USER_SCENARIO_NAME_MAX), s: captureCurrentScenario() });
@@ -265,7 +273,7 @@ export function initScenariosUI(): void {
         setBountyMode(isBountyMode(s.bountyMode) ? s.bountyMode : "off");
         replacePlayers(s.players);
         renderPlayers();
-        setPayouts(s.payouts);
+        setPayouts(s.payouts, false);
         applyNashParams(s);
         setCallManualOverride(false);
         recompute();

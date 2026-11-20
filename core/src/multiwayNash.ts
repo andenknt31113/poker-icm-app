@@ -18,7 +18,6 @@
  *     ポットを取るものとする。
  */
 
-import { calculateICM } from "./icm.js";
 import { equitiesWithBounty, type BountySpec, type Knockout } from "./bounty.js";
 import type { ComboWeightFn, HandLabel } from "./nash.js";
 import type { Payouts, Stacks } from "./types.js";
@@ -105,7 +104,7 @@ export interface MultiwayTerminals {
   };
 }
 
-function validate(input: MultiwayPushFoldInput): void {
+export function validateMultiwayInput(input: MultiwayPushFoldInput): void {
   const { stacks, pusherIndex, callerIndices, blinds, antes, foldWinnerIndex, allHands } = input;
   const n = stacks.length;
   if (n < 2) throw new Error("MultiwayNash: プレイヤー数が 2 未満");
@@ -245,7 +244,7 @@ export function computeNodeValues(
  * 後ろに複数人いる push/fold 均衡を Fictitious Play (線形平均化) で解く。
  */
 export function solveMultiwayPushFold(input: MultiwayPushFoldInput): MultiwayPushFoldResult {
-  validate(input);
+  validateMultiwayInput(input);
   const {
     stacks,
     payouts,
@@ -254,6 +253,7 @@ export function solveMultiwayPushFold(input: MultiwayPushFoldInput): MultiwayPus
     huEquity,
     allHands,
     comboWeight,
+    bounty,
     maxIterations = DEFAULT_MAX_ITER,
     convergenceTolerance = DEFAULT_TOLERANCE,
     bigBlind = 1,
@@ -306,7 +306,7 @@ export function solveMultiwayPushFold(input: MultiwayPushFoldInput): MultiwayPus
     const down = stacks.slice();
     up[i] = stacks[i]! + d;
     down[i] = Math.max(0, stacks[i]! - d);
-    const s = (calculateICM(up, payouts)[i]! - calculateICM(down, payouts)[i]!) / (up[i]! - down[i]!);
+    const s = (equitiesWithBounty(up, payouts, bounty)[i]! - equitiesWithBounty(down, payouts, bounty)[i]!) / (up[i]! - down[i]!);
     return Math.abs(s) > 1e-12 ? Math.abs(s) * bigBlind : 1;
   };
   const slopeP = slopeOf(P);

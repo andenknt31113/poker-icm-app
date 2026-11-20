@@ -228,8 +228,12 @@ export function initPlayersUI(): void {
   // 画面のあちこちに後から描かれるので、document で受ける。
   document.addEventListener("click", (event) => {
     if (!(event.target as HTMLElement).closest("[data-fill-positions]")) return;
+    const nextPositions = players.every((player) => player.position === "")
+      ? positionsForN(players.length)
+      : positionsForChangedTable(players.map((player) => player.position));
+    if (players.every((player, index) => player.position === (nextPositions[index] ?? ""))) return;
     checkpointSetup();
-    if (!fillMissingPositions()) return;
+    fillMissingPositions();
     ringAutoLinkArmed = false;
     renderPlayers();
     recompute();
@@ -286,6 +290,18 @@ export function initPlayersUI(): void {
     if (!isPro() && players.length > FREE_MAX_PLAYERS) return; // readonly のはずだが二重ガード
     const id = Number(target.dataset.id);
     if (Number.isFinite(id)) updateStack(id, Number(target.value));
+  });
+  // 負数・空欄などが入ったまま残らないよう、フォーカスが外れたら実計算値 (非負) に表示を揃える
+  playersList.addEventListener("focusout", (e) => {
+    const target = e.target as HTMLInputElement;
+    if (!target.classList.contains("player-stack") || target.readOnly) return;
+    const id = Number(target.dataset.id);
+    const p = players.find((item) => item.id === id);
+    if (!p) return;
+    const raw = Number(target.value);
+    if (!Number.isFinite(raw) || raw < 0 || target.value.trim() === "") {
+      target.value = String(p.stack);
+    }
   });
 
   playersList.addEventListener("change", (e) => {

@@ -34,6 +34,11 @@ beforeEach(() => {
     nashSbInput: document.getElementById("nash-sb"),
     nashBbInput: document.getElementById("nash-bb"),
     nashAnteInput: document.getElementById("nash-ante"),
+    readBlindParams: () => ({
+      sb: Number((document.getElementById("nash-sb") as HTMLInputElement).value) || 0.5,
+      bb: Number((document.getElementById("nash-bb") as HTMLInputElement).value) || 1,
+      ante: Math.max(0, Number((document.getElementById("nash-ante") as HTMLInputElement).value) || 0),
+    }),
   }));
 });
 

@@ -92,4 +92,17 @@ describe("サマリーの視点と役割", () => {
     expect(document.querySelector(".villain")?.textContent).toContain("相手未指定");
     expect(document.querySelectorAll(".hero-summary-role")).toHaveLength(0);
   });
+
+  it("BF が Infinity のときは ∞ と表示し、負の RP (バウンティ有利) は good 色にする", async () => {
+    const { renderHeroSummary } = await import("../src/heroSummary.js");
+    renderHeroSummary({ ...SCENARIO, bf: Number.POSITIVE_INFINITY, requiredEq: 1, rp: 0.55 });
+    const bfVal = document.querySelector("[data-info='BF'] .hero-summary-value")?.textContent ?? "";
+    expect(bfVal).toBe("∞");
+    expect(bfVal).not.toContain("Infinity");
+
+    renderHeroSummary({ ...SCENARIO, bf: 0.9, requiredEq: 0.42, rp: -0.025 });
+    const rpEl = document.querySelector("[data-info='RP'] .hero-summary-value");
+    expect(rpEl?.classList.contains("good")).toBe(true);
+    expect(rpEl?.textContent).toContain("-2.5");
+  });
 });

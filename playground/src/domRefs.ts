@@ -36,7 +36,20 @@ export const nashSbInput = $<HTMLInputElement>("nash-sb");
 export const nashBbInput = $<HTMLInputElement>("nash-bb");
 export const nashAnteInput = $<HTMLInputElement>("nash-ante");
 
+/** SB/BB/アンティを安全な非負・正の値で読む (負数や空欄でコア計算が例外を投げないようにする)。 */
+export function readBlindParams(): { sb: number; bb: number; ante: number } {
+  const rawSb = Number(nashSbInput.value);
+  const rawBb = Number(nashBbInput.value);
+  const rawAnte = Number(nashAnteInput.value);
+  return {
+    sb: Number.isFinite(rawSb) && rawSb > 0 ? rawSb : DEFAULT_SB,
+    bb: Number.isFinite(rawBb) && rawBb > 0 ? rawBb : DEFAULT_BB,
+    ante: Number.isFinite(rawAnte) && rawAnte >= 0 ? rawAnte : 0,
+  };
+}
+
 export function saveState(): void {
+  const blinds = readBlindParams();
   const state: PersistedState = {
     // バウンティは使っているときだけ書く (使っていなければ以前と同じ保存形式のまま)
     players: players.map((p) => ({
@@ -46,11 +59,7 @@ export function saveState(): void {
       ...(sanitizeBounty(p.bounty) > 0 ? { bounty: sanitizeBounty(p.bounty) } : {}),
     })),
     payouts: payoutsArr.length > 0 ? payoutsArr : [...DEFAULT_PAYOUTS],
-    nash: {
-      sb: Number(nashSbInput.value) || DEFAULT_SB,
-      bb: Number(nashBbInput.value) || DEFAULT_BB,
-      ante: Number(nashAnteInput.value) || 0,
-    },
+    nash: blinds,
     ...(getBountyMode() !== "off" ? { bounty: { mode: getBountyMode() } } : {}),
   };
   writeJson(STORAGE_KEYS.appState, state);

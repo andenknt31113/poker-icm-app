@@ -76,6 +76,14 @@ describe("buildPushSpot (実際のポジションの blind・ante)", () => {
     const after = spot.stacks.reduce((a, s) => a + s, 0) + spot.deadMoney;
     expect(after).toBeCloseTo(before, 10);
   });
+
+  it("コール側 BB が ante + bb 未満 (1.5BB) のとき、callerBlind は残高に収まる", () => {
+    const table = [seat(20, "BTN"), seat(14, "SB"), seat(1.5, "BB")];
+    const spot = buildPushSpot(table, 0, 2, SB, BB, 1);
+    expect(spot.stacks[2]).toBeCloseTo(0.5, 10);
+    expect(spot.callerBlind).toBeCloseTo(0.5, 10);
+    expect(spot.stacks[2]! - spot.callerBlind).toBeGreaterThanOrEqual(0);
+  });
 });
 
 describe("pushDepthTier (自分から押す判断の深さ区分)", () => {

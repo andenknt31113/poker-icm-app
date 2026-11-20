@@ -96,21 +96,24 @@ export function evaluatePushDecision(
   const heroStack = stacks[heroIndex]!;
   const villainStack = stacks[villainIndex]!;
 
-  // SB (hero) は ante を払わない。BB (villain) が ante 全額を負担する。
+  // SB (hero) は ante を払わない。BB (villain) が ante 全額を負担する (持っている分まで)。
   const heroLive = heroStack;
-  const villainLive = villainStack - ante;
+  const villainAntePaid = Math.min(ante, villainStack);
+  const villainLive = villainStack - villainAntePaid;
+  const heroSbPaid = Math.min(sb, heroLive);
+  const villainBbPaid = Math.min(bb, villainLive);
   const matched = Math.min(heroLive, villainLive);
-  const pot = 2 * matched + ante;
+  const pot = 2 * matched + villainAntePaid;
 
-  // fold: hero が push せず降りる → SB (sb) を失い、villain がそれを得る (第三者不変)
+  // fold: hero が push せず降りる → SB (heroSbPaid) を失い、villain がそれを得る (第三者不変)
   const stacksFold = stacks.slice();
-  stacksFold[heroIndex] = heroStack - sb;
-  stacksFold[villainIndex] = villainStack + sb;
+  stacksFold[heroIndex] = heroStack - heroSbPaid;
+  stacksFold[villainIndex] = villainStack + heroSbPaid;
 
   // steal: hero が push → villain が fold (villain の blind + ante を丸取り)
   const stacksSteal = stacks.slice();
-  stacksSteal[heroIndex] = heroStack + bb + ante;
-  stacksSteal[villainIndex] = villainStack - ante - bb;
+  stacksSteal[heroIndex] = heroStack + villainBbPaid + villainAntePaid;
+  stacksSteal[villainIndex] = villainStack - villainAntePaid - villainBbPaid;
 
   // win: hero が push → villain が call → hero が勝つ
   const stacksWin = stacks.slice();

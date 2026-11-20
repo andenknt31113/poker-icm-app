@@ -105,6 +105,31 @@ export function applyRevenueCatCustomerInfo(info: RcCustomerInfoLike | null | un
   return active;
 }
 
+// RevenueCat SDK の configure 完了を共有する Promise。起動直後にペイウォールを開いたとき、
+// configure 完了前に getOfferings / purchasePackage が呼ばれる競合を防ぐ。
+let configurePromise: Promise<boolean> | null = null;
+let configured = false;
+
+/** RevenueCat SDK の初期化 (configure) が完了するのを待つ。失敗時は false。 */
+export function ensurePurchasesConfigured(): Promise<boolean> {
+  if (!isCapacitorNative() || !isIapConfigured()) return Promise.resolve(false);
+  if (configured) return Promise.resolve(true);
+  if (!configurePromise) {
+    configurePromise = (async () => {
+      try {
+        const { Purchases } = await import("@revenuecat/purchases-capacitor");
+        await Purchases.configure({ apiKey: REVENUECAT_IOS_API_KEY });
+        configured = true;
+        return true;
+      } catch {
+        configurePromise = null;
+        return false;
+      }
+    })();
+  }
+  return configurePromise;
+}
+
 /**
  * RevenueCat SDK を初期化して Pro 権限を判定する (Phase 3)。
  * - ネイティブ (iOS) かつ IAP 設定済みのときのみ実行し、それ以外は即 return
@@ -116,8 +141,9 @@ export function applyRevenueCatCustomerInfo(info: RcCustomerInfoLike | null | un
 export async function initEntitlements(): Promise<void> {
   if (!isCapacitorNative() || !isIapConfigured()) return;
   try {
+    const ok = await ensurePurchasesConfigured();
+    if (!ok) return;
     const { Purchases } = await import("@revenuecat/purchases-capacitor");
-    await Purchases.configure({ apiKey: REVENUECAT_IOS_API_KEY });
     // 購入/復元による更新を購読 (初回取得より前に登録しておく)。
     await Purchases.addCustomerInfoUpdateListener((customerInfo) => {
       applyRevenueCatCustomerInfo(customerInfo);

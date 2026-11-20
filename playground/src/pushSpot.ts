@@ -67,7 +67,12 @@ export function buildPushSpot(
     // ポジション未設定の卓: 自分を SB、相手を BB (ante も相手が払う) とみなす
     const antePaid = Math.min(totalAnte, stacks[callerIndex]!);
     stacks[callerIndex] = stacks[callerIndex]! - antePaid;
-    return { stacks, pusherBlind: sb, callerBlind: bb, deadMoney: antePaid };
+    return {
+      stacks,
+      pusherBlind: Math.min(sb, stacks[pusherIndex]!),
+      callerBlind: Math.min(bb, stacks[callerIndex]!),
+      deadMoney: antePaid,
+    };
   }
 
   let deadMoney = 0;
@@ -79,8 +84,8 @@ export function buildPushSpot(
     const antePaid = Math.min(ante, stacks[i]!);
     stacks[i] = stacks[i]! - antePaid;
     deadMoney += antePaid;
-    if (i === pusherIndex) pusherBlind = blind;
-    else if (i === callerIndex) callerBlind = blind;
+    if (i === pusherIndex) pusherBlind = Math.min(blind, stacks[i]!);
+    else if (i === callerIndex) callerBlind = Math.min(blind, stacks[i]!);
     else {
       const blindPaid = Math.min(blind, stacks[i]!);
       stacks[i] = stacks[i]! - blindPaid;

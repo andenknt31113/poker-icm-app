@@ -97,22 +97,22 @@ export function calculatePotOdds(input: PotOddsInput): PotOddsResult {
     throw new Error(`PotOdds: blind/ante は非負である必要があります`);
   }
 
-  // BB ante 構造: BB が ante 全額を払う
-  const heroAntePaid = heroPosition === "BB" ? ante : 0;
-  const villainAntePaid = villainPosition === "BB" ? ante : 0;
+  // BB ante 構造: BB が ante 全額を払う (持っている分まで)
+  const heroAntePaid = heroPosition === "BB" ? Math.min(ante, heroStack) : 0;
+  const villainAntePaid = villainPosition === "BB" ? Math.min(ante, villainStack) : 0;
 
   const heroLive = heroStack - heroAntePaid;
   const villainLive = villainStack - villainAntePaid;
   const matched = Math.min(heroLive, villainLive);
 
-  const heroLiveCommit = liveCommit(heroPosition, sb, bb);
-  const villainLiveCommit = liveCommit(villainPosition, sb, bb);
+  const heroLiveCommit = Math.min(liveCommit(heroPosition, sb, bb), heroLive);
+  const villainLiveCommit = Math.min(liveCommit(villainPosition, sb, bb), villainLive);
 
   const sbInAction = heroPosition === "SB" || villainPosition === "SB";
   const bbInAction = heroPosition === "BB" || villainPosition === "BB";
   const sbDead = sbInAction ? 0 : sb;
   const bbDead = bbInAction ? 0 : bb;
-  const anteDead = ante;
+  const anteDead = bbInAction ? heroAntePaid + villainAntePaid : ante;
   const totalDead = sbDead + bbDead + anteDead;
 
   const potAtShowdown = 2 * matched + totalDead;

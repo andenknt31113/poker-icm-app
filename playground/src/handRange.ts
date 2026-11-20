@@ -16,20 +16,16 @@ import { $ } from "./dom.js";
 import {
   players,
   parseList,
-  DEFAULT_SB,
-  DEFAULT_BB,
   actionOrderIdx,
 } from "./appState.js";
 import {
   payoutsInput,
-  nashSbInput,
-  nashBbInput,
-  nashAnteInput,
+  readBlindParams,
 } from "./domRefs.js";
 import { STORAGE_KEYS, readJson, writeJson } from "./storage.js";
 import { buildPushSpot, pushDepthTier } from "./pushSpot.js";
 import { fmt } from "./format.js";
-import { nashRangeForSpot } from "./nashRange.js";
+import { solveSpotNash } from "./nashRange.js";
 import { loadThreeWayTable } from "./threeWay.js";
 
 // ===== DOM 参照 (ハンド比較タブ) =====
@@ -77,25 +73,32 @@ function getCurrentVillainRange(): Set<HandNotation> {
 
 // 「相手 call → 自分 push (逆算)」モード用: 相手 call レンジを所与に
 // hero がどのハンドで push +EV になるかを計算
+interface PushHandDetail {
+  callRate: number;
+  eqVsCall: number;
+  diffPoolPct: number;
+  status: "push" | "marginal" | "fold";
+}
+
 interface PushBackResult {
   pushRange: Set<HandNotation>;
   marginal: Set<HandNotation>;
+  details: Map<HandNotation, PushHandDetail>;
 }
 
 function computePushBackRange(villainCallRange: Set<HandNotation>): PushBackResult {
   const heroIdx = players.findIndex((p) => p.role === "hero");
   const villainIdx = players.findIndex((p) => p.role === "villain");
-  const empty: PushBackResult = { pushRange: new Set(), marginal: new Set() };
+  const empty: PushBackResult = { pushRange: new Set(), marginal: new Set(), details: new Map() };
   if (heroIdx < 0 || villainIdx < 0 || heroIdx === villainIdx) return empty;
 
   const stacks = players.map((p) => p.stack);
   if (stacks[heroIdx]! <= 0 || stacks[villainIdx]! <= 0) return empty;
   const payouts = parseList(payoutsInput.value);
   if (payouts.length === 0) return empty;
+  const totalPrize = payouts.slice(0, stacks.length).reduce((a, b) => a + b, 0);
 
-  const sb = Number(nashSbInput.value) || DEFAULT_SB;
-  const bb = Number(nashBbInput.value) || DEFAULT_BB;
-  const totalAnte = Number(nashAnteInput.value) || 0; // アンティ入力はテーブル合計
+  const { sb, bb, ante: totalAnte } = readBlindParams();
   // 実際のポジションの blind / BB ante / 第三者の dead money で局面を組む (Nash と共通)
   const spot = buildPushSpot(players, heroIdx, villainIdx, sb, bb, totalAnte);
   const baseStacks = spot.stacks;
@@ -127,31 +130,45 @@ function computePushBackRange(villainCallRange: Set<HandNotation>): PushBackResu
   // (hero が A を持てば villain の AX コンボは減る → fold 率が上がる)。
   const pushRange = new Set<HandNotation>();
   const marginal = new Set<HandNotation>();
+  const details = new Map<HandNotation, PushHandDetail>();
+  const normBase = foldEq > 0 ? foldEq : Math.max(totalPrize, stealEq, winEq, 1);
   for (const heroHand of ALL_169_HANDS) {
     let totalCombos = 0;
     let callCombos = 0;
     let sdSum = 0;
+    let eqSum = 0;
     for (const v of ALL_169_HANDS) {
       const w = comboCountVsHero(heroHand, v);
       totalCombos += w;
       if (villainCallRange.has(v)) {
         callCombos += w;
         const heq = huEquity(heroHand, v);
+        eqSum += w * heq;
         sdSum += w * (heq * winEq + (1 - heq) * loseEq);
       }
     }
-    const foldRate = totalCombos > 0 ? (totalCombos - callCombos) / totalCombos : 1;
+    const callRate = totalCombos > 0 ? callCombos / totalCombos : 0;
+    const eqVsCall = callCombos > 0 ? eqSum / callCombos : 0.5;
+    const foldRate = 1 - callRate;
     let evPush = foldRate * stealEq;
     if (callCombos > 0 && totalCombos > 0) {
       evPush += sdSum / totalCombos;
     }
     const margin = evPush - foldEq;
-    // foldEq の 0.5% を 1 単位として境界判定 (0=境界、+で push、-で fold)
-    const norm = foldEq > 0 ? margin / foldEq : margin;
-    if (norm >= 0.005) pushRange.add(heroHand);
-    else if (norm >= -0.003) marginal.add(heroHand);
+    // foldEq (0 なら賞金規模) の 0.5% を 1 単位として境界判定 (0=境界、+で push、-で fold)
+    const norm = margin / normBase;
+    let status: PushHandDetail["status"] = "fold";
+    if (norm >= 0.005) {
+      pushRange.add(heroHand);
+      status = "push";
+    } else if (norm >= -0.003) {
+      marginal.add(heroHand);
+      status = "marginal";
+    }
+    const diffPoolPct = totalPrize > 0 ? (margin / totalPrize) * 100 : 0;
+    details.set(heroHand, { callRate, eqVsCall, diffPoolPct, status });
   }
-  return { pushRange, marginal };
+  return { pushRange, marginal, details };
 }
 
 // ボーダー判定バンド幅 (±0.1pt)。equity テーブルは 100万試行/ペア
@@ -159,8 +176,35 @@ function computePushBackRange(villainCallRange: Set<HandNotation>): PushBackResu
 // 「数値上ほぼ完全に五分」のセルだけを黄にする最小幅 (ユーザー指定)。
 const MARGINAL_BAND = 0.001;
 
-// タップで数値検分中のハンド (callBack 方向のみ)。
+// タップで数値検分中のハンド (callBack / pushBack 両方向で使える)。
 let inspectedHand: HandNotation | null = null;
+// 直近の「この局面の Nash を相手レンジに入れる」適用時点の局面スナップショット。
+// 局面・レンジが変わったら古い案内文を消すために使う。
+let nashNoteSpotKey: string | null = null;
+
+function currentNashNoteKey(): string {
+  const { sb, bb, ante } = readBlindParams();
+  return JSON.stringify([
+    players.map(({ stack, role, position, bounty }) => [stack, role, position, bounty ?? 0]),
+    payoutsInput.value,
+    sb,
+    bb,
+    ante,
+    direction,
+    villainRangeMode,
+    villainRangeMode === "custom" ? customVillainRange.size : pushRangeInput.value,
+  ]);
+}
+
+function clearStaleNashNote(): void {
+  const note = document.getElementById("nash-range-note");
+  if (!note || note.classList.contains("hidden")) return;
+  if (nashNoteSpotKey !== currentNashNoteKey()) {
+    note.classList.add("hidden");
+    note.textContent = "";
+    nashNoteSpotKey = null;
+  }
+}
 
 export function setRangeUnavailable(message: string | null): void {
   const notice = document.getElementById("range-unavailable");
@@ -177,21 +221,50 @@ export function setRangeUnavailable(message: string | null): void {
   }
 }
 
-/** 検分中ハンドの数値詳細 (勝率/必要勝率/差分/判定) を #hand-cell-detail に表示する。 */
-function renderInspectDetail(villainRange: Set<HandNotation>, requiredEquity: number): void {
+/** 検分中ハンドの数値詳細を #hand-cell-detail に表示する (callBack / pushBack 両対応)。 */
+function renderInspectDetail(
+  villainRange: Set<HandNotation>,
+  requiredEquity: number,
+  pushDetails?: Map<HandNotation, PushHandDetail>,
+): void {
   const el = document.getElementById("hand-cell-detail");
   if (!el) return;
-  if (!inspectedHand || direction !== "callBack") {
+  if (!inspectedHand) {
     el.classList.add("hidden");
     el.innerHTML = "";
     return;
   }
+  if (direction === "pushBack") {
+    const d = pushDetails?.get(inspectedHand);
+    if (!d) {
+      el.classList.add("hidden");
+      el.innerHTML = "";
+      return;
+    }
+    const diffRounded = Math.round(d.diffPoolPct * 100) / 100 || 0;
+    const verdict =
+      d.status === "push"
+        ? t("hand.inspect.verdict.push")
+        : d.status === "marginal"
+          ? t("hand.inspect.verdict.marginal")
+          : t("hand.inspect.verdict.fold");
+    el.classList.remove("hidden");
+    el.innerHTML = t("hand.inspect.pushDetail.html", {
+      hand: inspectedHand,
+      callRate: (d.callRate * 100).toFixed(0),
+      eq: (d.eqVsCall * 100).toFixed(1),
+      diff: `${diffRounded >= 0 ? "+" : ""}${diffRounded.toFixed(2)}`,
+      verdict,
+    });
+    return;
+  }
   const eq = equity(inspectedHand, villainRange);
-  const margin = (eq - requiredEquity) * 100;
+  const rawMargin = (eq - requiredEquity) * 100;
+  const margin = Math.round(rawMargin * 10) / 10 || 0;
   const verdict =
-    margin >= MARGINAL_BAND * 100
+    rawMargin >= MARGINAL_BAND * 100
       ? t("hand.inspect.verdict.call")
-      : margin > -MARGINAL_BAND * 100
+      : rawMargin > -MARGINAL_BAND * 100
         ? t("hand.inspect.verdict.marginal")
         : t("hand.inspect.verdict.fold");
   el.classList.remove("hidden");
@@ -239,7 +312,11 @@ export function currentDirection(): Direction {
 /** 席順で向きが決まるときはそれに合わせ、ありえない側のボタンを押せなくする。 */
 function syncDirectionWithPositions(): void {
   const forced = directionFromPositions();
-  if (forced) direction = forced;
+  if (forced && forced !== direction) {
+    direction = forced;
+    // 向きが変わったら、前の向きでタップ検分していたハンド選択を解除する
+    inspectedHand = null;
+  }
   document.querySelectorAll<HTMLButtonElement>(".direction-tab").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.direction === direction);
     btn.disabled = forced !== null && btn.dataset.direction !== forced;
@@ -332,6 +409,7 @@ export function renderRangeComparison(requiredEquity: number): RangeVerdictSumma
 
   const villainPct = comboPctOfRange(villainRange);
   let verdict: RangeVerdictSummary;
+  let pushDetails: Map<HandNotation, PushHandDetail> | undefined;
 
   if (direction === "callBack") {
     // 相手 push に対し自分 call できるハンド。
@@ -370,10 +448,13 @@ export function renderRangeComparison(requiredEquity: number): RangeVerdictSumma
   } else {
     // 逆算: 相手 call (villainRange) に対し自分が push +EV になるハンド
     const result = computePushBackRange(villainRange);
+    pushDetails = result.details;
     renderGrid(heroGrid, (hand) => {
-      if (result.pushRange.has(hand)) return heroPushClass;
-      if (result.marginal.has(hand)) return "marginal";
-      return "";
+      let cls = "";
+      if (result.pushRange.has(hand)) cls = heroPushClass;
+      else if (result.marginal.has(hand)) cls = "marginal";
+      if (hand === inspectedHand) cls += " picked";
+      return cls;
     });
     const pushComboPct = comboPctOfRange(result.pushRange);
     callStats.innerHTML = t("hand.callStats.pushBack", {
@@ -389,8 +470,9 @@ export function renderRangeComparison(requiredEquity: number): RangeVerdictSumma
     callStats.textContent = "";
     document.getElementById("hand-cell-detail")?.classList.add("hidden");
   } else {
-    renderInspectDetail(villainRange, requiredEquity);
+    renderInspectDetail(villainRange, requiredEquity, pushDetails);
   }
+  clearStaleNashNote();
 
   // カスタムモードのカウント表示
   if (villainRangeMode === "custom") {
@@ -444,6 +526,8 @@ export function updateHandPositionBanner(heroIndex: number): void {
   }
   const callerPos = heroPos;
   banner.classList.remove("hidden");
+  banner.classList.toggle("ok-box", behind.length === 0);
+  banner.classList.toggle("warn-box", behind.length > 0);
   if (behind.length === 0) {
     banner.innerHTML = t("hand.banner.noBehind.html", { label: callerLabel, pos: callerPos });
   } else {
@@ -504,7 +588,9 @@ export function initHandRange(onChange: () => void): void {
         .querySelectorAll<HTMLButtonElement>(".direction-tab")
         .forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
-      direction = btn.dataset.direction as Direction;
+      const next = btn.dataset.direction as Direction;
+      if (next !== direction) inspectedHand = null;
+      direction = next;
       onChange();
     });
   });
@@ -516,8 +602,15 @@ export function initHandRange(onChange: () => void): void {
   //   - タップだけならトグル動作（従来通り）
   let dragMode: "add" | "remove" | null = null;
   const dragVisited = new Set<string>();
+  let dragRafId: number | null = null;
 
-  function applyDragAction(hand: string): void {
+  function flushDragChange(): void {
+    dragRafId = null;
+    saveCustomRange();
+    onChange();
+  }
+
+  function applyDragAction(hand: string, immediate: boolean): void {
     if (dragVisited.has(hand)) return;
     dragVisited.add(hand);
     if (dragMode === "add") {
@@ -525,8 +618,17 @@ export function initHandRange(onChange: () => void): void {
     } else if (dragMode === "remove") {
       customVillainRange.delete(hand);
     }
-    saveCustomRange();
-    onChange();
+    if (immediate) {
+      if (dragRafId !== null) {
+        cancelAnimationFrame(dragRafId);
+        dragRafId = null;
+      }
+      saveCustomRange();
+      onChange();
+    } else if (dragRafId === null) {
+      // 連続ドラッグ中はフレーム単位に束ねて、毎セルのフル再計算によるカクつきを防ぐ
+      dragRafId = requestAnimationFrame(flushDragChange);
+    }
   }
 
   function getCellHandFromPoint(x: number, y: number): string | null {
@@ -545,7 +647,7 @@ export function initHandRange(onChange: () => void): void {
     // 最初のセルの状態で mode 決定
     dragMode = customVillainRange.has(hand) ? "remove" : "add";
     dragVisited.clear();
-    applyDragAction(hand);
+    applyDragAction(hand, true);
     // ポインターキャプチャしてドラッグ中スクロール抑制
     villainGrid.setPointerCapture(e.pointerId);
     e.preventDefault();
@@ -554,13 +656,17 @@ export function initHandRange(onChange: () => void): void {
   villainGrid.addEventListener("pointermove", (e) => {
     if (villainRangeMode !== "custom" || dragMode === null) return;
     const hand = getCellHandFromPoint(e.clientX, e.clientY);
-    if (hand) applyDragAction(hand);
+    if (hand) applyDragAction(hand, false);
   });
 
   const endDrag = (e: PointerEvent): void => {
     if (dragMode !== null) {
       dragMode = null;
       dragVisited.clear();
+      if (dragRafId !== null) {
+        cancelAnimationFrame(dragRafId);
+        flushDragChange();
+      }
       if (villainGrid.hasPointerCapture(e.pointerId)) {
         villainGrid.releasePointerCapture(e.pointerId);
       }
@@ -597,9 +703,8 @@ export function initHandRange(onChange: () => void): void {
     });
   }
 
-  // hero グリッド (call レンジ側) タップで数値検分。もう一度同じセルで解除。
+  // hero グリッド タップで数値検分 (callBack / pushBack 両対応)。もう一度同じセルで解除。
   heroGrid.addEventListener("click", (e) => {
-    if (direction !== "callBack") return;
     const cell = (e.target as HTMLElement).closest<HTMLDivElement>(".hand-cell");
     if (!cell || !cell.title) return;
     inspectedHand = inspectedHand === cell.title ? null : (cell.title as HandNotation);
@@ -613,46 +718,61 @@ export function initHandRange(onChange: () => void): void {
 
   // この局面の Nash を相手レンジ (カスタム) に入れる。上位 X% は対ランダム勝率順で、
   // 小さいペアやスーテッドコネクターが入りにくいため、実際の押し引きに近い形を1タップで置けるようにする。
-  document.getElementById("use-nash-range")?.addEventListener("click", async () => {
+  const useNashBtn = document.getElementById("use-nash-range") as HTMLButtonElement | null;
+  useNashBtn?.addEventListener("click", async () => {
+    if (useNashBtn.disabled) return;
+    useNashBtn.disabled = true;
     const note = document.getElementById("nash-range-note");
-    // オーバーコールまで入れた Nash タブと同じ結果にするため、3 人の勝率表を先に読む (失敗しても続ける)
-    await loadThreeWayTable();
-    const heroIdx = players.findIndex((p) => p.role === "hero");
-    const villainIdx = players.findIndex((p) => p.role === "villain");
-    const villainPushes = direction === "callBack";
-    const range = nashRangeForSpot(
-      players,
-      parseList(payoutsInput.value),
-      villainPushes ? villainIdx : heroIdx,
-      villainPushes ? heroIdx : villainIdx,
-      Number(nashSbInput.value) || DEFAULT_SB,
-      Number(nashBbInput.value) || DEFAULT_BB,
-      Number(nashAnteInput.value) || 0,
-      villainPushes ? "push" : "call",
-      activeBounty(),
-    );
-    if (note) note.classList.remove("hidden");
-    if (!range) {
-      if (note) note.textContent = t("hand.nashRange.failed");
-      return;
+    try {
+      // オーバーコールまで入れた Nash タブと同じ結果にするため、3 人の勝率表を先に読む (失敗しても続ける)
+      await loadThreeWayTable();
+      const heroIdx = players.findIndex((p) => p.role === "hero");
+      const villainIdx = players.findIndex((p) => p.role === "villain");
+      const villainPushes = direction === "callBack";
+      const pusherIdx = villainPushes ? villainIdx : heroIdx;
+      const callerIdx = villainPushes ? heroIdx : villainIdx;
+      const payouts = parseList(payoutsInput.value);
+      const { sb, bb, ante } = readBlindParams();
+      let range: Set<HandNotation> | null = null;
+      let includedOthers = 0;
+      if (pusherIdx >= 0 && callerIdx >= 0 && pusherIdx !== callerIdx && payouts.length > 0) {
+        try {
+          const solved = solveSpotNash(players, payouts, pusherIdx, callerIdx, sb, bb, ante, activeBounty());
+          range = new Set(villainPushes ? solved.pushRange : solved.callRange);
+          includedOthers = solved.others.length;
+        } catch {
+          range = null;
+        }
+      }
+      if (note) note.classList.remove("hidden");
+      if (!range) {
+        nashNoteSpotKey = null;
+        if (note) note.textContent = t("hand.nashRange.failed");
+        return;
+      }
+      customVillainRange.clear();
+      for (const hand of range) customVillainRange.add(hand);
+      saveCustomRange();
+      if (note) {
+        note.textContent =
+          t(villainPushes ? "hand.nashRange.donePush" : "hand.nashRange.doneCall", {
+            pct: comboPctOfRange(range).toFixed(0),
+          }) + (includedOthers > 0 ? " " + t("hand.nashRange.multiway", { n: includedOthers }) : "");
+      }
+      const customTab = document.querySelector<HTMLButtonElement>('.mode-tab[data-mode="custom"]');
+      if (villainRangeMode !== "custom" && customTab) {
+        // customTab.click() 内の onChange() より前に nashNoteSpotKey を合わせておく
+        villainRangeMode = "custom";
+        nashNoteSpotKey = currentNashNoteKey();
+        villainRangeMode = "preset";
+        customTab.click();
+      } else {
+        nashNoteSpotKey = currentNashNoteKey();
+        onChange();
+      }
+    } finally {
+      useNashBtn.disabled = false;
     }
-    customVillainRange.clear();
-    for (const hand of range) customVillainRange.add(hand);
-    saveCustomRange();
-    if (note) {
-      // 2人だけの Nash なので、押す側の後ろに他の人が残っていると実際より広く出る
-      const pusherAct = actionOrderIdx(players[villainPushes ? villainIdx : heroIdx]?.position ?? "");
-      const othersBehind = players.filter((p, i) =>
-        i !== heroIdx && i !== villainIdx && p.stack > 0 && pusherAct >= 0 && actionOrderIdx(p.position) > pusherAct,
-      ).length;
-      note.textContent =
-        t(villainPushes ? "hand.nashRange.donePush" : "hand.nashRange.doneCall", {
-          pct: comboPctOfRange(range).toFixed(0),
-        }) + (othersBehind > 0 ? " " + t("hand.nashRange.multiway", { n: othersBehind }) : "");
-    }
-    const customTab = document.querySelector<HTMLButtonElement>('.mode-tab[data-mode="custom"]');
-    if (villainRangeMode !== "custom" && customTab) customTab.click();
-    else onChange();
   });
 
   // 小さい表をタップ → 大きい表をその場で開く
