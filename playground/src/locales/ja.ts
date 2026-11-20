@@ -901,6 +901,7 @@ export const ja: Record<string, string> = {
   "paywall.feature.save": "局面と賞金を保存して、いつでも呼び出し",
   "paywall.feature.bounty": "バウンティ（KO / PKO）を入れた必要勝率・ハンド表・Nash",
   "paywall.price": "価格: {price}",
+  "paywall.oneTimeNote": "買い切り・月額課金なし（一度の購入でずっと使えます）",
   "paywall.cta.upgrade": "Pro にアップグレード",
   "paywall.cta.restore": "購入を復元",
   "paywall.web.note": "この機能はアプリ版でご利用いただけます。",

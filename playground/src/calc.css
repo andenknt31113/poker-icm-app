@@ -254,6 +254,7 @@
 .autofill-manual-note { color: var(--warn); }
 #autofill-call.is-manual { border-color: var(--accent); color: var(--accent); }
 .paywall-actions button:disabled { opacity: 0.55; cursor: progress; }
+.paywall-one-time { margin: -6px 0 12px; font-size: 12px; color: var(--accent); text-align: center; }
 
 @media (max-width: 599px) {
   .workspace .container { padding-top: 10px; gap: 10px; }

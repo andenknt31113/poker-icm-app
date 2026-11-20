@@ -70,6 +70,7 @@ function ensurePaywallModal(): HTMLDivElement {
           <li>${t("paywall.feature.bounty")}</li>
         </ul>
         <p class="paywall-price">${t("paywall.price", { price: PRICE_PLACEHOLDER })}</p>
+        <p class="paywall-one-time">${t("paywall.oneTimeNote")}</p>
         ${actionsHtml}
       </div>
     </div>
