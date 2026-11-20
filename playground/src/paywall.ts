@@ -18,6 +18,7 @@ import { t } from "./i18n.js";
 import { isCapacitorNative } from "./capacitorEnv.js";
 import { isIapConfigured } from "./iapConfig.js";
 import { applyRevenueCatCustomerInfo, ensurePurchasesConfigured } from "./entitlement.js";
+import { hapticSuccess } from "./haptics.js";
 
 // RevenueCat から実価格を取得できないあいだの価格プレースホルダ。
 const PRICE_PLACEHOLDER = "—";
@@ -172,6 +173,7 @@ async function onUpgradeClick(): Promise<void> {
     const { customerInfo } = await Purchases.purchasePackage({ aPackage: pkg });
     const active = applyRevenueCatCustomerInfo(customerInfo);
     if (active) {
+      hapticSuccess();
       closePaywall();
       showToast(t("paywall.purchase.success"));
     } else {
@@ -199,6 +201,7 @@ async function onRestoreClick(): Promise<void> {
     const { customerInfo } = await Purchases.restorePurchases();
     const active = applyRevenueCatCustomerInfo(customerInfo);
     if (active) {
+      hapticSuccess();
       closePaywall();
       showToast(t("paywall.restore.success"));
     } else {

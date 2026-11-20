@@ -12,6 +12,7 @@ import { checkpointSetup } from "./setupUndo.js";
 import { sanitizeBounty } from "./bountyState.js";
 import { renderBounty } from "./setupBounty.js";
 import { renderPayouts } from "./setupPayouts.js";
+import { hapticLight } from "./haptics.js";
 import {
   players,
   allocPlayerId,
@@ -102,6 +103,7 @@ export function replacePlayers(
 function setRole(playerId: number, role: Role): void {
   const target = players.find((p) => p.id === playerId);
   if (!target || target.role === role) return;
+  hapticLight();
   checkpointSetup();
   assignRole(players, playerId, role);
   renderPlayers();
@@ -119,6 +121,7 @@ function removePlayer(playerId: number): void {
   if (players.length <= MIN_PLAYERS) return;
   const idx = players.findIndex((p) => p.id === playerId);
   if (idx < 0) return;
+  hapticLight();
   checkpointSetup();
   const removed = players.splice(idx, 1)[0]!;
   // 削除した役割が hero/villain なら別の人に振る
@@ -134,6 +137,7 @@ function removePlayer(playerId: number): void {
 
 function addPlayer(): void {
   if (players.length >= MAX_PLAYERS) return;
+  hapticLight();
   checkpointSetup();
   const avg =
     players.reduce((a, p) => a + p.stack, 0) / Math.max(1, players.length);
@@ -196,6 +200,7 @@ function setPosition(playerId: number, position: Position): void {
 }
 
 function randomizeStacks(): void {
+  hapticLight();
   checkpointSetup();
   // RANDOM_STACK_MIN_BB 〜 RANDOM_STACK_MAX_BB のランダム整数。
   const span = RANDOM_STACK_MAX_BB - RANDOM_STACK_MIN_BB + 1;
@@ -240,6 +245,7 @@ export function initPlayersUI(): void {
   });
   document.querySelectorAll<HTMLButtonElement>("[data-swap-players]").forEach(button => button.addEventListener("click", () => {
     if (!players.some(player => player.role === "hero") || !players.some(player => player.role === "villain")) return;
+    hapticLight();
     checkpointSetup();
     swapDecisionPlayers(players);
     renderPlayers();

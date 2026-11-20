@@ -897,4 +897,17 @@
   - ASC の `1.5.2` は `WAITING_FOR_REVIEW`（`AFTER_APPROVAL`）。`1.5.3` の Archive・アップロード・提出は未実施（1.5.2 公開後または本人の指示後に実施）。
   - 実機・iPad 実機・実際の購入と復元（RevenueCat）は未確認。
 
+## 2026-11-20 アプリ内ダークモーダル化・iOS 触覚フィードバック・1.5.x 告知刷新（feat/native-modals-and-haptics）
+
+- 変更:
+  - **アプリ内ダークモーダル化 (`dialogModal.ts`)**: `window.prompt` / `window.confirm` を使っていた全4箇所（局面保存・局面削除・賞金保存・練習履歴リセット）を `openPromptModal` / `openConfirmModal` に置換。空欄送信防止・破壊的操作の誤爆防止フォーカス・Escape/背景閉じ・HTML エスケープに対応し、`i18n` 日英キーを追加。
+  - **iOS 触覚フィードバック (`haptics.ts`)**: 同梱済みで未使用だった `@capacitor/haptics` を `isCapacitorNative()` ガード付きで導入（`selectionStart → selectionChanged → selectionEnd` / `impact(Light)` / `notification(Success)`）。タブ切替・ハンド表セル選択・レンジ目安・役割切替・Undo・保存完了・購入/復元成功に配線。
+  - **告知素材の 1.5.x 更新**: `docs/PROMO_1_5.md`（バウンティ KO/PKO・4人無料・★5 反映の X 投稿案 A〜E）を作成し、`artifacts/release-1.5.3/promo/`（git 管理外）に 1600×900 告知カード 4 枚（必要勝率・バウンティ・Nash・ハンド表）を生成。`docs/RELEASE_1_5_3.md` も最新化。
+- 検証:
+  - `npm run typecheck`、unit（core 116 / playground 379、`dialogModal.test.ts`・`haptics.test.ts` を追加）、`npm run build`、e2e 20/20（アプリ内モーダル検証・標準ダイアログ非発火を含む）、`npm run cap:sync` + iPhone 17 Release シミュレーターでアプリ内ダークモーダル表示を目視確認、告知カード 4 枚を目視確認。
+- 残件:
+  - ASC の `1.5.2` は `WAITING_FOR_REVIEW`（`AFTER_APPROVAL`）。`1.5.3` の Archive・アップロード・提出は本人の指示後に実施。
+  - 実機・iPad 実機・実際の購入と復元（RevenueCat）・実機の触覚体感は未確認。X 告知は未投稿。
+
+
 

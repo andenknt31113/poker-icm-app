@@ -1,5 +1,7 @@
 import type { Difficulty, PracticeMode } from "./types.js";
 import { t } from "../i18n.js";
+import { openConfirmModal } from "../dialogModal.js";
+import { hapticLight } from "../haptics.js";
 import { loadHistory, loadStats, clearHistory, type PracticeHistoryEntry } from "./store.js";
 
 export { appendHistory } from "./store.js";
@@ -126,9 +128,16 @@ export function initProgress(): void {
   document.getElementById("practice-progress")?.addEventListener("click", (e) => {
     const target = e.target as HTMLElement;
     if (!target.closest("#practice-history-reset-btn")) return;
-    if (confirm(t("practice.progress.resetConfirm"))) {
+    void openConfirmModal({
+      title: t("practice.progress.resetTitle"),
+      message: t("practice.progress.resetConfirm"),
+      confirmLabel: t("dialog.reset"),
+      danger: true,
+    }).then((confirmed) => {
+      if (!confirmed) return;
       clearHistory();
       updatePracticeProgress();
-    }
+      hapticLight();
+    });
   });
 }

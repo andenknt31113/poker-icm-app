@@ -16,6 +16,7 @@ import { initScenariosUI } from "./setupScenarios.js";
 import { renderPayouts, initPayoutsUI } from "./setupPayouts.js";
 import { renderBounty, initBountyUI } from "./setupBounty.js";
 import { getBountyMode, setBountyMode } from "./bountyState.js";
+import { hapticLight } from "./haptics.js";
 import { STORAGE_KEYS, readRaw, writeRaw, type StorageKey } from "./storage.js";
 
 // 既存の import 元 (main.ts / practice/interactions.ts) を変えずに済むよう再公開する。
@@ -91,7 +92,11 @@ export function initSetup(): void {
     };
   });
   const undo = document.querySelector<HTMLButtonElement>("#setup-undo");
-  undo?.addEventListener("click", undoSetup);
+  undo?.addEventListener("click", () => {
+    if (!canUndoSetup()) return;
+    hapticLight();
+    undoSetup();
+  });
   document.addEventListener("focusin", event => {
     const input = event.target;
     // #bounty-all は「入れる」ボタン押下時に checkpointSetup() するため、入力中の一時欄では積まない

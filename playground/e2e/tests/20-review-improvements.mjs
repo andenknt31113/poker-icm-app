@@ -298,4 +298,59 @@ export default async function testReviewImprovements({ baseURL, createContext })
       await context.close();
     }
   }
+
+  // 9. Pro の賞金保存・局面保存・局面削除が標準 prompt/confirm ではなくアプリ内モーダルで動く
+  {
+    const { context, page, errors } = await openWithState({ pro: true, tag: "review-inapp-dialogs" });
+    let nativeDialogFired = null;
+    page.on("dialog", async (dialog) => {
+      nativeDialogFired = dialog.type();
+      await dialog.dismiss();
+    });
+    try {
+      // 賞金保存
+      await page.click("#payouts-fold > summary");
+      await page.click("#save-payout");
+      await page.waitForSelector("#app-dialog-modal", { state: "visible" });
+      if (!(await page.isDisabled("#dialog-confirm-btn"))) {
+        throw new Error("空欄のあいだは保存ボタンが無効であるべきです");
+      }
+      await page.fill("#dialog-prompt-input", "JOPTテスト");
+      await page.click("#dialog-confirm-btn");
+      await page.waitForSelector("#app-dialog-modal", { state: "detached" });
+      const savedPayoutText = await page.textContent("#saved-payouts");
+      if (!savedPayoutText?.includes("JOPTテスト")) {
+        throw new Error(`アプリ内モーダルから賞金が保存されていません: ${savedPayoutText}`);
+      }
+
+      // 局面保存 → 削除確認モーダル (createContext 既定で presetsOpen=true のため閉じていれば開く)
+      if (!(await page.locator("#scenario-presets-toggle").evaluate((el) => el.open))) {
+        await page.click("#scenario-presets-toggle > summary");
+      }
+      await page.click("#save-scenario-btn");
+      await page.waitForSelector("#app-dialog-modal", { state: "visible" });
+      await page.fill("#dialog-prompt-input", "バブル確認");
+      await page.click("#dialog-confirm-btn");
+      await page.waitForSelector("#app-dialog-modal", { state: "detached" });
+      const savedScenarioText = await page.textContent("#user-scenarios");
+      if (!savedScenarioText?.includes("バブル確認")) {
+        throw new Error(`アプリ内モーダルから局面が保存されていません: ${savedScenarioText}`);
+      }
+
+      await page.click("#user-scenarios .user-del");
+      await page.waitForSelector("#app-dialog-modal .dialog-btn-danger", { state: "visible" });
+      await page.click("#dialog-confirm-btn");
+      await page.waitForSelector("#app-dialog-modal", { state: "detached" });
+      const afterDel = await page.textContent("#user-scenarios");
+      if (afterDel?.includes("バブル確認")) {
+        throw new Error(`削除確認モーダルで局面が消えていません: ${afterDel}`);
+      }
+      if (nativeDialogFired) {
+        throw new Error(`ブラウザ標準ダイアログ (${nativeDialogFired}) が開いてしまいました`);
+      }
+      assertNoErrors(errors, "review-inapp-dialogs");
+    } finally {
+      await context.close();
+    }
+  }
 }
