@@ -910,6 +910,7 @@ export const en: Record<string, string> = {
   "paywall.feature.save": "Save spots and payouts and reload them anytime",
   "paywall.feature.bounty": "Required equity, hand charts and Nash with bounties (KO / PKO)",
   "paywall.price": "Price: {price}",
+  "paywall.oneTimeNote": "One-time purchase · No subscription (yours forever)",
   "paywall.cta.upgrade": "Upgrade to Pro",
   "paywall.cta.restore": "Restore purchases",
   "paywall.web.note": "This feature is available in the app version.",

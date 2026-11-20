@@ -21,6 +21,7 @@
 - **iOS 起動時の白フラッシュ解消・ダーク UI 統一**: `capacitor.config.ts`（`ios.backgroundColor: "#101715"`）、`SceneDelegate.swift`（ウィンドウ背景色）、`Info.plist`（`UIUserInterfaceStyle = Dark`）を設定。スプラッシュ終了〜WebView 初回描画の間の白画面とライトモードのネイティブダイアログ・キーボード混在を解消。
 - **Pro 保存・削除のブラウザ標準ダイアログをアプリ内ダークモーダルへ置換**: `window.prompt` / `window.confirm` を使っていた4箇所（局面保存・局面削除・賞金保存・練習履歴リセット）を `dialogModal.ts` に統一。空欄時の保存ボタン無効化、破壊的操作の誤爆防止フォーカス、Escape・背景タップ対応、HTML エスケープを実装。
 - **iOS 触覚フィードバック（`@capacitor/haptics`）を導入**: 同梱済みで未使用だったプラグインを `haptics.ts`（`isCapacitorNative()` ガード付き）から活用し、タブ切替・ハンド表セルタップ・レンジ目安・役割切替・Undo・保存完了・購入/復元成功時に軽い触覚を追加。
+- **ペイウォールに「買い切り・月額課金なし」を明記**: `paywall.ts` / 日英辞書に買い切り注記（`.paywall-one-time`）を追加し、サブスクとの違いが一目で伝わるようにした。
 - **未使用のテンプレート画像を整理**: `Splash.imageset` に残っていた未参照の PNG 3枚を削除し、Xcode の asset warning 5件を解消。
 - **自分からオールイン（`pushBack`）時の使い勝手と表示を統一**:
   - ハンド表のセルタップで相手コール率・コール時勝率・賞金期待値差・判定を確認できるようにした（向き切替時は選択解除）。
@@ -83,3 +84,4 @@ What is new in 1.5.3 (fixes and polish only; no new features or purchases):
 
 - 未提出・未アーカイブ（2026-11-20 時点）。
 - 1.5.2 が `WAITING_FOR_REVIEW`（`AFTER_APPROVAL`）で審査待ちのため、1.5.2 の公開後（または本人の指示後）に Archive → アップロード → ASC で 1.5.3 を作成して提出する。
+- 1.5.3 で合わせて差し替える JP / US の ASO（サブタイトル・キーワード・プロモーションテキスト）の確定案は `docs/ASO_1_5_3.md` にまとめている。

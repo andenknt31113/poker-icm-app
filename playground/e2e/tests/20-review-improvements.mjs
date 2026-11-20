@@ -267,6 +267,13 @@ export default async function testReviewImprovements({ baseURL, createContext })
       if (offPressed !== "true" || koPressed !== "false") {
         throw new Error(`無料時のバウンティ選択表示が不整合: off=${offPressed} ko=${koPressed}`);
       }
+      // KO タップでペイウォールが開き、買い切り・月額なしの注記が出る
+      await page.click('[data-bounty-mode="ko"]');
+      await page.waitForSelector("#paywall-modal:not(.hidden)", { state: "visible" });
+      const oneTimeText = await page.textContent("#paywall-modal .paywall-one-time");
+      if (!oneTimeText?.includes("買い切り")) {
+        throw new Error(`ペイウォールに買い切り注記がありません: ${oneTimeText}`);
+      }
       assertNoErrors(errors, "review-free-bounty-mode");
     } finally {
       await context.close();

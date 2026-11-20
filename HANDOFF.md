@@ -909,5 +909,20 @@
   - ASC の `1.5.2` は `WAITING_FOR_REVIEW`（`AFTER_APPROVAL`）。`1.5.3` の Archive・アップロード・提出は本人の指示後に実施。
   - 実機・iPad 実機・実際の購入と復元（RevenueCat）・実機の触覚体感は未確認。X 告知は未投稿。
 
+## 2026-11-20 売り出し準備（ペイウォール買い切り明記・ASO 設計・日英プロモパック）
+
+- 変更:
+  - **ペイウォール訴求改善 (`paywall.ts` / `locales/{ja,en}.ts` / `calc.css`)**: 価格の下に「買い切り・月額課金なし（一度の購入でずっと使えます）」/「One-time purchase · No subscription (yours forever)」を追加し、E2E `20-review-improvements.mjs` に回帰チェックを追加。
+  - **App Store ASO 設計 (`docs/ASO_1_5_3.md`)**: 2026-11-20 の iTunes Search API 実測（JP `poker icm`/`ポーカー icm`/`ポーカー チョップ` 1位、US `poker icm` 2位、一方 JP `ポーカー バウンティ`・US `icm chop`/`poker bounty` は圏外）と ASC 現行メタデータ読み取りに基づき、JP / EN-US の文字数検証済みサブタイトル・キーワード・プロモーションテキスト案を作成。
+  - **X ハンドクイズ連載パック (`docs/PROMO_X_QUIZ_PACK.md`)**: `@poker-icm/core` で全数値を厳密検証した6問（FTバブル AJo、PKO KTs 逆転、サテライト QQ フォールド、2番手 vs CL の AKs、最短4BB の J9o、3人同時オールイン BB AKs オーバーコールフォールド）の投稿・リプ本文と、1600×900 問題カード6枚（`artifacts/release-1.5.3/promo/quiz/`、git 管理外）を作成。
+  - **英語圏プロモパック (`docs/PROMO_EN.md`)**: Reddit `r/poker` メイン紹介案・戦略議論型投稿案・英語 X 投稿群と、英語告知カード2枚（`artifacts/release-1.5.3/promo/en/`、git 管理外）を作成。
+- 検証:
+  - `npm run typecheck`、unit（core 116 / playground 379）、`npm run build`、e2e 20/20（ペイウォール買い切り注記の検証を含む）すべて成功。
+  - 生成した日本語クイズカード6枚・英語告知カード2枚を目視確認。
+- 残件:
+  - ASC への ASO 反映（プロモーションテキストは審査なしで即時反映可、サブタイトル・キーワードは 1.5.3 提出時に反映）および 1.5.3 提出は本人の指示後に実施。
+  - X・Reddit への投稿、実機・購入/復元確認、ASC 売上受取口座の確認は本人側で実施。
+
+
 
 
