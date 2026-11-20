@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { nashRangeForSpot, solveSpotNash } from "../src/nashRange.js";
+import { nashRangeForSpot, pusherOrder, solveSpotNash } from "../src/nashRange.js";
 import { comboPctOfRange, topRangeByComboPct } from "../src/handRanking.js";
 import type { Position } from "../src/appState.js";
 
@@ -69,5 +69,20 @@ describe("solveSpotNash (後ろに複数人いる局面)", () => {
   it("後ろが 1 人のときは 2 人モデルのまま (others は空)", () => {
     const r = solveSpotNash([seat(10, "BTN"), seat(10, "BB")], [100], 0, 1, SB, BB, 0);
     expect(r.others).toEqual([]);
+  });
+});
+
+describe("pusherOrder (最初に押せる席の判定)", () => {
+  it("末尾席 (BB) のスタックが 0 のときは、その前の席 (SB) を押せる席に含めない", () => {
+    expect(pusherOrder([seat(10, "BTN"), seat(10, "SB"), seat(0, "BB")])).toEqual([0]);
+  });
+
+  it("スタック > 0 が 1 人以下なら空配列を返す (空白表示の防止)", () => {
+    expect(pusherOrder([seat(10, "SB"), seat(0, "BB")])).toEqual([]);
+    expect(pusherOrder([seat(0, "SB"), seat(0, "BB")])).toEqual([]);
+  });
+
+  it("未設定のポジションがあれば null を返す", () => {
+    expect(pusherOrder([seat(10, ""), seat(10, "BB")])).toBeNull();
   });
 });

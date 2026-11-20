@@ -94,7 +94,8 @@ export function initSetup(): void {
   undo?.addEventListener("click", undoSetup);
   document.addEventListener("focusin", event => {
     const input = event.target;
-    if (input instanceof HTMLInputElement && !input.readOnly && input.matches(".player-stack, .payout-amount, .bounty-amount, #bounty-all, #nash-sb, #nash-bb, #nash-ante, #call, #potwin")) stageSetupInput(input);
+    // #bounty-all は「入れる」ボタン押下時に checkpointSetup() するため、入力中の一時欄では積まない
+    if (input instanceof HTMLInputElement && !input.readOnly && input.matches(".player-stack, .payout-amount, .bounty-amount, #nash-sb, #nash-bb, #nash-ante, #call, #potwin")) stageSetupInput(input);
   });
   document.addEventListener("input", event => {
     const input = event.target;

@@ -300,7 +300,7 @@
         </p>
         <div class="grid">
           <label>
-            <span data-i18n="result.eq.callLabel">コール額</span>
+            <span id="eq-call-label" data-i18n="result.eq.callLabel">コール額</span>
             <div class="num-stepper">
               <button type="button" class="num-step-btn" data-target="call" data-delta="-1">−1</button>
               <input id="call" type="number" inputmode="decimal" placeholder="例: 8.0" min="0.1" step="0.1" data-i18n-attr="placeholder:result.eq.call.placeholder" />
@@ -420,7 +420,7 @@
           </div>
         </div>
         <div class="analysis-details-link">
-          <button class="workspace-secondary" type="button" data-analysis-target="sec-icm" data-i18n="flow.equityDetails">コール額・必要勝率の内訳を見る →</button>
+          <button id="flow-equity-details" class="workspace-secondary" type="button" data-analysis-target="sec-icm" data-i18n="flow.equityDetails">コール額・必要勝率の内訳を見る →</button>
         </div>
         </div>
       </section>

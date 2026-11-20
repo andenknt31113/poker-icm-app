@@ -33,6 +33,7 @@ export const ja: Record<string, string> = {
   "nash.title.theyPush": "相手のオールインレンジ 🔴",
   "nash.title.youCall": "自分がコールするレンジ 🟢",
   "flow.equityDetails": "コール額・必要勝率の内訳を見る →",
+  "flow.equityDetailsPush": "必要勝率・ICM の内訳を見る →",
   "flow.example": "例題から試す",
   "flow.exampleHint": "よくある局面を選ぶだけ",
   "flow.own": "自分の局面を入力",
@@ -196,6 +197,7 @@ export const ja: Record<string, string> = {
   "calc.eq.flow.icm": "必要勝率 (ICM)",
   "result.eq.hint.html": "自分と相手のオールインから自動で計算しています。数値を上書きすると手入力になります。",
   "result.eq.callLabel": "\n            コール額\n            ",
+  "result.eq.pushLabel": "追加で出す額",
   "result.eq.call.placeholder": "例: 8.0",
   "result.eq.potwinLabel": "\n            勝った時の純利得\n            ",
   "result.eq.potwin.placeholder": "例: 10.5",
@@ -260,7 +262,7 @@ export const ja: Record<string, string> = {
   "hand.banner.callerLabel.hero": "自分",
   "hand.banner.noBehind.html": "\n      ✅ {label}=<strong>{pos}</strong>: 後ろにプレイヤーがいないので、この 1 対 1 モデルがそのまま当てはまります。\n    ",
   "hand.banner.behind.html": "\n      <details class=\"hand-caveat\">\n        <summary>⚠ {label}=<strong>{pos}</strong>: 後ろの {n} 人ぶんのオーバーコールは未反映 — 実戦はもう少し硬めに</summary>\n        <div class=\"hand-caveat-body\">\n          この計算は「1 対 1 のオールイン」モデルです。{label} の後ろに残っている {n} 人 ({list}) が割り込んでくるリスクは含まれていません。{note}\n        </div>\n      </details>\n    ",
-  "hand.banner.note.callBack": "ここで「call OK」と出ても実戦ではより硬い range で受けるべきです。",
+  "hand.banner.note.callBack": "ここで「コール可」と出ても、実戦では後ろの人にもコールされる可能性があるので、もう少し強いハンドに絞るのが安全です。",
   "hand.banner.note.pushBack": "ここで「オールインできる」と出ても、実戦では後ろの人にもコールされる可能性があるので、もう少し強いハンドに絞るのが安全です。",
 
   // ===== index.html: 練習 =====
@@ -599,7 +601,7 @@ export const ja: Record<string, string> = {
   "calc.bf.err.zeroStack": "スタックが 0 の人がいるので計算できません",
   "calc.err.noCall": "この局面ではコールする額がありません。自分か相手が、ブラインドやアンティを払った時点でオールインになっています。スタックを確かめてください。",
   "calc.err.callInput": "コール額と勝った時の純利得には、0 より大きい数を入れてください。",
-  "calc.note.pushDirection.html": "自分{hero}が先に動くので、<strong>自分がオールインして相手{villain}にコールされた場合</strong>の数字です。「コール額」は自分が追加で出す額で、相手に降りてもらえる分は入っていません。",
+  "calc.note.pushDirection.html": "自分{hero}が先に動くので、<strong>自分がオールインして相手{villain}にコールされた場合</strong>の数字です。相手に降りてもらえる分は入っていません。",
   "calc.bf.label.bf": "自分 vs 相手の BF",
   "calc.bf.label.risk": "リスクチップ",
   "calc.autofill.summaryLine": "✓ コール額 <strong>{call}</strong> / 勝った時の純利得 <strong>{pot}</strong> BB",
@@ -671,6 +673,7 @@ export const ja: Record<string, string> = {
 
   // ===== 警告 (calculator.ts) =====
   "calc.warn.depth.html": "⚠️ 実効 {eff}BB：オールインされた後のコール判断なので、この計算はそのまま使えます。ただ、この深さでいきなりオールインしてくる相手はかなり強いハンドに絞られることが多いので、相手レンジは狭めに設定してください。",
+  "calc.warn.depthPush.html": "⚠️ 実効 {eff}BB：実戦では 2BB オープンやリンプも選ばれる深さです。ここの数字は「オールインして相手にコールされた場合」の参考値として見てください。",
 
   // ===== 用語解説モーダル (calculator.ts INFO_TEXTS) =====
   "info.icm.title": "ICM (Independent Chip Model)",

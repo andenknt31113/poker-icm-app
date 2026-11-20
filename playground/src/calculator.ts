@@ -358,9 +358,15 @@ export function recompute(): void {
 
     // 状態を保存
     saveState();
+    const activeDirection = callUnavailable ? null : currentDirection();
+    const pushes = activeDirection === "pushBack";
+    const eqCallLabel = document.getElementById("eq-call-label");
+    if (eqCallLabel) eqCallLabel.textContent = t(pushes ? "result.eq.pushLabel" : "result.eq.callLabel").trim();
+    const flowEqDetails = document.getElementById("flow-equity-details");
+    if (flowEqDetails) flowEqDetails.textContent = t(pushes ? "flow.equityDetailsPush" : "flow.equityDetails");
     updateNashOvercallWarn();
-    updatePositionWarn(callUnavailable ? null : currentDirection(), heroIndex, villainIndex);
-    updateDepthWarn(heroIndex, villainIndex, stacks);
+    updatePositionWarn(activeDirection, heroIndex, villainIndex);
+    updateDepthWarn(heroIndex, villainIndex, stacks, activeDirection);
     updateHandPositionBanner(heroIndex);
     ensureNashCalculated();
   } catch (err) {
