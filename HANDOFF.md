@@ -880,3 +880,21 @@
 - 検証: `npm run typecheck`、unit（core 116 / playground 368）、`npm run build`、e2e 20件（`20-review-improvements.mjs` を追加、Chrome 実行）すべて成功。修正後の画面スクショ 4 種（pushBack 検分・バウンティ BF・均等賞金 ∞・375px 英語 9人卓）を目視確認。
 - 残件: 1.5.2 は別途審査待ち（WAITING_FOR_REVIEW）のため、本修正は次期 iOS リリース（1.5.3 等）のビルドに含める想定。実機・iPad・購入と復元は未確認。
 
+## 2026-11-20 第2弾改善（PR #104）＋ 1.5.3 リリース準備（PR #105）
+
+- 背景: PR #103 マージ後の追加確認（本番 `/support` 反映確認、ASC 1.5.2 状態確認、iPhone 17 / iPad Pro 13-inch シミュレーター確認）で見つかった iOS 起動白フラッシュと端ケース不具合を修正し、1.5.2 公開後にすぐ出せる状態まで `1.5.3` の準備を完了。
+- 変更（PR #104 `fix/ios-and-edge-polish`、マージ済み `5648212`）:
+  - **iOS 起動白フラッシュ解消・ダーク UI 統一**: `capacitor.config.ts` に `ios.backgroundColor: "#101715"`、`SceneDelegate.swift` にウィンドウ背景色、`Info.plist` に `UIUserInterfaceStyle = Dark` を設定。`Splash.imageset` の未参照テンプレート PNG 3枚を削除し Xcode asset warning 5件を解消。
+  - **Nash・バウンティ・保存データ・pushBack 表示の端ケース修正**: `nashRange.ts` (`pusherOrder`) で末尾 0 チップ席を除外（有効 1 人以下で空白にならないよう修正）、`setup.ts` / `setupBounty.ts` で `#bounty-all` の Undo 重複・負数 blur 正規化・無料時のバウンティ選択表示整合・エスケープを修正、`appState.ts` / `setupScenarios.ts` に `sanitizePlayersArray` を追加、`warnings.ts` / `calculator.ts` / `index.html` / `locales/{ja,en}.ts` で `pushBack` 時の Hand 下部 CTA・入力ラベル・20BB 超深さ警告をオールイン向きに統一。
+- 変更（PR #105 `release/1.5.3`）:
+  - `ios/App/App.xcodeproj/project.pbxproj` の `MARKETING_VERSION` を `1.5.2` → `1.5.3`（`CURRENT_PROJECT_VERSION = 1`）。
+  - `docs/RELEASE_1_5_3.md` を作成（PR #103・#104 の全変更点、検証記録、日英の更新説明案・審査メモ案）。
+- 検証:
+  - `npm run typecheck`、unit（core 116 / playground 372）、`npm run build`、e2e 20/20（Chrome）すべて成功。
+  - 本番 Workers（`https://poker-icm-app.andenknt31113.workers.dev`）: `/support` 200（`♠`・バウンティ/賞金保存 FAQ 反映済み）、`/legal` 200、`/` 410 を確認。
+  - iPhone 17（iOS 26.5）および iPad Pro 13-inch (M5) シミュレーターの Release ビルドで、起動直後（0.3s）から暗色背景・白ステータスバー（白フラッシュなし）およびハンド・賞金/BF・Nash 画面を目視確認。Xcode ビルドの自前コード・asset warning ゼロ。
+- 残件:
+  - ASC の `1.5.2` は `WAITING_FOR_REVIEW`（`AFTER_APPROVAL`）。`1.5.3` の Archive・アップロード・提出は未実施（1.5.2 公開後または本人の指示後に実施）。
+  - 実機・iPad 実機・実際の購入と復元（RevenueCat）は未確認。
+
+
