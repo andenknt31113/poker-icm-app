@@ -202,16 +202,20 @@ function solveNode(
 }
 
 /**
- * 最初に押せる席 (チップがあって、後ろにまだ人がいる席) を行動順に返す。
+ * 最初に押せる席 (チップがあって、後ろにチップのある人がまだいる席) を行動順に返す。
  * 全員のポジションが決まっていなければ null。
  */
 export function pusherOrder(table: readonly SeatLike[]): number[] | null {
   const orders = table.map((seat) => actionOrderIdx(seat.position));
   if (orders.some((order) => order < 0)) return null;
-  const last = Math.max(...orders);
+  const activeOrders = table
+    .map((seat, i) => (seat.stack > 0 ? orders[i]! : -1))
+    .filter((order) => order >= 0);
+  if (activeOrders.length < 2) return [];
+  const lastActive = Math.max(...activeOrders);
   return table
     .map((_, i) => i)
-    .filter((i) => table[i]!.stack > 0 && orders[i]! < last)
+    .filter((i) => table[i]!.stack > 0 && orders[i]! < lastActive)
     .sort((a, b) => orders[a]! - orders[b]!);
 }
 

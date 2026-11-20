@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   sanitizePayoutsArray,
+  sanitizePlayersArray,
   parseList,
   positionsForN,
   posToPotOddsPos,
@@ -154,5 +155,24 @@ describe("positionsAfterChange", () => {
     expect(positionsAfterChange(["BB", "SB", "BTN", "CO"], 1, "HJ", true)).toEqual([
       "BB", "HJ", "BTN", "CO",
     ]);
+  });
+});
+
+describe("sanitizePlayersArray", () => {
+  it("壊れたスタック・未知ロール/ポジション・重複ヒーロー・上限超過人数を正規化する", () => {
+    const dirty = [
+      { stack: -5, role: "hero", position: "BB", bounty: -2 },
+      { stack: Number.NaN, role: "hero", position: "INVALID", bounty: 10 },
+      { stack: 15, role: "villain", position: "SB", bounty: 0 },
+      { stack: 20, role: "unknown", position: "BTN" },
+      null,
+      ...Array.from({ length: 10 }, () => ({ stack: 10, role: "other", position: "" })),
+    ];
+    const clean = sanitizePlayersArray(dirty);
+    expect(clean.length).toBe(9);
+    expect(clean[0]).toEqual({ stack: 0, role: "hero", position: "BB" });
+    expect(clean[1]).toEqual({ stack: 0, role: "other", position: "", bounty: 10 });
+    expect(clean[2]).toEqual({ stack: 15, role: "villain", position: "SB" });
+    expect(clean[3]).toEqual({ stack: 20, role: "other", position: "BTN" });
   });
 });

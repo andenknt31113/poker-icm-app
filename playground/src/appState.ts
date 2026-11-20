@@ -1,4 +1,4 @@
-import type { PotOddsPosition } from "@poker-icm/core";
+import { MAX_PLAYERS, type PotOddsPosition } from "@poker-icm/core";
 import { STORAGE_KEYS, readJson } from "./storage.js";
 
 // ===== プレイヤー状態管理 =====
@@ -176,6 +176,66 @@ export function sanitizePayoutsArray(values: unknown): number[] {
   );
 }
 
+export type SavedPlayer = { stack: number; role: Role; position: Position; bounty?: number };
+
+const VALID_ROLES: readonly Role[] = ["hero", "villain", "other"];
+
+// プリフロップ行動順 (UTG → UTG+1 → MP → LJ → HJ → CO → BTN → SB → BB)
+// (BB が最後に行動する)
+const POSITION_ACT_ORDER = [
+  "UTG",
+  "UTG+1",
+  "MP",
+  "LJ",
+  "HJ",
+  "CO",
+  "BTN",
+  "SB",
+  "BB",
+] as const;
+
+export function actionOrderIdx(pos: string): number {
+  return POSITION_ACT_ORDER.indexOf(pos as (typeof POSITION_ACT_ORDER)[number]);
+}
+
+/**
+ * プレイヤー配列のサニタイズ: 壊れた localStorage や保存シナリオから不正な
+ * stack (負数/NaN)・未知 role/position・上限超過人数が入り込むのを防ぐ。
+ */
+export function sanitizePlayersArray(values: unknown): SavedPlayer[] {
+  if (!Array.isArray(values)) return [];
+  const out: SavedPlayer[] = [];
+  let hasHero = false;
+  let hasVillain = false;
+  for (const item of values) {
+    if (out.length >= MAX_PLAYERS) break;
+    if (typeof item !== "object" || item === null) continue;
+    const raw = item as Record<string, unknown>;
+    const stack = typeof raw.stack === "number" && Number.isFinite(raw.stack) && raw.stack >= 0 ? raw.stack : 0;
+    let role: Role =
+      typeof raw.role === "string" && (VALID_ROLES as readonly string[]).includes(raw.role)
+        ? (raw.role as Role)
+        : "other";
+    if (role === "hero") {
+      if (hasHero) role = "other";
+      else hasHero = true;
+    } else if (role === "villain") {
+      if (hasVillain) role = "other";
+      else hasVillain = true;
+    }
+    const position: Position =
+      typeof raw.position === "string" && (raw.position === "" || actionOrderIdx(raw.position) >= 0)
+        ? (raw.position as Position)
+        : "";
+    const sanitized: SavedPlayer = { stack, role, position };
+    if (typeof raw.bounty === "number" && Number.isFinite(raw.bounty) && raw.bounty > 0) {
+      sanitized.bounty = raw.bounty;
+    }
+    out.push(sanitized);
+  }
+  return out;
+}
+
 /**
  * 保存済み state が最低限の形 (players / payouts が配列で nash が存在) を
  * 満たすか。個々の値の妥当性は各利用箇所とサニタイズに委ねる。
@@ -193,7 +253,9 @@ function loadState(): PersistedState | null {
     (v): v is PersistedState | null => v === null || isPersistedStateShape(v),
   );
   if (obj === null) return null;
-  return { ...obj, payouts: sanitizePayoutsArray(obj.payouts) };
+  const sanitizedPlayers = sanitizePlayersArray(obj.players);
+  if (sanitizedPlayers.length === 0) return null;
+  return { ...obj, players: sanitizedPlayers, payouts: sanitizePayoutsArray(obj.payouts) };
 }
 
 // デフォルト状態（初回起動時）
@@ -227,22 +289,4 @@ export function parseList(v: string): number[] {
     .filter((s) => s.length > 0)
     .map((s) => Number(s))
     .filter((n) => Number.isFinite(n) && n >= 0);
-}
-
-// プリフロップ行動順 (UTG → UTG+1 → MP → LJ → HJ → CO → BTN → SB → BB)
-// (BB が最後に行動する)
-const POSITION_ACT_ORDER = [
-  "UTG",
-  "UTG+1",
-  "MP",
-  "LJ",
-  "HJ",
-  "CO",
-  "BTN",
-  "SB",
-  "BB",
-] as const;
-
-export function actionOrderIdx(pos: string): number {
-  return POSITION_ACT_ORDER.indexOf(pos as (typeof POSITION_ACT_ORDER)[number]);
 }

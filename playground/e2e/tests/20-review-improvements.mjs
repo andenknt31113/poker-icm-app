@@ -164,4 +164,138 @@ export default async function testReviewImprovements({ baseURL, createContext })
       await context.close();
     }
   }
+
+  // 5. pushBack 時のフッターCTA・入力ラベル・20BB超の深さ警告がオールイン向きになる
+  const openWithState = async ({ pro = true, state = null, tag = "review" } = {}) => {
+    const context = await createContext({ onboardingDone: true, pro, practice: false });
+    if (state) {
+      await context.addInitScript(
+        (s) => localStorage.setItem("poker-icm-app-state-v1", JSON.stringify(s)),
+        state,
+      );
+    }
+    const page = await context.newPage();
+    const errors = attachErrorCollector(page, tag);
+    await page.goto(baseURL, { waitUntil: "load" });
+    await page.waitForSelector(".player-row", { state: "visible" });
+    return { context, page, errors };
+  };
+
+  {
+    const { context, page, errors } = await openWithState({
+      tag: "review-pushback-copy",
+      state: {
+        players: [
+          { stack: 25, role: "hero", position: "SB" },
+          { stack: 25, role: "villain", position: "BB" },
+          { stack: 20, role: "other", position: "BTN" },
+        ],
+        payouts: [50, 30, 20],
+        nash: { sb: 0.5, bb: 1, ante: 1 },
+      },
+    });
+    try {
+      const flowCta = await page.textContent("#flow-equity-details");
+      if (!flowCta?.includes("必要勝率・ICM")) {
+        throw new Error(`pushBack で Hand タブ下部CTAがコール表記のまま: ${flowCta}`);
+      }
+      await page.click('[data-jump="sec-icm"]');
+      const eqLabel = await page.textContent("#eq-call-label");
+      const depthWarn = await page.textContent("#depth-warn-eq");
+      if (!eqLabel?.includes("追加で出す額")) {
+        throw new Error(`pushBack で入力ラベルがコール額のまま: ${eqLabel}`);
+      }
+      if (!depthWarn?.includes("2BB オープン") || depthWarn.includes("オールインされた後のコール判断")) {
+        throw new Error(`pushBack で深さ警告がコール向きのまま: ${depthWarn}`);
+      }
+      assertNoErrors(errors, "review-pushback-copy");
+    } finally {
+      await context.close();
+    }
+  }
+
+  // 6. バウンティ一括適用は1回の Undo で戻り、負数入力は blur で正規化される
+  {
+    const { context, page, errors } = await openWithState({ tag: "review-bounty-undo" });
+    try {
+      await page.click("#bounty-fold > summary");
+      await page.click('[data-bounty-mode="ko"]');
+      // KO 切替で Undo が1件積まれた状態から、全員一括適用は1ステップのみ増える
+      await page.fill("#bounty-all", "25");
+      await page.click("#bounty-all-apply");
+      const afterApply = await page.textContent("#bounty-summary");
+      if (!afterApply?.includes("25 / 25 / 25")) {
+        throw new Error(`バウンティ一括適用が反映されていません: ${afterApply}`);
+      }
+      await page.click("#setup-undo");
+      const afterOneUndo = await page.textContent("#bounty-summary");
+      if (afterOneUndo?.includes("25")) {
+        throw new Error(`一括適用後の1回の Undo で戻っていません (重複積みの疑い): ${afterOneUndo}`);
+      }
+      await page.fill("#bounty-all", "-10");
+      await page.locator("#bounty-all").blur();
+      const normalized = await page.inputValue("#bounty-all");
+      if (normalized !== "") {
+        throw new Error(`#bounty-all の負数が blur で消えていません: ${normalized}`);
+      }
+      assertNoErrors(errors, "review-bounty-undo");
+    } finally {
+      await context.close();
+    }
+  }
+
+  // 7. 無料ユーザーに KO 保存値が残っていても「なし」が選択状態になる
+  {
+    const { context, page, errors } = await openWithState({
+      pro: false,
+      tag: "review-free-bounty-mode",
+      state: {
+        players: [
+          { stack: 18, role: "hero", position: "BB", bounty: 10 },
+          { stack: 14, role: "villain", position: "SB", bounty: 10 },
+          { stack: 20, role: "other", position: "BTN", bounty: 10 },
+        ],
+        payouts: [50, 30, 20],
+        nash: { sb: 0.5, bb: 1, ante: 1 },
+        bounty: { mode: "ko" },
+      },
+    });
+    try {
+      await page.click("#bounty-fold > summary");
+      const offPressed = await page.getAttribute('[data-bounty-mode="off"]', "aria-pressed");
+      const koPressed = await page.getAttribute('[data-bounty-mode="ko"]', "aria-pressed");
+      if (offPressed !== "true" || koPressed !== "false") {
+        throw new Error(`無料時のバウンティ選択表示が不整合: off=${offPressed} ko=${koPressed}`);
+      }
+      assertNoErrors(errors, "review-free-bounty-mode");
+    } finally {
+      await context.close();
+    }
+  }
+
+  // 8. 末尾席 BB=0 (1人しかスタック>0がいない) のとき Nash タブが空白にならず案内を出す
+  {
+    const { context, page, errors } = await openWithState({
+      tag: "review-nash-trailing-zero",
+      state: {
+        players: [
+          { stack: 10, role: "hero", position: "SB" },
+          { stack: 0, role: "villain", position: "BB" },
+        ],
+        payouts: [100],
+        nash: { sb: 0.5, bb: 1, ante: 0 },
+      },
+    });
+    try {
+      await page.click('[data-jump="sec-nash"]');
+      await page.waitForTimeout(200);
+      const status = await page.textContent("#nash-table-status");
+      if (!status?.includes("2人以上")) {
+        throw new Error(`BB=0 (有効1人) で Nash に案内が出ていません: ${status}`);
+      }
+      assertNoErrors(errors, "review-nash-trailing-zero");
+    } finally {
+      await context.close();
+    }
+  }
 }

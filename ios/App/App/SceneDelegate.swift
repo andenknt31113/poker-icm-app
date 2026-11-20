@@ -8,6 +8,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = scene as? UIWindowScene else { return }
 
         window = UIWindow(windowScene: windowScene)
+        // ダーク専用アプリのため、WebView 初期化前のウィンドウ背景もアプリの背景色 (#101715) に合わせる
+        window?.backgroundColor = UIColor(red: 16.0 / 255.0, green: 23.0 / 255.0, blue: 21.0 / 255.0, alpha: 1.0)
         window?.rootViewController = CAPBridgeViewController()
         window?.makeKeyAndVisible()
 

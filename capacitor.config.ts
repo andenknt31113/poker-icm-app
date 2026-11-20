@@ -11,6 +11,8 @@ const config: CapacitorConfig = {
     // ネイティブ側のインセットと CSS の safe-area が二重掛けになり、
     // ヘッダー上に大きな空白ができる (実機で確認済み)。
     contentInset: "never",
+    // スプラッシュ終了〜WebView 初回描画の間の白フラッシュを防ぐ (workspace.css の --bg と同色)
+    backgroundColor: "#101715",
   },
 };
 

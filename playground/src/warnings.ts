@@ -39,6 +39,7 @@ export function updateDepthWarn(
   heroIndex: number,
   villainIndex: number,
   stacks: number[],
+  direction: "callBack" | "pushBack" | null = "callBack",
 ): void {
   const eqWarnEl = document.getElementById("depth-warn-eq");
   if (!eqWarnEl) return;
@@ -63,6 +64,7 @@ export function updateDepthWarn(
     hide();
     return;
   }
-  eqWarnEl.innerHTML = t("calc.warn.depth.html", { eff: fmt(effStack, 1) });
+  const key = direction === "pushBack" ? "calc.warn.depthPush.html" : "calc.warn.depth.html";
+  eqWarnEl.innerHTML = t(key, { eff: fmt(effStack, 1) });
   eqWarnEl.classList.remove("hidden");
 }

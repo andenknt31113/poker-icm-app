@@ -40,6 +40,7 @@ export const en: Record<string, string> = {
   "nash.title.theyPush": "Range they shove 🔴",
   "nash.title.youCall": "Range you call with 🟢",
   "flow.equityDetails": "Review call amount and required equity →",
+  "flow.equityDetailsPush": "Review required equity and ICM breakdown →",
   "flow.example": "Start with an example",
   "flow.exampleHint": "Choose a familiar tournament spot",
   "flow.own": "Build your own spot",
@@ -202,6 +203,7 @@ export const en: Record<string, string> = {
   "calc.eq.flow.icm": "Required (ICM)",
   "result.eq.hint.html": "Calculated automatically from your all-in against the villain. Overwrite the numbers to enter them manually.",
   "result.eq.callLabel": "\n            Call amount\n            ",
+  "result.eq.pushLabel": "Amount you add",
   "result.eq.call.placeholder": "e.g. 8.0",
   "result.eq.potwinLabel": "\n            Net gain if you win\n            ",
   "result.eq.potwin.placeholder": "e.g. 10.5",
@@ -265,8 +267,8 @@ export const en: Record<string, string> = {
   "hand.banner.callerLabel.hero": "You",
   "hand.banner.noBehind.html": "\n      ✅ {label} = <strong>{pos}</strong>: nobody left to act, so this 1-vs-1 model applies exactly.\n    ",
   "hand.banner.behind.html": "\n      <details class=\"hand-caveat\">\n        <summary>⚠ {label} = <strong>{pos}</strong>: over-calls from {n} player(s) behind are not reflected — play a bit tighter</summary>\n        <div class=\"hand-caveat-body\">\n          This is a 1-vs-1 all-in model. It does not include the risk of the {n} players ({list}) behind {label} coming over the top. {note}\n        </div>\n      </details>\n    ",
-  "hand.banner.note.callBack": "Even if it says “call OK” here, defend with a tighter range in practice.",
-  "hand.banner.note.pushBack": "Even if it says “push OK” here, account for over-calls and shove a tighter range in practice.",
+  "hand.banner.note.callBack": "Even if it says “Call” here, account for over-calls and defend with a tighter range in practice.",
+  "hand.banner.note.pushBack": "Even if it says “Shove” here, account for over-calls and shove a tighter range in practice.",
 
   // ===== index.html: 練習 =====
   "practice.h2": "🎲 Practice",
@@ -609,7 +611,7 @@ export const en: Record<string, string> = {
   "calc.bf.err.zeroStack": "A player has a stack of 0, so this can’t be calculated",
   "calc.err.noCall": "There is nothing left to call in this spot: you or the villain are already all-in after posting the blinds or ante. Check the stacks.",
   "calc.err.callInput": "Enter a call amount and a net gain greater than 0.",
-  "calc.note.pushDirection.html": "You {hero} act first, so these are the numbers <strong>if you shove and the villain {villain} calls</strong>. The call amount is what you add, and fold equity is not included.",
+  "calc.note.pushDirection.html": "You {hero} act first, so these are the numbers <strong>if you shove and the villain {villain} calls</strong>. Fold equity is not included.",
   "calc.bf.label.bf": "You vs villain BF",
   "calc.bf.label.risk": "Chips at risk",
   "calc.autofill.summaryLine": "✓ Call amount <strong>{call}</strong> / net gain if you win <strong>{pot}</strong> BB",
@@ -681,6 +683,7 @@ export const en: Record<string, string> = {
 
   // ===== 警告 (calculator.ts) =====
   "calc.warn.depth.html": "⚠️ Effective {eff}BB: this is a call decision after an all-in, so the math still applies. But players who shove this deep usually have a narrow, strong range, so set the villain range tighter.",
+  "calc.warn.depthPush.html": "⚠️ Effective {eff}BB: min-raises and limps are normal at this depth. Treat these numbers as a reference for shoving and getting called.",
 
   // ===== 用語解説モーダル (calculator.ts INFO_TEXTS) =====
   "info.icm.title": "ICM (Independent Chip Model)",

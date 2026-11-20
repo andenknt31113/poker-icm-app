@@ -9,6 +9,7 @@ import { openPaywall } from "./paywall.js";
 import { recompute, setCallManualOverride } from "./calculator.js";
 import {
   players,
+  sanitizePlayersArray,
   type Role,
   type Position,
   DEFAULT_SB,
@@ -141,10 +142,12 @@ const SCENARIOS: Record<string, Scenario> = {
  * 組み込みプリセット適用とユーザー定義シナリオ復元の両方から使う共通処理。
  */
 function applyNashParams(s: Scenario): void {
-  nashSbInput.value = String(s.sb);
+  const sb = typeof s.sb === "number" && Number.isFinite(s.sb) && s.sb > 0 ? s.sb : DEFAULT_SB;
+  const ante = typeof s.ante === "number" && Number.isFinite(s.ante) && s.ante >= 0 ? s.ante : DEFAULT_ANTE;
+  nashSbInput.value = String(sb);
   // BB はスタックの単位なので常に 1 (古い保存シナリオに別の値があっても使わない)
   nashBbInput.value = String(DEFAULT_BB);
-  nashAnteInput.value = String(s.ante);
+  nashAnteInput.value = String(ante);
 }
 
 function applyScenario(scenarioId: string): void {
@@ -268,10 +271,11 @@ export function initScenariosUI(): void {
     }
     if (target.classList.contains("user-load")) {
       const s = list[idx]?.s;
-      if (s) {
+      const sanitizedPlayers = s ? sanitizePlayersArray(s.players) : [];
+      if (s && sanitizedPlayers.length > 0) {
         checkpointSetup();
         setBountyMode(isBountyMode(s.bountyMode) ? s.bountyMode : "off");
-        replacePlayers(s.players);
+        replacePlayers(sanitizedPlayers);
         renderPlayers();
         setPayouts(s.payouts, false);
         applyNashParams(s);
