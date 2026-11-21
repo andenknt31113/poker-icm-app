@@ -9,6 +9,7 @@ import { openInfoModal } from "./infoModal.js";
 import { applyTab } from "./tabs.js";
 import { setAnalysisView } from "./analysisView.js";
 import { fmt } from "./format.js";
+import { formatBbCompact } from "./stackUnit.js";
 import type { RangeVerdictSummary } from "./handRange.js";
 
 const heroSummaryEl = $<HTMLDivElement>("hero-summary");
@@ -100,14 +101,14 @@ export function renderHeroSummary(a: HeroSummaryArg): void {
     ? `
       <div class="hero-summary-row villain">
         <span class="hero-summary-row-label">${t("calc.summary.villain")}</span>
-        <span class="hero-summary-row-stat">${villainPos}<span class="hero-summary-row-stack"> ${villainStack}<span class="unit">BB</span></span></span>
+        <span class="hero-summary-row-stat">${villainPos}<span class="hero-summary-row-stack"> ${formatBbCompact(villainStack)}<span class="unit">BB</span></span></span>
         ${roleHtml(villainRole, villainRoleShort)}
       </div>`
     : `<div class="hero-summary-row villain muted-row">${t("calc.summary.villainUnset")}</div>`;
   const heroRow = `
       <div class="hero-summary-row hero">
         <span class="hero-summary-row-label">${t("calc.summary.hero")}</span>
-        <span class="hero-summary-row-stat">${heroPos}<span class="hero-summary-row-stack"> ${heroStack}<span class="unit">BB</span></span></span>
+        <span class="hero-summary-row-stat">${heroPos}<span class="hero-summary-row-stack"> ${formatBbCompact(heroStack)}<span class="unit">BB</span></span></span>
         ${hasVillain ? roleHtml(heroRole, heroRoleShort) : ""}
       </div>`;
 

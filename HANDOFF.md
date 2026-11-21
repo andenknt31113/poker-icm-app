@@ -960,4 +960,17 @@
   - `1.5.2` は `IN_REVIEW`（`AFTER_APPROVAL`）。公開後に `1.5.3` を Archive → アップロード → ASO 反映 → 提出。
   - 実機・購入/復元確認、ASC 売上受取口座の確認は本人側で実施。
 
+## 2026-11-21 1.5.3 再レビュー修正・iOS Release シミュレーター確認・ストアスクショ準備（fix/rereview-153-polish）
+
+- 変更（再レビューで発見した 4 件を修正）:
+  - **割り切れないチップ→BB 換算時の長大小数表示を修正 (`stackUnit.ts` / `heroSummary.ts` / `bfMatrix.ts` / `handRange.ts`)**: `40,000 ÷ 3,000 = 13.333333333333334` のような値でサマリー・後ろ席注意バナー・BF マップ見出しが崩れる問題を解消（`formatBbCompact` で小数 1 桁整形、BF マップ見出しは `formatStackDisplay` でチップモードにも追従）。
+  - **1 BB 手入力中の丸め誤差蓄積を防止 (`setupPlayers.ts`)**: `#bb-size-input` フォーカス時にチップ枚数を基準値として保持し、キー入力途中（例: `1000 → 3 → 3000`）でチップ数が欠損しないようにした。
+  - **使い方ガイド＆1.5.3 ストア文面を最新化 (`locales/{ja,en}.ts` / `docs/RELEASE_1_5_3.md`)**: ガイドへ `BB / チップ` 切替と「自分の手札」クイック判定を追記し、`docs/RELEASE_1_5_3.md` の更新説明（ja / en-US）・審査メモを新 UX 込みの確定版へ更新。
+- 検証:
+  - `npm run typecheck`、unit（core 116 / playground 391）、`npm run build`、e2e 20/20（割り切れない 1 BB 入力・サマリー丸め・BF マップチップ表示の回帰テストを含む）すべて成功。
+  - `npm run cap:sync` → iPhone 17（iOS 26.5）Release シミュレーターでビルド成功（自前警告ゼロ）＆起動・画面描画を目視確認。`artifacts/release-1.5.3/screenshots/{ja,en}` のストア用スクショ 24 枚（iPhone 6.9"・iPad 13" 各日英 6 枚）を横はみ出し・JS エラーゼロで生成＆目視確認。
+- 残件:
+  - `1.5.2` は `IN_REVIEW`（`AFTER_APPROVAL`）。公開後に `1.5.3` を Archive → アップロード → 新スクショ＆ASO 反映 → 提出。
+  - 実機・購入/復元確認、ASC 売上受取口座の確認は本人側で実施。
+
 

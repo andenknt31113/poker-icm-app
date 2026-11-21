@@ -48,13 +48,11 @@
 ## 検証
 
 - `npm run typecheck` 成功
-- `npm test`: core 116件 / playground 379件 すべて成功（`dialogModal.test.ts`・`haptics.test.ts` を追加）
+- `npm test`: core 116件 / playground 391件 すべて成功（`dialogModal.test.ts`・`haptics.test.ts`・`stackUnit.test.ts` を追加、`chop.test.ts`・`handRanking.test.ts`・`analysisView.test.ts`・`reviewPrompt.test.ts`・`termCopy.test.ts` を拡充）
 - `npm run build` 成功
-- `cd playground && E2E_BROWSER_CHANNEL=chrome npm run e2e`: 20件すべて成功（`20-review-improvements.mjs` にアプリ内モーダル検証を含む全9シナリオを収録）
+- `cd playground && E2E_BROWSER_CHANNEL=chrome npm run e2e`: 20件すべて成功（`20-review-improvements.mjs` にアプリ内モーダル・4タブ・チョップコピー・手札クイック選択・BB/チップ単位切替・割り切れない 1 BB での丸め精度を含む全11シナリオを収録）
 - iOS シミュレーター（Release 構成）:
-  - **iPhone 17（iOS 26.5）**: 起動直後（0.3s）から暗色背景で白フラッシュなし、初回案内スキップ後の「サンプル」札削除、自分からオールイン時の追従カード・赤丸凡例・13×13 ハンド表、アプリ内ダークモーダル（保存・削除確認）を確認。
-  - **iPad Pro 13-inch (M5)**: 起動直後（0.3s）から暗色背景・白ステータスバーで白フラッシュなし、2 カラムのハンド・賞金/BF（ICM/チョップ/BFマップ）・Nash 一覧を確認。
-  - Xcode Release ビルドで `Splash.imageset` の warning 解消・自前コードの warning ゼロを確認。
+  - **iPhone 17（iOS 26.5）**・**iPad Pro 13-inch (M5)**: 起動直後（0.3s）から暗色背景・白ステータスバーで白フラッシュなし、新 UX（4 タブ・`?` ボタン・手札クイック判定・独立チョップタブ＋コピー・BB/チップ切替・ダークモーダル）を目視確認。Xcode Release ビルドの自前コード・asset warning ゼロ。
 - 未確認: 実機・iPad 実機・実際の購入と復元（RevenueCat）・実機での触覚（Taptic Engine）の体感。
 
 ## ストア文面（案）
@@ -62,33 +60,33 @@
 更新説明（ja）:
 
 ```
-・自分からオールインする場面でも、ハンド表のマスをタップして相手コール率や賞金期待値差を確認できるようになりました
-・相手がショートスタックの BB のときにオールイン可能ハンドが正しく出ないことがある不具合や、均等賞金（サテライト等）での BF 表示を直しました
-・アプリ起動直後に一瞬白い画面が見える現象を直し、局面・賞金の保存ダイアログもアプリ内のダーク表示に統一しました
-・タップ時の軽い触覚フィードバックを追加し、バウンティ・Nash 一覧・狭い画面のレイアウトなど細かな不具合を直しました
+・チョップ（ディール）を独立タブにし、結果をそのままコピーして共有できるボタンを追加しました
+・ハンド表の上で「自分の手札」を直接選んで、コール／フォールドの判定と勝率をすぐ確認できるようになりました
+・ライブトナメ向け「BB / チップ」単位切替を追加し、実チップ数のまま入力・ICM／チョップ計算ができるようになりました
+・自分からオールインする場面でのセルタップ検分、ショート BB やサテライト BF の計算修正、起動時の白フラッシュ解消・ダークモーダル統一・軽い触覚フィードバックなど細かな使い勝手を改善しました
 ```
 
 更新説明（en-US）:
 
 ```
-- You can now tap any hand cell when shoving first to inspect villain call rate, equity when called, and prize EV difference
-- Fixed shove ranges sometimes showing 0% against a short BB, and improved BF display for equal-payout (satellite) structures
-- Eliminated the brief white flash on launch and replaced system prompt/confirm alerts for saving spots and payouts with dark in-app modals
-- Added subtle iOS haptic feedback and fixed minor bounty, Nash table, and compact-screen layout issues
+- Moved ICM Chop to its own top-level tab and added a one-tap Copy button to share deal splits
+- Added a quick "Your hand" picker above the 13x13 chart to check call/fold verdicts and equity immediately
+- Added a "BB / Chips" unit toggle with 1 BB presets so you can enter live chip counts directly for ICM, Nash, and chops
+- Added cell inspection when shoving first, eliminated the launch white flash, unified dark in-app modals, added subtle haptics, and fixed short-BB / satellite BF edge cases
 ```
 
 審査メモ（1.5.2 の節を置き換える案）:
 
 ```
-What is new in 1.5.3 (fixes and polish only; no new features or purchases):
+What is new in 1.5.3 (UX polish and bug fixes; no changes to purchases or calculation model):
+- Promoted ICM Chop to its own analysis tab with a one-tap copy button for deal splits.
+- Added a quick "Your hand" selector above the 13x13 hand chart (synced with cell tap inspection) and a "BB / Chips" input unit toggle for live tournaments.
 - Tapping a hand cell now also shows hand details when you act first (shoving mode).
 - Fixed edge-case calculations (shoving into a short big blind, negative blind/ante inputs, equal-payout satellite Bubble Factor display, and Nash table when a trailing seat has 0 chips).
-- Fixed a brief white flash on launch, aligned native iOS dialogs/keyboards to dark mode, replaced browser prompt/confirm alerts for saving/deleting spots and payouts with in-app modals, and added subtle iOS haptic feedback.
-- Fixed compact-screen layout on 9-player tables in English and added a guard against tapping purchase/restore before RevenueCat finishes configuring.
+- Fixed a brief white flash on launch, aligned native iOS dialogs/keyboards to dark mode, replaced browser prompt/confirm alerts with dark in-app modals, clarified one-time purchase on the paywall, and added subtle iOS haptic feedback.
 ```
 
 ## 提出状況
 
-- 未提出・未アーカイブ（2026-11-20 時点）。
-- 1.5.2 が `WAITING_FOR_REVIEW`（`AFTER_APPROVAL`）で審査待ちのため、1.5.2 の公開後（または本人の指示後）に Archive → アップロード → ASC で 1.5.3 を作成して提出する。
-- 1.5.3 で合わせて差し替える JP / US の ASO（サブタイトル・キーワード・プロモーションテキスト）の確定案は `docs/ASO_1_5_3.md` にまとめている。
+- 未提出・未アーカイブ（2026-11-21 時点）。
+- 1.5.2 が `IN_REVIEW`（`AFTER_APPROVAL`）で審査中のため、1.5.2 の公開後（または本人の指示後）に Archive → アップロード → ASC で 1.5.3 を作成し、`docs/ASO_1_5_3.md` のサブタイトル・キーワードと新スクショ込みで提出する。

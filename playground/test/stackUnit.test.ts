@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_BB_SIZE,
   bbToInputValue,
+  formatBbCompact,
   formatStackDisplay,
   formatStackShareLabel,
   inputValueToBb,
@@ -34,7 +35,11 @@ describe("stackUnit 変換ロジック", () => {
   });
 
   it("表示用・チョップ共有用テキストのフォーマットがモードに追従する", () => {
+    expect(formatBbCompact(40000 / 3000)).toBe("13.3");
+    expect(formatBbCompact(18)).toBe("18");
+    expect(formatBbCompact(-1)).toBe("0");
     expect(formatStackDisplay(4.5, "bb", 10000)).toBe("4.5");
+    expect(formatStackDisplay(40000 / 3000, "bb", 3000)).toBe("13.33");
     expect(formatStackDisplay(4.5, "chips", 10000)).toBe("45,000");
     expect(formatStackShareLabel(12, "bb", 10000)).toBe("12BB");
     expect(formatStackShareLabel(4.5, "chips", 10000)).toBe("45,000 (4.5BB)");

@@ -68,7 +68,13 @@ export function inputValueToBb(raw: number, mode: StackUnit, bbSize: number): nu
   return raw;
 }
 
-/** 表 (ICM・チョップ) のスタック列に並べる表示文字列。 */
+/** サマリーや注意バナー向け: BB 値を最大小数 1 桁に丸めた短い表記 ("13.3", "4.5", "18")。 */
+export function formatBbCompact(bb: number): string {
+  const safeBb = Number.isFinite(bb) && bb >= 0 ? bb : 0;
+  return String(Math.round(safeBb * 10) / 10);
+}
+
+/** 表 (ICM・チョップ・BF マップ) のスタック列に並べる表示文字列。 */
 export function formatStackDisplay(bb: number, mode: StackUnit, bbSize: number): string {
   const safeBb = Number.isFinite(bb) && bb >= 0 ? bb : 0;
   if (mode === "chips") return Math.round(safeBb * sanitizeBbSize(bbSize)).toLocaleString("en-US");

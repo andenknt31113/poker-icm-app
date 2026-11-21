@@ -497,6 +497,27 @@ export default async function testReviewImprovements({ baseURL, createContext })
         throw new Error(`チョップ表にチップ表示 45,000 が出ません: "${chopText}"`);
       }
 
+      // 割り切れない 1 BB (40,000 ÷ 3,000 = 13.3333...) でも長大な小数が出ず、入力途中の丸めズレも起きない
+      await page.locator(".player-stack").first().fill("40000");
+      await page.locator("#bb-size-input").click();
+      await page.locator("#bb-size-input").fill("3");
+      await page.locator("#bb-size-input").fill("3000");
+      await page.locator("#bb-size-input").blur();
+      if ((await page.locator(".player-stack").first().inputValue()) !== "40000") {
+        throw new Error(`1 BB 編集中にチップ値がずれました: "${await page.locator(".player-stack").first().inputValue()}"`);
+      }
+      await page.click('[data-jump="sec-icm"]');
+      const summaryText = await page.textContent("#hero-summary");
+      if (summaryText?.includes("13.333") || !summaryText?.includes("13.3")) {
+        throw new Error(`サマリーの BB 表記が丸められていません: "${summaryText}"`);
+      }
+      const bfHeaderText = await page.textContent("#bf-matrix");
+      if (!bfHeaderText?.includes("40,000")) {
+        throw new Error(`BF マップの見出しがチップ表示 40,000 に追従していません: "${bfHeaderText}"`);
+      }
+      await page.click('[data-bb-preset="10000"]');
+      await page.locator(".player-stack").first().fill("45000");
+
       // リロードしてもチップモードと 1 BB = 10000 が保持される
       await page.reload({ waitUntil: "load" });
       await page.waitForSelector("#bb-size-bar:not(.hidden)");
