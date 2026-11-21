@@ -7,6 +7,7 @@ import { players } from "./appState.js";
 import { hapticSelection, hapticSuccess } from "./haptics.js";
 import { t } from "./i18n.js";
 import { noteChopCopiedForReview } from "./reviewPrompt.js";
+import { formatStackDisplay, formatStackShareLabel, getBbSize, getStackUnit } from "./stackUnit.js";
 
 /** 刻みを選べるのは、賞金の合計がその刻みの何倍以上あるときか。 */
 const MIN_UNITS_IN_TOTAL = 20;
@@ -61,12 +62,17 @@ export function renderChop(stacks: readonly number[], payouts: readonly number[]
   const usable = (unit: number): boolean => unit === 0 || unit <= paidTotal / MIN_UNITS_IN_TOTAL;
   if (!usable(roundingUnit)) roundingUnit = 0;
   const result = calculateChop(stacks, payouts, roundingUnit);
+  const unitMode = getStackUnit();
+  const bbSize = getBbSize();
   const shareRows = result.icm.map((icm, i) => {
     const player = players[i];
     const label = player?.position || `#${i + 1}`;
+    const stackVal = stacks[i] ?? 0;
     return {
       label,
-      stack: stacks[i] ?? 0,
+      stack: stackVal,
+      stackDisplay: formatStackDisplay(stackVal, unitMode, bbSize),
+      stackText: formatStackShareLabel(stackVal, unitMode, bbSize),
       icmText: fmtAmount(icm, roundingUnit),
       chipText: fmtAmount(result.chip[i] ?? 0, roundingUnit),
       role: player?.role,
@@ -82,7 +88,7 @@ export function renderChop(stacks: readonly number[], payouts: readonly number[]
             : "";
       return `<tr>
         <td>${row.label}${role}</td>
-        <td>${row.stack}</td>
+        <td>${row.stackDisplay}</td>
         <td class="chop-icm">${row.icmText}</td>
         <td class="chop-chip">${row.chipText}</td>
       </tr>`;

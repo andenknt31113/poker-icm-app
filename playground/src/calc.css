@@ -556,3 +556,91 @@ body.no-practice.workspace .container { padding-bottom: 40px; }
   .workspace .hand-pick-select { min-width: 46px; padding: 4px 4px; font-size: 14px; }
   .hand-pick-suit button, .hand-pick-clear { min-width: 30px; padding: 0 6px; }
 }
+
+/* ===== スタック単位 (BB / チップ) 切替 ===== */
+.setup-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.unit-toggle {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  overflow: hidden;
+  background: #101a14;
+}
+.unit-toggle button {
+  min-height: 36px;
+  padding: 0 10px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.unit-toggle button.active {
+  background: var(--accent);
+  color: #14241a;
+  font-weight: 700;
+}
+.bb-size-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #121c17;
+}
+.bb-size-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.workspace .bb-size-field input {
+  width: 96px;
+  min-height: 36px;
+  padding: 4px 8px;
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: right;
+}
+.bb-size-presets {
+  display: inline-flex;
+  gap: 4px;
+}
+.bb-size-presets button {
+  min-height: 34px;
+  padding: 0 9px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 12px;
+  cursor: pointer;
+}
+.bb-size-presets button.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #14241a;
+  font-weight: 700;
+}
+@media (max-width: 359px) {
+  .setup-heading-actions { gap: 5px; }
+  .unit-toggle button { padding: 0 8px; font-size: 11px; }
+  .workspace .bb-size-field input { width: 82px; font-size: 13px; }
+  .bb-size-presets button { padding: 0 7px; font-size: 11px; }
+}

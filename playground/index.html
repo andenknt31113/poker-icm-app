@@ -45,11 +45,29 @@
       <section class="card spot-card players-card" id="setup-players" data-tab="analyze">
         <div class="setup-card-heading">
           <h2 data-i18n="setup.players.h2">局面</h2>
-          <button id="setup-undo" class="save-btn" type="button" disabled data-i18n="setup.undo">元に戻す</button>
+          <div class="setup-heading-actions">
+            <div class="unit-toggle" role="group" aria-label="スタックの単位" data-i18n-attr="aria-label:setup.unit.aria">
+              <button type="button" data-stack-unit="bb" aria-pressed="true" class="active" data-i18n="setup.unit.bb">BB</button>
+              <button type="button" data-stack-unit="chips" aria-pressed="false" data-i18n="setup.unit.chips">チップ</button>
+            </div>
+            <button id="setup-undo" class="save-btn" type="button" disabled data-i18n="setup.undo">元に戻す</button>
+          </div>
+        </div>
+        <div class="bb-size-bar hidden" id="bb-size-bar">
+          <label class="bb-size-field">
+            <span data-i18n="setup.unit.bbLabel">1 BB</span>
+            <input id="bb-size-input" type="number" inputmode="numeric" min="1" step="any" value="1000" aria-label="1 BB のチップ数" data-i18n-attr="aria-label:setup.unit.bbInput.aria" />
+          </label>
+          <div class="bb-size-presets" role="group" aria-label="1 BB の目安" data-i18n-attr="aria-label:setup.unit.presets.aria">
+            <button type="button" data-bb-preset="1000">1k</button>
+            <button type="button" data-bb-preset="5000">5k</button>
+            <button type="button" data-bb-preset="10000">10k</button>
+            <button type="button" data-bb-preset="20000">20k</button>
+          </div>
         </div>
         <div class="spot-columns" aria-hidden="true">
           <span data-i18n="setup.cols.pos">位置</span>
-          <span data-i18n="setup.cols.stack">スタック (BB)</span>
+          <span id="spot-col-stack" data-i18n="setup.cols.stack">スタック (BB)</span>
           <span data-i18n="setup.cols.role">役割</span>
         </div>
         <p id="players-lock-notice" class="hint lock-notice" role="status" hidden></p>

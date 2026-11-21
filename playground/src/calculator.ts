@@ -43,6 +43,7 @@ import { exactCallRequiredEquity } from "./callSpot.js";
 import { renderChop, clearChop, initChop } from "./chopView.js";
 import { activeBounty } from "./bountyState.js";
 import { renderBountySummary } from "./setupBounty.js";
+import { formatStackDisplay, getBbSize, getStackUnit } from "./stackUnit.js";
 
 // ===== DOM参照 (計算結果タブ) =====
 const callInput = $<HTMLInputElement>("call");
@@ -112,6 +113,8 @@ export function recompute(): void {
     // ICM
     const equities = calculateICM(stacks, payouts);
     const totalPrize = payouts.reduce((a, b) => a + b, 0);
+    const unitMode = getStackUnit();
+    const bbSize = getBbSize();
     icmRows.innerHTML = stacks
       .map((stack, i) => {
         const eq = equities[i] ?? 0;
@@ -126,7 +129,7 @@ export function recompute(): void {
         const rowClass = role === "hero" ? ' class="hero-row"' : "";
         return `<tr${rowClass}>
           <td>${players[i]?.position || `#${i + 1}`}${tag}</td>
-          <td>${stack}</td>
+          <td>${formatStackDisplay(stack, unitMode, bbSize)}</td>
           <td>${fmt(eq, 3)}</td>
           <td>${fmtPct(pct, 1)}</td>
         </tr>`;
