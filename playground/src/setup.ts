@@ -16,6 +16,7 @@ import { initScenariosUI } from "./setupScenarios.js";
 import { renderPayouts, initPayoutsUI } from "./setupPayouts.js";
 import { renderBounty, initBountyUI } from "./setupBounty.js";
 import { getBountyMode, setBountyMode } from "./bountyState.js";
+import { getBbSize, setBbSize } from "./stackUnit.js";
 import { hapticLight } from "./haptics.js";
 import { STORAGE_KEYS, readRaw, writeRaw, type StorageKey } from "./storage.js";
 
@@ -76,8 +77,10 @@ export function initSetup(): void {
     const amounts = [call.value, pot.value];
     const manual = getCallManualOverride();
     const bountyMode = getBountyMode();
+    const savedBbSize = getBbSize();
     return () => {
       setBountyMode(bountyMode);
+      setBbSize(savedBbSize);
       players.splice(0, players.length, ...savedPlayers);
       setPositionAutoLink(autoLink);
       replacePayouts(prizes);
@@ -100,7 +103,7 @@ export function initSetup(): void {
   document.addEventListener("focusin", event => {
     const input = event.target;
     // #bounty-all は「入れる」ボタン押下時に checkpointSetup() するため、入力中の一時欄では積まない
-    if (input instanceof HTMLInputElement && !input.readOnly && input.matches(".player-stack, .payout-amount, .bounty-amount, #nash-sb, #nash-bb, #nash-ante, #call, #potwin")) stageSetupInput(input);
+    if (input instanceof HTMLInputElement && !input.readOnly && input.matches(".player-stack, .payout-amount, .bounty-amount, #bb-size-input, #nash-sb, #nash-bb, #nash-ante, #call, #potwin")) stageSetupInput(input);
   });
   document.addEventListener("input", event => {
     const input = event.target;

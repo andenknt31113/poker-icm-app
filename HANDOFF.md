@@ -948,4 +948,16 @@
   - `1.5.2` は `IN_REVIEW`（`AFTER_APPROVAL`）。公開後に `1.5.3` の Archive → アップロード → `docs/ASO_1_5_3.md` のサブタイトル・キーワード反映 → 提出を実施。
   - 実機・購入/復元確認、ASC 売上受取口座の確認は本人側で実施。
 
+## 2026-11-21 BB / チップ単位切替を追加（feat/stack-unit-chips）
+
+- 変更:
+  - **純粋変換モジュール (`stackUnit.ts`)**: 内部状態・計算コアは BB 単一表現を保ったまま、UI 表示・入力だけ `BB` / `チップ` 切替できる `bbToInputValue` / `inputValueToBb` / `formatStackDisplay` / `formatStackShareLabel` / `rescaleStacksForBbSize` を実装（`STORAGE_KEYS.stackUnit` に永続化）。
+  - **UI 配線 (`index.html` / `setupPlayers.ts` / `setup.ts` / `chop.ts` / `chopView.ts` / `calculator.ts` / `calc.css` / `locales/{ja,en}.ts`)**: 局面ヘッダーに `BB` / `チップ` 切替を追加。チップモード時だけ `1 BB` 入力＋`1k`/`5k`/`10k`/`20k` プリセット欄を展開し、`1 BB` 変更時は各プレイヤーのチップ枚数を保ったまま BB を再計算。ICM 表・チョップ表・チョップ共有コピー・1 段 Undo にも対応。
+- 検証:
+  - `npm run typecheck`、unit（core 116 / playground 391、`stackUnit.test.ts` を追加）、`npm run build`、e2e 20/20（`20-review-improvements.mjs` にチップ換算・10k プリセット・Undo・リロード永続化・320px 日英横はみ出しゼロを追加）すべて成功。
+  - 390px 日英のチップモード画面（`chips-ja.png` / `chips-en.png`）を目視確認。
+- 残件:
+  - `1.5.2` は `IN_REVIEW`（`AFTER_APPROVAL`）。公開後に `1.5.3` を Archive → アップロード → ASO 反映 → 提出。
+  - 実機・購入/復元確認、ASC 売上受取口座の確認は本人側で実施。
+
 

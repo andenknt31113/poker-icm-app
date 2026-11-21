@@ -66,6 +66,8 @@ export const STORAGE_KEYS = {
   practiceEnabled: "poker-icm-practice-enabled",
   /** 評価のお願いの判定用 (起動回数・Nash を見た回数・最後に頼んだ時刻)。 */
   reviewState: "poker-icm-review-state",
+  /** スタック表示・入力の単位 ("bb" | "chips") と 1 BB のチップ数。 */
+  stackUnit: "poker-icm-stack-unit",
 } as const;
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];

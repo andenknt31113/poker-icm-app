@@ -60,6 +60,8 @@ export function calculateChop(stacks: Stacks, payouts: Payouts, unit = 0): ChopR
 export interface ChopShareRow {
   readonly label: string;
   readonly stack: number;
+  /** チップモード等で任意のスタック表記を渡すときに使う (省略時は `${stack}BB`)。 */
+  readonly stackText?: string;
   readonly icmText: string;
   readonly chipText: string;
 }
@@ -79,7 +81,7 @@ export function formatChopShareText(params: ChopShareParams): string {
   const lines = [
     `${params.title} — ${params.totalText}`,
     ...params.rows.map(
-      (r) => `${r.label} (${r.stack}BB): ${params.icmLabel} ${r.icmText} / ${params.chipLabel} ${r.chipText}`,
+      (r) => `${r.label} (${r.stackText ?? `${r.stack}BB`}): ${params.icmLabel} ${r.icmText} / ${params.chipLabel} ${r.chipText}`,
     ),
   ];
   if (params.bountyNote) lines.push(params.bountyNote);

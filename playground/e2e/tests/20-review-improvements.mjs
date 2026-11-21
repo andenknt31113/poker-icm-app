@@ -453,4 +453,78 @@ export default async function testReviewImprovements({ baseURL, createContext })
       await context.close();
     }
   }
+
+  // ===== 11. BB / チップ単位切替 (ライブ実チップ入力・1 BB プリセット・チョップ表示・Undo・永続化) =====
+  {
+    const context = await createContext({ tutorialDone: true });
+    try {
+      const page = await context.newPage();
+      const errors = attachErrorCollector(page, "ux-stack-unit-chips");
+      await page.setViewportSize({ width: 320, height: 740 });
+      await page.goto(baseURL, { waitUntil: "load" });
+
+      const firstBb = Number(await page.locator(".player-stack").first().inputValue());
+      const reqBefore = await page.textContent("#hero-summary .hero-summary-item.primary .hero-summary-value");
+      // BB → チップ切替: 既定 1 BB = 1000 で BB×1000 に換算、必要勝率は不変
+      await page.click('[data-stack-unit="chips"]');
+      await page.waitForSelector("#bb-size-bar:not(.hidden)");
+      const firstChip = await page.locator(".player-stack").first().inputValue();
+      const expectedChip = String(Math.round(firstBb * 1000));
+      if (firstChip !== expectedChip) {
+        throw new Error(`チップ切替時の換算が不正です: expected "${expectedChip}", got "${firstChip}"`);
+      }
+      const reqAfterToggle = await page.textContent("#hero-summary .hero-summary-item.primary .hero-summary-value");
+      if (reqAfterToggle !== reqBefore) {
+        throw new Error(`単位切替だけで必要勝率が変わりました: ${reqBefore} → ${reqAfterToggle}`);
+      }
+
+      // 10k プリセット → チップ数を保ちつつ 1 BB=10000 になり、元に戻すで 1000 に戻る
+      await page.click('[data-bb-preset="10000"]');
+      if ((await page.inputValue("#bb-size-input")) !== "10000") {
+        throw new Error("10k プリセットが反映されていません");
+      }
+      await page.click("#setup-undo");
+      if ((await page.inputValue("#bb-size-input")) !== "1000") {
+        throw new Error("元に戻すで 1 BB が 1000 に戻りません");
+      }
+
+      // 10k に戻して実チップ 45000 を入力 → 内部 4.5BB・チョップ表に 45,000 表示
+      await page.click('[data-bb-preset="10000"]');
+      await page.locator(".player-stack").first().fill("45000");
+      await page.click('[data-jump="sec-chop"]');
+      const chopText = await page.textContent("#chop-rows");
+      if (!chopText?.includes("45,000")) {
+        throw new Error(`チョップ表にチップ表示 45,000 が出ません: "${chopText}"`);
+      }
+
+      // リロードしてもチップモードと 1 BB = 10000 が保持される
+      await page.reload({ waitUntil: "load" });
+      await page.waitForSelector("#bb-size-bar:not(.hidden)");
+      if ((await page.inputValue("#bb-size-input")) !== "10000") {
+        throw new Error("リロード後に 1 BB 設定が復元されません");
+      }
+      if ((await page.locator(".player-stack").first().inputValue()) !== "45000") {
+        throw new Error("リロード後に 45000 チップが復元されません");
+      }
+
+      // 320px 幅でチップモード日英とも横はみ出しゼロ
+      if (await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)) {
+        throw new Error("320px チップモード (日本語) で横はみ出し");
+      }
+      await page.click("#lang-toggle");
+      await page.waitForFunction(() => document.documentElement.lang === "en");
+      if (await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)) {
+        throw new Error("320px チップモード (英語) で横はみ出し");
+      }
+
+      // BB モードへ戻すと 4.5 に戻る
+      await page.click('[data-stack-unit="bb"]');
+      if ((await page.locator(".player-stack").first().inputValue()) !== "4.5") {
+        throw new Error("BB モード復帰で 4.5 になりません");
+      }
+      assertNoErrors(errors, "ux-stack-unit-chips");
+    } finally {
+      await context.close();
+    }
+  }
 }

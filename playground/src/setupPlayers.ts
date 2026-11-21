@@ -12,7 +12,17 @@ import { checkpointSetup } from "./setupUndo.js";
 import { sanitizeBounty } from "./bountyState.js";
 import { renderBounty } from "./setupBounty.js";
 import { renderPayouts } from "./setupPayouts.js";
-import { hapticLight } from "./haptics.js";
+import { hapticLight, hapticSelection } from "./haptics.js";
+import {
+  bbToInputValue,
+  getBbSize,
+  getStackUnit,
+  inputValueToBb,
+  rescaleStacksForBbSize,
+  setBbSize,
+  setStackUnit,
+  type StackUnit,
+} from "./stackUnit.js";
 import {
   players,
   allocPlayerId,
@@ -38,11 +48,55 @@ const MIN_PLAYERS = 2;
 const RANDOM_STACK_MIN_BB = 3;
 const RANDOM_STACK_MAX_BB = 30;
 
+function renderStackUnitBar(locked: boolean): void {
+  const mode = getStackUnit();
+  const bbSize = getBbSize();
+  document.querySelectorAll<HTMLButtonElement>("[data-stack-unit]").forEach((btn) => {
+    const active = btn.dataset.stackUnit === mode;
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-pressed", String(active));
+  });
+  const bar = document.getElementById("bb-size-bar");
+  bar?.classList.toggle("hidden", mode !== "chips");
+  const col = document.getElementById("spot-col-stack");
+  if (col) col.textContent = tr(mode === "chips" ? "setup.cols.stackChips" : "setup.cols.stack");
+  const bbInput = document.getElementById("bb-size-input") as HTMLInputElement | null;
+  if (bbInput) {
+    if (document.activeElement !== bbInput) bbInput.value = String(bbSize);
+    bbInput.readOnly = locked;
+    bbInput.classList.toggle("locked-pro", locked);
+  }
+  document.querySelectorAll<HTMLButtonElement>("[data-bb-preset]").forEach((btn) => {
+    const presetVal = Number(btn.dataset.bbPreset);
+    const active = presetVal === bbSize;
+    btn.classList.toggle("active", active);
+    btn.classList.toggle("locked-pro", locked);
+    btn.setAttribute("aria-pressed", String(active));
+  });
+}
+
+function applyBbSizeChange(nextBbSize: number): void {
+  const prev = getBbSize();
+  if (!(nextBbSize > 0) || !Number.isFinite(nextBbSize) || nextBbSize === prev) return;
+  const rescaled = rescaleStacksForBbSize(
+    players.map((p) => p.stack),
+    prev,
+    nextBbSize,
+  );
+  players.forEach((p, idx) => {
+    p.stack = rescaled[idx] ?? 0;
+  });
+  setBbSize(nextBbSize);
+}
+
 export function renderPlayers(): void {
   playersList.innerHTML = "";
   // freemium: 無料時はスタック編集をロック (readonly + 🔒)。役割/ポジションは無料のまま。
-  // 3人以下のテーブルは無料でも自由編集。4人以上は Pro のみ。
+  // 4人以下のテーブルは無料でも自由編集。5人以上は Pro のみ。
   const locked = !isPro() && players.length > FREE_MAX_PLAYERS;
+  renderStackUnitBar(locked);
+  const unitMode = getStackUnit();
+  const bbSize = getBbSize();
   const lockNotice = document.getElementById("players-lock-notice");
   if (lockNotice) {
     lockNotice.hidden = !locked;
@@ -61,9 +115,11 @@ export function renderPlayers(): void {
           `<option value="${pos}" ${pos === p.position ? "selected" : ""}>${pos === "" ? "—" : pos}</option>`,
       )
       .join("");
+    const stackVal = bbToInputValue(p.stack, unitMode, bbSize);
+    const stackStep = unitMode === "chips" ? "any" : "1";
     row.innerHTML = `
       <select class="player-pos" data-id="${p.id}" aria-label="${tr("setup.player.position.aria", { n: i + 1 })}" title="${tr("setup.player.pos.title")}">${posOptions}</select>
-      <input type="number" inputmode="decimal" aria-label="${tr("setup.player.stack.aria", { n: i + 1 })}" class="player-stack${locked ? " locked-pro" : ""}" min="0" step="1" value="${p.stack}" data-id="${p.id}"${locked ? " readonly" : ""} />
+      <input type="number" inputmode="decimal" aria-label="${tr("setup.player.stack.aria", { n: i + 1 })}" class="player-stack${locked ? " locked-pro" : ""}" min="0" step="${stackStep}" value="${stackVal}" data-id="${p.id}"${locked ? " readonly" : ""} />
       ${locked ? `<span class="lock-badge" aria-hidden="true" title="${tr("paywall.lock.title")}">🔒</span>` : ""}
       <div class="player-roles" data-id="${p.id}">
         <button type="button" class="role-btn ${p.role === "hero" ? "active hero" : ""}" data-role="hero" aria-pressed="${p.role === "hero"}" title="${tr("setup.player.role.hero")}">${tr("setup.player.role.hero")}</button>
@@ -113,7 +169,7 @@ function setRole(playerId: number, role: Role): void {
 function updateStack(playerId: number, value: number): void {
   const target = players.find((p) => p.id === playerId);
   if (!target) return;
-  target.stack = Number.isFinite(value) && value >= 0 ? value : 0;
+  target.stack = inputValueToBb(value, getStackUnit(), getBbSize());
   recompute();
 }
 
@@ -306,8 +362,65 @@ export function initPlayersUI(): void {
     if (!p) return;
     const raw = Number(target.value);
     if (!Number.isFinite(raw) || raw < 0 || target.value.trim() === "") {
-      target.value = String(p.stack);
+      target.value = bbToInputValue(p.stack, getStackUnit(), getBbSize());
     }
+  });
+
+  // ===== BB / チップ単位切替と 1 BB サイズ =====
+  document.querySelectorAll<HTMLButtonElement>("[data-stack-unit]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const next = btn.dataset.stackUnit as StackUnit;
+      if (next !== "bb" && next !== "chips") return;
+      if (next === getStackUnit()) return;
+      hapticSelection();
+      setStackUnit(next);
+      renderPlayers();
+      recompute();
+    });
+  });
+
+  const bbInput = document.getElementById("bb-size-input") as HTMLInputElement | null;
+  if (bbInput) {
+    bbInput.addEventListener("pointerdown", (e) => {
+      if (!isPro() && players.length > FREE_MAX_PLAYERS) {
+        e.preventDefault();
+        openPaywall();
+      }
+    });
+    bbInput.addEventListener("focusin", () => {
+      if (!isPro() && players.length > FREE_MAX_PLAYERS) {
+        bbInput.blur();
+        openPaywall();
+      }
+    });
+    bbInput.addEventListener("input", () => {
+      if (!isPro() && players.length > FREE_MAX_PLAYERS) return;
+      const val = Number(bbInput.value);
+      if (!Number.isFinite(val) || val <= 0) return;
+      applyBbSizeChange(val);
+      renderStackUnitBar(false);
+      recompute();
+    });
+    bbInput.addEventListener("focusout", () => {
+      if (bbInput.readOnly) return;
+      const val = Number(bbInput.value);
+      if (!Number.isFinite(val) || val <= 0) {
+        bbInput.value = String(getBbSize());
+      }
+    });
+  }
+
+  document.querySelectorAll<HTMLButtonElement>("[data-bb-preset]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (!isPro() && players.length > FREE_MAX_PLAYERS) return openPaywall();
+      const val = Number(btn.dataset.bbPreset);
+      if (!Number.isFinite(val) || val <= 0 || val === getBbSize()) return;
+      hapticSelection();
+      checkpointSetup();
+      applyBbSizeChange(val);
+      renderPlayers();
+      recompute();
+    });
   });
 
   playersList.addEventListener("change", (e) => {
