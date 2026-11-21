@@ -41,6 +41,7 @@ export const ja: Record<string, string> = {
   "flow.practice": "クイズで練習",
   "flow.practiceHint": "1問ずつ、判断の感覚を磨く",
   "flow.hand": "ハンド",
+  "flow.chop": "チョップ",
   "flow.equity": "賞金・BF",
   "flow.nash": "Nash",
   "workspace.eyebrow": "TOURNAMENT / STUDY",
@@ -153,6 +154,11 @@ export const ja: Record<string, string> = {
   "hand.nashRange.multiway": "オールインする人の後ろにいるあと {n} 人のコールも入れて解いています。",
   "hand.thumb.aria": "相手のレンジを表で見る",
   "hand.thumb.caption": "表で見る",
+  "hand.picker.label": "自分の手札",
+  "hand.picker.r1.aria": "1枚目のランク",
+  "hand.picker.r2.aria": "2枚目のランク",
+  "hand.picker.suit.aria": "スート（スーテッド / オフスート）",
+  "hand.picker.clear.aria": "手札の選択を解除",
   "calc.summary.chipOnly": "チップだけなら {v}%",
   "setup.blinds.hint": "スタックは BB 単位なので BB は 1 で固定です。アンティ有りの卓は「アンティ合計」を入力。",
 
@@ -180,6 +186,9 @@ export const ja: Record<string, string> = {
   "chop.th.icm": "ICM チョップ",
   "chop.th.chip": "チップ比例",
   "chop.total": "合計 {total}（残り {n} 人ぶんの賞金）",
+  "chop.copyBtn": "結果をコピー",
+  "chop.copied": "コピーしました ✓",
+  "chop.copyFailed": "コピーできませんでした",
   "chop.bountyNote": "※ 賞金のみの配分です（バウンティは各自に残ります）。",
   "chop.note": "ICM チョップは各自の賞金期待値どおりに分ける、一般に公平とされる方法です。チップ比例は最下位ぶんを全員に保証して残りをチップの比で分けるもので、チップリーダーに有利になります。",
   "result.icm.h2": "賞金期待値 (ICM)",
@@ -341,7 +350,7 @@ export const ja: Record<string, string> = {
   "onboarding.step2.body": `
       <p>まずは数字を動かしてみてください。<strong>「局面」</strong>でスタックを打ち換える（「例題・保存した局面」から選んでも OK）と、すぐ下に必要勝率とハンド表が出ます。</p>
       <p data-feature="practice"><strong>🎲 練習</strong>タブでは、クイズに答えながら感覚をつかめます。</p>
-      <p class="hint">困ったときはヘッダー右上の <strong>❓</strong> から、いつでも使い方ガイドと用語解説を開けます。</p>
+      <p class="hint">困ったときはヘッダー右上の <strong>?</strong> から、いつでも使い方ガイドと用語解説を開けます。</p>
     `,
   "onboarding.skip": "スキップ",
   "onboarding.next": "次へ →",
@@ -376,7 +385,7 @@ export const ja: Record<string, string> = {
             <ol>
               <li>「局面」で状況を入力（例題でも OK）</li>
               <li>「賞金期待値 (ICM)」の表で各プレイヤーの取り分を確認</li>
-              <li>「チョップ（ディール）するなら」で、ICM チョップとチップ比例の配分を確認（賞金に実際の金額を入れるとそのまま使える）</li>
+              <li>「チョップ」タブの「チョップ（ディール）するなら」で、ICM チョップとチップ比例の配分を確認・コピーできる（賞金に実際の金額を入れるとそのまま使える）</li>
               <li>「BF マップ」で自分の行・相手の列のセルを確認</li>
               <li>コール額と純利得は自動で入る（手で書き換えた後は「🔄 自動算出に戻す」で戻せる）</li>
             </ol>

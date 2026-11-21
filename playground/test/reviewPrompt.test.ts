@@ -21,4 +21,9 @@ describe("shouldRequestReview", () => {
   it("間隔が空いたらもう一度頼む", () => {
     expect(shouldRequestReview({ ...ready, lastAskedAt: NOW - REVIEW_COOLDOWN_DAYS * DAY }, NOW)).toBe(true);
   });
+  it("チョップ結果のコピー回数でも完了条件を満たす", () => {
+    expect(shouldRequestReview({ launches: REVIEW_MIN_LAUNCHES, nashDone: 0, chopDone: REVIEW_MIN_NASH_DONE, lastAskedAt: 0 }, NOW)).toBe(true);
+    expect(shouldRequestReview({ launches: REVIEW_MIN_LAUNCHES, nashDone: 1, chopDone: 1, lastAskedAt: 0 }, NOW)).toBe(true);
+    expect(shouldRequestReview({ launches: REVIEW_MIN_LAUNCHES, nashDone: 0, chopDone: 1, lastAskedAt: 0 }, NOW)).toBe(false);
+  });
 });

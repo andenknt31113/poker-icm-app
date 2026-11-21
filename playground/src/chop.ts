@@ -56,3 +56,33 @@ export function calculateChop(stacks: Stacks, payouts: Payouts, unit = 0): ChopR
     chip: roundToTotal(chip, unit, total),
   };
 }
+
+export interface ChopShareRow {
+  readonly label: string;
+  readonly stack: number;
+  readonly icmText: string;
+  readonly chipText: string;
+}
+
+export interface ChopShareParams {
+  readonly title: string;
+  readonly totalText: string;
+  readonly icmLabel: string;
+  readonly chipLabel: string;
+  readonly rows: readonly ChopShareRow[];
+  readonly bountyNote?: string;
+}
+
+/** LINE やメモへそのまま貼れるチョップ結果のテキストを組み立てる。 */
+export function formatChopShareText(params: ChopShareParams): string {
+  if (params.rows.length === 0) return "";
+  const lines = [
+    `${params.title} — ${params.totalText}`,
+    ...params.rows.map(
+      (r) => `${r.label} (${r.stack}BB): ${params.icmLabel} ${r.icmText} / ${params.chipLabel} ${r.chipText}`,
+    ),
+  ];
+  if (params.bountyNote) lines.push(params.bountyNote);
+  lines.push("— Poker ICM");
+  return lines.join("\n");
+}

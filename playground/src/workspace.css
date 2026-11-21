@@ -90,8 +90,10 @@
 .workspace .analyze-jump button { min-height: 44px; }
 .workspace .analyze-jump { scroll-margin-top: calc(170px + var(--safe-area-top, env(safe-area-inset-top, 0px))); }
 .workspace .analyze-jump button.active { border-color: var(--accent); color: #14241a; background: var(--accent); }
-.workspace[data-analysis-view="nash"] #hero-summary { display: none !important; }
-.workspace[data-analysis-view="nash"] .analyze-jump { scroll-margin-top: calc(20px + var(--safe-area-top, env(safe-area-inset-top, 0px))); }
+.workspace[data-analysis-view="nash"] #hero-summary,
+.workspace[data-analysis-view="chop"] #hero-summary { display: none !important; }
+.workspace[data-analysis-view="nash"] .analyze-jump,
+.workspace[data-analysis-view="chop"] .analyze-jump { scroll-margin-top: calc(20px + var(--safe-area-top, env(safe-area-inset-top, 0px))); }
 .workspace .hidden-analysis { display: none !important; }
 .nash-context { position: sticky; top: calc(4px + var(--safe-area-top, env(safe-area-inset-top, 0px))); z-index: 5; padding: 12px; margin-bottom: 20px; border: 1px solid var(--accent); border-radius: 12px; background: var(--hero-summary-bg); }
 .nash-context details { margin-top: 8px; font-size: 13px; }
@@ -169,8 +171,8 @@
   .workspace .workspace-secondary { padding: 8px 12px; font-size: 12px; white-space: nowrap; }
   .workspace .player-row { gap: 4px; }
   .workspace .role-btn { padding: 4px 6px; }
-  .workspace .analyze-jump { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
-  .workspace .analyze-jump button { padding: 8px 4px; font-size: 12px; }
+  .workspace .analyze-jump { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
+  .workspace .analyze-jump button { padding: 8px 2px; font-size: 12px; white-space: nowrap; }
   .workspace .practice-actions-top { margin-bottom: 10px; }
   .workspace .practice-controls { margin: 8px 0; }
   .workspace .scenario-fact { font-size: 11px; }
@@ -188,4 +190,6 @@
   .workspace .player-unit { font-size: 10px; }
   .workspace .player-pos { min-width: 0; }
   .workspace .players-toolbar { font-size: 11px; }
+  .workspace .analyze-jump { gap: 4px; }
+  .workspace .analyze-jump button { font-size: 11px; padding: 8px 2px; }
 }

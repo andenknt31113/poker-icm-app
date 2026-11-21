@@ -11,8 +11,11 @@ import {
   HAND_COUNT,
   HAND_RANKING,
   HAND_RANK_MAP,
+  HAND_RANKS,
   ALL_169_HANDS,
+  buildHandNotation,
   handAt,
+  parseHandNotation,
   rankOf,
   topRange,
   comboCount,
@@ -136,5 +139,25 @@ describe("comboCount", () => {
     expect(comboCount("AA")).toBe(6);
     expect(comboCount("AKs")).toBe(4);
     expect(comboCount("AKo")).toBe(12);
+  });
+});
+
+describe("buildHandNotation / parseHandNotation", () => {
+  it("ランク順を自動で正規化し、ペアは s/o なしで組み立てる", () => {
+    expect(HAND_RANKS).toHaveLength(13);
+    expect(buildHandNotation("J", "A", false)).toBe("AJo");
+    expect(buildHandNotation("T", "K", true)).toBe("KTs");
+    expect(buildHandNotation("A", "A", true)).toBe("AA");
+    expect(buildHandNotation("A", "A", false)).toBe("AA");
+    expect(buildHandNotation("X", "A", false)).toBeNull();
+  });
+
+  it("正規のハンド表記を分解し、不正な表記は null を返す", () => {
+    expect(parseHandNotation("AJo")).toEqual({ r1: "A", r2: "J", suited: false, isPair: false });
+    expect(parseHandNotation("KTs")).toEqual({ r1: "K", r2: "T", suited: true, isPair: false });
+    expect(parseHandNotation("QQ")).toEqual({ r1: "Q", r2: "Q", suited: false, isPair: true });
+    expect(parseHandNotation("AAo")).toBeNull();
+    expect(parseHandNotation("AK")).toBeNull();
+    expect(parseHandNotation("")).toBeNull();
   });
 });

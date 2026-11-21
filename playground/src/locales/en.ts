@@ -48,7 +48,8 @@ export const en: Record<string, string> = {
   "flow.practice": "Practice a decision",
   "flow.practiceHint": "Build intuition, one hand at a time",
   "flow.hand": "Hands",
-  "flow.equity": "Prizes / BF",
+  "flow.chop": "Chop",
+  "flow.equity": "ICM · BF",
   "flow.nash": "Nash",
   "workspace.eyebrow": "TOURNAMENT / STUDY",
   "workspace.title": "Give your call a reason.",
@@ -159,6 +160,11 @@ export const en: Record<string, string> = {
   "hand.nashRange.multiway": "Calls from the other {n} player(s) behind the shover are included.",
   "hand.thumb.aria": "Show their range as a chart",
   "hand.thumb.caption": "Open chart",
+  "hand.picker.label": "Your hand",
+  "hand.picker.r1.aria": "First card rank",
+  "hand.picker.r2.aria": "Second card rank",
+  "hand.picker.suit.aria": "Suit (suited / offsuit)",
+  "hand.picker.clear.aria": "Clear selected hand",
   "calc.summary.chipOnly": "Chips only: {v}%",
   "setup.blinds.hint": "Stacks are in BB units, so BB is fixed at 1. For ante games, enter the table total.",
 
@@ -186,6 +192,9 @@ export const en: Record<string, string> = {
   "chop.th.icm": "ICM chop",
   "chop.th.chip": "Chip chop",
   "chop.total": "Total {total} (prizes for the {n} remaining players)",
+  "chop.copyBtn": "Copy chop",
+  "chop.copied": "Copied ✓",
+  "chop.copyFailed": "Could not copy",
   "chop.bountyNote": "Note: splits the prize pool only (bounties remain separate).",
   "chop.note": "An ICM chop pays everyone their prize equity and is generally considered the fair method. A chip chop guarantees everyone the lowest remaining prize and splits the rest by chips, which favors the chip leader.",
   "result.icm.h2": "Prize equity (ICM)",
@@ -348,7 +357,7 @@ export const en: Record<string, string> = {
   "onboarding.step2.body": `
       <p>Start by changing the numbers. Edit the stacks in <strong>“Spot”</strong> (or pick one from “Examples and saved spots”), and the required equity and hand chart appear right below.</p>
       <p data-feature="practice">In the <strong>🎲 Practice</strong> tab you can build a feel by answering quizzes.</p>
-      <p class="hint">If you get stuck, the <strong>❓</strong> at the top right opens the how-to guide and term explanations anytime.</p>
+      <p class="hint">If you get stuck, the <strong>?</strong> at the top right opens the how-to guide and term explanations anytime.</p>
     `,
   "onboarding.skip": "Skip",
   "onboarding.next": "Next →",
@@ -383,7 +392,7 @@ export const en: Record<string, string> = {
             <ol>
               <li>Enter a situation in “Spot” (examples are fine)</li>
               <li>Check each player’s share in the “Prize equity (ICM)” table</li>
-              <li>Under “If you chop (make a deal)”, compare the ICM chop and the chip-proportional split (enter real prize amounts in Payouts to use the numbers as they are)</li>
+              <li>In the “Chop” tab under “If you chop (make a deal)”, compare and copy the ICM chop and the chip-proportional split (enter real prize amounts in Payouts to use the numbers as they are)</li>
               <li>In the “BF map”, find the cell on your row and the villain’s column</li>
               <li>Call amount and net gain are filled in automatically (after editing them, “🔄 Back to auto-calc” restores them)</li>
             </ol>

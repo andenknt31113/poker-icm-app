@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { calculateICM } from "@poker-icm/core";
-import { calculateChop, roundToTotal } from "../src/chop.js";
+import { calculateChop, formatChopShareText, roundToTotal } from "../src/chop.js";
 
 const sum = (a: readonly number[]) => a.reduce((x, y) => x + y, 0);
 
@@ -62,5 +62,45 @@ describe("roundToTotal", () => {
     expect(r[1]! % 100).toBe(0);
     expect(r[2]! % 100).toBe(0);
     expect(r[0]).toBe(6051);
+  });
+});
+
+describe("formatChopShareText", () => {
+  it("共有用テキストに全員の ICM チョップ・チップ比例・合計と署名を含める", () => {
+    const text = formatChopShareText({
+      title: "チョップ（ディール）するなら",
+      totalText: "合計 100,000（残り 2 人ぶんの賞金）",
+      icmLabel: "ICM チョップ",
+      chipLabel: "チップ比例",
+      rows: [
+        { label: "SB", stack: 30, icmText: "60,000", chipText: "62,000" },
+        { label: "BB", stack: 20, icmText: "40,000", chipText: "38,000" },
+      ],
+    });
+    expect(text).toContain("チョップ（ディール）するなら — 合計 100,000（残り 2 人ぶんの賞金）");
+    expect(text).toContain("SB (30BB): ICM チョップ 60,000 / チップ比例 62,000");
+    expect(text).toContain("BB (20BB): ICM チョップ 40,000 / チップ比例 38,000");
+    expect(text.endsWith("— Poker ICM")).toBe(true);
+  });
+
+  it("バウンティ注記があれば含め、行が空なら空文字を返す", () => {
+    const withNote = formatChopShareText({
+      title: "If you chop",
+      totalText: "Total 100",
+      icmLabel: "ICM chop",
+      chipLabel: "Chip chop",
+      rows: [{ label: "BTN", stack: 15, icmText: "55", chipText: "60" }],
+      bountyNote: "Note: splits the prize pool only.",
+    });
+    expect(withNote).toContain("Note: splits the prize pool only.");
+    expect(
+      formatChopShareText({
+        title: "Empty",
+        totalText: "",
+        icmLabel: "ICM",
+        chipLabel: "Chip",
+        rows: [],
+      }),
+    ).toBe("");
   });
 });
