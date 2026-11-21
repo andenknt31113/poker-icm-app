@@ -387,7 +387,7 @@ export const en: Record<string, string> = {
             <p>Enter stacks, seats, You / Villain and payouts in the “Spot” card at the top. Results appear right below and update as you type.</p>
             <ol>
               <li>Open “Examples and saved spots” and tap one to load a situation instantly</li>
-              <li>Adjust stacks (add more with + Add player). Tap the Payouts and Blinds rows to open them</li>
+              <li>Adjust stacks (add more with + Add player, or switch “BB / Chips” at the top right to enter live chip counts directly). Tap the Payouts and Blinds rows to open them</li>
               <li>Tap “You” / “Villain” to set the roles</li>
             </ol>
           </div>
@@ -412,7 +412,7 @@ export const en: Record<string, string> = {
             <ol>
               <li>Who shoves is decided by seat order (the player who acts first shoves). You only choose it yourself when positions are not set</li>
               <li>Adjust the villain’s range with the slider or the 10–100% buttons. Tap the small chart on the left to open the full chart. With “Custom edit”, tap cells to select hands</li>
-              <li>Use the chart colors to see which hands you should call or shove</li>
+              <li>Use the chart colors to see which hands you should call or shove, or pick “Your hand” / tap a cell to inspect exact equity and verdict</li>
             </ol>
           </div>
         </details>

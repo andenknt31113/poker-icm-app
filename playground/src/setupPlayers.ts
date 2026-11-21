@@ -381,6 +381,9 @@ export function initPlayersUI(): void {
 
   const bbInput = document.getElementById("bb-size-input") as HTMLInputElement | null;
   if (bbInput) {
+    // 1 BB 入力中のキーストローク (例: 1000 → 1 → 3 → 3000) でチップ丸め誤差が
+    // 蓄積しないよう、フォーカス時点のチップ枚数を基準値として保持する。
+    let anchorChips: number[] | null = null;
     bbInput.addEventListener("pointerdown", (e) => {
       if (!isPro() && players.length > FREE_MAX_PLAYERS) {
         e.preventDefault();
@@ -391,17 +394,28 @@ export function initPlayersUI(): void {
       if (!isPro() && players.length > FREE_MAX_PLAYERS) {
         bbInput.blur();
         openPaywall();
+        return;
       }
+      const curBb = getBbSize();
+      anchorChips = players.map((p) => Math.round(p.stack * curBb));
     });
     bbInput.addEventListener("input", () => {
       if (!isPro() && players.length > FREE_MAX_PLAYERS) return;
       const val = Number(bbInput.value);
       if (!Number.isFinite(val) || val <= 0) return;
-      applyBbSizeChange(val);
+      if (anchorChips && anchorChips.length === players.length) {
+        players.forEach((p, idx) => {
+          p.stack = (anchorChips![idx] ?? 0) / val;
+        });
+        setBbSize(val);
+      } else {
+        applyBbSizeChange(val);
+      }
       renderStackUnitBar(false);
       recompute();
     });
     bbInput.addEventListener("focusout", () => {
+      anchorChips = null;
       if (bbInput.readOnly) return;
       const val = Number(bbInput.value);
       if (!Number.isFinite(val) || val <= 0) {

@@ -28,6 +28,7 @@ import {
 import { STORAGE_KEYS, readJson, writeJson } from "./storage.js";
 import { buildPushSpot, pushDepthTier } from "./pushSpot.js";
 import { fmt } from "./format.js";
+import { formatBbCompact } from "./stackUnit.js";
 import { solveSpotNash } from "./nashRange.js";
 import { loadThreeWayTable } from "./threeWay.js";
 import { hapticLight, hapticSelection } from "./haptics.js";
@@ -565,7 +566,7 @@ export function updateHandPositionBanner(heroIndex: number): void {
   if (behind.length === 0) {
     banner.innerHTML = t("hand.banner.noBehind.html", { label: callerLabel, pos: callerPos });
   } else {
-    const list = behind.map((x) => `${x.pos} (${x.stack}BB)`).join(", ");
+    const list = behind.map((x) => `${x.pos} (${formatBbCompact(x.stack)}BB)`).join(", ");
     const directionNote = direction === "callBack"
       ? t("hand.banner.note.callBack")
       : t("hand.banner.note.pushBack");

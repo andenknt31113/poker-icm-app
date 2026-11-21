@@ -5,6 +5,7 @@ import { calculateBubbleFactor, type BountySpec } from "@poker-icm/core";
 import { $ } from "./dom.js";
 import { players } from "./appState.js";
 import { fmt } from "./format.js";
+import { formatStackDisplay, getBbSize, getStackUnit } from "./stackUnit.js";
 
 const bfMatrix = $<HTMLDivElement>("bf-matrix");
 
@@ -85,18 +86,22 @@ export function renderBFMatrix(stacks: number[], payouts: number[], bounty?: Bou
     return `P${idx + 1}`;
   };
 
+  const unitMode = getStackUnit();
+  const bbSize = getBbSize();
+  const stackLabel = (bb: number | undefined): string => formatStackDisplay(bb ?? 0, unitMode, bbSize);
+
   // 1行目: 角空白 + ヘッダ
   cells.push('<div class="bf-hdr-corner"></div>');
   for (let j = 0; j < n; j++) {
     cells.push(
-      `<div class="bf-hdr-col">${labelOf(j)}<span class="stack-info">${stacks[j]}</span></div>`,
+      `<div class="bf-hdr-col">${labelOf(j)}<span class="stack-info">${stackLabel(stacks[j])}</span></div>`,
     );
   }
 
   // 2行目以降
   for (let i = 0; i < n; i++) {
     cells.push(
-      `<div class="bf-hdr-row">${labelOf(i)}<span class="stack-info">${stacks[i]}</span></div>`,
+      `<div class="bf-hdr-row">${labelOf(i)}<span class="stack-info">${stackLabel(stacks[i])}</span></div>`,
     );
     for (let j = 0; j < n; j++) {
       if (i === j) {
