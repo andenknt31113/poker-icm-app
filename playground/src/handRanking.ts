@@ -7,7 +7,42 @@
 
 export type HandNotation = string; // 例: "AA", "AKs", "AKo"
 
-const RANKS = ["A", "K", "Q", "J", "T", "9", "8", "7", "6", "5", "4", "3", "2"] as const;
+export const HAND_RANKS = ["A", "K", "Q", "J", "T", "9", "8", "7", "6", "5", "4", "3", "2"] as const;
+export type HandRank = (typeof HAND_RANKS)[number];
+const RANKS = HAND_RANKS;
+
+/** 2枚のランクとスート有無から正規のハンド表記を作る (高いランクを前、ペアは s/o なし)。 */
+export function buildHandNotation(r1: string, r2: string, suited: boolean): HandNotation | null {
+  const i1 = RANKS.indexOf(r1 as HandRank);
+  const i2 = RANKS.indexOf(r2 as HandRank);
+  if (i1 < 0 || i2 < 0) return null;
+  if (i1 === i2) return `${RANKS[i1]}${RANKS[i2]}`;
+  const hi = Math.min(i1, i2);
+  const lo = Math.max(i1, i2);
+  return `${RANKS[hi]}${RANKS[lo]}${suited ? "s" : "o"}`;
+}
+
+export interface ParsedHand {
+  readonly r1: HandRank;
+  readonly r2: HandRank;
+  readonly suited: boolean;
+  readonly isPair: boolean;
+}
+
+/** ハンド表記 ("AA", "AJs", "AJo") を 2枚のランクとスート有無へ分解する。 */
+export function parseHandNotation(hand: string): ParsedHand | null {
+  if (hand.length !== 2 && hand.length !== 3) return null;
+  const r1 = hand[0] as HandRank;
+  const r2 = hand[1] as HandRank;
+  if (!RANKS.includes(r1) || !RANKS.includes(r2)) return null;
+  if (hand.length === 2) {
+    if (r1 !== r2) return null;
+    return { r1, r2, suited: false, isPair: true };
+  }
+  const suffix = hand[2];
+  if (r1 === r2 || (suffix !== "s" && suffix !== "o")) return null;
+  return { r1, r2, suited: suffix === "s", isPair: false };
+}
 
 /** ハンドグリッドの一辺 (= ランク数 13)。grid.ts の描画ループもこれを使う。 */
 export const GRID_SIZE = RANKS.length;

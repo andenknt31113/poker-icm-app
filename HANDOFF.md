@@ -935,4 +935,17 @@
   - ASC への ASO 反映・`1.5.3` の Archive / アップロード / 提出は本人の指示後に実施。
   - Reddit 英語圏投稿、実機・購入/復元確認、ASC 売上受取口座の確認は本人側で実施。
 
+## 2026-11-21 UX 改善（チョップ独立タブ・結果コピー・自分の手札クイック判定・ヘッダー ? 統一）
+
+- 変更:
+  - **チョップ独立タブ＆1タップ結果コピー (`analysisView.ts` / `chop.ts` / `chopView.ts` / `index.html` / `workspace.css` / `calc.css`)**: 分析切替を 4 タブ（`ハンド` / `チョップ` / `賞金・BF` / `Nash`、EN: `Hands` / `Chop` / `ICM · BF` / `Nash`）へ整理。チョップ表示時は上部サマリーを非表示にし、表の下に共有テキストを 1 タップでコピーできるボタン（`formatChopShareText`）を追加。`capture-release.mjs` の 05-chop 撮影手順も追従。
+  - **自分の手札クイック判定 (`handRanking.ts` / `handRange.ts` / `index.html` / `calc.css`)**: `buildHandNotation` / `parseHandNotation` を追加し、ハンド表の直上に 2 枚のランク + `s`/`o` のクイック選択欄を配置。選択即判定・グリッド側セルタップとの双方向同期・ペア時の `s`/`o` 自動無効化を実装。
+  - **レビュー依頼・見た目調整 (`reviewPrompt.ts` / `index.html` / `locales/{ja,en}.ts`)**: チョップ結果コピーも `SKStoreReviewController` の完了回数に含め、ヘッダー右上の `❓` を `?` へ統一（オンボーディング文言も追従）。
+- 検証:
+  - `npm run typecheck`、unit（core 116 / playground 386）、`npm run build`、e2e 20/20（`20-review-improvements.mjs` に 4 タブ・チョップコピー・手札クイック選択・320px 日英横はみ出しゼロの検証を追加）すべて成功。
+  - `capture-release.mjs`（ja / en、iPhone 6.9"・iPad 13"）で 4 タブ・`?` ボタン・自分の手札クイック判定・独立チョップタブ＋コピーボタンの画面を目視確認（横はみ出し・JS エラーゼロ）。
+- 残件:
+  - `1.5.2` は `IN_REVIEW`（`AFTER_APPROVAL`）。公開後に `1.5.3` の Archive → アップロード → `docs/ASO_1_5_3.md` のサブタイトル・キーワード反映 → 提出を実施。
+  - 実機・購入/復元確認、ASC 売上受取口座の確認は本人側で実施。
+
 

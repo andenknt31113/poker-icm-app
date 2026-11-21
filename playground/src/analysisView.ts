@@ -2,6 +2,7 @@ import { hapticSelection } from "./haptics.js";
 
 export const ANALYSIS_TARGETS = {
   "sec-hand": "hand",
+  "sec-chop": "chop",
   "sec-icm": "equity",
   "sec-nash": "nash",
 } as const;

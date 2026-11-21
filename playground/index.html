@@ -19,7 +19,7 @@
         <div class="header-row">
           <h1><span class="brand-mark" aria-hidden="true">♠</span> Poker ICM<span class="brand-sub">STUDY ROOM</span></h1>
           <div class="header-actions">
-            <button id="help-btn" class="header-btn" type="button" title="使い方ガイド" aria-label="ヘルプ" data-i18n-attr="title:header.help.title;aria-label:header.help.aria">❓</button>
+            <button id="help-btn" class="header-btn header-help-btn" type="button" title="使い方ガイド" aria-label="ヘルプ" data-i18n-attr="title:header.help.title;aria-label:header.help.aria">?</button>
             <button id="lang-toggle" class="header-btn header-lang-btn" type="button" title="言語切替" aria-label="言語切替" data-i18n-attr="title:header.lang.title;aria-label:header.lang.aria">EN</button>
           </div>
         </div>
@@ -171,9 +171,10 @@
       </section>
 
       <nav class="analyze-jump" data-tab="analyze" aria-label="分析セクション" data-i18n-attr="aria-label:analyze.jump.aria">
-        <button type="button" data-jump="sec-hand" aria-controls="sec-hand"><span data-i18n="flow.hand">ハンドの判断</span></button>
-        <button type="button" data-jump="sec-icm" aria-controls="sec-icm sec-bf sec-equity"><span data-i18n="flow.equity">賞金への影響</span></button>
-        <button type="button" data-jump="sec-nash" aria-controls="sec-nash"><span data-i18n="flow.nash">Nash・詳細</span></button>
+        <button type="button" data-jump="sec-hand" aria-controls="sec-hand"><span data-i18n="flow.hand">ハンド</span></button>
+        <button type="button" data-jump="sec-chop" aria-controls="sec-chop"><span data-i18n="flow.chop">チョップ</span></button>
+        <button type="button" data-jump="sec-icm" aria-controls="sec-icm sec-bf sec-equity"><span data-i18n="flow.equity">賞金・BF</span></button>
+        <button type="button" data-jump="sec-nash" aria-controls="sec-nash"><span data-i18n="flow.nash">Nash</span></button>
       </nav>
 
       <section class="card" data-tab="analyze" data-analysis-panel="equity" id="sec-icm">
@@ -192,7 +193,7 @@
         <p class="hint hidden" id="icm-bounty-note" style="margin-top: 8px;" data-i18n="result.icm.bountyNote"></p>
       </section>
 
-      <section class="card" data-tab="analyze" data-analysis-panel="equity" id="sec-chop">
+      <section class="card" data-tab="analyze" data-analysis-panel="chop" id="sec-chop">
         <h2 data-i18n="chop.h2">チョップ（ディール）するなら</h2>
         <p class="hint" data-i18n="chop.hint">残っている全員で賞金を分けるときの金額です。賞金の欄に実際の金額を入れると、そのまま使えます。</p>
         <div class="chop-units" role="group" aria-label="金額の刻み" data-i18n-attr="aria-label:chop.unit.aria">
@@ -213,7 +214,10 @@
           </thead>
           <tbody id="chop-rows"></tbody>
         </table>
-        <p class="hint" id="chop-total"></p>
+        <div class="chop-footer-row">
+          <p class="hint" id="chop-total"></p>
+          <button type="button" id="chop-copy-btn" class="workspace-secondary chop-copy-btn" data-i18n="chop.copyBtn">結果をコピー</button>
+        </div>
         <p class="hint hidden" id="chop-bounty-note" data-i18n="chop.bountyNote"></p>
         <p class="hint" data-i18n="chop.note">ICM チョップは各自の賞金期待値どおりに分ける、一般に公平とされる方法です。チップ比例は最下位ぶんを全員に保証して残りをチップの比で分けるもので、チップリーダーに有利になります。</p>
       </section>
@@ -412,6 +416,18 @@
             <h3 id="hero-grid-title">自分のcallレンジ 🟢</h3>
             <div id="push-depth-warn" class="warn-box hidden"></div>
             <p class="hint call-stats-below" id="call-stats"></p>
+            <div class="hand-quick-picker" id="hand-quick-picker">
+              <span class="hand-quick-label" data-i18n="hand.picker.label">自分の手札</span>
+              <div class="hand-quick-controls">
+                <select id="hand-pick-r1" class="hand-pick-select" aria-label="1枚目のランク" data-i18n-attr="aria-label:hand.picker.r1.aria"></select>
+                <select id="hand-pick-r2" class="hand-pick-select" aria-label="2枚目のランク" data-i18n-attr="aria-label:hand.picker.r2.aria"></select>
+                <div class="hand-pick-suit" role="group" aria-label="スート（スーテッド / オフスート）" data-i18n-attr="aria-label:hand.picker.suit.aria">
+                  <button type="button" data-pick-suit="s" aria-pressed="false">s</button>
+                  <button type="button" data-pick-suit="o" aria-pressed="true" class="active">o</button>
+                </div>
+                <button type="button" id="hand-pick-clear" class="hand-pick-clear hidden" aria-label="手札の選択を解除" data-i18n-attr="aria-label:hand.picker.clear.aria">✕</button>
+              </div>
+            </div>
             <p class="hint hand-cell-detail hidden" id="hand-cell-detail" aria-live="polite"></p>
             <!-- タップしたセルの答えはグリッドの「上」に置く。グリッドの下に置くと
                  13行ぶん下がって画面外になり、タップしても何も起きないように見えるため。 -->

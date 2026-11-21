@@ -227,12 +227,11 @@
   /* PC: 左に局面、右に結果を並べる */
   .workspace section.spot-card[data-tab="analyze"]:not(#sec-hand):not(.workspace-section-head) { grid-column: 1; grid-row: auto; align-self: start; }
   .workspace .container > #hero-summary { grid-column: 2; align-self: start; }
-  /* 賞金・BF: 左に「賞金期待値 → チョップ」、右に BF マップ、下に必要勝率の内訳を全幅で置く。
-     並び順を指定しないと、片側だけ空いた段ができる。 */
+  /* 賞金・BF: 左に賞金期待値、右に BF マップ、下に必要勝率の内訳を全幅で置く。
+     チョップは独立タブのため全幅表示 (workspace.css の grid-column: 1 / -1) を使う。 */
   /* (:not(#sec-hand) は workspace.css の order: 4 の指定に勝つために付けている) */
   .workspace .container > #sec-icm:not(#sec-hand) { grid-column: 1; order: 3; align-self: start; }
-  .workspace .container > #sec-bf:not(#sec-hand) { grid-column: 2; grid-row: span 2; order: 3; align-self: start; }
-  .workspace .container > #sec-chop { grid-column: 1; align-self: start; }
+  .workspace .container > #sec-bf:not(#sec-hand) { grid-column: 2; order: 3; align-self: start; }
   .workspace .container > #sec-equity { grid-column: 1 / -1; }
   /* 広い画面でハンド表が横いっぱいに伸びると、マスだけ大きく文字が小さいままになる */
   .workspace #sec-hand .hand-grid:not(.mini),
@@ -437,4 +436,123 @@ body.no-practice.workspace .container { padding-bottom: 40px; }
 }
 .dialog-btn-danger:hover {
   background: #a3473e;
+}
+
+/* ===== ヘッダー ? ボタン / チョップコピー / 手札クイック判定 ===== */
+.workspace .header-help-btn {
+  color: var(--text);
+  font-size: 17px;
+  font-weight: 700;
+  font-family: var(--mono);
+  line-height: 1;
+}
+.workspace .header-help-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.chop-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.chop-footer-row #chop-total {
+  margin: 0;
+}
+.workspace .chop-copy-btn {
+  min-height: 38px;
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.workspace .chop-copy-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.hand-quick-picker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 8px 0 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #121d17;
+}
+.hand-quick-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.hand-quick-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 1 auto;
+}
+.workspace .hand-pick-select {
+  min-height: 38px;
+  min-width: 52px;
+  padding: 4px 8px;
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #0d1611;
+  color: var(--text);
+}
+.hand-pick-suit {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0d1611;
+}
+.hand-pick-suit button {
+  min-width: 34px;
+  min-height: 38px;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.hand-pick-suit button.active {
+  background: var(--accent);
+  color: #14241a;
+}
+.hand-pick-suit button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.hand-pick-clear {
+  min-width: 34px;
+  min-height: 38px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+.hand-pick-clear:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+@media (max-width: 359px) {
+  .hand-quick-picker { padding: 7px 8px; gap: 6px; }
+  .workspace .hand-pick-select { min-width: 46px; padding: 4px 4px; font-size: 14px; }
+  .hand-pick-suit button, .hand-pick-clear { min-width: 30px; padding: 0 6px; }
 }

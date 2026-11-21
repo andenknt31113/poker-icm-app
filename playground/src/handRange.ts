@@ -2,6 +2,9 @@ import { equitiesWithBounty, type Knockout } from "@poker-icm/core";
 import { activeBounty } from "./bountyState.js";
 import {
   ALL_169_HANDS,
+  HAND_RANKS,
+  buildHandNotation,
+  parseHandNotation,
   topRangeByComboPct,
   type HandNotation,
   comboCountOfRange,
@@ -47,7 +50,35 @@ let villainRangeMode: RangeMode = "preset";
 // 方向: callBack = 相手 push → 自分 call (従来), pushBack = 相手 call → 自分 push (逆算)
 export type Direction = "callBack" | "pushBack";
 let direction: Direction = "callBack";
+let pickerSuited = false;
 const customVillainRange = new Set<HandNotation>();
+
+/** 検分中ハンド (inspectedHand) の状態を「自分の手札」クイック選択へ同期する。 */
+function syncHandPickerFromState(): void {
+  const r1El = document.getElementById("hand-pick-r1") as HTMLSelectElement | null;
+  const r2El = document.getElementById("hand-pick-r2") as HTMLSelectElement | null;
+  const clearBtn = document.getElementById("hand-pick-clear") as HTMLButtonElement | null;
+  if (!r1El || !r2El) return;
+  const parsed = inspectedHand ? parseHandNotation(inspectedHand) : null;
+  if (parsed) {
+    r1El.value = parsed.r1;
+    r2El.value = parsed.r2;
+    if (!parsed.isPair) pickerSuited = parsed.suited;
+  } else if (r1El.value && r2El.value) {
+    // 向き切替やセル再タップで解除されたときは、選択欄も空に戻す
+    r1El.value = "";
+    r2El.value = "";
+  }
+  const isPair = !!r1El.value && r1El.value === r2El.value;
+  document.querySelectorAll<HTMLButtonElement>("[data-pick-suit]").forEach((btn) => {
+    const isSuitedBtn = btn.dataset.pickSuit === "s";
+    const active = !isPair && isSuitedBtn === pickerSuited;
+    btn.disabled = isPair;
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-pressed", String(active));
+  });
+  clearBtn?.classList.toggle("hidden", !inspectedHand);
+}
 
 function isStringArray(v: unknown): v is string[] {
   return Array.isArray(v) && v.every((x) => typeof x === "string");
@@ -372,6 +403,8 @@ export function renderRangeComparison(requiredEquity: number): RangeVerdictSumma
     rangeNotice.classList.toggle("hidden", !emptyRange);
   }
   heroGrid.classList.toggle("hidden", emptyRange);
+  document.getElementById("hand-quick-picker")?.classList.toggle("hidden", emptyRange);
+  syncHandPickerFromState();
 
   // カスタム時はクリック可能スタイルを付与
   if (villainRangeMode === "custom") {
@@ -713,9 +746,53 @@ export function initHandRange(onChange: () => void): void {
     if (!cell || !cell.title) return;
     hapticSelection();
     inspectedHand = inspectedHand === cell.title ? null : (cell.title as HandNotation);
+    syncHandPickerFromState();
     onChange();
     if (inspectedHand) document.getElementById("hand-cell-detail")?.scrollIntoView({ block: "center", behavior: "smooth" });
   });
+
+  // ===== 自分の手札クイック判定 (2枚のランク + s/o で1発検分) =====
+  const pickR1 = document.getElementById("hand-pick-r1") as HTMLSelectElement | null;
+  const pickR2 = document.getElementById("hand-pick-r2") as HTMLSelectElement | null;
+  const pickClear = document.getElementById("hand-pick-clear") as HTMLButtonElement | null;
+  if (pickR1 && pickR2) {
+    const optionsHtml =
+      `<option value="">—</option>` + HAND_RANKS.map((r) => `<option value="${r}">${r}</option>`).join("");
+    pickR1.innerHTML = optionsHtml;
+    pickR2.innerHTML = optionsHtml;
+    const applyPicker = () => {
+      const r1 = pickR1.value;
+      const r2 = pickR2.value;
+      if (r1 && r2) {
+        inspectedHand = buildHandNotation(r1, r2, pickerSuited);
+      } else {
+        inspectedHand = null;
+      }
+      hapticSelection();
+      syncHandPickerFromState();
+      onChange();
+    };
+    pickR1.addEventListener("change", applyPicker);
+    pickR2.addEventListener("change", applyPicker);
+    document.querySelectorAll<HTMLButtonElement>("[data-pick-suit]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (btn.disabled) return;
+        const next = btn.dataset.pickSuit === "s";
+        if (next === pickerSuited) return;
+        pickerSuited = next;
+        applyPicker();
+      });
+    });
+    pickClear?.addEventListener("click", () => {
+      pickR1.value = "";
+      pickR2.value = "";
+      inspectedHand = null;
+      hapticSelection();
+      syncHandPickerFromState();
+      onChange();
+    });
+    syncHandPickerFromState();
+  }
 
 
   // pushRangeInput の変更は再計算トリガー

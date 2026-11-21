@@ -50,6 +50,7 @@ try {
       await capture("03-range", "#sec-hand");
       await page.locator('[data-jump="sec-icm"]').click();
       await capture("04-prizes", "#sec-icm");
+      await page.locator('[data-jump="sec-chop"]').click();
       await capture("05-chop", "#sec-chop");
       await page.locator('[data-jump="sec-nash"]').click();
       await page.waitForFunction(() => document.querySelectorAll("#nash-table .nash-row").length > 0 && document.getElementById("nash-table-status")?.textContent === "", null, { timeout: 60000 });

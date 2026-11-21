@@ -360,4 +360,97 @@ export default async function testReviewImprovements({ baseURL, createContext })
       await context.close();
     }
   }
+
+  // ===== 10. チョップ独立タブ・結果コピー・自分の手札クイック判定・4タブ収まり =====
+  {
+    const context = await createContext({ tutorialDone: true });
+    try {
+      const page = await context.newPage();
+      const errors = attachErrorCollector(page, "ux-chop-tab-hand-picker");
+      await page.setViewportSize({ width: 320, height: 740 });
+      await page.goto(baseURL, { waitUntil: "load" });
+
+      // ヘッダーの ? ボタンは赤絵文字ではなく "?"
+      const helpText = (await page.textContent("#help-btn"))?.trim();
+      if (helpText !== "?") {
+        throw new Error(`#help-btn の表示が "?" ではありません: "${helpText}"`);
+      }
+
+      // 自分の手札クイック判定: A + J + o → AJo、s 切替 → AJs、ペア A + A → AA (s/o 無効化)、解除
+      await page.selectOption("#hand-pick-r1", "A");
+      await page.selectOption("#hand-pick-r2", "J");
+      await page.waitForSelector("#hand-cell-detail:not(.hidden)");
+      const ajoDetail = await page.textContent("#hand-cell-detail");
+      if (!ajoDetail?.includes("AJo")) {
+        throw new Error(`A+J 選択で AJo の判定が出ません: "${ajoDetail}"`);
+      }
+      await page.click('[data-pick-suit="s"]');
+      const ajsDetail = await page.textContent("#hand-cell-detail");
+      if (!ajsDetail?.includes("AJs")) {
+        throw new Error(`s 切替で AJs の判定が出ません: "${ajsDetail}"`);
+      }
+      await page.selectOption("#hand-pick-r2", "A");
+      const aaDetail = await page.textContent("#hand-cell-detail");
+      if (!aaDetail?.includes("AA")) {
+        throw new Error(`A+A 選択で AA の判定が出ません: "${aaDetail}"`);
+      }
+      if (!(await page.isDisabled('[data-pick-suit="s"]'))) {
+        throw new Error("ペア選択時に s ボタンが無効化されていません");
+      }
+      await page.click("#hand-pick-clear");
+      if (await page.locator("#hand-cell-detail").isVisible()) {
+        throw new Error("解除ボタンで手札詳細が閉じていません");
+      }
+
+      // グリッド側セルタップでもクイック選択欄と同期する
+      await page.click('#grid-hero .hand-cell[title="KQs"]');
+      const syncedR1 = await page.inputValue("#hand-pick-r1");
+      const syncedR2 = await page.inputValue("#hand-pick-r2");
+      const syncedS = await page.getAttribute('[data-pick-suit="s"]', "aria-pressed");
+      if (syncedR1 !== "K" || syncedR2 !== "Q" || syncedS !== "true") {
+        throw new Error(`セルタップ後に手札選択欄が同期しません: ${syncedR1}${syncedR2} s=${syncedS}`);
+      }
+
+      // チョップ独立タブ: 1 タップで #sec-chop のみ表示、#hero-summary は非表示、コピー操作が動く
+      await page.click('[data-jump="sec-chop"]');
+      if (!(await page.locator("#sec-chop").isVisible()) || (await page.locator("#sec-icm").isVisible())) {
+        throw new Error("チョップタブが独立表示になっていません");
+      }
+      if (await page.locator("#hero-summary").isVisible()) {
+        throw new Error("チョップタブでは #hero-summary を隠す想定です");
+      }
+      await page.evaluate(() => {
+        Object.defineProperty(navigator, "clipboard", {
+          configurable: true,
+          value: {
+            writeText: async (txt) => {
+              window.__copiedChop = txt;
+            },
+          },
+        });
+      });
+      await page.click("#chop-copy-btn");
+      await page.waitForFunction(() => Boolean(window.__copiedChop));
+      const copied = await page.evaluate(() => window.__copiedChop);
+      if (!copied.includes("Poker ICM") || !copied.includes("BB")) {
+        throw new Error(`チョップコピー内容が想定と異なります: "${copied}"`);
+      }
+      const btnLabel = await page.textContent("#chop-copy-btn");
+      if (!btnLabel?.includes("コピーしました")) {
+        throw new Error(`コピー後の確認表示が出ません: "${btnLabel}"`);
+      }
+
+      // 320px 幅で日英とも横はみ出しゼロ
+      const overflowJa = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+      if (overflowJa) throw new Error("320px 日本語 4タブ画面で横はみ出し");
+      await page.click("#lang-toggle");
+      await page.waitForFunction(() => document.documentElement.lang === "en");
+      const overflowEn = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+      if (overflowEn) throw new Error("320px 英語 4タブ画面で横はみ出し");
+
+      assertNoErrors(errors, "ux-chop-tab-hand-picker");
+    } finally {
+      await context.close();
+    }
+  }
 }

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { initAnalysisView, setAnalysisView } from "../src/analysisView.js";
 
 beforeEach(() => {
-  document.body.innerHTML = '<nav class="analyze-jump"><button data-jump="sec-hand"></button><button data-jump="sec-icm"></button><button data-jump="sec-nash"></button></nav><section data-analysis-panel="hand"><input value="AKs"></section><section data-analysis-panel="equity"></section><section data-analysis-panel="equity"></section><section data-analysis-panel="nash"></section>';
+  document.body.innerHTML = '<nav class="analyze-jump"><button data-jump="sec-hand"></button><button data-jump="sec-chop"></button><button data-jump="sec-icm"></button><button data-jump="sec-nash"></button></nav><section data-analysis-panel="hand"><input value="AKs"></section><section data-analysis-panel="chop"></section><section data-analysis-panel="equity"></section><section data-analysis-panel="equity"></section><section data-analysis-panel="nash"></section>';
   HTMLElement.prototype.scrollIntoView = vi.fn();
   setAnalysisView("hand");
 });
@@ -41,5 +41,14 @@ describe("目的別の分析画面", () => {
     setAnalysisView("hand");
     expect(document.querySelector("input")?.value).toBe("AKs");
     expect(document.querySelector('[data-jump="sec-hand"]')?.getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("チョップタブでチョップパネルだけを表示する", () => {
+    initAnalysisView();
+    document.querySelector<HTMLButtonElement>('[data-jump="sec-chop"]')!.click();
+    expect(document.body.dataset.analysisView).toBe("chop");
+    expect(document.querySelector('[data-analysis-panel="chop"]')?.classList.contains("hidden-analysis")).toBe(false);
+    expect(document.querySelectorAll("[data-analysis-panel]:not(.hidden-analysis)")).toHaveLength(1);
+    expect(document.querySelector('[data-jump="sec-chop"]')?.getAttribute("aria-pressed")).toBe("true");
   });
 });

@@ -17,32 +17,48 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
 export interface ReviewState {
   launches: number;
   nashDone: number;
+  /** チョップ結果をコピーした回数 (旧保存データでは未定義のことがある)。 */
+  chopDone?: number;
   /** 最後に頼んだ時刻 (ms)。まだなら 0。 */
   lastAskedAt: number;
 }
 
-const EMPTY: ReviewState = { launches: 0, nashDone: 0, lastAskedAt: 0 };
+const EMPTY: ReviewState = { launches: 0, nashDone: 0, chopDone: 0, lastAskedAt: 0 };
 
 function isReviewState(v: unknown): v is ReviewState {
   if (typeof v !== "object" || v === null) return false;
   const s = v as Record<string, unknown>;
-  return [s.launches, s.nashDone, s.lastAskedAt].every((n) => typeof n === "number" && Number.isFinite(n) && n >= 0);
+  const validNum = (n: unknown) => typeof n === "number" && Number.isFinite(n) && n >= 0;
+  if (![s.launches, s.nashDone, s.lastAskedAt].every(validNum)) return false;
+  return s.chopDone === undefined || validNum(s.chopDone);
 }
 
 /** いま評価を頼んでよいか。 */
 export function shouldRequestReview(state: ReviewState, now: number): boolean {
   if (state.launches < REVIEW_MIN_LAUNCHES) return false;
-  if (state.nashDone < REVIEW_MIN_NASH_DONE) return false;
+  const completed = state.nashDone + (state.chopDone ?? 0);
+  if (completed < REVIEW_MIN_NASH_DONE) return false;
   if (state.lastAskedAt > 0 && now - state.lastAskedAt < REVIEW_COOLDOWN_DAYS * MS_PER_DAY) return false;
   return true;
 }
 
 function load(): ReviewState {
-  return { ...readJson(STORAGE_KEYS.reviewState, EMPTY, isReviewState) };
+  return { ...EMPTY, ...readJson(STORAGE_KEYS.reviewState, EMPTY, isReviewState) };
 }
 
 function save(state: ReviewState): void {
   writeRaw(STORAGE_KEYS.reviewState, JSON.stringify(state));
+}
+
+function maybeRequestReview(state: ReviewState, now: number): void {
+  const ask = shouldRequestReview(state, now);
+  if (ask) state.lastAskedAt = now;
+  save(state);
+  if (!ask) return;
+  // プラグインは必要なときだけ読む (Web では読み込まない)。失敗しても画面には何も出さない
+  void import("@capacitor-community/in-app-review")
+    .then(({ InAppReview }) => InAppReview.requestReview())
+    .catch(() => undefined);
 }
 
 /** 起動を 1 回数える。main から一度だけ呼ぶ。 */
@@ -58,12 +74,13 @@ export function noteNashFinishedForReview(now: number = Date.now()): void {
   if (!isCapacitorNative()) return;
   const state = load();
   state.nashDone += 1;
-  const ask = shouldRequestReview(state, now);
-  if (ask) state.lastAskedAt = now;
-  save(state);
-  if (!ask) return;
-  // プラグインは必要なときだけ読む (Web では読み込まない)。失敗しても画面には何も出さない
-  void import("@capacitor-community/in-app-review")
-    .then(({ InAppReview }) => InAppReview.requestReview())
-    .catch(() => undefined);
+  maybeRequestReview(state, now);
+}
+
+/** チョップ結果をコピーしたときに呼ぶ。チョップ中心のユーザーにも適切なタイミングで評価を頼む。 */
+export function noteChopCopiedForReview(now: number = Date.now()): void {
+  if (!isCapacitorNative()) return;
+  const state = load();
+  state.chopDone = (state.chopDone ?? 0) + 1;
+  maybeRequestReview(state, now);
 }
