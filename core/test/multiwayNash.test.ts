@@ -127,6 +127,36 @@ describe("solveMultiwayPushFold", () => {
     expect(two.exploitability).toBeLessThan(0.001);
   });
 
+  it("既 0 チップの脱落席がある 3 人卓は、生存 2 人だけの HU と完全一致する", () => {
+    const withDead = solveMultiwayPushFold({
+      stacks: [20, 14, 0],
+      payouts: [50, 30],
+      pusherIndex: 0,
+      callerIndices: [1],
+      blinds: [0, 0.5, 0],
+      antes: [0, 0, 0],
+      foldWinnerIndex: 1,
+      huEquity,
+      allHands: ALL_HANDS,
+    });
+    const pureHu = solveMultiwayPushFold({
+      stacks: [20, 14],
+      payouts: [50, 30],
+      pusherIndex: 0,
+      callerIndices: [1],
+      blinds: [0, 0.5],
+      antes: [0, 0],
+      foldWinnerIndex: 1,
+      huEquity,
+      allHands: ALL_HANDS,
+    });
+    expect([...withDead.pushRange].sort()).toEqual([...pureHu.pushRange].sort());
+    expect([...withDead.callRanges[0]!].sort()).toEqual([...pureHu.callRanges[0]!].sort());
+    expect(withDead.values[0]).toBeCloseTo(pureHu.values[0]!, 9);
+    expect(withDead.values[1]).toBeCloseTo(pureHu.values[1]!, 9);
+    expect(withDead.values[2]).toBe(0);
+  });
+
   it("不正な入力はエラー", () => {
     const ok = {
       stacks: [10, 12, 15],

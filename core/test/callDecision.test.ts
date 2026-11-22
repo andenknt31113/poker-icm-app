@@ -306,4 +306,27 @@ describe("calculateExactCallEquity", () => {
     }
     expect(r.stacksFold[2]).toBe(0);
   });
+
+  it("相手のオールインが自分の既出ブラインド未満でも必要勝率が負にならず 0 になる", () => {
+    const stacks = [10, 0.5, 10];
+    const total = sum(stacks);
+    const r = calculateExactCallEquity({
+      stacks,
+      payouts: [50, 30, 20],
+      heroIndex: 0,
+      villainIndex: 1,
+      heroPosition: "BB",
+      villainPosition: "SB",
+      sbPlayerIndex: 1,
+      bbPlayerIndex: 0,
+      sb: 0.5,
+      bb: 1,
+      ante: 1,
+    });
+    expect(r.requiredEquity).toBe(0);
+    expect(r.stacksFold[0]).toBeCloseTo(8.5, 9);
+    for (const st of [r.stacksFold, r.stacksWin, r.stacksLose]) {
+      expect(sum(st)).toBeCloseTo(total, 6);
+    }
+  });
 });

@@ -1,5 +1,5 @@
 import { calculateICM } from "./icm.js";
-import type { Payouts } from "./types.js";
+import type { Payouts, Stacks } from "./types.js";
 
 /**
  * バウンティ (KO / PKO) トーナメントの $ の数え方。
@@ -80,17 +80,68 @@ export function bountyEquities(
 }
 
 /**
+ * 終端で 0 チップが 2 人以上になったとき、ハンド開始時のスタック (initialStacks) に応じて
+ * 脱落順位を補正する。
+ *   - 今回飛んだ人 (initialStacks > 0): 開始スタックが多い人ほど上位 (同額は等分)
+ *   - もともと 0 だった人 (initialStacks === 0): 今回飛んだ人より下の順位に割り当て
+ * 生存者の ICM 値は変わらず、賞金合計も保存される。
+ */
+function adjustBustOrder(
+  icm: number[],
+  clipped: readonly number[],
+  payouts: Payouts,
+  initialStacks: Stacks,
+): void {
+  const allZero: number[] = [];
+  let alive = 0;
+  for (let i = 0; i < clipped.length; i++) {
+    if (clipped[i]! > 0) alive++;
+    else allZero.push(i);
+  }
+  if (allZero.length < 2) return;
+  const bustedHere = allZero
+    .filter((i) => initialStacks[i]! > 0)
+    .sort((a, b) => initialStacks[b]! - initialStacks[a]!);
+  const priorZero = allZero.filter((i) => !(initialStacks[i]! > 0));
+  if (bustedHere.length === 0) return;
+
+  let place = alive;
+  for (let i = 0; i < bustedHere.length; ) {
+    let j = i;
+    while (j + 1 < bustedHere.length && initialStacks[bustedHere[j + 1]!] === initialStacks[bustedHere[i]!]) j++;
+    let sum = 0;
+    for (let q = i; q <= j; q++) sum += payouts[place + (q - i)] ?? 0;
+    const share = sum / (j - i + 1);
+    for (let q = i; q <= j; q++) icm[bustedHere[q]!] = share;
+    place += j - i + 1;
+    i = j + 1;
+  }
+  if (priorZero.length > 0) {
+    let sum = 0;
+    for (let q = 0; q < priorZero.length; q++) sum += payouts[place + q] ?? 0;
+    const share = sum / priorZero.length;
+    for (const idx of priorZero) icm[idx] = share;
+  }
+}
+
+/**
  * 賞金の ICM にバウンティぶんを足した $。bounty を省略すると ICM と同じ。
  * スタックは 0 未満を 0 に切り上げてから計算する。
+ * initialStacks (ハンド開始時スタック) を渡すと、既 0 チップ席と今回飛んだ席、
+ * および同時脱落時の開始スタック順をトーナメント規則どおりに順位付けする。
  */
 export function equitiesWithBounty(
   stacks: readonly number[],
   payouts: Payouts,
   bounty?: BountySpec,
   knockouts: readonly Knockout[] = [],
+  initialStacks?: Stacks,
 ): number[] {
   const clipped = stacks.map((stack) => Math.max(0, stack));
   const icm = calculateICM(clipped, payouts).slice();
+  if (initialStacks && initialStacks.length === clipped.length) {
+    adjustBustOrder(icm, clipped, payouts, initialStacks);
+  }
   if (!bounty) return icm;
   const extra = bountyEquities(clipped, bounty, knockouts);
   return icm.map((value, i) => value + extra[i]!);

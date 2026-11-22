@@ -424,4 +424,56 @@ describe("huNashExploitability", () => {
     });
     expect(eps.epsilonBb).toBeLessThan(0.0015);
   });
+
+  it("第三者がスタック 0 で ante > 0 でも負スタックにならず収束する", () => {
+    const r = solveHUNash({
+      stacks: [10, 10, 0],
+      payouts: [50, 30, 20],
+      sbIndex: 0,
+      bbIndex: 1,
+      sb: 0.5,
+      bb: 1,
+      ante: 1,
+      huEquity: makeFakeHUEquity(),
+      allHands: ALL_HANDS,
+    });
+    expect(r.converged).toBe(true);
+    expect(Number.isFinite(r.exploitability)).toBe(true);
+  });
+
+  it("BB がブラインド時点でオールイン済み、またはプッシュ額が BB 未満なら BB コールは 100% 固定で収束する", () => {
+    const allInBb = solveHUNash({
+      stacks: [14, 1, 20],
+      payouts: [50, 30, 20],
+      sbIndex: 0,
+      bbIndex: 1,
+      sb: 0.5,
+      bb: 1,
+      ante: 0,
+      pusherBlind: 0.5,
+      callerBlind: 1,
+      deadMoney: 1,
+      huEquity: makeFakeHUEquity(),
+      allHands: ALL_HANDS,
+    });
+    expect(allInBb.converged).toBe(true);
+    expect(allInBb.bbCallRange.size).toBe(ALL_HANDS.length);
+
+    const subBlindPush = solveHUNash({
+      stacks: [0.8, 10, 10],
+      payouts: [50, 30, 20],
+      sbIndex: 0,
+      bbIndex: 1,
+      sb: 0.5,
+      bb: 1,
+      ante: 0,
+      pusherBlind: 0,
+      callerBlind: 1,
+      deadMoney: 1.5,
+      huEquity: makeFakeHUEquity(),
+      allHands: ALL_HANDS,
+    });
+    expect(subBlindPush.converged).toBe(true);
+    expect(subBlindPush.bbCallRange.size).toBe(ALL_HANDS.length);
+  });
 });

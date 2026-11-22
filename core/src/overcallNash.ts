@@ -252,11 +252,21 @@ export function solveOvercallPushFold(input: OvercallPushFoldInput): OvercallPus
   }
 
   // ----- 戦略 -----
+  // ブラインド＋アンティで既にオールイン済み、または直前のオールイン額が既出ブラインド以下 (= 追加コール 0) の席は降りられない
+  const forcedAllIn = callerIndices.map((c) => posted[c]! <= 1e-12);
+  const forcedCall = callerIndices.map((c, k) => forcedAllIn[k]! || live[P]! <= blinds[c]! + 1e-12);
+  const forcedOvercall = callerIndices.map((_, k) =>
+    Array.from({ length: K - k - 1 }, (__, m) => {
+      const j = k + 1 + m;
+      const o = callerIndices[j]!;
+      return forcedAllIn[j]! || Math.max(live[P]!, live[callerIndices[k]!]!) <= blinds[o]! + 1e-12;
+    }),
+  );
   const push = new Float64Array(n).fill(1);
-  const call: Float64Array[] = callerIndices.map(() => new Float64Array(n));
+  const call: Float64Array[] = callerIndices.map((_, k) => new Float64Array(n).fill(forcedCall[k] ? 1 : 0));
   /** oc[k][m][c] = callers[k] が call したあと callers[k+1+m] が c で overcall する確率 */
   const oc: Float64Array[][] = callerIndices.map((_, k) =>
-    Array.from({ length: K - k - 1 }, () => new Float64Array(n)),
+    Array.from({ length: K - k - 1 }, (__, m) => new Float64Array(n).fill(forcedOvercall[k]![m] ? 1 : 0)),
   );
 
   // 2 人対決の損得表 (overcall の可能性を混ぜ込んだもの)。pay[k] = { p: pusher の $, c: caller の $ }
@@ -411,23 +421,27 @@ export function solveOvercallPushFold(input: OvercallPushFoldInput): OvercallPus
         const ck = call[k]!;
         const br = callBR[k]!;
         const pc = payC[k]!;
-        for (let c = 0; c < n; c++) {
-          let pw = 0;
-          let sd = 0;
-          for (let h = 0; h < n; h++) {
-            const w = W[c * n + h]! * push[h]! * reachP[h]!;
-            if (w <= 0) continue;
-            pw += w;
-            sd += w * pc[h * n + c]!;
+        if (forcedCall[k]) {
+          br.fill(1);
+        } else {
+          for (let c = 0; c < n; c++) {
+            let pw = 0;
+            let sd = 0;
+            for (let h = 0; h < n; h++) {
+              const w = W[c * n + h]! * push[h]! * reachP[h]!;
+              if (w <= 0) continue;
+              pw += w;
+              sd += w * pc[h * n + c]!;
+            }
+            if (pw <= 0) {
+              br[c] = 0;
+              continue;
+            }
+            const evCall = sd / pw;
+            br[c] = evCall > evFoldMe ? 1 : 0;
+            const best = evCall > evFoldMe ? evCall : evFoldMe;
+            epsK += prior[c]! * (pw / rowTotal[c]!) * (best - (ck[c]! * evCall + (1 - ck[c]!) * evFoldMe));
           }
-          if (pw <= 0) {
-            br[c] = 0;
-            continue;
-          }
-          const evCall = sd / pw;
-          br[c] = evCall > evFoldMe ? 1 : 0;
-          const best = evCall > evFoldMe ? evCall : evFoldMe;
-          epsK += prior[c]! * (pw / rowTotal[c]!) * (best - (ck[c]! * evCall + (1 - ck[c]!) * evFoldMe));
         }
         epsilonBb = Math.max(epsilonBb, epsK / slopeC[k]!);
         const cf = callFrac[k]!;
@@ -463,6 +477,10 @@ export function solveOvercallPushFold(input: OvercallPushFoldInput): OvercallPus
         const winMe = terminals.pusherWins[k]![me]!;
         const loseMe = terminals.pusherLoses[k]![me]!;
         const range = oc[k]![m]!;
+        if (forcedOvercall[k]![m]) {
+          range.fill(1);
+          continue;
+        }
         for (let c = 0; c < n; c++) {
           let mass = 0;
           let evFold = 0;

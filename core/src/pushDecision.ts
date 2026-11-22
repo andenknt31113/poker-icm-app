@@ -1,4 +1,4 @@
-import { calculateICM } from "./icm.js";
+import { equitiesWithBounty } from "./bounty.js";
 import type { Payouts, Stacks } from "./types.js";
 
 /**
@@ -125,10 +125,10 @@ export function evaluatePushDecision(
   stacksLose[heroIndex] = heroLive - matched;
   stacksLose[villainIndex] = villainLive - matched + pot;
 
-  const equityFold = calculateICM(stacksFold, payouts)[heroIndex]!;
-  const equitySteal = calculateICM(stacksSteal, payouts)[heroIndex]!;
-  const equityWin = calculateICM(stacksWin, payouts)[heroIndex]!;
-  const equityLose = calculateICM(stacksLose, payouts)[heroIndex]!;
+  const equityFold = equitiesWithBounty(stacksFold, payouts, undefined, [], stacks)[heroIndex]!;
+  const equitySteal = equitiesWithBounty(stacksSteal, payouts, undefined, [], stacks)[heroIndex]!;
+  const equityWin = equitiesWithBounty(stacksWin, payouts, undefined, [], stacks)[heroIndex]!;
+  const equityLose = equitiesWithBounty(stacksLose, payouts, undefined, [], stacks)[heroIndex]!;
 
   const evFold = equityFold;
   const evPush =

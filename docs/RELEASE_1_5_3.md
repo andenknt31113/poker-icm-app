@@ -1,4 +1,4 @@
-# 1.5.3 (build 2)
+# 1.5.3 (build 3)
 
 2026-11-20 の 1.5.2 提出後に実施した全体レビュー・改善（PR #103・PR #104・PR #106）をまとめた更新。計算式・課金の仕組みは 1.5.2 から変えていない。
 
@@ -46,13 +46,15 @@
   - 公開サポートページ（`/support`）・利用規約ページ（`/legal`）・案内ページ（`/`）の配色をアプリのダークエメラルドテーマ（`#101715` / `#a8e6bd`）へ統一し、`/support` の FAQ に `BB / チップ` 単位切替・チョップ共有コピー・賞金保存・バウンティを追記。
   - チョップ結果コピーの WKWebView フォールバックで `setSelectionRange` / 16px フォント指定を追加し、ストアスクショ自動撮影（`capture-release.mjs`）に 2 枚目用の `07-bounty.png` を組み込んだ。
   - 深掘りバグ監査の 8 件を追加修正（build 2）：残り人数より賞金順位が多い卓での ICM 取り分 % 分母統一、全員スタック 0 時の多言語エラー化＆BF マップ/警告/Nash 残骸クリア、iPhone での `1 BB` 入力・手札セレクト自動ズーム防止（`font-size: 16px` 統一）＆`theme-color` 統一、iOS WKWebView での `1 BB` フォーカス中プリセット／Undo 表示同期、BB ≦ アンティ時の Nash 空白画面解消、バウンティ形式切替時の古い Nash 案内消去、`#bf-result` / `nashUI` の生小数丸め、破損ブラインド保存値のサニタイズ。
+  - 計算コア＆多言語初回起動の残存バグ 5 件を追加修正（build 3）：英語端末での初回起動自動英語化（`i18n.ts`）、第三者ショート SB/BB のポット上限クランプで架空チップ混入と RP 水増しを解消（`potOdds.ts` / `calculator.ts`）、ブラインド時点で自動オールイン済みの BB/SB を Nash コール・オーバーコールとも強制 100% 参加に修正（`multiwayNash.ts` / `overcallNash.ts`）＆ `solveHUNash` の 0 スタック＋アンティ負数防止（`nash.ts`）、`pushBack` ボーダー帯を総賞金比 ±0.03pt の対称基準へ整理（`handRange.ts`）、必要勝率入力欄に `(BB)` 表記追加＆カスタムレンジ空時の空見出し非表示。
+  - 追加総点検で見つかったコア・UI バグ 7 件を同 build 3 に統合修正：小数・チップモードでの自動算出 `cEV` / `RP` に `.toFixed(1)` 丸め誤差が混ざる問題と `0.05BB` 未満コールの `"0.0"` 誤エラー化を解消（`calculator.ts`）、2 人卓ポジション未設定時の架空第3者ブラインド計上を解消（`calculator.ts`）、0% Nash レンジ適用時にカスタムタブ切替のプリセット補完で無言上書きされる不具合を解消（`handRange.ts`）、既にオールイン済み／ブラインド未満プッシュに対する `pushBack`・HU/多人数/オーバーコール Nash での不要なフォールド率を 100% コール固定へ統一（`handRange.ts` / `nash.ts` / `multiwayNash.ts` / `overcallNash.ts`）、相手スタックが既出ブラインド未満のとき `calculateExactCallEquity` が負の必要勝率を返す不具合を修正（`callDecision.ts`）、BB=0 脱落席が `foldWinnerIndex` で復活する不具合（`multiwaySpot.ts`）と既 0 チップ席が今回飛んだ席と 2 位・3 位賞金を折半してしまう不具合を `equitiesWithBounty` の開始スタック順脱落判定（`bounty.ts` / `bf.ts` / `callDecision.ts` / `pushDecision.ts` / `nash.ts` / `multiwayNash.ts` / `handRange.ts`）で一括解消。
 
 ## 検証
 
-- `npm run typecheck` 成功
-- `npm test`: core 116件 / playground 391件 すべて成功（`dialogModal.test.ts`・`haptics.test.ts`・`stackUnit.test.ts` を追加、`chop.test.ts`・`handRanking.test.ts`・`analysisView.test.ts`・`reviewPrompt.test.ts`・`termCopy.test.ts` を拡充）
+- `npm -w @poker-icm/core run build` & `npm run typecheck` 成功
+- `npm test`: core 124件 / playground 393件 すべて成功
 - `npm run build` 成功
-- `cd playground && E2E_BROWSER_CHANNEL=chrome npm run e2e`: 20件すべて成功（`20-review-improvements.mjs` にアプリ内モーダル・保存済み賞金の削除確認・4タブ・チョップコピー・手札クイック選択・BB/チップ単位切替・割り切れない 1 BB での丸め精度を含む全11シナリオを収録）
+- `cd playground && E2E_BROWSER_CHANNEL=chrome npm run e2e`: 20件すべて成功
 - ストア用スクリーンショット（`artifacts/release-1.5.3/screenshots/{ja,en}`）: `01-spot`〜`07-bounty` の 7 枚 × 2 デバイス × 2 言語 = 28 枚を横はみ出し・JS エラーゼロで生成＆目視確認。
 - iOS シミュレーター（Release 構成）:
   - **iPhone 17（iOS 26.5）**・**iPad Pro 13-inch (M5)**: 起動直後（0.3s）から暗色背景・白ステータスバーで白フラッシュなし、新 UX（4 タブ・`?` ボタン・手札クイック判定・独立チョップタブ＋コピー・BB/チップ切替・ダークモーダル）を目視確認。Xcode Release ビルドの自前コード・asset warning ゼロ。
@@ -92,4 +94,4 @@ What is new in 1.5.3 (UX polish and bug fixes; no changes to purchases or calcul
 ## 提出状況
 
 - 2026-11-21 17:17 JST に **`1.5.2` が審査承認・日米 App Store 公開（`READY_FOR_SALE`）** となった。
-- 2026-11-22 13:34 JST に `1.5.3 (build 1)` を新スクショ 24 枚・`docs/ASO_1_5_3.md` の ASO 文面込みで提出後、深掘りバグ監査の 8 件修正を入れた **`1.5.3 (build 2)`** へ差し替えて再提出予定。
+- 2026-11-22 15:02 JST に `1.5.3 (build 2)` を提出済み（`WAITING_FOR_REVIEW`）。さらに計算コア＆英語端末初回起動の 5 件修正を入れた **`1.5.3 (build 3)`** へ差し替えて再提出予定。

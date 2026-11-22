@@ -229,10 +229,10 @@ export const en: Record<string, string> = {
   "calc.eq.flow.rp": "+ RP",
   "calc.eq.flow.icm": "Required (ICM)",
   "result.eq.hint.html": "Calculated automatically from your all-in against the villain. Overwrite the numbers to enter them manually.",
-  "result.eq.callLabel": "\n            Call amount\n            ",
-  "result.eq.pushLabel": "Amount you add",
+  "result.eq.callLabel": "Call amount (BB)",
+  "result.eq.pushLabel": "Amount you add (BB)",
   "result.eq.call.placeholder": "e.g. 8.0",
-  "result.eq.potwinLabel": "\n            Net gain if you win\n            ",
+  "result.eq.potwinLabel": "Net gain if you win (BB)",
   "result.eq.potwin.placeholder": "e.g. 10.5",
   "result.eq.autofillBtn": "\n          🔄 Back to auto-calc\n        ",
 

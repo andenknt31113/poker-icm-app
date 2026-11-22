@@ -65,16 +65,24 @@ export function calculateBubbleFactor(
   const winStacks = stacks.slice();
   winStacks[heroIndex] = stacks[heroIndex]! + riskChips;
   winStacks[villainIndex] = stacks[villainIndex]! - riskChips;
-  const equityWin = equitiesWithBounty(winStacks, payouts, bounty, [
-    { winner: heroIndex, loser: villainIndex },
-  ])[heroIndex]!;
+  const equityWin = equitiesWithBounty(
+    winStacks,
+    payouts,
+    bounty,
+    [{ winner: heroIndex, loser: villainIndex }],
+    stacks,
+  )[heroIndex]!;
 
   const loseStacks = stacks.slice();
   loseStacks[heroIndex] = stacks[heroIndex]! - riskChips;
   loseStacks[villainIndex] = stacks[villainIndex]! + riskChips;
-  const equityLose = equitiesWithBounty(loseStacks, payouts, bounty, [
-    { winner: villainIndex, loser: heroIndex },
-  ])[heroIndex]!;
+  const equityLose = equitiesWithBounty(
+    loseStacks,
+    payouts,
+    bounty,
+    [{ winner: villainIndex, loser: heroIndex }],
+    stacks,
+  )[heroIndex]!;
 
   const gain = equityWin - equityNow;
   const rawLoss = equityNow - equityLose;

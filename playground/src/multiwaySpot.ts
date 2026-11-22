@@ -50,5 +50,12 @@ export function buildMultiwaySpot(
     .sort((a, b) => orders[a]! - orders[b]!);
   if (callerIndices.length === 0) return null;
 
-  return { pusherIndex, callerIndices, blinds, antes, foldWinnerIndex: bbIndex };
+  // BB が脱落済み (チップ 0) のまま foldWinnerIndex にすると、降りた先のブラインドを受け取って
+  // 0 チップの BB が復活してしまう。BB に残りチップが無いときは生きている最後尾の席を foldWinner にする。
+  const foldWinnerIndex =
+    table[bbIndex]!.stack - antes[bbIndex]! > 0
+      ? bbIndex
+      : callerIndices[callerIndices.length - 1]!;
+
+  return { pusherIndex, callerIndices, blinds, antes, foldWinnerIndex };
 }

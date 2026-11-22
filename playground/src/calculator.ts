@@ -14,6 +14,8 @@ import {
   calculateICM,
   calculatePotOdds,
   calculateRequiredEquity,
+  type PotOddsPosition,
+  type PotOddsResult,
 } from "@poker-icm/core";
 import { renderRangeComparison, updateHandPositionBanner, setRangeUnavailable, currentDirection } from "./handRange.js";
 import { updateNashOvercallWarn, invalidateChangedNash, ensureNashCalculated } from "./nashUI.js";
@@ -57,6 +59,14 @@ const eqResult = $<HTMLDivElement>("eq-result");
 
 /** ステッパー (+/-) が下回れないコール額/純利得の下限。 */
 const NUM_STEP_MIN = 0.1;
+
+/** 自動算出した BB 値の表示表記。0.1 BB 未満でも "0.0" に潰れないよう小数桁を伸ばす。 */
+function formatBbAmount(value: number): string {
+  if (value > 0 && value < 0.1) {
+    return Number(value.toFixed(2)) > 0 ? value.toFixed(2) : value.toFixed(3);
+  }
+  return value.toFixed(1);
+}
 
 // セクション 5 のコール額/純利得を手動編集したかどうかのフラグ。
 // true の間は自動更新を抑制。シナリオ変更や autofill ボタンで false にリセット。
@@ -192,6 +202,7 @@ export function recompute(): void {
     // ため、自動算出はスキップ (throw で ICM 表全体が生エラーに置き換わるのを防ぐ)。
     const { sb: sbV, bb: bbV, ante: totalAnteV } = readBlindParams();
     autofillBtn.classList.toggle("is-manual", callManualOverride);
+    let autoPot: PotOddsResult | null = null;
     if (
       heroIndex < 0 ||
       villainIndex < 0 ||
@@ -207,12 +218,32 @@ export function recompute(): void {
     } else {
       const heroPos = players[heroIndex]?.position;
       const villainPos = players[villainIndex]?.position;
+      const pushes = currentDirection() === "pushBack";
+      let heroPotPos: PotOddsPosition = posToPotOddsPos(heroPos, players.length);
+      let villainPotPos: PotOddsPosition = posToPotOddsPos(villainPos, players.length);
+      // 2人卓でポジション未設定のときは架空の第3者 SB/BB を作らず、行動向きから SB/BB を補う (pushSpot.ts と整合)
+      if (players.length === 2) {
+        if (heroPotPos === "OTHER" && villainPotPos === "OTHER") {
+          heroPotPos = pushes ? "SB" : "BB";
+          villainPotPos = pushes ? "BB" : "SB";
+        } else if (heroPotPos === "OTHER") {
+          heroPotPos = villainPotPos === "BB" ? "SB" : "BB";
+        } else if (villainPotPos === "OTHER") {
+          villainPotPos = heroPotPos === "BB" ? "SB" : "BB";
+        }
+      }
+      const sbPlayer = players.find((p, i) => i !== heroIndex && i !== villainIndex && posToPotOddsPos(p.position, players.length) === "SB");
+      const bbPlayer = players.find((p, i) => i !== heroIndex && i !== villainIndex && posToPotOddsPos(p.position, players.length) === "BB");
       const r = calculatePotOdds({
         heroStack: stacks[heroIndex]!,
         villainStack: stacks[villainIndex]!,
-        heroPosition: posToPotOddsPos(heroPos, players.length),
-        villainPosition: posToPotOddsPos(villainPos, players.length),
-        sb: sbV, bb: bbV, ante: totalAnteV,
+        heroPosition: heroPotPos,
+        villainPosition: villainPotPos,
+        sb: sbV,
+        bb: bbV,
+        ante: totalAnteV,
+        sbStack: players.length === 2 ? 0 : sbPlayer?.stack,
+        bbStack: players.length === 2 ? 0 : bbPlayer?.stack,
       });
       // 自分か相手がブラインド・アンティを払った時点でオールインになっていると、
       // コールする額が残らない (判断する場面がない)。古い値を残すと別の局面の数字が出るので空にする。
@@ -221,14 +252,16 @@ export function recompute(): void {
         potWinInput.value = "";
         autofillHint.innerHTML = "";
       } else {
-        const pushes = currentDirection() === "pushBack";
+        autoPot = r;
         // 位置が未設定の人は括弧ごと省く (「相手()」と出さない)
         const seat = (pos: string | undefined): string => (pos ? `(${pos})` : "");
-        callInput.value = r.callAmount.toFixed(1);
-        potWinInput.value = r.potIfWin.toFixed(1);
+        const callStr = formatBbAmount(r.callAmount);
+        const potWinStr = formatBbAmount(r.potIfWin);
+        callInput.value = callStr;
+        potWinInput.value = potWinStr;
         const heroStackV = stacks[heroIndex]!;
-        const heroAntePaid = heroPos === "BB" ? Math.min(totalAnteV, heroStackV) : 0;
-        const villainAntePaid = villainPos === "BB" ? Math.min(totalAnteV, stacks[villainIndex]!) : 0;
+        const heroAntePaid = heroPotPos === "BB" ? Math.min(totalAnteV, heroStackV) : 0;
+        const villainAntePaid = villainPotPos === "BB" ? Math.min(totalAnteV, stacks[villainIndex]!) : 0;
         const heroBlindPaid = r.heroLiveCommit;
         const heroSunk = heroAntePaid + heroBlindPaid;
         const heroLive = heroStackV - heroSunk;
@@ -252,7 +285,7 @@ export function recompute(): void {
               matched: r.matched.toFixed(1),
             });
         autofillHint.innerHTML = `
-          <div class="autofill-summary-line">${t(pushes ? "calc.autofill.summaryLinePush" : "calc.autofill.summaryLine", { call: r.callAmount.toFixed(1), pot: r.potIfWin.toFixed(1) })}</div>
+          <div class="autofill-summary-line">${t(pushes ? "calc.autofill.summaryLinePush" : "calc.autofill.summaryLine", { call: callStr, pot: potWinStr })}</div>
           <details class="autofill-details">
             <summary>${t("calc.autofill.detailsSummary")}</summary>
             <div class="autofill-body">
@@ -265,7 +298,7 @@ export function recompute(): void {
                   ${r.deadBreakdown.bbDead > 0 ? `<li>${t("calc.autofill.bbDead", { v: r.deadBreakdown.bbDead.toFixed(1) })}</li>` : ""}
                   ${villainAntePaid > 0 ? `<li>${t("calc.autofill.villainAnte", { pos: seat(villainPos), v: villainAntePaid.toFixed(1) })}</li>` : ""}
                   ${r.deadBreakdown.anteDead > 0 && !anteShownAsOwn ? `<li>${t("calc.autofill.anteDead", { v: r.deadBreakdown.anteDead.toFixed(1) })}</li>` : ""}
-                  <li>${t(pushes ? "calc.autofill.heroToPush" : "calc.autofill.heroToPay", { v: r.callAmount.toFixed(1) })}</li>
+                  <li>${t(pushes ? "calc.autofill.heroToPush" : "calc.autofill.heroToPay", { v: callStr })}</li>
                   <li>${villainStake}</li>
                   <li><strong>${t("calc.autofill.totalPot", { v: r.potAtShowdown.toFixed(1) })}</strong></li>
                 </ul>
@@ -275,8 +308,8 @@ export function recompute(): void {
                 <table class="autofill-table">
                   ${t("calc.autofill.tableHead")}
                   <tr><td>${t("calc.autofill.row.fold")}</td><td>${stackIfFold.toFixed(1)}</td><td>±0</td><td class="${netFold >= 0 ? 'good' : 'bad'}">${fmtSigned(netFold)}</td></tr>
-                  <tr><td>${t(pushes ? "calc.autofill.row.pushWin" : "calc.autofill.row.win")}</td><td>${stackIfWin.toFixed(1)}</td><td class="good">+${r.potIfWin.toFixed(1)}</td><td class="${netWin >= 0 ? 'good' : 'bad'}">${fmtSigned(netWin)}</td></tr>
-                  <tr><td>${t(pushes ? "calc.autofill.row.pushLose" : "calc.autofill.row.lose")}</td><td>${stackIfLose.toFixed(1)}</td><td class="bad">-${r.callAmount.toFixed(1)}</td><td class="bad">${fmtSigned(netLose)}</td></tr>
+                  <tr><td>${t(pushes ? "calc.autofill.row.pushWin" : "calc.autofill.row.win")}</td><td>${stackIfWin.toFixed(1)}</td><td class="good">+${potWinStr}</td><td class="${netWin >= 0 ? 'good' : 'bad'}">${fmtSigned(netWin)}</td></tr>
+                  <tr><td>${t(pushes ? "calc.autofill.row.pushLose" : "calc.autofill.row.lose")}</td><td>${stackIfLose.toFixed(1)}</td><td class="bad">-${callStr}</td><td class="bad">${fmtSigned(netLose)}</td></tr>
                 </table>
               </div>
             </div>
@@ -284,8 +317,8 @@ export function recompute(): void {
         `;
       }
     }
-    const callAmount = Number(callInput.value);
-    const potIfWin = Number(potWinInput.value);
+    const callAmount = autoPot ? autoPot.callAmount : Number(callInput.value);
+    const potIfWin = autoPot ? autoPot.potIfWin : Number(potWinInput.value);
     // 判断できない局面では必要勝率を出さず、理由だけを出す。
     // core の calculateRequiredEquity は 0 以下の額で例外を投げるので、呼ぶ前にここで止める
     // (以前は例外が ICM の表ごとエラー文に置き換えていた)。

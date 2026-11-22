@@ -182,7 +182,7 @@ export function buildMultiwayTerminals(
   }
 
   const icm = (s: readonly number[], knockouts: readonly Knockout[] = []): number[] =>
-    equitiesWithBounty(s, payouts, bounty, knockouts);
+    equitiesWithBounty(s, payouts, bounty, knockouts, stacks);
   return {
     fold: foldEquities ? foldEquities.slice() : icm(foldStacks),
     steal: icm(stealStacks),
@@ -290,7 +290,13 @@ export function solveMultiwayPushFold(input: MultiwayPushFoldInput): MultiwayPus
 
   // ----- 戦略 -----
   const push = new Float64Array(n).fill(1);
-  const call: Float64Array[] = callerIndices.map(() => new Float64Array(n));
+  const pusherLive = stacks[P]! - input.antes[P]!;
+  // ブラインド＋アンティを払った時点で手元が 0、またはプッシャーのオールイン額が
+  // 既に置いたブラインド以下 (= 追加コール額 0) の席はフォールドできない
+  const forcedAllIn = callerIndices.map(
+    (c) => stacks[c]! - input.antes[c]! - input.blinds[c]! <= 1e-12 || pusherLive <= input.blinds[c]! + 1e-12,
+  );
+  const call: Float64Array[] = callerIndices.map((_, k) => new Float64Array(n).fill(forcedAllIn[k] ? 1 : 0));
 
   // 反復ごとの作業領域
   const callFrac: Float64Array[] = callerIndices.map(() => new Float64Array(n)); // pusher が h のとき k が call する確率
@@ -391,26 +397,30 @@ export function solveMultiwayPushFold(input: MultiwayPushFoldInput): MultiwayPus
       let epsK = 0;
       const ck = call[k]!;
       const br = callBR[k]!;
-      for (let c = 0; c < n; c++) {
-        const base = c * n;
-        let pw = 0;
-        let sd = 0;
-        for (let h = 0; h < n; h++) {
-          const w = W[base + h]! * push[h]! * reachP[h]!;
-          if (w <= 0) continue;
-          pw += w;
-          const pusherEq = E[h * n + c]!;
-          sd += w * (pusherEq * winMe + (1 - pusherEq) * loseMe);
+      if (forcedAllIn[k]) {
+        br.fill(1);
+      } else {
+        for (let c = 0; c < n; c++) {
+          const base = c * n;
+          let pw = 0;
+          let sd = 0;
+          for (let h = 0; h < n; h++) {
+            const w = W[base + h]! * push[h]! * reachP[h]!;
+            if (w <= 0) continue;
+            pw += w;
+            const pusherEq = E[h * n + c]!;
+            sd += w * (pusherEq * winMe + (1 - pusherEq) * loseMe);
+          }
+          if (pw <= 0) {
+            br[c] = 0;
+            continue;
+          }
+          const evCall = sd / pw;
+          br[c] = evCall > evFoldMe ? 1 : 0;
+          const best = evCall > evFoldMe ? evCall : evFoldMe;
+          const cur = ck[c]! * evCall + (1 - ck[c]!) * evFoldMe;
+          epsK += prior[c]! * (pw / rowTotal[c]!) * (best - cur);
         }
-        if (pw <= 0) {
-          br[c] = 0;
-          continue;
-        }
-        const evCall = sd / pw;
-        br[c] = evCall > evFoldMe ? 1 : 0;
-        const best = evCall > evFoldMe ? evCall : evFoldMe;
-        const cur = ck[c]! * evCall + (1 - ck[c]!) * evFoldMe;
-        epsK += prior[c]! * (pw / rowTotal[c]!) * (best - cur);
       }
       epsilonBb = Math.max(epsilonBb, epsK / slopeC[k]!);
 

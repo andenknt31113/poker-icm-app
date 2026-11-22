@@ -43,14 +43,16 @@ describe("haptics", () => {
     native = true;
     const { hapticSelection, hapticLight, hapticSuccess } = await import("../src/haptics.js");
     hapticSelection();
-    await flush();
-    expect(calls).toEqual(["selectionStart", "selectionChanged", "selectionEnd"]);
+    await vi.waitFor(() => {
+      expect(calls).toEqual(["selectionStart", "selectionChanged", "selectionEnd"]);
+    });
 
     calls.length = 0;
     hapticLight();
     hapticSuccess();
-    await flush();
-    expect(calls).toEqual(["impact:LIGHT", "notification:SUCCESS"]);
+    await vi.waitFor(() => {
+      expect(calls).toEqual(["impact:LIGHT", "notification:SUCCESS"]);
+    });
   });
 
   it("ネイティブ側の呼び出しが失敗しても例外を漏らさない", async () => {

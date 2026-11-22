@@ -16,10 +16,24 @@ function isLang(v: unknown): v is Lang {
   return v === "ja" || v === "en";
 }
 
-/** 保存済み言語を読む。未設定・不正値・localStorage 不可環境では既定言語。 */
+/** 端末の言語設定から既定の UI 言語を選ぶ (日本語系なら ja、それ以外の英語圏などは en)。 */
+export function detectBrowserLang(navLang: string | undefined): Lang {
+  if (!navLang) return DEFAULT_LANG;
+  return /^ja\b/i.test(navLang.trim()) ? "ja" : "en";
+}
+
+/** 保存済み言語を読む。未設定時は端末言語 (英語圏なら en、日本語や非ブラウザ/jsdom は ja)。 */
 function readLang(): Lang {
   const v = readRaw(STORAGE_KEYS.lang);
-  return isLang(v) ? v : DEFAULT_LANG;
+  if (isLang(v)) return v;
+  if (
+    typeof window === "undefined" ||
+    typeof navigator === "undefined" ||
+    /jsdom/i.test(navigator.userAgent ?? "")
+  ) {
+    return DEFAULT_LANG;
+  }
+  return detectBrowserLang(navigator.language);
 }
 
 let currentLang: Lang = readLang();
@@ -89,6 +103,9 @@ export function t(key: string, params?: Record<string, string | number>): string
  *    (title / aria-label / placeholder など)
  */
 export function applyStaticTranslations(root: ParentNode = document): void {
+  if (root === document && document.documentElement) {
+    document.documentElement.setAttribute("lang", currentLang);
+  }
   root.querySelectorAll<HTMLElement>("[data-i18n]").forEach((el) => {
     const key = el.dataset.i18n;
     if (key) el.textContent = t(key);

@@ -1008,3 +1008,27 @@
   - PR マージ後、`1.5.3 (build 2)` を Archive・アップロードし、審査待ち（`WAITING_FOR_REVIEW`）の `1.5.3 (build 1)` を取り下げて build 2 に差し替えて再提出（本人の明示指示「直してほしい全部」に基づき実施）。
   - 実機・iPad 実機・購入/復元、ASC 売上受取口座の確認は本人側で実施。
 
+## 2026-11-22 第4弾ストレステスト監査・計算コア＆英語自動起動の5件修正（fix/audit-round4-core-i18n・1.5.3 build 3）
+
+- **背景**: `1.5.3 (build 2)` 再提出（2026-11-22 15:02 JST、reviewSubmission `0b2d482a…`）後の「まだバグあるよね？」「どんどんやって」の依頼を受け、計算コア全体と 6 画面幅（320px〜1376px）× 日英 × 極端局面のストレステストを実施し、実測で再現した 5 件を修正。
+- **変更**:
+  - **英語端末での初回起動自動英語化 (`playground/src/i18n.ts`)**: `detectBrowserLang` を追加し、保存言語なし時は端末言語が日本語系以外なら自動で `"en"`（かつ `<html lang="en">`）で起動するようにした（jsdom/非ブラウザは `"ja"` 維持、`context.mjs` は既定 `locale: "ja-JP"`）。
+  - **第三者ショート SB / BB のポット上限クランプ (`core/src/potOdds.ts` / `playground/src/calculator.ts`)**: `PotOddsInput` に `sbStack?` / `bbStack?` を追加し、第三者の BB が 0.4BB しかないのに ante 1.0 + BB 1.0 をポット加算して架空チップと RP 水増しを起こしていた不具合を解消（厳密 ICM 計算 `callDecision.ts` と完全一致）。
+  - **自動オールイン済み BB / SB の強制参加 (`core/src/multiwayNash.ts` / `core/src/overcallNash.ts`) & `solveHUNash` クランプ (`core/src/nash.ts`)**: ブラインド＋アンティ支払い後に手元 0 チップの席が Nash でフォールド扱い（例: オーバーコール 37.3% やサテライト 0%）になっていたのを 100% 参加に固定。あわせて `solveHUNash` の 0 スタック第三者＋ante 時の負スタック・未収束と `slope` 計算の誤差も修正。
+  - **`pushBack` ボーダー帯の対称・精密化 (`playground/src/handRange.ts`)**: 古い非対称しきい値（`+0.5% / -0.3%`）により `+0.15pt` のプラス期待値ハンドが 35 種類もボーダー落ちしていたのを、表示と同じ総賞金比 `±0.03pt`（`PUSH_MARGINAL_BAND_PT`）の対称基準へ統一。
+  - **チップモード時の単位表記＆空カスタムレンジ表示整理 (`playground/index.html` / `locales/{ja,en}.ts` / `handRange.ts`)**: 必要勝率入力欄に `(BB)` 表記を追加し、カスタムレンジ全消去時は `.hero-range-result` ごと非表示に。
+  - **ビルド番号更新 (`project.pbxproj`)**: `1.5.3` の `CURRENT_PROJECT_VERSION` を `2` → `3` へ更新。
+- **検証**:
+  - `npm -w @poker-icm/core run build`、`npm run typecheck`、unit（core 124 / playground 393）、`npm run build`、e2e 20/20（第4弾・第5弾の全回帰シナリオを含む）を実行・確認。
+- **第5弾追加総点検で発見・同 PR #114（`1.5.3 build 3`）へ統合修正した 7 件**:
+  - **小数・チップモードの `cEV`/`RP` 丸めズレ & 0.05BB 未満コール誤エラー (`calculator.ts`)**: 自動算出時は丸め前の exact `callAmount` / `potIfWin` で `cEV` を計算し、`0.1BB` 未満も `"0.0"` に潰れない小数表記（`formatBbAmount`）へ修正。
+  - **2人卓ポジション未設定時の架空第3者デッドマネー (`calculator.ts`)**: 2人卓で未設定のときは `pushSpot.ts` と同じく行動向きから SB/BB を補い、存在しない第3者のブラインド計上を解消。
+  - **0% Nash レンジ適用時のプリセット無言上書き (`handRange.ts`)**: `applyVillainRangeMode(mode, seedIfEmpty)` を分離し、`use-nash-range` からのカスタム切替では 0% レンジを保持・案内文を維持。
+  - **強制オールイン／ブラインド未満プッシュ時の不要フォールド率 (`handRange.ts` / `nash.ts` / `multiwayNash.ts` / `overcallNash.ts`)**: 追加コール 0BB の相手を 100% コール固定に統一（オーバーコール時は先行コーラーのスタックも考慮）。
+  - **`calculateExactCallEquity` の負の必要勝率 (`callDecision.ts`)**: `heroFoldBlind = Math.min(heroBlind, matched)` と `[0, 1]` クランプで、ブラインド未満の相手オールイン時に `-25.5%` 等の負値を返さないよう修正。
+  - **BB=0 脱落席の `foldWinnerIndex` 復活 (`multiwaySpot.ts`)**: BB が 0 チップのときは生きている最後尾の席を `foldWinnerIndex` に指定。
+  - **既 0 チップ席と今回脱落席の順位折半バグ (`bounty.ts` / `bf.ts` / `callDecision.ts` / `pushDecision.ts` / `nash.ts` / `multiwayNash.ts` / `handRange.ts`)**: `equitiesWithBounty` に `initialStacks` による脱落順位補正（`adjustBustOrder`）を追加し、既脱落席がある卓でも BF・必要勝率・Nash が生存卓と完全一致するよう修正。
+- **残件**:
+  - PR #114 マージ後、`1.5.3 (build 3)` を Archive・アップロードし、審査待ち（`WAITING_FOR_REVIEW`）の `1.5.3 (build 2)` から差し替えて再提出予定。
+  - 実機・iPad 実機・購入/復元、ASC 売上受取口座の確認は本人側で実施。
+

@@ -76,4 +76,23 @@ export default async function testLangSwitch({ baseURL, createContext }) {
   } finally {
     await context.close();
   }
+
+  // --- 英語端末 (en-US) で保存値なしの初回起動時は自動で英語 UI になる ---
+  const enContext = await createContext({ tutorialDone: true, pro: true, locale: "en-US" });
+  try {
+    const page = await enContext.newPage();
+    const errors = attachErrorCollector(page, "lang-auto-en");
+    await page.goto(baseURL, { waitUntil: "load" });
+    await page.waitForSelector("#setup-players h2", { state: "visible" });
+    if ((await page.getAttribute("html", "lang")) !== "en") {
+      throw new Error("en-US 端末の初回起動で <html lang> が en になりません");
+    }
+    const spotHeading = await textOf(page, "#setup-players h2");
+    if (spotHeading !== "Spot") {
+      throw new Error(`en-US 端末の初回起動で英語UIになりません: heading="${spotHeading}"`);
+    }
+    assertNoErrors(errors, "英語端末自動判定");
+  } finally {
+    await enContext.close();
+  }
 }

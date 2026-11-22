@@ -173,6 +173,27 @@ describe("calculatePotOdds (BB ante 構造)", () => {
     expect(r.potAtShowdown).toBeCloseTo(0.5, 6);
   });
 
+  it("第三者の SB / BB がショートのとき所持スタック上限にクランプし架空チップを足さない", () => {
+    // CO 8 vs BTN 10, 第三者 SB=0.3 (<0.5), BB=0.4 (<ante 1.0)
+    const r = calculatePotOdds({
+      heroStack: 10,
+      villainStack: 8,
+      heroPosition: "OTHER",
+      villainPosition: "OTHER",
+      sb: 0.5,
+      bb: 1,
+      ante: 1,
+      sbStack: 0.3,
+      bbStack: 0.4,
+    });
+    expect(r.deadBreakdown.sbDead).toBeCloseTo(0.3, 6);
+    expect(r.deadBreakdown.anteDead).toBeCloseTo(0.4, 6);
+    expect(r.deadBreakdown.bbDead).toBeCloseTo(0, 6);
+    expect(r.potAtShowdown).toBeCloseTo(16.7, 6);
+    expect(r.callAmount).toBeCloseTo(8, 6);
+    expect(r.potIfWin).toBeCloseTo(8.7, 6);
+  });
+
   it("不正値はエラー", () => {
     expect(() =>
       calculatePotOdds({
