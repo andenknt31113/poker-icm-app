@@ -174,7 +174,12 @@ function solveNext(): void {
     if (result) current.solved.set(result.pusherIndex, result);
     else {
       current.finished = true;
-      noteNashFinishedForReview();
+      if (current.solved.size === 0) {
+        // 全席がブラインド・アンティ時点でオールイン済み等で解ける席が 0 件だった場合、空白画面にしない
+        current.error = t("nash.table.noPushers");
+      } else {
+        noteNashFinishedForReview();
+      }
     }
   } catch (err) {
     current.error = err instanceof Error ? err.message : String(err);

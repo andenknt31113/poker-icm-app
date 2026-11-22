@@ -48,7 +48,12 @@ const MIN_PLAYERS = 2;
 const RANDOM_STACK_MIN_BB = 3;
 const RANDOM_STACK_MAX_BB = 30;
 
-function renderStackUnitBar(locked: boolean): void {
+// 1 BB 入力中のキーストローク (例: 1000 → 1 → 3 → 3000) でチップ丸め誤差が
+// 蓄積しないよう、フォーカス時点のチップ枚数を基準値として保持する。
+// プリセット適用や Undo で renderPlayers() が走ったときは無効化して古い基準を残さない。
+let bbInputAnchorChips: number[] | null = null;
+
+function renderStackUnitBar(locked: boolean, syncBbInput = true): void {
   const mode = getStackUnit();
   const bbSize = getBbSize();
   document.querySelectorAll<HTMLButtonElement>("[data-stack-unit]").forEach((btn) => {
@@ -62,7 +67,12 @@ function renderStackUnitBar(locked: boolean): void {
   if (col) col.textContent = tr(mode === "chips" ? "setup.cols.stackChips" : "setup.cols.stack");
   const bbInput = document.getElementById("bb-size-input") as HTMLInputElement | null;
   if (bbInput) {
-    if (document.activeElement !== bbInput) bbInput.value = String(bbSize);
+    // iOS WKWebView ではボタン押下時に input からフォーカスが外れないことがあるため、
+    // 入力中 (syncBbInput=false) 以外は activeElement に関わらず表示値を同期する。
+    if (syncBbInput) {
+      bbInput.value = String(bbSize);
+      bbInputAnchorChips = null;
+    }
     bbInput.readOnly = locked;
     bbInput.classList.toggle("locked-pro", locked);
   }
@@ -381,9 +391,6 @@ export function initPlayersUI(): void {
 
   const bbInput = document.getElementById("bb-size-input") as HTMLInputElement | null;
   if (bbInput) {
-    // 1 BB 入力中のキーストローク (例: 1000 → 1 → 3 → 3000) でチップ丸め誤差が
-    // 蓄積しないよう、フォーカス時点のチップ枚数を基準値として保持する。
-    let anchorChips: number[] | null = null;
     bbInput.addEventListener("pointerdown", (e) => {
       if (!isPro() && players.length > FREE_MAX_PLAYERS) {
         e.preventDefault();
@@ -397,25 +404,25 @@ export function initPlayersUI(): void {
         return;
       }
       const curBb = getBbSize();
-      anchorChips = players.map((p) => Math.round(p.stack * curBb));
+      bbInputAnchorChips = players.map((p) => Math.round(p.stack * curBb));
     });
     bbInput.addEventListener("input", () => {
       if (!isPro() && players.length > FREE_MAX_PLAYERS) return;
       const val = Number(bbInput.value);
       if (!Number.isFinite(val) || val <= 0) return;
-      if (anchorChips && anchorChips.length === players.length) {
-        players.forEach((p, idx) => {
-          p.stack = (anchorChips![idx] ?? 0) / val;
-        });
-        setBbSize(val);
-      } else {
-        applyBbSizeChange(val);
+      if (!bbInputAnchorChips || bbInputAnchorChips.length !== players.length) {
+        const curBb = getBbSize();
+        bbInputAnchorChips = players.map((p) => Math.round(p.stack * curBb));
       }
-      renderStackUnitBar(false);
+      players.forEach((p, idx) => {
+        p.stack = (bbInputAnchorChips![idx] ?? 0) / val;
+      });
+      setBbSize(val);
+      renderStackUnitBar(false, false);
       recompute();
     });
     bbInput.addEventListener("focusout", () => {
-      anchorChips = null;
+      bbInputAnchorChips = null;
       if (bbInput.readOnly) return;
       const val = Number(bbInput.value);
       if (!Number.isFinite(val) || val <= 0) {

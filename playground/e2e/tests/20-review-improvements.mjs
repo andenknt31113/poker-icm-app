@@ -564,4 +564,113 @@ export default async function testReviewImprovements({ baseURL, createContext })
       await context.close();
     }
   }
+
+  // ===== 12. 深掘りバグ監査の回帰テスト =====
+  // - 英語UIで全員スタック0時に日本語エラーが出ず、古いBFマップも消える
+  // - 3人卓で7位まで賞金を入れてもICM取り分%の合計が100%になる
+  // - BB<=ante (HU BTN 10BB / BB 0.8BB, ante 1) でNashタブが空白にならない
+  // - KO→Nashレンジ適用→PKO切替で古いNash案内が消える
+  // - #bb-size-input フォーカス中のプリセット反映＆iOS自動ズーム防止フォントサイズ(>=16px)
+  {
+    const context = await createContext({ onboardingDone: true, pro: true, practice: false });
+    await context.addInitScript(() => localStorage.setItem("poker-icm-lang", "en"));
+    try {
+      const page = await context.newPage();
+      const errors = attachErrorCollector(page, "deep-bug-audit-en");
+      await page.setViewportSize({ width: 320, height: 740 });
+      await page.goto(baseURL, { waitUntil: "load" });
+      await page.waitForSelector(".player-row", { state: "visible" });
+
+      // iOS 自動ズーム防止: 1 BB 入力と手札セレクトが 16px 以上
+      await page.click('[data-stack-unit="chips"]');
+      const fontSizes = await page.evaluate(() => ({
+        bbInput: parseFloat(getComputedStyle(document.getElementById("bb-size-input")).fontSize),
+        handPick: parseFloat(getComputedStyle(document.getElementById("hand-pick-r1")).fontSize),
+      }));
+      if (fontSizes.bbInput < 16 || fontSizes.handPick < 16) {
+        throw new Error(`iOS 自動ズーム防止の 16px 未満です: ${JSON.stringify(fontSizes)}`);
+      }
+      // フォーカス維持のまま 10k プリセットを押しても #bb-size-input 表示値が追従する
+      await page.evaluate(() => {
+        const input = document.getElementById("bb-size-input");
+        input.focus();
+        document.querySelector('[data-bb-preset="10000"]').click();
+      });
+      if ((await page.inputValue("#bb-size-input")) !== "10000") {
+        throw new Error(`#bb-size-input フォーカス中のプリセット反映に失敗: ${await page.inputValue("#bb-size-input")}`);
+      }
+      await page.click('[data-stack-unit="bb"]');
+
+      // 3人卓で7位まで賞金を入れても ICM 表の取り分 % 合計が 100%
+      await page.click("#payouts-fold > summary");
+      await page.click('button[data-preset="40,25,15,10,5,3,2"]');
+      await page.click('[data-jump="sec-icm"]');
+      const shareSum = await page.evaluate(() => {
+        const cells = [...document.querySelectorAll("#icm-rows tr td:last-child")];
+        return cells.reduce((acc, td) => acc + parseFloat(td.textContent || "0"), 0);
+      });
+      if (Math.abs(shareSum - 100) > 0.3) {
+        throw new Error(`3人卓×7位まで賞金で ICM 取り分合計が 100% になりません: ${shareSum.toFixed(1)}%`);
+      }
+
+      // 全員スタック 0 → 英語エラー (日本語文字なし) かつ BF マップもクリアされる
+      const stacks = page.locator(".player-stack");
+      for (let i = 0; i < (await stacks.count()); i++) await stacks.nth(i).fill("0");
+      const icmZeroText = await page.locator("#icm-rows").innerText();
+      const bfAfterZero = (await page.locator("#bf-matrix").innerHTML()).trim();
+      if (/[ぁ-んァ-ヶ一-龠]/.test(icmZeroText) || !icmZeroText.toLowerCase().includes("stack")) {
+        throw new Error(`全員スタック0のエラー文が不適切: "${icmZeroText}"`);
+      }
+      if (bfAfterZero !== "") {
+        throw new Error(`全員スタック0で古い BF マップが残っています: length=${bfAfterZero.length}`);
+      }
+
+      // KO で Nash レンジ適用後、PKO へ切り替えると古い案内が消える
+      if (!(await page.locator("#scenario-presets-toggle").evaluate((el) => el.open))) {
+        await page.click("#scenario-presets-toggle > summary");
+      }
+      await page.click('.scenario-btn[data-scenario="ft3"]');
+      await page.click("#bounty-fold > summary");
+      await page.click('[data-bounty-mode="ko"]');
+      await page.fill("#bounty-all", "20");
+      await page.click("#bounty-all-apply");
+      await page.click('[data-jump="sec-hand"]');
+      await page.click("#use-nash-range");
+      await page.waitForSelector("#nash-range-note:not(.hidden)", { state: "visible" });
+      await page.click('[data-bounty-mode="pko"]');
+      if (await page.locator("#nash-range-note").isVisible()) {
+        throw new Error("バウンティ形式 (KO→PKO) を変えたのに古い Nash レンジ案内が残っています");
+      }
+
+      assertNoErrors(errors, "deep-bug-audit-en");
+    } finally {
+      await context.close();
+    }
+  }
+
+  // BB <= ante (HU BTN 10BB / BB 0.8BB, ante 1.0) で Nash タブが空白にならず案内を出す
+  {
+    const { context, page, errors } = await openWithState({
+      tag: "review-nash-bb-allin-ante",
+      state: {
+        players: [
+          { stack: 10, role: "hero", position: "BTN" },
+          { stack: 0.8, role: "villain", position: "BB" },
+        ],
+        payouts: [100],
+        nash: { sb: 0.5, bb: 1, ante: 1 },
+      },
+    });
+    try {
+      await page.click('[data-jump="sec-nash"]');
+      await page.waitForFunction(
+        () => (document.getElementById("nash-table-status")?.textContent ?? "").includes("2人以上"),
+        null,
+        { timeout: 10000 },
+      );
+      assertNoErrors(errors, "review-nash-bb-allin-ante");
+    } finally {
+      await context.close();
+    }
+  }
 }

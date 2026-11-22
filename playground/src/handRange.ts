@@ -1,5 +1,5 @@
 import { equitiesWithBounty, type Knockout } from "@poker-icm/core";
-import { activeBounty } from "./bountyState.js";
+import { activeBounty, bountyKey } from "./bountyState.js";
 import {
   ALL_169_HANDS,
   HAND_RANKS,
@@ -218,14 +218,15 @@ let nashNoteSpotKey: string | null = null;
 function currentNashNoteKey(): string {
   const { sb, bb, ante } = readBlindParams();
   return JSON.stringify([
-    players.map(({ stack, role, position, bounty }) => [stack, role, position, bounty ?? 0]),
+    players.map(({ stack, role, position }) => [stack, role, position]),
+    bountyKey(),
     payoutsInput.value,
     sb,
     bb,
     ante,
     direction,
     villainRangeMode,
-    villainRangeMode === "custom" ? customVillainRange.size : pushRangeInput.value,
+    villainRangeMode === "custom" ? Array.from(customVillainRange).sort() : pushRangeInput.value,
   ]);
 }
 

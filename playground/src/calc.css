@@ -501,7 +501,7 @@ body.no-practice.workspace .container { padding-bottom: 40px; }
   min-width: 52px;
   padding: 4px 8px;
   font-family: var(--mono);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   text-align: center;
   border: 1px solid var(--border);
@@ -553,7 +553,7 @@ body.no-practice.workspace .container { padding-bottom: 40px; }
 }
 @media (max-width: 359px) {
   .hand-quick-picker { padding: 7px 8px; gap: 6px; }
-  .workspace .hand-pick-select { min-width: 46px; padding: 4px 4px; font-size: 14px; }
+  .workspace .hand-pick-select { min-width: 48px; padding: 4px 2px; font-size: 16px; }
   .hand-pick-suit button, .hand-pick-clear { min-width: 30px; padding: 0 6px; }
 }
 
@@ -613,7 +613,7 @@ body.no-practice.workspace .container { padding-bottom: 40px; }
   min-height: 36px;
   padding: 4px 8px;
   font-family: var(--mono);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   text-align: right;
 }
@@ -641,6 +641,6 @@ body.no-practice.workspace .container { padding-bottom: 40px; }
 @media (max-width: 359px) {
   .setup-heading-actions { gap: 5px; }
   .unit-toggle button { padding: 0 8px; font-size: 11px; }
-  .workspace .bb-size-field input { width: 82px; font-size: 13px; }
+  .workspace .bb-size-field input { width: 88px; font-size: 16px; }
   .bb-size-presets button { padding: 0 7px; font-size: 11px; }
 }
