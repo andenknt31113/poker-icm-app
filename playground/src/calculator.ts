@@ -44,6 +44,7 @@ import { renderChop, clearChop, initChop } from "./chopView.js";
 import { activeBounty } from "./bountyState.js";
 import { renderBountySummary } from "./setupBounty.js";
 import { formatStackDisplay, getBbSize, getStackUnit } from "./stackUnit.js";
+import { hapticLight, hapticSelection } from "./haptics.js";
 
 // ===== DOM参照 (計算結果タブ) =====
 const callInput = $<HTMLInputElement>("call");
@@ -421,6 +422,7 @@ export function initCalculator(): void {
       autofillHint.textContent = t("calc.autofill.err.zeroStack");
       return;
     }
+    hapticLight();
     checkpointSetup();
     callManualOverride = false;
     recompute();
@@ -437,6 +439,7 @@ export function initCalculator(): void {
       const cur = Number(input.value) || 0;
       const next = Math.max(NUM_STEP_MIN, cur + delta);
       if (next === cur) return;
+      hapticSelection();
       checkpointSetup();
       input.value = next.toFixed(1);
       callManualOverride = true;

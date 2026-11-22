@@ -19,8 +19,8 @@
 ### 画面・操作・課金・iOS ネイティブ
 
 - **iOS 起動時の白フラッシュ解消・ダーク UI 統一**: `capacitor.config.ts`（`ios.backgroundColor: "#101715"`）、`SceneDelegate.swift`（ウィンドウ背景色）、`Info.plist`（`UIUserInterfaceStyle = Dark`）を設定。スプラッシュ終了〜WebView 初回描画の間の白画面とライトモードのネイティブダイアログ・キーボード混在を解消。
-- **Pro 保存・削除のブラウザ標準ダイアログをアプリ内ダークモーダルへ置換**: `window.prompt` / `window.confirm` を使っていた4箇所（局面保存・局面削除・賞金保存・練習履歴リセット）を `dialogModal.ts` に統一。空欄時の保存ボタン無効化、破壊的操作の誤爆防止フォーカス、Escape・背景タップ対応、HTML エスケープを実装。
-- **iOS 触覚フィードバック（`@capacitor/haptics`）を導入**: 同梱済みで未使用だったプラグインを `haptics.ts`（`isCapacitorNative()` ガード付き）から活用し、タブ切替・ハンド表セルタップ・レンジ目安・役割切替・Undo・保存完了・購入/復元成功時に軽い触覚を追加。
+- **Pro 保存・削除のブラウザ標準ダイアログをアプリ内ダークモーダルへ置換**: `window.prompt` / `window.confirm` を使っていた4箇所（局面保存・局面削除・賞金保存・練習履歴リセット）を `dialogModal.ts` に統一し、保存済み賞金の削除にも誤タップ防止の確認モーダルを追加。空欄時の保存ボタン無効化、破壊的操作の誤爆防止フォーカス、Escape・背景タップ対応、HTML エスケープを実装。
+- **iOS 触覚フィードバック（`@capacitor/haptics`）を導入**: 同梱済みで未使用だったプラグインを `haptics.ts`（`isCapacitorNative()` ガード付き）から活用し、タブ切替・ハンド表セルタップ・レンジ目安・役割切替・コール額ステッパー・自動算出復帰・Undo・保存完了・購入/復元成功時に軽い触覚を追加。
 - **ペイウォールに「買い切り・月額課金なし」を明記**: `paywall.ts` / 日英辞書に買い切り注記（`.paywall-one-time`）を追加し、サブスクとの違いが一目で伝わるようにした。
 - **チョップを独立タブ化・1タップ結果コピー・自分の手札クイック判定を追加**:
   - 分析切替を `ハンド` / `チョップ` / `賞金・BF` / `Nash`（EN: `Hands` / `Chop` / `ICM · BF` / `Nash`）の 4 タブへ整理し、チョップ表へ 1 タップで到達できるようにした（チョップ表示中は上部サマリーを隠して視認性を改善）。
@@ -43,14 +43,16 @@
   - Pro 解放時に `#save-payout` のロック表示が外れない漏れを修正。賞金と局面で「保存なし」文言を統一。
   - 起動直後の RevenueCat `Purchases.configure()` 完了前呼び出しレースを防止し、購入・復元処理中はボタンを無効化。
   - RP の桁を上部カード・内訳とも小数 1 桁に統一し `-0.0%` を防止。相手未指定・手入力時に古い計算内訳が残らないように修正。
-  - 公開サポートページ（`/support`）の 🎰 を ♠ に変更し、賞金保存・バウンティの FAQ を追記（Workers 反映済み）。
+  - 公開サポートページ（`/support`）・利用規約ページ（`/legal`）・案内ページ（`/`）の配色をアプリのダークエメラルドテーマ（`#101715` / `#a8e6bd`）へ統一し、`/support` の FAQ に `BB / チップ` 単位切替・チョップ共有コピー・賞金保存・バウンティを追記。
+  - チョップ結果コピーの WKWebView フォールバックで `setSelectionRange` / 16px フォント指定を追加し、ストアスクショ自動撮影（`capture-release.mjs`）に 2 枚目用の `07-bounty.png` を組み込んだ。
 
 ## 検証
 
 - `npm run typecheck` 成功
 - `npm test`: core 116件 / playground 391件 すべて成功（`dialogModal.test.ts`・`haptics.test.ts`・`stackUnit.test.ts` を追加、`chop.test.ts`・`handRanking.test.ts`・`analysisView.test.ts`・`reviewPrompt.test.ts`・`termCopy.test.ts` を拡充）
 - `npm run build` 成功
-- `cd playground && E2E_BROWSER_CHANNEL=chrome npm run e2e`: 20件すべて成功（`20-review-improvements.mjs` にアプリ内モーダル・4タブ・チョップコピー・手札クイック選択・BB/チップ単位切替・割り切れない 1 BB での丸め精度を含む全11シナリオを収録）
+- `cd playground && E2E_BROWSER_CHANNEL=chrome npm run e2e`: 20件すべて成功（`20-review-improvements.mjs` にアプリ内モーダル・保存済み賞金の削除確認・4タブ・チョップコピー・手札クイック選択・BB/チップ単位切替・割り切れない 1 BB での丸め精度を含む全11シナリオを収録）
+- ストア用スクリーンショット（`artifacts/release-1.5.3/screenshots/{ja,en}`）: `01-spot`〜`07-bounty` の 7 枚 × 2 デバイス × 2 言語 = 28 枚を横はみ出し・JS エラーゼロで生成＆目視確認。
 - iOS シミュレーター（Release 構成）:
   - **iPhone 17（iOS 26.5）**・**iPad Pro 13-inch (M5)**: 起動直後（0.3s）から暗色背景・白ステータスバーで白フラッシュなし、新 UX（4 タブ・`?` ボタン・手札クイック判定・独立チョップタブ＋コピー・BB/チップ切替・ダークモーダル）を目視確認。Xcode Release ビルドの自前コード・asset warning ゼロ。
 - 未確認: 実機・iPad 実機・実際の購入と復元（RevenueCat）・実機での触覚（Taptic Engine）の体感。
@@ -88,5 +90,5 @@ What is new in 1.5.3 (UX polish and bug fixes; no changes to purchases or calcul
 
 ## 提出状況
 
-- 未提出・未アーカイブ（2026-11-21 時点）。
-- 1.5.2 が `IN_REVIEW`（`AFTER_APPROVAL`）で審査中のため、1.5.2 の公開後（または本人の指示後）に Archive → アップロード → ASC で 1.5.3 を作成し、`docs/ASO_1_5_3.md` のサブタイトル・キーワードと新スクショ込みで提出する。
+- 2026-11-21 17:17 JST に **`1.5.2` が審査承認・日米 App Store 公開（`READY_FOR_SALE`）** となった。
+- `1.5.3 (build 1)` はローカル署名済み Archive・新スクショ 28 枚・`docs/ASO_1_5_3.md` の ASO 案まで準備済み。App Store Connect へのアップロード・提出は本人の確認・指示後に実施する。

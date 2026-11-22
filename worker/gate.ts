@@ -59,13 +59,13 @@ export const CLOSED_PAGE = `<!doctype html>
     <title>Poker ICM</title>
     <style>
       body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
-        background: #0f1115; color: #e8eaed; line-height: 1.7; }
+        background: #101715; color: #eef3ed; line-height: 1.7; }
       main { max-width: 520px; margin: 0 auto; padding: 72px 16px; }
-      h1 { font-size: 22px; margin: 0 0 16px; }
-      a { color: #8ab4f8; }
+      h1 { font-size: 22px; margin: 0 0 16px; color: #a8e6bd; }
+      a { color: #a8e6bd; }
       .store { display: inline-block; margin: 16px 0 32px; padding: 12px 20px; border-radius: 10px;
-        background: #8ab4f8; color: #0f1115; font-weight: 700; text-decoration: none; }
-      .en { color: #9aa0a6; font-size: 14px; }
+        background: #a8e6bd; color: #101715; font-weight: 700; text-decoration: none; }
+      .en { color: #a1b2a7; font-size: 14px; }
     </style>
   </head>
   <body>
