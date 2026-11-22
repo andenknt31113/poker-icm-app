@@ -144,6 +144,8 @@ interface HUGame {
   readonly chipSlopeSb: number;
   /** exploitability($) を bb 単位へ換算する係数（$ / bb）。BB 側。 */
   readonly chipSlopeBb: number;
+  /** コール側が既にオールイン済み、またはプッシュ額が既出ブラインド以下 (= 追加コール 0) で降りられないか。 */
+  readonly bbForcedCall: boolean;
 }
 
 function buildHUGame(input: HUNashInput): HUGame {
@@ -222,7 +224,7 @@ function buildHUGame(input: HUNashInput): HUGame {
     const s: number[] = baseStacks.slice();
     s[sbIndex] = Math.max(0, sbStack);
     s[bbIndex] = Math.max(0, bbStack);
-    const eq = equitiesWithBounty(s, payouts, bounty, knockouts);
+    const eq = equitiesWithBounty(s, payouts, bounty, knockouts, stacks);
     return { sbEq: eq[sbIndex]!, bbEq: eq[bbIndex]! };
   }
 
@@ -342,6 +344,7 @@ function buildHUGame(input: HUNashInput): HUGame {
     callEvBb,
     chipSlopeSb: Math.abs(slopeSb) > 1e-12 ? Math.abs(slopeSb) : 1,
     chipSlopeBb: Math.abs(slopeBb) > 1e-12 ? Math.abs(slopeBb) : 1,
+    bbForcedCall: bbBaseAfterBlind <= 1e-12 || matched <= callerBlind + 1e-12,
   };
 }
 
@@ -401,13 +404,15 @@ export function huNashExploitability(
     const cur = sbProb[hi]! * evPush + (1 - sbProb[hi]!) * evFold;
     sbDollar += game.prior[hi]! * (best - cur);
   }
-  for (let vi = 0; vi < n; vi++) {
-    const { ev: evCall, pushFrac } = game.callEvBb(vi, sbProb);
-    const evFold = game.evFoldBb;
-    const best = Math.max(evCall, evFold);
-    const cur = bbProb[vi]! * evCall + (1 - bbProb[vi]!) * evFold;
-    // BB は SB が push してきたときのみ行動する → pushFrac で加重
-    bbDollar += game.prior[vi]! * pushFrac * (best - cur);
+  if (!game.bbForcedCall) {
+    for (let vi = 0; vi < n; vi++) {
+      const { ev: evCall, pushFrac } = game.callEvBb(vi, sbProb);
+      const evFold = game.evFoldBb;
+      const best = Math.max(evCall, evFold);
+      const cur = bbProb[vi]! * evCall + (1 - bbProb[vi]!) * evFold;
+      // BB は SB が push してきたときのみ行動する → pushFrac で加重
+      bbDollar += game.prior[vi]! * pushFrac * (best - cur);
+    }
   }
 
   const sbBb = sbDollar / game.chipSlopeSb;
@@ -446,9 +451,9 @@ export function solveHUNash(input: HUNashInput): HUNashResult {
   const n = game.n;
   const { evFoldSb, evFoldBb, chipSlopeSb, chipSlopeBb, prior } = game;
 
-  // 確率（0..1）。初期値: SB=1.0 (any-two push), BB=0.0 (empty call)
+  // 確率（0..1）。初期値: SB=1.0 (any-two push), BB=0.0 (強制オールイン時は 1.0 固定)
   const sbPushProb = new Array<number>(n).fill(1.0);
-  const bbCallProb = new Array<number>(n).fill(0.0);
+  const bbCallProb = new Array<number>(n).fill(game.bbForcedCall ? 1.0 : 0.0);
 
   const sbBR = new Array<number>(n);
   const bbBR = new Array<number>(n);
@@ -474,12 +479,16 @@ export function solveHUNash(input: HUNashInput): HUNashResult {
     }
 
     let bbEpsDollar = 0;
-    for (let vi = 0; vi < n; vi++) {
-      const { ev: evCall, pushFrac } = game.callEvBb(vi, sbPushProb);
-      bbBR[vi] = evCall > evFoldBb ? 1 : 0;
-      const best = evCall > evFoldBb ? evCall : evFoldBb;
-      const cur = bbCallProb[vi]! * evCall + (1 - bbCallProb[vi]!) * evFoldBb;
-      bbEpsDollar += prior[vi]! * pushFrac * (best - cur);
+    if (game.bbForcedCall) {
+      bbBR.fill(1);
+    } else {
+      for (let vi = 0; vi < n; vi++) {
+        const { ev: evCall, pushFrac } = game.callEvBb(vi, sbPushProb);
+        bbBR[vi] = evCall > evFoldBb ? 1 : 0;
+        const best = evCall > evFoldBb ? evCall : evFoldBb;
+        const cur = bbCallProb[vi]! * evCall + (1 - bbCallProb[vi]!) * evFoldBb;
+        bbEpsDollar += prior[vi]! * pushFrac * (best - cur);
+      }
     }
 
     epsilonBb = Math.max(sbEpsDollar / chipSlopeSb, bbEpsDollar / chipSlopeBb);

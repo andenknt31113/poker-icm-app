@@ -1019,8 +1019,16 @@
   - **チップモード時の単位表記＆空カスタムレンジ表示整理 (`playground/index.html` / `locales/{ja,en}.ts` / `handRange.ts`)**: 必要勝率入力欄に `(BB)` 表記を追加し、カスタムレンジ全消去時は `.hero-range-result` ごと非表示に。
   - **ビルド番号更新 (`project.pbxproj`)**: `1.5.3` の `CURRENT_PROJECT_VERSION` を `2` → `3` へ更新。
 - **検証**:
-  - `npm run typecheck`、unit（core 119 / playground 392）、`npm run build`、e2e 20/20（`08-lang-switch.mjs` に `en-US` 自動英語化、`20-review-improvements.mjs` に第三者ショート BB ポット・自動オールイン BB オーバーコール 100%・カスタム空非表示・`(BB)` ラベルの回帰テストを追加）を実行・確認。
+  - `npm -w @poker-icm/core run build`、`npm run typecheck`、unit（core 124 / playground 393）、`npm run build`、e2e 20/20（第4弾・第5弾の全回帰シナリオを含む）を実行・確認。
+- **第5弾追加総点検で発見・同 PR #114（`1.5.3 build 3`）へ統合修正した 7 件**:
+  - **小数・チップモードの `cEV`/`RP` 丸めズレ & 0.05BB 未満コール誤エラー (`calculator.ts`)**: 自動算出時は丸め前の exact `callAmount` / `potIfWin` で `cEV` を計算し、`0.1BB` 未満も `"0.0"` に潰れない小数表記（`formatBbAmount`）へ修正。
+  - **2人卓ポジション未設定時の架空第3者デッドマネー (`calculator.ts`)**: 2人卓で未設定のときは `pushSpot.ts` と同じく行動向きから SB/BB を補い、存在しない第3者のブラインド計上を解消。
+  - **0% Nash レンジ適用時のプリセット無言上書き (`handRange.ts`)**: `applyVillainRangeMode(mode, seedIfEmpty)` を分離し、`use-nash-range` からのカスタム切替では 0% レンジを保持・案内文を維持。
+  - **強制オールイン／ブラインド未満プッシュ時の不要フォールド率 (`handRange.ts` / `nash.ts` / `multiwayNash.ts` / `overcallNash.ts`)**: 追加コール 0BB の相手を 100% コール固定に統一（オーバーコール時は先行コーラーのスタックも考慮）。
+  - **`calculateExactCallEquity` の負の必要勝率 (`callDecision.ts`)**: `heroFoldBlind = Math.min(heroBlind, matched)` と `[0, 1]` クランプで、ブラインド未満の相手オールイン時に `-25.5%` 等の負値を返さないよう修正。
+  - **BB=0 脱落席の `foldWinnerIndex` 復活 (`multiwaySpot.ts`)**: BB が 0 チップのときは生きている最後尾の席を `foldWinnerIndex` に指定。
+  - **既 0 チップ席と今回脱落席の順位折半バグ (`bounty.ts` / `bf.ts` / `callDecision.ts` / `pushDecision.ts` / `nash.ts` / `multiwayNash.ts` / `handRange.ts`)**: `equitiesWithBounty` に `initialStacks` による脱落順位補正（`adjustBustOrder`）を追加し、既脱落席がある卓でも BF・必要勝率・Nash が生存卓と完全一致するよう修正。
 - **残件**:
-  - PR マージ後、`1.5.3 (build 3)` を Archive・アップロードし、審査待ち（`WAITING_FOR_REVIEW`）の `1.5.3 (build 2)` から差し替えて再提出予定。
+  - PR #114 マージ後、`1.5.3 (build 3)` を Archive・アップロードし、審査待ち（`WAITING_FOR_REVIEW`）の `1.5.3 (build 2)` から差し替えて再提出予定。
   - 実機・iPad 実機・購入/復元、ASC 売上受取口座の確認は本人側で実施。
 

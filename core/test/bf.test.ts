@@ -132,5 +132,17 @@ describe("calculateBubbleFactor", () => {
         expect(result.bf >= 0).toBe(true);
       }
     });
+
+    it("既 0 チップの脱落席がある卓でも今回飛ぶ席が 2 位扱いになり HU と同じく BF=1.0 になる", () => {
+      const result = calculateBubbleFactor({
+        stacks: [20, 14, 0],
+        payouts: [50, 30],
+        heroIndex: 1,
+        villainIndex: 0,
+        riskChips: 14,
+      });
+      expect(result.equityLose).toBeCloseTo(30, 9);
+      expect(result.bf).toBeCloseTo(1, 9);
+    });
   });
 });

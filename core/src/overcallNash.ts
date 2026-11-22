@@ -252,13 +252,21 @@ export function solveOvercallPushFold(input: OvercallPushFoldInput): OvercallPus
   }
 
   // ----- 戦略 -----
-  // ブラインド＋アンティを払った時点で手元が 0 の席は既に自動オールイン済みでフォールドできない
+  // ブラインド＋アンティで既にオールイン済み、または直前のオールイン額が既出ブラインド以下 (= 追加コール 0) の席は降りられない
   const forcedAllIn = callerIndices.map((c) => posted[c]! <= 1e-12);
+  const forcedCall = callerIndices.map((c, k) => forcedAllIn[k]! || live[P]! <= blinds[c]! + 1e-12);
+  const forcedOvercall = callerIndices.map((_, k) =>
+    Array.from({ length: K - k - 1 }, (__, m) => {
+      const j = k + 1 + m;
+      const o = callerIndices[j]!;
+      return forcedAllIn[j]! || Math.max(live[P]!, live[callerIndices[k]!]!) <= blinds[o]! + 1e-12;
+    }),
+  );
   const push = new Float64Array(n).fill(1);
-  const call: Float64Array[] = callerIndices.map((_, k) => new Float64Array(n).fill(forcedAllIn[k] ? 1 : 0));
+  const call: Float64Array[] = callerIndices.map((_, k) => new Float64Array(n).fill(forcedCall[k] ? 1 : 0));
   /** oc[k][m][c] = callers[k] が call したあと callers[k+1+m] が c で overcall する確率 */
   const oc: Float64Array[][] = callerIndices.map((_, k) =>
-    Array.from({ length: K - k - 1 }, (__, m) => new Float64Array(n).fill(forcedAllIn[k + 1 + m] ? 1 : 0)),
+    Array.from({ length: K - k - 1 }, (__, m) => new Float64Array(n).fill(forcedOvercall[k]![m] ? 1 : 0)),
   );
 
   // 2 人対決の損得表 (overcall の可能性を混ぜ込んだもの)。pay[k] = { p: pusher の $, c: caller の $ }
@@ -413,7 +421,7 @@ export function solveOvercallPushFold(input: OvercallPushFoldInput): OvercallPus
         const ck = call[k]!;
         const br = callBR[k]!;
         const pc = payC[k]!;
-        if (forcedAllIn[k]) {
+        if (forcedCall[k]) {
           br.fill(1);
         } else {
           for (let c = 0; c < n; c++) {
@@ -469,7 +477,7 @@ export function solveOvercallPushFold(input: OvercallPushFoldInput): OvercallPus
         const winMe = terminals.pusherWins[k]![me]!;
         const loseMe = terminals.pusherLoses[k]![me]!;
         const range = oc[k]![m]!;
-        if (forcedAllIn[j]) {
+        if (forcedOvercall[k]![m]) {
           range.fill(1);
           continue;
         }

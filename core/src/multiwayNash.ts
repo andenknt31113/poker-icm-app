@@ -182,7 +182,7 @@ export function buildMultiwayTerminals(
   }
 
   const icm = (s: readonly number[], knockouts: readonly Knockout[] = []): number[] =>
-    equitiesWithBounty(s, payouts, bounty, knockouts);
+    equitiesWithBounty(s, payouts, bounty, knockouts, stacks);
   return {
     fold: foldEquities ? foldEquities.slice() : icm(foldStacks),
     steal: icm(stealStacks),
@@ -290,8 +290,12 @@ export function solveMultiwayPushFold(input: MultiwayPushFoldInput): MultiwayPus
 
   // ----- 戦略 -----
   const push = new Float64Array(n).fill(1);
-  // ブラインド＋アンティを払った時点で手元が 0 の席は既に自動オールイン済みでフォールドできない
-  const forcedAllIn = callerIndices.map((c) => stacks[c]! - input.antes[c]! - input.blinds[c]! <= 1e-12);
+  const pusherLive = stacks[P]! - input.antes[P]!;
+  // ブラインド＋アンティを払った時点で手元が 0、またはプッシャーのオールイン額が
+  // 既に置いたブラインド以下 (= 追加コール額 0) の席はフォールドできない
+  const forcedAllIn = callerIndices.map(
+    (c) => stacks[c]! - input.antes[c]! - input.blinds[c]! <= 1e-12 || pusherLive <= input.blinds[c]! + 1e-12,
+  );
   const call: Float64Array[] = callerIndices.map((_, k) => new Float64Array(n).fill(forcedAllIn[k] ? 1 : 0));
 
   // 反復ごとの作業領域

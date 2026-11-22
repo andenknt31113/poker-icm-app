@@ -100,6 +100,22 @@ describe("solveOvercallPushFold", () => {
     expect(oc.overcallRanges[0]![0]!.size).toBe(ALL_HANDS.length);
   });
 
+  it("プッシャーが BB ブラインド未満のオールインなら BB コールは 100% だが、大きい SB コール後のオーバーコールは強制されない", () => {
+    const spot = {
+      ...base,
+      stacks: [0.8, 10, 10],
+      payouts: [50, 30, 20],
+      blinds: [0, 0.5, 1.0],
+      antes: [0, 0, 1.0],
+    };
+    const multi = solveMultiwayPushFold(spot);
+    expect(multi.callRanges[1]!.size).toBe(ALL_HANDS.length);
+    const oc = solveOvercallPushFold({ ...spot, threeWay });
+    expect(oc.callRanges[1]!.size).toBe(ALL_HANDS.length);
+    // SB (10BB) がコールした後は BB も追加 8BB のリスクを負うため 100% オーバーコールにはならない
+    expect(oc.overcallRanges[0]![0]!.size).toBeLessThan(ALL_HANDS.length);
+  });
+
   it("不正入力 (callerIndices 重複など) は例外を投げる", () => {
     expect(() => solveOvercallPushFold({ ...base, callerIndices: [1, 1], threeWay })).toThrow();
     expect(() => solveOvercallPushFold({ ...base, callerIndices: [], threeWay })).toThrow();

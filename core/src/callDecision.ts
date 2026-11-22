@@ -138,6 +138,9 @@ export function calculateExactCallEquity(
   const matched = Math.min(heroLive, villainLive);
 
   const heroBlind = Math.min(liveCommit(heroPosition, sb, bb), heroLive);
+  // 相手のオールインが自分の既出ブラインド以下のとき、追加コール額は 0 であり、
+  // 相手が持っていない額まで失わない (超過分のブラインドは未コール額として手元に残る)。
+  const heroFoldBlind = Math.min(heroBlind, matched);
 
   // SB が hero/villain どちらでもない第三者なら、その SB は dead money になる
   const sbIsThirdParty =
@@ -170,8 +173,8 @@ export function calculateExactCallEquity(
 
   // fold: hero が降りる → villain が無競争で pot を獲得
   const stacksFold = stacks.slice();
-  stacksFold[heroIndex] = heroLive - heroBlind;
-  stacksFold[villainIndex] = villainLive + heroBlind + dead;
+  stacksFold[heroIndex] = heroLive - heroFoldBlind;
+  stacksFold[villainIndex] = villainLive + heroFoldBlind + dead;
   applyThirdPartySb(stacksFold);
 
   // call して勝ち
@@ -186,18 +189,27 @@ export function calculateExactCallEquity(
   stacksLose[villainIndex] = villainLive - matched + pot;
   applyThirdPartySb(stacksLose);
 
-  const equityFold = equitiesWithBounty(stacksFold, payouts, bounty)[heroIndex]!;
-  const equityWin = equitiesWithBounty(stacksWin, payouts, bounty, [
-    { winner: heroIndex, loser: villainIndex },
-  ])[heroIndex]!;
-  const equityLose = equitiesWithBounty(stacksLose, payouts, bounty, [
-    { winner: villainIndex, loser: heroIndex },
-  ])[heroIndex]!;
+  const equityFold = equitiesWithBounty(stacksFold, payouts, bounty, [], stacks)[heroIndex]!;
+  const equityWin = equitiesWithBounty(
+    stacksWin,
+    payouts,
+    bounty,
+    [{ winner: heroIndex, loser: villainIndex }],
+    stacks,
+  )[heroIndex]!;
+  const equityLose = equitiesWithBounty(
+    stacksLose,
+    payouts,
+    bounty,
+    [{ winner: villainIndex, loser: heroIndex }],
+    stacks,
+  )[heroIndex]!;
 
   const denom = equityWin - equityLose;
   // 勝っても $ エクイティが増えない (payouts 頭打ち / サテライトロック等):
   // どんな勝率でも call は損なので、必要勝率は 100% (絶対 fold)。
-  const requiredEquity = denom <= 0 ? 1 : (equityFold - equityLose) / denom;
+  const rawRequired = denom <= 0 ? 1 : (equityFold - equityLose) / denom;
+  const requiredEquity = Math.max(0, Math.min(1, rawRequired));
 
   return {
     requiredEquity,

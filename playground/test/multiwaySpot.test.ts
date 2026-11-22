@@ -36,6 +36,13 @@ describe("buildMultiwaySpot (押す人の後ろに残る全員)", () => {
     expect(spot.blinds[1]).toBe(0);
   });
 
+  it("BB がスタック 0 (脱落席) のときは 0 チップの BB を foldWinner にせず、生きている最後尾の席にする", () => {
+    const table = [seat(20, "BTN"), seat(14, "SB"), seat(0, "BB")];
+    const spot = buildMultiwaySpot(table, 0, 0.5, 1, 1)!;
+    expect(spot.callerIndices).toEqual([1]);
+    expect(spot.foldWinnerIndex).toBe(1);
+  });
+
   it("ポジション未設定・BB が押す・BB 不在は null (2人モデルに戻す)", () => {
     expect(buildMultiwaySpot([seat(10, ""), seat(10, "BB")], 0, 0.5, 1, 0)).toBeNull();
     expect(buildMultiwaySpot([seat(10, "SB"), seat(10, "BB")], 1, 0.5, 1, 0)).toBeNull();

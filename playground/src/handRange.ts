@@ -117,12 +117,13 @@ interface PushBackResult {
   pushRange: Set<HandNotation>;
   marginal: Set<HandNotation>;
   details: Map<HandNotation, PushHandDetail>;
+  villainForcedCall: boolean;
 }
 
 function computePushBackRange(villainCallRange: Set<HandNotation>): PushBackResult {
   const heroIdx = players.findIndex((p) => p.role === "hero");
   const villainIdx = players.findIndex((p) => p.role === "villain");
-  const empty: PushBackResult = { pushRange: new Set(), marginal: new Set(), details: new Map() };
+  const empty: PushBackResult = { pushRange: new Set(), marginal: new Set(), details: new Map(), villainForcedCall: false };
   if (heroIdx < 0 || villainIdx < 0 || heroIdx === villainIdx) return empty;
 
   const stacks = players.map((p) => p.stack);
@@ -140,13 +141,16 @@ function computePushBackRange(villainCallRange: Set<HandNotation>): PushBackResu
     return empty;
   }
   const matched = Math.min(baseStacks[heroIdx]!, baseStacks[villainIdx]!);
+  // 相手が既にブラインドだけでオールイン済み、または自分のオールイン額が相手のブラインド以下
+  // (= 追加コール額 0) のときは相手は降りられないため 100% コール扱い。
+  const villainForcedCall = baseStacks[villainIdx]! - callerBlind <= 1e-12 || matched <= callerBlind + 1e-12;
 
   const bounty = activeBounty();
   function icmAt(hStack: number, vStack: number, knockouts: readonly Knockout[] = []): number {
     const s = baseStacks.slice();
     s[heroIdx] = Math.max(0, hStack);
     s[villainIdx] = Math.max(0, vStack);
-    return equitiesWithBounty(s, payouts, bounty, knockouts)[heroIdx]!;
+    return equitiesWithBounty(s, payouts, bounty, knockouts, stacks)[heroIdx]!;
   }
 
   // hero(=pusher) 視点の各シナリオ ICM
@@ -173,7 +177,7 @@ function computePushBackRange(villainCallRange: Set<HandNotation>): PushBackResu
     for (const v of ALL_169_HANDS) {
       const w = comboCountVsHero(heroHand, v);
       totalCombos += w;
-      if (villainCallRange.has(v)) {
+      if (villainForcedCall || villainCallRange.has(v)) {
         callCombos += w;
         const heq = huEquity(heroHand, v);
         eqSum += w * heq;
@@ -212,7 +216,7 @@ function computePushBackRange(villainCallRange: Set<HandNotation>): PushBackResu
     }
     details.set(heroHand, { callRate, eqVsCall, diffPoolPct, status });
   }
-  return { pushRange, marginal, details };
+  return { pushRange, marginal, details, villainForcedCall };
 }
 
 // ボーダー判定バンド幅 (±0.1pt)。equity テーブルは 100万試行/ペア
@@ -507,14 +511,15 @@ export function renderRangeComparison(requiredEquity: number): RangeVerdictSumma
       return cls;
     });
     const pushComboPct = comboPctOfRange(result.pushRange);
+    const effectiveVillainPct = result.villainForcedCall ? 100 : villainPct;
     callStats.innerHTML = t("hand.callStats.pushBack", {
-      villainPct: villainPct.toFixed(0),
+      villainPct: effectiveVillainPct.toFixed(0),
       n: result.pushRange.size,
       pushCombos: comboCountOfRange(result.pushRange),
       pPct: pushComboPct.toFixed(1),
       marginal: result.marginal.size,
     });
-    verdict = { direction, villainPct, heroPct: pushComboPct };
+    verdict = { direction, villainPct: effectiveVillainPct, heroPct: pushComboPct };
   }
   if (emptyRange) {
     callStats.textContent = "";
@@ -606,27 +611,33 @@ function seedCustomRangeFromPreset(): void {
 
 // calculator.ts と handRange.ts の循環 import を避けるため、呼び出し元 (main.ts) から注入する。
 export function initHandRange(onChange: () => void): void {
+  function applyVillainRangeMode(next: RangeMode, seedIfEmpty = true): void {
+    document
+      .querySelectorAll<HTMLButtonElement>(".mode-tab")
+      .forEach((b) => b.classList.toggle("active", b.dataset.mode === next));
+    villainRangeMode = next;
+    // カスタム編集を空のまま開くと「レンジが空です」の注意だけが出て、何をすればいいか分かりにくい。
+    // ユーザーの手動切替でまだ何も選んでいなければ、いま見ていた上位レンジを出発点として入れておく。
+    // (Nash 適用で 0% レンジを入れたときは seedIfEmpty=false でそのまま空を保つ。)
+    if (villainRangeMode === "custom" && seedIfEmpty && customVillainRange.size === 0) {
+      seedCustomRangeFromPreset();
+    }
+    const rangeDetails = document.getElementById("villain-range-details") as HTMLDetailsElement | null;
+    if (rangeDetails) rangeDetails.open = villainRangeMode === "custom";
+    document.getElementById("sec-hand")?.classList.toggle("custom-range-mode", villainRangeMode === "custom");
+    if (villainRangeMode === "preset") {
+      presetControls.classList.remove("hidden");
+      customControls.classList.add("hidden");
+    } else {
+      presetControls.classList.add("hidden");
+      customControls.classList.remove("hidden");
+    }
+  }
+
   // モード切替
   document.querySelectorAll<HTMLButtonElement>(".mode-tab").forEach((btn) => {
     btn.addEventListener("click", () => {
-      document
-        .querySelectorAll<HTMLButtonElement>(".mode-tab")
-        .forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      villainRangeMode = btn.dataset.mode as RangeMode;
-      // カスタム編集を空のまま開くと「レンジが空です」の注意だけが出て、何をすればいいか分かりにくい。
-      // まだ何も選んでいなければ、いま見ていた上位レンジを出発点として入れておく。
-      if (villainRangeMode === "custom" && customVillainRange.size === 0) seedCustomRangeFromPreset();
-      const rangeDetails = document.getElementById("villain-range-details") as HTMLDetailsElement | null;
-      if (rangeDetails) rangeDetails.open = villainRangeMode === "custom";
-      document.getElementById("sec-hand")?.classList.toggle("custom-range-mode", villainRangeMode === "custom");
-      if (villainRangeMode === "preset") {
-        presetControls.classList.remove("hidden");
-        customControls.classList.add("hidden");
-      } else {
-        presetControls.classList.add("hidden");
-        customControls.classList.remove("hidden");
-      }
+      applyVillainRangeMode(btn.dataset.mode as RangeMode, true);
       onChange();
     });
   });
@@ -858,17 +869,11 @@ export function initHandRange(onChange: () => void): void {
             pct: comboPctOfRange(range).toFixed(0),
           }) + (includedOthers > 0 ? " " + t("hand.nashRange.multiway", { n: includedOthers }) : "");
       }
-      const customTab = document.querySelector<HTMLButtonElement>('.mode-tab[data-mode="custom"]');
-      if (villainRangeMode !== "custom" && customTab) {
-        // customTab.click() 内の onChange() より前に nashNoteSpotKey を合わせておく
-        villainRangeMode = "custom";
-        nashNoteSpotKey = currentNashNoteKey();
-        villainRangeMode = "preset";
-        customTab.click();
-      } else {
-        nashNoteSpotKey = currentNashNoteKey();
-        onChange();
+      if (villainRangeMode !== "custom") {
+        applyVillainRangeMode("custom", false);
       }
+      nashNoteSpotKey = currentNashNoteKey();
+      onChange();
     } finally {
       useNashBtn.disabled = false;
     }

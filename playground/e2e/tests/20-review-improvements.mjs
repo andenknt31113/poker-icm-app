@@ -750,4 +750,178 @@ export default async function testReviewImprovements({ baseURL, createContext })
       await context.close();
     }
   }
+
+  // ===== 14. 第5弾監査の回帰テスト =====
+  // - 小数スタック (BB 10 vs SB 1.25) で丸め誤差による負 RP (-1.0%) が出ず +0.2% になる
+  // - 0.05BB 未満コール (BB 10 vs SB 1.04) で "0.0" 扱いにならず正常に計算・表示される
+  // - 2人卓ポジション未設定で架空の第3者 SB/BB デッドマネーが足されない
+  // - 0% Nash レンジ適用でプリセット 25% に無言上書きされない
+  // - pushBack で既にオールイン済みの BB (2.0BB, ante 1) が相手コール率 100% になる
+  // - BB=0 脱落席でも Nash が HU 相当の妥当なコールレンジになる
+  {
+    const { context, page, errors } = await openWithState({
+      tag: "audit-round5-fractional-call",
+      state: {
+        players: [
+          { stack: 10, role: "hero", position: "BB" },
+          { stack: 1.25, role: "villain", position: "SB" },
+          { stack: 10, role: "other", position: "BTN" },
+        ],
+        payouts: [50, 30, 20],
+        nash: { sb: 0.5, bb: 1, ante: 1 },
+      },
+    });
+    try {
+      const summaryText = await page.locator("#hero-summary").innerText();
+      if (!summaryText.includes("7.1%") || !summaryText.includes("+0.2%")) {
+        throw new Error(`小数スタックの cEV/RP が丸め誤差でズレています: "${summaryText}"`);
+      }
+      assertNoErrors(errors, "audit-round5-fractional-call");
+    } finally {
+      await context.close();
+    }
+  }
+
+  {
+    const { context, page, errors } = await openWithState({
+      tag: "audit-round5-tiny-call",
+      state: {
+        players: [
+          { stack: 10, role: "hero", position: "BB" },
+          { stack: 1.04, role: "villain", position: "SB" },
+          { stack: 10, role: "other", position: "BTN" },
+        ],
+        payouts: [50, 30, 20],
+        nash: { sb: 0.5, bb: 1, ante: 1 },
+      },
+    });
+    try {
+      const callVal = await page.inputValue("#call");
+      const summaryActive = await page.locator("#hero-summary.active").count();
+      if (callVal !== "0.04" || summaryActive !== 1) {
+        throw new Error(`0.04BB コールが誤って無効化されています: call="${callVal}", summaryActive=${summaryActive}`);
+      }
+      assertNoErrors(errors, "audit-round5-tiny-call");
+    } finally {
+      await context.close();
+    }
+  }
+
+  {
+    const { context, page, errors } = await openWithState({
+      tag: "audit-round5-2p-unset-pos",
+      state: {
+        players: [
+          { stack: 10, role: "hero", position: "" },
+          { stack: 10, role: "villain", position: "" },
+        ],
+        payouts: [100],
+        nash: { sb: 0.5, bb: 1, ante: 1 },
+      },
+    });
+    try {
+      await page.click('[data-jump="sec-icm"]');
+      await page.click("#autofill-hint summary");
+      const hintText = await page.locator("#autofill-hint").innerText();
+      if (hintText.includes("降りている")) {
+        throw new Error(`2人卓ポジション未設定で架空の第3者ブラインドが計上されています: "${hintText}"`);
+      }
+      assertNoErrors(errors, "audit-round5-2p-unset-pos");
+    } finally {
+      await context.close();
+    }
+  }
+
+  {
+    const { context, page, errors } = await openWithState({
+      tag: "audit-round5-zero-nash-range",
+      state: {
+        players: [
+          { stack: 25, role: "villain", position: "BB" },
+          { stack: 25, role: "hero", position: "SB" },
+          { stack: 25, role: "other", position: "BTN" },
+          { stack: 0.5, role: "other", position: "CO" },
+        ],
+        payouts: [33, 33, 33],
+        nash: { sb: 0.5, bb: 1, ante: 1 },
+      },
+    });
+    try {
+      await page.click("#use-nash-range");
+      await page.waitForFunction(
+        () => {
+          const btn = document.getElementById("use-nash-range");
+          return btn && !btn.hasAttribute("disabled");
+        },
+        null,
+        { timeout: 15000 },
+      );
+      const selected = await page.locator("#custom-selected").innerText();
+      const noteVisible = await page.locator("#nash-range-note").isVisible();
+      if (!selected.includes("0 種類") || !noteVisible) {
+        throw new Error(`0% Nash レンジがプリセットに上書きされています: selected="${selected}", noteVisible=${noteVisible}`);
+      }
+      assertNoErrors(errors, "audit-round5-zero-nash-range");
+    } finally {
+      await context.close();
+    }
+  }
+
+  {
+    const { context, page, errors } = await openWithState({
+      tag: "audit-round5-pushback-forced-call",
+      state: {
+        players: [
+          { stack: 14, role: "hero", position: "SB" },
+          { stack: 2, role: "villain", position: "BB" },
+          { stack: 20, role: "other", position: "BTN" },
+        ],
+        payouts: [50, 30, 20],
+        nash: { sb: 0.5, bb: 1, ante: 1 },
+      },
+    });
+    try {
+      await page.click('#grid-hero .hand-cell[title="72o"]');
+      const detail = await page.locator("#hand-cell-detail").innerText();
+      if (!detail.includes("相手コール率 100%")) {
+        throw new Error(`強制オールイン BB に対し相手コール率が 100% になっていません: "${detail}"`);
+      }
+      assertNoErrors(errors, "audit-round5-pushback-forced-call");
+    } finally {
+      await context.close();
+    }
+  }
+
+  {
+    const { context, page, errors } = await openWithState({
+      tag: "audit-round5-nash-dead-bb",
+      state: {
+        players: [
+          { stack: 20, role: "other", position: "BTN" },
+          { stack: 14, role: "villain", position: "SB" },
+          { stack: 0, role: "hero", position: "BB" },
+        ],
+        payouts: [50, 30],
+        nash: { sb: 0.5, bb: 1, ante: 1 },
+      },
+    });
+    try {
+      await page.click('[data-jump="sec-nash"]');
+      await page.waitForFunction(
+        () => document.querySelectorAll("#nash-table .nash-row").length > 0 && document.getElementById("nash-table-status")?.textContent === "",
+        null,
+        { timeout: 20000 },
+      );
+      const btnPushPctText = await page.locator("#nash-table .nash-row.push .nash-row-pct").first().innerText();
+      const sbCallPctText = await page.locator("#nash-table .nash-row.call .nash-row-pct").first().innerText();
+      const btnPushPct = Number.parseFloat(btnPushPctText);
+      const sbCallPct = Number.parseFloat(sbCallPctText);
+      if (!(btnPushPct < 50 && sbCallPct >= 8)) {
+        throw new Error(`BB=0 脱落席の Nash が HU 相当になっていません: push="${btnPushPctText}", call="${sbCallPctText}"`);
+      }
+      assertNoErrors(errors, "audit-round5-nash-dead-bb");
+    } finally {
+      await context.close();
+    }
+  }
 }
