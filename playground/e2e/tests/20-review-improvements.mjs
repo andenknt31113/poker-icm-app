@@ -673,4 +673,81 @@ export default async function testReviewImprovements({ baseURL, createContext })
       await context.close();
     }
   }
+
+  // ===== 13. 第4弾監査の回帰テスト =====
+  // - 第三者ショート BB (0.4BB < ante 1.0) で架空チップがポットに入らず 16.9BB になる
+  // - 必要勝率カードに (BB) 単位表記がある
+  // - カスタムレンジ全消去で空の hero-range-result 見出しが残らない
+  // - BB 自動オールイン局面 (BTN 15 / SB 10 / BB 1.5, ante 1.0) で BB オーバーコールが 100.0%
+  {
+    const { context, page, errors } = await openWithState({
+      tag: "audit-round4",
+      state: {
+        players: [
+          { stack: 10, role: "hero", position: "BTN" },
+          { stack: 8, role: "villain", position: "CO" },
+          { stack: 12, role: "other", position: "SB" },
+          { stack: 0.4, role: "other", position: "BB" },
+        ],
+        payouts: [50, 30, 20],
+        nash: { sb: 0.5, bb: 1, ante: 1 },
+      },
+    });
+    try {
+      await page.click('[data-jump="sec-icm"]');
+      const eqCallLabel = await page.textContent("#eq-call-label");
+      if (!eqCallLabel?.includes("(BB)")) {
+        throw new Error(`コール額ラベルに (BB) 単位がありません: "${eqCallLabel}"`);
+      }
+      await page.click("#autofill-hint summary");
+      const hintText = await page.locator("#autofill-hint").innerText();
+      if (!hintText.includes("16.9")) {
+        throw new Error(`第三者ショート BB (0.4BB) のポット合計が 16.9 BB になっていません: "${hintText}"`);
+      }
+
+      // カスタムレンジ全消去で .hero-range-result ごと隠れる
+      await page.click('[data-jump="sec-hand"]');
+      await page.click('.mode-tab[data-mode="custom"]');
+      await page.click("#custom-clear");
+      if (await page.locator(".hero-range-result").isVisible()) {
+        throw new Error("カスタムレンジ全消去時に .hero-range-result の空見出しが残っています");
+      }
+
+      assertNoErrors(errors, "audit-round4");
+    } finally {
+      await context.close();
+    }
+  }
+
+  // BTN 15 / SB 10 / BB 1.5 (ante 1.0): 自動オールイン済みの BB はオーバーコールも 100.0%
+  {
+    const { context, page, errors } = await openWithState({
+      tag: "audit-round4-bb-forced-allin",
+      state: {
+        players: [
+          { stack: 15, role: "other", position: "BTN" },
+          { stack: 10, role: "hero", position: "SB" },
+          { stack: 1.5, role: "villain", position: "BB" },
+        ],
+        payouts: [50, 30, 20],
+        nash: { sb: 0.5, bb: 1, ante: 1 },
+      },
+    });
+    try {
+      await page.click('[data-jump="sec-nash"]');
+      await page.waitForFunction(
+        () => document.querySelectorAll("#nash-table .nash-row").length > 0 && document.getElementById("nash-table-status")?.textContent === "",
+        null,
+        { timeout: 20000 },
+      );
+      const nashText = await page.locator("#nash-table").innerText();
+      if (!nashText.includes("BB 100.0%")) {
+        throw new Error(`自動オールイン済み BB のオーバーコールが 100.0% になっていません: "${nashText}"`);
+      }
+
+      assertNoErrors(errors, "audit-round4-bb-forced-allin");
+    } finally {
+      await context.close();
+    }
+  }
 }

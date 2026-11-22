@@ -14,8 +14,16 @@
 // freemium 専用の新規テストは pro を省略 (= 無料) または明示 false で使う。
 export function makeContextFactory(browser) {
   return async function createContext(opts = {}) {
-    const { theme, tutorialDone = true, onboardingDone = true, pro = false, presetsOpen = true, practice = true } = opts;
-    const context = await browser.newContext();
+    const {
+      theme,
+      tutorialDone = true,
+      onboardingDone = true,
+      pro = false,
+      presetsOpen = true,
+      practice = true,
+      locale = "ja-JP",
+    } = opts;
+    const context = await browser.newContext({ locale });
     await context.addInitScript(
       ({ theme, tutorialDone, onboardingDone, pro, presetsOpen, practice }) => {
         try {

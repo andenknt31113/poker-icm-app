@@ -84,6 +84,22 @@ describe("solveOvercallPushFold", () => {
     expect(result.overcallRanges[0]![0]!.has("AA")).toBe(true);
   });
 
+  it("ブラインド＋アンティで既に自動オールイン済みの BB はコール・オーバーコールとも 100% 参加になる", () => {
+    // BTN 15 / SB 10 / BB 1.5 (ante 1.0 + blind 0.5 で BB は手元 0 = 選択権なし)
+    const spot = {
+      ...base,
+      stacks: [15, 10, 1.5],
+      payouts: [50, 30, 20],
+      blinds: [0, 0.5, 0.5],
+      antes: [0, 0, 1.0],
+    };
+    const multi = solveMultiwayPushFold({ ...spot, payouts: [33, 33, 33] });
+    expect(multi.callRanges[1]!.size).toBe(ALL_HANDS.length);
+    const oc = solveOvercallPushFold({ ...spot, threeWay });
+    expect(oc.callRanges[1]!.size).toBe(ALL_HANDS.length);
+    expect(oc.overcallRanges[0]![0]!.size).toBe(ALL_HANDS.length);
+  });
+
   it("不正入力 (callerIndices 重複など) は例外を投げる", () => {
     expect(() => solveOvercallPushFold({ ...base, callerIndices: [1, 1], threeWay })).toThrow();
     expect(() => solveOvercallPushFold({ ...base, callerIndices: [], threeWay })).toThrow();

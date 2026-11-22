@@ -188,17 +188,28 @@ function computePushBackRange(villainCallRange: Set<HandNotation>): PushBackResu
       evPush += sdSum / totalCombos;
     }
     const margin = evPush - foldEq;
-    // foldEq (0 なら賞金規模) の 0.5% を 1 単位として境界判定 (0=境界、+で push、-で fold)
-    const norm = margin / normBase;
-    let status: PushHandDetail["status"] = "fold";
-    if (norm >= 0.005) {
-      pushRange.add(heroHand);
-      status = "push";
-    } else if (norm >= -0.003) {
-      marginal.add(heroHand);
-      status = "marginal";
-    }
     const diffPoolPct = totalPrize > 0 ? (margin / totalPrize) * 100 : 0;
+    // 賞金総計に対する期待値差 (pt) で対称な狭いボーダー帯 (±0.03pt) を切る。
+    // これにより表示値 (+0.15pt など) と判定 (オールイン / ボーダー / フォールド) が一致する。
+    let status: PushHandDetail["status"] = "fold";
+    if (totalPrize > 0) {
+      if (diffPoolPct >= PUSH_MARGINAL_BAND_PT) {
+        pushRange.add(heroHand);
+        status = "push";
+      } else if (diffPoolPct > -PUSH_MARGINAL_BAND_PT) {
+        marginal.add(heroHand);
+        status = "marginal";
+      }
+    } else {
+      const norm = margin / normBase;
+      if (norm >= 0.001) {
+        pushRange.add(heroHand);
+        status = "push";
+      } else if (norm > -0.001) {
+        marginal.add(heroHand);
+        status = "marginal";
+      }
+    }
     details.set(heroHand, { callRate, eqVsCall, diffPoolPct, status });
   }
   return { pushRange, marginal, details };
@@ -208,6 +219,8 @@ function computePushBackRange(villainCallRange: Set<HandNotation>): PushBackResu
 // (MC 標準誤差 ±0.05pt) に精密化済みで、±0.1pt はその約2σ。
 // 「数値上ほぼ完全に五分」のセルだけを黄にする最小幅 (ユーザー指定)。
 const MARGINAL_BAND = 0.001;
+/** 自分からオールイン時のボーダー帯 (総賞金比 ±0.03pt)。 */
+const PUSH_MARGINAL_BAND_PT = 0.03;
 
 // タップで数値検分中のハンド (callBack / pushBack 両方向で使える)。
 let inspectedHand: HandNotation | null = null;
@@ -406,6 +419,7 @@ export function renderRangeComparison(requiredEquity: number): RangeVerdictSumma
   }
   heroGrid.classList.toggle("hidden", emptyRange);
   document.getElementById("hand-quick-picker")?.classList.toggle("hidden", emptyRange);
+  document.querySelector(".hero-range-result")?.classList.toggle("hidden", emptyRange);
   syncHandPickerFromState();
 
   // カスタム時はクリック可能スタイルを付与

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from "vitest";
-import { t, applyStaticTranslations, getLang } from "../src/i18n.js";
+import { t, applyStaticTranslations, getLang, detectBrowserLang } from "../src/i18n.js";
 import { ja } from "../src/locales/ja.js";
 
 describe("i18n t()", () => {
@@ -53,6 +53,16 @@ describe("i18n t()", () => {
 
   it("Phase A の既定言語は ja", () => {
     expect(getLang()).toBe("ja");
+  });
+
+  it("detectBrowserLang は日本語端末で ja、英語圏など日本語以外で en を返す", () => {
+    expect(detectBrowserLang("ja")).toBe("ja");
+    expect(detectBrowserLang("ja-JP")).toBe("ja");
+    expect(detectBrowserLang("JA-jp")).toBe("ja");
+    expect(detectBrowserLang("en-US")).toBe("en");
+    expect(detectBrowserLang("en-GB")).toBe("en");
+    expect(detectBrowserLang("fr-FR")).toBe("en");
+    expect(detectBrowserLang(undefined)).toBe("ja");
   });
 });
 

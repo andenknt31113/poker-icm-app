@@ -424,4 +424,20 @@ describe("huNashExploitability", () => {
     });
     expect(eps.epsilonBb).toBeLessThan(0.0015);
   });
+
+  it("第三者がスタック 0 で ante > 0 でも負スタックにならず収束する", () => {
+    const r = solveHUNash({
+      stacks: [10, 10, 0],
+      payouts: [50, 30, 20],
+      sbIndex: 0,
+      bbIndex: 1,
+      sb: 0.5,
+      bb: 1,
+      ante: 1,
+      huEquity: makeFakeHUEquity(),
+      allHands: ALL_HANDS,
+    });
+    expect(r.converged).toBe(true);
+    expect(Number.isFinite(r.exploitability)).toBe(true);
+  });
 });

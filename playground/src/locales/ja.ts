@@ -223,10 +223,10 @@ export const ja: Record<string, string> = {
   "calc.eq.flow.rp": "+ RP",
   "calc.eq.flow.icm": "必要勝率 (ICM)",
   "result.eq.hint.html": "自分と相手のオールインから自動で計算しています。数値を上書きすると手入力になります。",
-  "result.eq.callLabel": "\n            コール額\n            ",
-  "result.eq.pushLabel": "追加で出す額",
+  "result.eq.callLabel": "コール額 (BB)",
+  "result.eq.pushLabel": "追加で出す額 (BB)",
   "result.eq.call.placeholder": "例: 8.0",
-  "result.eq.potwinLabel": "\n            勝った時の純利得\n            ",
+  "result.eq.potwinLabel": "勝った時の純利得 (BB)",
   "result.eq.potwin.placeholder": "例: 10.5",
   "result.eq.autofillBtn": "\n          🔄 自動算出に戻す\n        ",
 

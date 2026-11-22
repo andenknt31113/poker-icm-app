@@ -37,6 +37,16 @@ export interface PotOddsInput {
   readonly bb: number;
   /** ante 合計 (BB ante 構造のため BB が全額負担)。 */
   readonly ante: number;
+  /**
+   * SB が第三者 (hero/villain 以外) のときの所持スタック上限 (省略時は sb 全額を払える前提)。
+   * ショート SB がブラインドを満額払えない局面で架空チップをポットに入れないために使う。
+   */
+  readonly sbStack?: number;
+  /**
+   * BB が第三者 (hero/villain 以外) のときの所持スタック上限 (省略時は ante+bb 全額を払える前提)。
+   * ショート BB がアンティ・ブラインドを満額払えない局面で架空チップをポットに入れないために使う。
+   */
+  readonly bbStack?: number;
 }
 
 export interface PotOddsResult {
@@ -85,7 +95,7 @@ function liveCommit(pos: PotOddsPosition, sb: number, bb: number): number {
  *   - potIfWin = pot − callAmount
  */
 export function calculatePotOdds(input: PotOddsInput): PotOddsResult {
-  const { heroStack, villainStack, heroPosition, villainPosition, sb, bb, ante } = input;
+  const { heroStack, villainStack, heroPosition, villainPosition, sb, bb, ante, sbStack, bbStack } = input;
 
   if (!Number.isFinite(heroStack) || heroStack <= 0) {
     throw new Error(`PotOdds: heroStack が不正です: ${heroStack}`);
@@ -110,9 +120,12 @@ export function calculatePotOdds(input: PotOddsInput): PotOddsResult {
 
   const sbInAction = heroPosition === "SB" || villainPosition === "SB";
   const bbInAction = heroPosition === "BB" || villainPosition === "BB";
-  const sbDead = sbInAction ? 0 : sb;
-  const bbDead = bbInAction ? 0 : bb;
-  const anteDead = bbInAction ? heroAntePaid + villainAntePaid : ante;
+  const sbThirdCap = sbStack !== undefined && Number.isFinite(sbStack) ? Math.max(0, sbStack) : sb;
+  const sbDead = sbInAction ? 0 : Math.min(sb, sbThirdCap);
+  const bbThirdCap = bbStack !== undefined && Number.isFinite(bbStack) ? Math.max(0, bbStack) : ante + bb;
+  const bbThirdAnte = bbInAction ? 0 : Math.min(ante, bbThirdCap);
+  const bbDead = bbInAction ? 0 : Math.min(bb, Math.max(0, bbThirdCap - bbThirdAnte));
+  const anteDead = bbInAction ? heroAntePaid + villainAntePaid : bbThirdAnte;
   const totalDead = sbDead + bbDead + anteDead;
 
   const potAtShowdown = 2 * matched + totalDead;

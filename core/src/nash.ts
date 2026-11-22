@@ -197,12 +197,10 @@ function buildHUGame(input: HUNashInput): HUGame {
     );
   }
 
-  const playerCount = n0;
-  // 勝った側が受け取る「2 人の matched 以外」のチップ = 全員の ante + 第三者の dead
-  const totalAnte = ante * playerCount + deadMoney;
-
-  // 全プレイヤーから ante 控除した「ハンド開始時」のスタック
-  const baseStacks: number[] = stacks.map((s) => s - ante);
+  // 全プレイヤーから ante 控除した「ハンド開始時」のスタック (所持上限でクランプし負スタックと架空チップを防ぐ)
+  const antePaid = stacks.map((s) => Math.min(ante, Math.max(0, s)));
+  const totalAnte = antePaid.reduce((a, b) => a + b, 0) + deadMoney;
+  const baseStacks: number[] = stacks.map((s, i) => s - antePaid[i]!);
 
   const sbBaseAfterBlind = baseStacks[sbIndex]! - pusherBlind;
   const bbBaseAfterBlind = baseStacks[bbIndex]! - callerBlind;
@@ -322,14 +320,16 @@ function buildHUGame(input: HUNashInput): HUGame {
     return { ev: sd / pushW, pushFrac: pushW / T };
   }
 
-  // chip → $ 換算係数（数値微分）。sb/bb は BB 単位なので chip = bb。
-  const d = 0.01;
+  // chip → $ 換算係数（数値微分）。小スタックでも分母が実差分と一致するよう調整。
+  const d = bb * 0.01;
+  const sbBase = baseStacks[sbIndex]!;
+  const bbBase = baseStacks[bbIndex]!;
+  const sbDown = Math.max(0, sbBase - d);
+  const bbDown = Math.max(0, bbBase - d);
   const slopeSb =
-    (icmAt(sbStack0 + d, bbStack0).sbEq - icmAt(sbStack0 - d, bbStack0).sbEq) /
-    (2 * d);
+    ((icmAt(sbBase + d, bbBase).sbEq - icmAt(sbDown, bbBase).sbEq) / (sbBase + d - sbDown)) * bb;
   const slopeBb =
-    (icmAt(sbStack0, bbStack0 + d).bbEq - icmAt(sbStack0, bbStack0 - d).bbEq) /
-    (2 * d);
+    ((icmAt(sbBase, bbBase + d).bbEq - icmAt(sbBase, bbDown).bbEq) / (bbBase + d - bbDown)) * bb;
 
   return {
     n,

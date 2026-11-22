@@ -207,12 +207,18 @@ export function recompute(): void {
     } else {
       const heroPos = players[heroIndex]?.position;
       const villainPos = players[villainIndex]?.position;
+      const sbPlayer = players.find((p, i) => i !== heroIndex && i !== villainIndex && posToPotOddsPos(p.position, players.length) === "SB");
+      const bbPlayer = players.find((p, i) => i !== heroIndex && i !== villainIndex && posToPotOddsPos(p.position, players.length) === "BB");
       const r = calculatePotOdds({
         heroStack: stacks[heroIndex]!,
         villainStack: stacks[villainIndex]!,
         heroPosition: posToPotOddsPos(heroPos, players.length),
         villainPosition: posToPotOddsPos(villainPos, players.length),
-        sb: sbV, bb: bbV, ante: totalAnteV,
+        sb: sbV,
+        bb: bbV,
+        ante: totalAnteV,
+        sbStack: sbPlayer?.stack,
+        bbStack: bbPlayer?.stack,
       });
       // 自分か相手がブラインド・アンティを払った時点でオールインになっていると、
       // コールする額が残らない (判断する場面がない)。古い値を残すと別の局面の数字が出るので空にする。
