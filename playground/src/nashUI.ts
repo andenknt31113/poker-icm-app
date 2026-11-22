@@ -9,6 +9,7 @@ import { solveSpotNash } from "./nashRange.js";
 import { activeBounty, bountyKey } from "./bountyState.js";
 import { ensureNashTable } from "./nashTableUI.js";
 import { fmt } from "./format.js";
+import { formatBbCompact } from "./stackUnit.js";
 import { t } from "./i18n.js";
 import { $ } from "./dom.js";
 import {
@@ -16,7 +17,9 @@ import {
   parseList,
   persistedState,
   actionOrderIdx,
+  DEFAULT_SB,
   DEFAULT_BB,
+  DEFAULT_ANTE,
 } from "./appState.js";
 import {
   payoutsInput,
@@ -92,7 +95,7 @@ export function renderNashContext(): void {
       : player.role === "villain"
         ? t(heroPushes ? "nash.theyCall" : "nash.theyPush")
         : t("seat.number", { n: index + 1 });
-    seat.textContent = `${role} · ${player.position || "—"} · ${player.stack} BB`;
+    seat.textContent = `${role} · ${player.position || "—"} · ${formatBbCompact(player.stack)} BB`;
     if (player.role === "other") others.appendChild(seat);
     else seats.appendChild(seat);
   });
@@ -238,7 +241,7 @@ export function updateNashOvercallWarn(): void {
   warnEl.classList.remove("hidden");
   warnEl.innerHTML = t("nash.multiway.note.html", {
     n: intruders.length,
-    list: intruders.map((p) => `${p.position} ${p.stack}BB`).join("、"),
+    list: intruders.map((p) => `${p.position} ${formatBbCompact(p.stack)}BB`).join("、"),
   });
 }
 
@@ -357,9 +360,11 @@ export function initNashUI(): void {
   // HRC 互換にしたい時はユーザーが明示的にラジオを切り替える。
   // BB はスタックの単位なので常に 1 (以前の版で変えた値が保存されていても戻す)。
   if (persistedState?.nash) {
-    nashSbInput.value = String(persistedState.nash.sb);
+    const savedSb = persistedState.nash.sb;
+    const savedAnte = persistedState.nash.ante;
+    nashSbInput.value = String(typeof savedSb === "number" && Number.isFinite(savedSb) && savedSb > 0 ? savedSb : DEFAULT_SB);
     nashBbInput.value = String(DEFAULT_BB);
-    nashAnteInput.value = String(persistedState.nash.ante);
+    nashAnteInput.value = String(typeof savedAnte === "number" && Number.isFinite(savedAnte) && savedAnte >= 0 ? savedAnte : DEFAULT_ANTE);
   }
   // Nash 入力変更時に状態保存
   [nashSbInput, nashBbInput, nashAnteInput].forEach((el) => {

@@ -36,7 +36,7 @@ import {
 import { escapeHtml } from "./html.js";
 import { fmt, fmtPct, fmtSigned } from "./format.js";
 import { renderHeroSummary, hideHeroSummary, initHeroSummary } from "./heroSummary.js";
-import { renderBFMatrix, initBFMatrix } from "./bfMatrix.js";
+import { renderBFMatrix, clearBFMatrix, initBFMatrix } from "./bfMatrix.js";
 import { updatePositionWarn, updateDepthWarn } from "./warnings.js";
 import { initInfoModal } from "./infoModal.js";
 import { exactCallRequiredEquity } from "./callSpot.js";
@@ -100,7 +100,10 @@ export function recompute(): void {
 
     if (stacks.length === 0) throw new Error(t("calc.err.needPlayer"));
     if (payouts.length === 0) throw new Error(t("calc.err.needPayout"));
-    if (!payouts.some(payout => payout > 0)) throw new Error(t("calc.err.positivePrize"));
+    const paidPayouts = payouts.slice(0, stacks.length);
+    const totalPrize = paidPayouts.reduce((a, b) => a + b, 0);
+    if (!(totalPrize > 0)) throw new Error(t("calc.err.positivePrize"));
+    if (!stacks.some((s) => s > 0)) throw new Error(t("calc.err.zeroTotalStack"));
 
     const heroIndex = players.findIndex((p) => p.role === "hero");
     const villainIndex = players.findIndex((p) => p.role === "villain");
@@ -113,7 +116,6 @@ export function recompute(): void {
 
     // ICM
     const equities = calculateICM(stacks, payouts);
-    const totalPrize = payouts.reduce((a, b) => a + b, 0);
     const unitMode = getStackUnit();
     const bbSize = getBbSize();
     icmRows.innerHTML = stacks
@@ -171,9 +173,13 @@ export function recompute(): void {
         // 生の $ エクイティ数値 (equityNow/equityWin/equityLose) は単位が伝わりにくく
         // 状況サマリー (#hero-summary) や BF マップと重複するため非表示。
         // BF 値自体とリスクチップのみ、hero vs villain の一行サマリーとして残す。
+        const riskLabel =
+          unitMode === "chips"
+            ? formatStackDisplay(safeRisk, unitMode, bbSize)
+            : `${formatStackDisplay(safeRisk, unitMode, bbSize)} BB`;
         bfResult.innerHTML = `
           <div class="row"><span class="label">${t("calc.bf.label.bf")}</span><span class="value big">${fmt(r.bf, 3)}</span></div>
-          <div class="row"><span class="label">${t("calc.bf.label.risk")}</span><span class="value">${safeRisk}</span></div>
+          <div class="row"><span class="label">${t("calc.bf.label.risk")}</span><span class="value">${riskLabel}</span></div>
         `;
       }
     }
@@ -377,11 +383,16 @@ export function recompute(): void {
     const msg = err instanceof Error ? err.message : String(err);
     icmRows.innerHTML = `<tr><td colspan="4" class="error">${escapeHtml(msg)}</td></tr>`;
     bfResult.innerHTML = "";
+    clearBFMatrix();
     eqResult.innerHTML = "";
+    autofillHint.innerHTML = "";
     clearChop();
     hideHeroSummary();
     setRangeUnavailable(msg);
+    updatePositionWarn(null, -1, -1);
     updateDepthWarn(-1, -1, []);
+    updateHandPositionBanner(-1);
+    ensureNashCalculated();
   }
 }
 

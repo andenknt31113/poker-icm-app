@@ -634,6 +634,7 @@ export const en: Record<string, string> = {
   // ===== 計算結果 (calculator.ts) =====
   "calc.err.needPlayer": "Add at least one player",
   "calc.err.needPayout": "Add at least one prize",
+  "calc.err.zeroTotalStack": "Enter a stack greater than 0 for at least one player.",
   "calc.bf.err.needHV": "Choose one “You” and one “Villain”",
   "calc.bf.err.sameHV": "“You” and “Villain” must be different players",
   "calc.bf.err.zeroStack": "A player has a stack of 0, so this can’t be calculated",

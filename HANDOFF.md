@@ -990,3 +990,21 @@
   - `1.5.3` の App Store Connect アップロード・バージョン作成・ASO 反映・新スクショ差し替え・審査提出は、本人の確認・指示後に実施。
   - 実機・iPad 実機・実際の購入と復元（RevenueCat）・実機触覚体感、ASC 売上受取口座の確認は本人側で実施。
 
+## 2026-11-22 1.5.3(1) 審査提出＋深掘りバグ監査・一括修正（fix/deep-bug-audit）
+
+- **App Store 提出**: 2026-11-22 13:34 JST に `1.5.3 (build 1)`（`main` `abdc448` / build `2383b582…`）を、新スクショ 24 枚（日英・iPhone/iPad 各 6 枚 `COMPLETE`）・`docs/ASO_1_5_3.md` のサブタイトル＆キーワード・`docs/RELEASE_1_5_3.md` の更新説明＆審査メモ込みで審査提出（reviewSubmission `e0825da1-9a4c-456b-819c-221839743c74`、`WAITING_FOR_REVIEW`、`AFTER_APPROVAL` 自動公開）。
+- **深掘りバグ監査で発見・修正した 8 件（ブランチ `fix/deep-bug-audit`・`1.5.3 (build 2)` へ反映）**:
+  - **ICM 取り分 % の分母バグ (`calculator.ts`)**: 残り人数より多い順位の賞金があるとき（例: 3 人卓で「7 位まで」賞金）、全順位合計で割っていたため取り分 % 合計が 100% 未満になっていた不具合を、`payouts.slice(0, stacks.length)`（残り人数ぶんの賞金合計）で割るよう修正（チョップ表と定義統一）。
+  - **全員スタック 0 時の英語 UI 日本語エラー＆残骸表示 (`calculator.ts` / `bfMatrix.ts` / `locales/{ja,en}.ts`)**: `calculateICM` の日本語例外がそのまま出て古い BF マップ・ポジション注意・Nash が残っていた不具合を、専用 i18n キー `calc.err.zeroTotalStack` と `clearBFMatrix()`＋各警告/Nash クリアで解消。
+  - **iOS 自動ズーム防止＆`theme-color` 統一 (`calc.css` / `index.html`)**: 新設の `1 BB` 入力欄と「自分の手札」セレクトの `font-size` が `16px` 未満（13〜15px）で iPhone タップ時に画面が自動ズームしていた不具合を `16px` に統一。`index.html` の `theme-color` も旧 `#0f1419` → `#101715` へ修正。
+  - **iOS WKWebView で `1 BB` 入力フォーカス中のプリセット／Undo 表示未更新 (`setupPlayers.ts`)**: ボタン押下でフォーカスが外れない iOS 仕様により `#bb-size-input` 表示が更新されない＆古い `anchorChips` が残る不具合を、`syncBbInput` 制御とアンカー無効化で解消。
+  - **BB ≦ アンティ時の Nash 空白画面 (`nashTableUI.ts`)**: HU `BTN 10BB / BB 0.8BB`, `ante 1.0` のように全席がアンティ時点でオールイン済みになると Nash タブが真っ白になる不具合を、`solved.size === 0` 終了時に `nash.table.noPushers` 案内を出すよう修正。
+  - **バウンティ形式切替・同サイズカスタム編集で古い Nash レンジ案内が残る不具合 (`handRange.ts`)**: `currentNashNoteKey()` に `bountyKey()` とソート済みカスタムレンジ配列を含めるよう修正。
+  - **割り切れないチップ→BB 換算時の生小数出力 (`calculator.ts` / `nashUI.ts`)**: `#bf-result` のリスクチップを `formatStackDisplay`（チップモード追従）、`nashUI.ts` のスタック表記を `formatBbCompact` に統一。
+  - **破損 `localStorage` のブラインド値耐性 (`nashUI.ts`)**: `persistedState.nash` の `sb`/`ante` が不正なときに `"undefined"` 等が入らないようサニタイズを追加。
+- **検証**:
+  - `npm run typecheck`、unit（core 116 / playground 391）、`npm run build`、e2e 20/20（`20-review-improvements.mjs` に上記 8 件の回帰シナリオを追加）すべて成功。
+- **残件**:
+  - PR マージ後、`1.5.3 (build 2)` を Archive・アップロードし、審査待ち（`WAITING_FOR_REVIEW`）の `1.5.3 (build 1)` を取り下げて build 2 に差し替えて再提出（本人の明示指示「直してほしい全部」に基づき実施）。
+  - 実機・iPad 実機・購入/復元、ASC 売上受取口座の確認は本人側で実施。
+

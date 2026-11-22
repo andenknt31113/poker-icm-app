@@ -66,6 +66,11 @@ function updateBFMatrixScrollState(): void {
   hint?.classList.toggle("hidden", !scrollable);
 }
 
+export function clearBFMatrix(): void {
+  bfMatrix.innerHTML = "";
+  updateBFMatrixScrollState();
+}
+
 export function renderBFMatrix(stacks: number[], payouts: number[], bounty?: BountySpec): void {
   const n = stacks.length;
   if (n < 2) {

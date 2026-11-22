@@ -624,6 +624,7 @@ export const ja: Record<string, string> = {
   // ===== 計算結果 (calculator.ts) =====
   "calc.err.needPlayer": "プレイヤーを1人以上入れてください",
   "calc.err.needPayout": "賞金を1つ以上入れてください",
+  "calc.err.zeroTotalStack": "誰か1人以上に 0 より大きいスタックを入れてください。",
   "calc.bf.err.needHV": "「自分」と「相手」を1人ずつ選んでください",
   "calc.bf.err.sameHV": "「自分」と「相手」は別の人にしてください",
   "calc.bf.err.zeroStack": "スタックが 0 の人がいるので計算できません",
