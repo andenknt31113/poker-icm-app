@@ -320,7 +320,7 @@ export function initPlayersUI(): void {
     }
     const remove = target.closest<HTMLButtonElement>(".player-remove");
     if (remove) {
-      // 削除 (人数を減らす方向) は無料でも可能。3人以下にすれば自由編集できる。
+      // 削除 (人数を減らす方向) は無料でも可能。FREE_MAX_PLAYERS (4人) 以下にすれば自由編集できる。
       const id = Number(remove.dataset.id);
       if (Number.isFinite(id)) removePlayer(id);
     }

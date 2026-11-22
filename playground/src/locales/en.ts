@@ -115,6 +115,8 @@ export const en: Record<string, string> = {
   "setup.confirm.deleteScenario": "Delete this saved spot?",
   "setup.prompt.savePayout": "Name this saved payout",
   "setup.prompt.payoutPlaceholder": "e.g. JOPT / APT / My HU",
+  "setup.confirm.deletePayoutTitle": "Delete saved payout",
+  "setup.confirm.deletePayout": "Delete this saved payout?",
   "dialog.cancel": "Cancel",
   "dialog.save": "Save",
   "dialog.ok": "OK",

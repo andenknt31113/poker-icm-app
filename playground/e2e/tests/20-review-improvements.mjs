@@ -330,6 +330,22 @@ export default async function testReviewImprovements({ baseURL, createContext })
         throw new Error(`アプリ内モーダルから賞金が保存されていません: ${savedPayoutText}`);
       }
 
+      // 賞金削除: 確認モーダルが開き、キャンセルで残存 → 削除確定で消える
+      await page.click("#saved-payouts .del");
+      await page.waitForSelector("#app-dialog-modal .dialog-btn-danger", { state: "visible" });
+      await page.click("#app-dialog-modal .dialog-btn-cancel");
+      await page.waitForSelector("#app-dialog-modal", { state: "detached" });
+      if (!(await page.textContent("#saved-payouts"))?.includes("JOPTテスト")) {
+        throw new Error("賞金削除をキャンセルしたのに消えてしまいました");
+      }
+      await page.click("#saved-payouts .del");
+      await page.waitForSelector("#app-dialog-modal .dialog-btn-danger", { state: "visible" });
+      await page.click("#dialog-confirm-btn");
+      await page.waitForSelector("#app-dialog-modal", { state: "detached" });
+      if ((await page.textContent("#saved-payouts"))?.includes("JOPTテスト")) {
+        throw new Error("削除確認モーダルで保存済み賞金が消えていません");
+      }
+
       // 局面保存 → 削除確認モーダル (createContext 既定で presetsOpen=true のため閉じていれば開く)
       if (!(await page.locator("#scenario-presets-toggle").evaluate((el) => el.open))) {
         await page.click("#scenario-presets-toggle > summary");

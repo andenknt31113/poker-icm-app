@@ -1,6 +1,6 @@
 // ===== 局面カード: バウンティ (KO / PKO) の入力 =====
 //
-// 形式 (なし / KO / PKO) と、各プレイヤーの首にかかっている額を入力する。
+// 形式 (なし / KO / PKO) と、各プレイヤーにかかっているバウンティ額を入力する。
 // バウンティは Pro の機能: 無料のときは KO / PKO を選ぶとペイウォールを出し、
 // 計算にも入れない (判定は bountyState.activeBounty が isPro() で行う)。
 import { t as tr } from "./i18n.js";
@@ -115,7 +115,7 @@ export function initBountyUI(): void {
     }
   });
 
-  // 「全員に同じ額」: 入れた額を全員の首に入れる
+  // 「全員に同じ額」: 入れた額を全員のバウンティに入れる
   const all = document.getElementById("bounty-all") as HTMLInputElement | null;
   all?.addEventListener("focusout", () => {
     const raw = Number(all.value);

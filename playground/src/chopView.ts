@@ -4,6 +4,7 @@
 import { calculateChop, formatChopShareText } from "./chop.js";
 import { activeBounty } from "./bountyState.js";
 import { players } from "./appState.js";
+import { escapeHtml } from "./html.js";
 import { hapticSelection, hapticSuccess } from "./haptics.js";
 import { t } from "./i18n.js";
 import { noteChopCopiedForReview } from "./reviewPrompt.js";
@@ -40,8 +41,11 @@ async function copyPlainText(text: string): Promise<boolean> {
     area.setAttribute("readonly", "");
     area.style.position = "fixed";
     area.style.opacity = "0";
+    area.style.fontSize = "16px";
     document.body.appendChild(area);
+    area.focus();
     area.select();
+    area.setSelectionRange(0, area.value.length);
     const ok = document.execCommand("copy");
     area.remove();
     return ok;
@@ -87,7 +91,7 @@ export function renderChop(stacks: readonly number[], payouts: readonly number[]
             ? ` <span class="icm-role villain">${t("calc.summary.villain")}</span>`
             : "";
       return `<tr>
-        <td>${row.label}${role}</td>
+        <td>${escapeHtml(row.label)}${role}</td>
         <td>${row.stackDisplay}</td>
         <td class="chop-icm">${row.icmText}</td>
         <td class="chop-chip">${row.chipText}</td>

@@ -108,6 +108,8 @@ export const ja: Record<string, string> = {
   "setup.confirm.deleteScenario": "保存したこの局面を削除しますか？",
   "setup.prompt.savePayout": "賞金配分に名前を付けて保存",
   "setup.prompt.payoutPlaceholder": "例: JOPT / APT / マイHU",
+  "setup.confirm.deletePayoutTitle": "保存した賞金を削除",
+  "setup.confirm.deletePayout": "保存したこの賞金配分を削除しますか？",
   "dialog.cancel": "キャンセル",
   "dialog.save": "保存",
   "dialog.ok": "OK",

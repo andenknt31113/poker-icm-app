@@ -973,4 +973,20 @@
   - `1.5.2` は `IN_REVIEW`（`AFTER_APPROVAL`）。公開後に `1.5.3` を Archive → アップロード → 新スクショ＆ASO 反映 → 提出。
   - 実機・購入/復元確認、ASC 売上受取口座の確認は本人側で実施。
 
+## 2026-11-22 1.5.2 公開確認・再レビュー第2弾修正（fix/rereview-2-polish）・1.5.3 提出準備完了
+
+- **App Store 状況**: 2026-11-21 17:17 JST に **`1.5.2` が審査承認・日米 App Store で公開（`READY_FOR_SALE`）** されたことを ASC API と iTunes Lookup で確認（JP ★5.0 / 1 件、US 公開済み）。
+- **変更（再レビュー第2弾）**:
+  - **保存済み賞金の削除に確認モーダルを追加 (`setupPayouts.ts` / `locales/{ja,en}.ts`)**: 保存済み局面 (`setupScenarios.ts`) と揃え、削除ボタン誤タップでの即時消失を防止（`openConfirmModal({ danger: true })`）。古いコメント（`3人以下`→`4人以下`、`首`→`バウンティ`）も整理。
+  - **操作触覚＆コピー互換性 (`calculator.ts` / `chopView.ts`)**: コール額/純利得ステッパーに `hapticSelection()`、自動算出復帰ボタンに `hapticLight()` を追加。チョップ結果コピーの WKWebView フォールバックに `setSelectionRange` / `fontSize: 16px` を追加し、`row.label` もエスケープ。
+  - **ストアスクショ自動撮影へ `07-bounty.png` を組み込み (`playground/e2e/capture-release.mjs`)**: App Store 現行 6 枚並びの 2 枚目（PKO `10 / 25 / 15` 展開）を自動撮影に追加し、日英・iPhone 6.9"・iPad 13" の計 28 枚を 1 コマンドで最新 UI に更新できるようにした。
+  - **公開 Web ページ（`/support`・`/legal`・`/`）のテーマ統一＆FAQ 更新 (`playground/public/{support,legal}.html` / `worker/gate.ts`)**: 旧青系テーマをアプリのダークエメラルドテーマ（`#101715` / `#18231f` / `#a8e6bd`）へ統一（`legal.html` の本文は不変で `legalSync.test.ts` 維持）。`/support` に `BB / チップ` 切替・チョップ共有コピーの FAQ を追記。
+  - **E2E・ドキュメント更新**: `20-review-improvements.mjs` に保存済み賞金の削除確認モーダル（キャンセル残存＋削除確定）を追加し、`docs/RELEASE_1_5_3.md` を最新化。
+- **検証**:
+  - `npm run typecheck`、unit（core 116 / playground 391）、`npm run build`、e2e 20/20（Chrome）すべて成功。
+  - `capture-release.mjs` で 28 枚（日英・iPhone/iPad 各 7 枚、横はみ出し・JS エラーゼロ）を生成＆`07-bounty.png` 等を目視確認。
+  - マージ後にプロモカード日英 6 枚（`artifacts/release-1.5.3/promo/`・`en/`）を 1.5.3 スクショ基準で再生成し、`npm run cap:sync` → 署名済みローカル `1.5.3 (build 1)` `.xcarchive` をビルド・検証予定。
+- **残件**:
+  - `1.5.3` の App Store Connect アップロード・バージョン作成・ASO 反映・新スクショ差し替え・審査提出は、本人の確認・指示後に実施。
+  - 実機・iPad 実機・実際の購入と復元（RevenueCat）・実機触覚体感、ASC 売上受取口座の確認は本人側で実施。
 

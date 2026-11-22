@@ -55,8 +55,24 @@ try {
       await page.locator('[data-jump="sec-nash"]').click();
       await page.waitForFunction(() => document.querySelectorAll("#nash-table .nash-row").length > 0 && document.getElementById("nash-table-status")?.textContent === "", null, { timeout: 60000 });
       await capture("06-nash", "#sec-nash");
+      // 07-bounty: Pro 状態で 3 人卓 (ft3) の PKO (10 / 25 / 15) を開いた画面を撮影
+      await page.evaluate(() => localStorage.setItem("poker-icm-pro", "1"));
+      await page.reload({ waitUntil: "networkidle" });
+      await page.locator('#scenario-presets-toggle > summary').click();
+      await page.locator('.scenario-btn[data-scenario="ft3"]').click();
+      await page.locator('#scenario-presets-toggle > summary').click();
+      await page.locator('#bounty-fold > summary').click();
+      await page.locator('[data-bounty-mode="pko"]').click();
+      const bountyInputs = page.locator('#bounty-list .bounty-amount');
+      await bountyInputs.nth(0).fill("10");
+      await bountyInputs.nth(1).fill("25");
+      await bountyInputs.nth(2).fill("15");
+      await bountyInputs.nth(2).blur();
+      await page.locator('[data-jump="sec-hand"]').click();
+      await page.mouse.move(0, 0);
+      await capture("07-bounty", ".players-actions");
       assertNoErrors(errors, device.name);
-      console.log(`${device.name}: 6枚作成、横はみ出し・JavaScriptエラーなし`);
+      console.log(`${device.name}: 7枚作成、横はみ出し・JavaScriptエラーなし`);
     } finally { await context.close(); }
   }
 } finally { await browser.close(); server.stop(); }

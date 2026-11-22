@@ -11,7 +11,7 @@ import { recompute } from "./calculator.js";
 import { parseList, sanitizePayoutsArray, players } from "./appState.js";
 import { payoutsInput, payoutsArr, replacePayouts } from "./domRefs.js";
 import { escapeHtml } from "./html.js";
-import { openPromptModal } from "./dialogModal.js";
+import { openConfirmModal, openPromptModal } from "./dialogModal.js";
 import { hapticLight, hapticSuccess } from "./haptics.js";
 import { STORAGE_KEYS, readJson, writeJson } from "./storage.js";
 
@@ -52,7 +52,7 @@ export function renderPayouts(): void {
   payoutsList.innerHTML = "";
   // freemium: 無料時はペイ構造の手編集をロック (readonly + 🔒)。
   // シナリオプリセット適用によるペイ変更 (setPayouts 経由) は許可 (プログラム的な差し替え)。
-  // ペイ構造の編集ロックはプレイヤー数と連動 (3人以下は無料で編集可)。
+  // ペイ構造の編集ロックはプレイヤー数と連動 (FREE_MAX_PLAYERS=4人以下は無料で編集可)。
   const locked = !isPro() && players.length > FREE_MAX_PLAYERS;
   payoutsArr.forEach((amt, i) => {
     const row = document.createElement("div");
@@ -227,12 +227,21 @@ export function initPayoutsUI(): void {
       return;
     }
     const idx = Number(wrap.dataset.i);
-    const list = loadSavedPayouts();
     if (target.classList.contains("del")) {
-      hapticLight();
-      list.splice(idx, 1);
-      persistSavedPayouts(list);
-      renderSavedPayouts();
+      void openConfirmModal({
+        title: tr("setup.confirm.deletePayoutTitle"),
+        message: tr("setup.confirm.deletePayout"),
+        confirmLabel: tr("dialog.delete"),
+        danger: true,
+      }).then((confirmed) => {
+        if (!confirmed) return;
+        const list = loadSavedPayouts();
+        if (idx < 0 || idx >= list.length) return;
+        list.splice(idx, 1);
+        persistSavedPayouts(list);
+        renderSavedPayouts();
+        hapticLight();
+      });
       return;
     }
     if (target.classList.contains("load")) {
