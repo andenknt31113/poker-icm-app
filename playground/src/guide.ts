@@ -1,7 +1,12 @@
 import { applyTab, getActiveTab } from "./tabs.js";
-import { t, getLang } from "./i18n.js";
-import { LEGAL_CONTENT_HTML } from "./legalContent.js";
+import { t } from "./i18n.js";
 import { STORAGE_KEYS, readFlag, writeFlag } from "./storage.js";
+import { isPro } from "./entitlement.js";
+import { openPaywall } from "./paywall.js";
+import { openLegalModal } from "./legalModal.js";
+import { APP_STORE_REVIEW_URL } from "./reviewPrompt.js";
+
+export { openLegalModal } from "./legalModal.js";
 
 // ===== オンボーディング（初回ガイド）& 使い方ガイド =====
 
@@ -95,7 +100,7 @@ function renderOnboardingStep(): void {
       footerActions.innerHTML = `
         <div class="onboarding-cta-row">
           <button type="button" class="solve-btn" id="onboarding-cta-practice" data-feature="practice">${t("onboarding.cta.practice")}</button>
-          <button type="button" class="solve-btn" id="onboarding-cta-setup" style="background: var(--card); color: var(--text); border: 1px solid var(--border);">${t("onboarding.cta.setup")}</button>
+          <button type="button" class="solve-btn onboarding-cta-setup" id="onboarding-cta-setup">${t("onboarding.cta.setup")}</button>
         </div>
       `;
       footerActions.querySelector("#onboarding-cta-practice")?.addEventListener("click", () => {
@@ -123,20 +128,24 @@ function closeOnboardingModal(): void {
   document.querySelector(".hero-summary-sample-badge")?.remove();
 }
 
-// ===== 使い方ガイド（❓ ボタン、常設） =====
+// ===== 使い方ガイド（? ボタン、常設） =====
 let guideModalEl: HTMLDivElement | null = null;
 
 /**
- * ガイド冒頭に出す「どこまで無料か」の注記。アプリ版 (Capacitor ネイティブ) 専用。
- *
- * ガイドの手順は「スタックを調整」「全員のスタックを入力」など編集操作を前提に
- * 書かれているが、アプリ版では編集系が Pro 買い切りゲートの内側にある。
- * 無料ユーザーが手順どおり進むとペイウォールに当たるため、先に線引きを示す。
- * ゲートは web/アプリ共通のため、常に表示する。
+ * ガイド冒頭に出す「どこまで無料か」の注記と、常設の Pro / 購入復元入口。
  * 価格はここに書かない (ストア/offerings 由来の表示に一元化する)。
  */
 function proNoteHtml(): string {
-  return `<p class="guide-pro-note">${t("guide.proNote.html")}</p>`;
+  return `
+    <div class="guide-pro-note">
+      <p class="guide-pro-note-text">${t("guide.proNote.html")}</p>
+      <button type="button" class="guide-pro-btn" id="guide-pro-btn"${isPro() ? " hidden" : ""}>${t("guide.proBtn")}</button>
+    </div>`;
+}
+
+function syncGuideProButton(): void {
+  const btn = guideModalEl?.querySelector<HTMLButtonElement>("#guide-pro-btn");
+  if (btn) btn.hidden = isPro();
 }
 
 function ensureGuideModal(): HTMLDivElement {
@@ -153,13 +162,21 @@ function ensureGuideModal(): HTMLDivElement {
         <h3 id="guide-modal-title">${t("guide.title")}</h3>
         <button type="button" class="guide-modal-close" id="guide-modal-close" aria-label="${t("guide.close.aria")}">✕</button>
       </div>
-      <div class="guide-modal-body">${proNoteHtml()}${t("guide.body.html")}</div>
+      <div class="guide-modal-body">
+        ${proNoteHtml()}
+        ${t("guide.body.html")}
+        <a class="guide-review-link" id="guide-review-link" href="${APP_STORE_REVIEW_URL}" target="_blank" rel="noopener noreferrer">${t("guide.reviewLink")}</a>
+      </div>
     </div>
   `;
   document.body.appendChild(modal);
   modal.querySelector("#guide-modal-close")?.addEventListener("click", closeGuideModal);
   modal.addEventListener("click", (e) => {
     if (e.target === modal) closeGuideModal();
+  });
+  modal.querySelector("#guide-pro-btn")?.addEventListener("click", () => {
+    closeGuideModal();
+    openPaywall("guide");
   });
   modal.querySelector("#guide-reopen-onboarding-btn")?.addEventListener("click", () => {
     closeGuideModal();
@@ -174,11 +191,13 @@ function ensureGuideModal(): HTMLDivElement {
 
 function openGuideModal(): void {
   ensureGuideModal().classList.remove("hidden");
+  syncGuideProButton();
 }
 /** 使い方ガイドを開き、指定した節 (details の id) を開いてそこまでスクロールする。 */
 export function openGuideAt(sectionId: string): void {
   const modal = ensureGuideModal();
   modal.classList.remove("hidden");
+  syncGuideProButton();
   const section = modal.querySelector<HTMLDetailsElement>(`#${sectionId}`);
   if (!section) return;
   section.open = true;
@@ -188,46 +207,7 @@ function closeGuideModal(): void {
   guideModalEl?.classList.add("hidden");
 }
 
-// ===== 利用規約・プライバシーポリシー（❓ガイド最下部・footer から開く） =====
-let legalModalEl: HTMLDivElement | null = null;
-
-function ensureLegalModal(): HTMLDivElement {
-  if (legalModalEl) return legalModalEl;
-  const modal = document.createElement("div");
-  modal.id = "legal-modal";
-  modal.className = "guide-modal hidden";
-  modal.setAttribute("role", "dialog");
-  modal.setAttribute("aria-modal", "true");
-  modal.setAttribute("aria-labelledby", "legal-modal-title");
-  modal.innerHTML = `
-    <div class="guide-modal-content">
-      <div class="guide-modal-header">
-        <h3 id="legal-modal-title">${t("legal.title")}</h3>
-        <button type="button" class="guide-modal-close" id="legal-modal-close" aria-label="${t("guide.close.aria")}">✕</button>
-      </div>
-      <div class="guide-modal-body legal-modal-body">
-        ${getLang() === "en" ? `<p class="legal-en-note"><strong>${t("legal.enOnlyNote")}</strong></p>` : ""}
-        ${LEGAL_CONTENT_HTML}
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-  modal.querySelector("#legal-modal-close")?.addEventListener("click", closeLegalModal);
-  modal.addEventListener("click", (e) => {
-    if (e.target === modal) closeLegalModal();
-  });
-  legalModalEl = modal;
-  return modal;
-}
-
-export function openLegalModal(): void {
-  ensureLegalModal().classList.remove("hidden");
-}
-function closeLegalModal(): void {
-  legalModalEl?.classList.add("hidden");
-}
-
-// ===== 初回ヒントバー（セットアップタブ最上部、シナリオプリセットの上） =====
+// ===== 初回ヒントバー（局面カードの直上。PKO / 4人バブルへの 1 タップ導線付き） =====
 function insertFirstHintBar(): void {
   if (!shouldShowFirstHint) return;
   const firstSetupCard = document.querySelector('section.card[data-tab="analyze"]');
@@ -237,8 +217,26 @@ function insertFirstHintBar(): void {
   bar.className = "first-hint-bar";
   bar.dataset.tab = "analyze";
   bar.classList.toggle("hidden-tab", getActiveTab() !== "analyze");
+
+  const body = document.createElement("div");
+  body.className = "first-hint-body";
   const text = document.createElement("span");
   text.innerHTML = t("firstHint.html");
+  const actions = document.createElement("div");
+  actions.className = "first-hint-actions";
+  actions.innerHTML = `
+    <button type="button" class="first-hint-chip is-pko" data-quick-scenario="ft6Pko">${t("firstHint.tryPko")}</button>
+    <button type="button" class="first-hint-chip" data-quick-scenario="ftBubble">${t("firstHint.tryBubble")}</button>
+  `;
+  actions.addEventListener("click", (event) => {
+    const btn = (event.target as HTMLElement).closest<HTMLButtonElement>("[data-quick-scenario]");
+    const id = btn?.dataset.quickScenario;
+    if (!id) return;
+    document.querySelector<HTMLButtonElement>(`.scenario-btn[data-scenario="${id}"]`)?.click();
+  });
+  body.appendChild(text);
+  body.appendChild(actions);
+
   const closeBtn = document.createElement("button");
   closeBtn.type = "button";
   closeBtn.className = "first-hint-bar-close";
@@ -248,12 +246,12 @@ function insertFirstHintBar(): void {
     bar.remove();
     markFirstHintDismissed();
   });
-  bar.appendChild(text);
+  bar.appendChild(body);
   bar.appendChild(closeBtn);
   firstSetupCard.parentElement.insertBefore(bar, firstSetupCard);
 }
 
-/** ガイド関連 (❓ボタン・初回ヒントバー・Escape キー) の配線。main.ts から一度だけ呼ぶ。 */
+/** ガイド関連 (?ボタン・初回ヒントバー・Escape キー) の配線。main.ts から一度だけ呼ぶ。 */
 export function initGuide(): void {
   document.getElementById("help-btn")?.addEventListener("click", openGuideModal);
   document.getElementById("open-limits")?.addEventListener("click", () => openGuideAt("guide-limits"));
@@ -263,9 +261,11 @@ export function initGuide(): void {
 
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
+    // 規約モーダルが最前面にある間はそちらの Escape ハンドラに任せる。
+    const legal = document.getElementById("legal-modal");
+    if (legal && !legal.classList.contains("hidden")) return;
     if (onboardingModalEl && !onboardingModalEl.classList.contains("hidden")) closeOnboardingModal();
     if (guideModalEl && !guideModalEl.classList.contains("hidden")) closeGuideModal();
-    if (legalModalEl && !legalModalEl.classList.contains("hidden")) closeLegalModal();
   });
 
   insertFirstHintBar();

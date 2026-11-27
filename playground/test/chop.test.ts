@@ -80,7 +80,8 @@ describe("formatChopShareText", () => {
     expect(text).toContain("チョップ（ディール）するなら — 合計 100,000（残り 2 人ぶんの賞金）");
     expect(text).toContain("SB (30BB): ICM チョップ 60,000 / チップ比例 62,000");
     expect(text).toContain("BB (20BB): ICM チョップ 40,000 / チップ比例 38,000");
-    expect(text.endsWith("— Poker ICM")).toBe(true);
+    expect(text).toContain("— Poker ICM");
+    expect(text.endsWith("https://apps.apple.com/app/id6793358140")).toBe(true);
   });
 
   it("バウンティ注記があれば含め、行が空なら空文字を返す", () => {

@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { bountySpecFor, bountySummaryText, isBountyMode, parseBountyInput, sanitizeBounty } from "../src/bountyState.js";
+import {
+  FREE_BOUNTY_EXAMPLES,
+  bountySpecFor,
+  bountySummaryText,
+  isBountyMode,
+  isFreeBountyExample,
+  parseBountyInput,
+  sanitizeBounty,
+} from "../src/bountyState.js";
 import { exactCallRequiredEquity } from "../src/callSpot.js";
 import { nashRangeForSpot } from "../src/nashRange.js";
 import { comboPctOfRange } from "../src/handRanking.js";
@@ -31,6 +39,29 @@ describe("bountySpecFor", () => {
   it("チップが残っていない席の首は 0 にする", () => {
     const spec = bountySpecFor([seat(20, "BB", 10), seat(0, "SB", 10), seat(15, "BTN", 5)], "ko", true);
     expect(spec?.heads).toEqual([10, 0, 5]);
+  });
+
+  it("未編集の組み込み無料 PKO 例題は、無料ユーザーでも計算を有効化する", () => {
+    const ft6 = FREE_BOUNTY_EXAMPLES.ft6Pko.players;
+    const ft4 = FREE_BOUNTY_EXAMPLES.ft4Pko.players;
+    expect(isFreeBountyExample(ft6, "pko")).toBe(true);
+    expect(isFreeBountyExample(ft4, "pko")).toBe(true);
+    expect(bountySpecFor(ft6, "pko", false)).toEqual({
+      heads: ft6.map((p) => p.bounty),
+      progressive: true,
+    });
+    expect(bountySpecFor(ft4, "pko", false)).toEqual({
+      heads: ft4.map((p) => p.bounty),
+      progressive: true,
+    });
+
+    // スタック・バウンティ・人数・形式のいずれかを変更したら無料計算は無効に戻る
+    const editedStack = ft6.map((p, i) => (i === 0 ? { ...p, stack: p.stack + 1 } : { ...p }));
+    const editedBounty = ft6.map((p, i) => (i === 1 ? { ...p, bounty: p.bounty + 5 } : { ...p }));
+    expect(bountySpecFor(editedStack, "pko", false)).toBeUndefined();
+    expect(bountySpecFor(editedBounty, "pko", false)).toBeUndefined();
+    expect(bountySpecFor(ft6.slice(0, 5), "pko", false)).toBeUndefined();
+    expect(bountySpecFor(ft6, "ko", false)).toBeUndefined();
   });
 });
 
@@ -70,6 +101,12 @@ describe("バウンティ行の要約", () => {
 
   it("形式を選んだだけで額が無ければ、入力を促す", () => {
     expect(bountySummaryText("ko", [0, 0], true)).not.toContain("0 / 0");
+  });
+
+  it("無料 PKO 例題プレビュー時は形式と額に例題印を添える", () => {
+    const text = bountySummaryText("pko", [15, 30], false, true);
+    expect(text).toContain("PKO · 15 / 30");
+    expect(text).not.toContain("Pro");
   });
 });
 

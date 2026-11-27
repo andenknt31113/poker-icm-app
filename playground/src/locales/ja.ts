@@ -61,6 +61,8 @@ export const ja: Record<string, string> = {
   "workspace.opponent": "相手",
   "workspace.table": "卓の配置を詳しく見る",
   // ===== index.html: ヘッダー =====
+  "header.pro.title": "Pro を見る・購入を復元",
+  "header.pro.aria": "Pro を開く",
   "header.help.title": "使い方ガイド",
   "header.help.aria": "ヘルプ",
   "header.lang.title": "言語切替",
@@ -81,6 +83,8 @@ export const ja: Record<string, string> = {
   "setup.presets.h2": "シナリオプリセット",
   "setup.presets.summary": "例題・保存した局面",
   "setup.presets.hint": "タップで状況一発セット。スタック・ポジション・ペイアウトを丸ごと反映。",
+  "setup.presets.ft6Pko": "💰 6人FT・PKO（高額バウンティ）",
+  "setup.presets.ft4Pko": "💰 4人バブル・PKO（カバー中）",
   "setup.presets.ft9": "9人残り・全員入賞",
   "setup.presets.ftBubble": "4人残り・3人入賞（自分がショート）",
   "setup.presets.ft6": "6人残り・全員入賞",
@@ -184,6 +188,9 @@ export const ja: Record<string, string> = {
   "setup.bounty.summary.locked": "🔒 Pro",
   "setup.bounty.summary.off": "なし",
   "setup.bounty.summary.empty": "額を入れてください",
+  "setup.bounty.summary.exampleTag": "例題",
+  "setup.bounty.exampleNotice": "PKO 例題を無料でお試し中です（相手をカバーしているため必要勝率が大きく下がります）。自分の額で計算するには Pro が必要です。",
+  "setup.bounty.exampleCta": "Pro で自分の額を計算 →",
 
 
   // ===== index.html: 計算結果 - ICM エクイティ =====
@@ -371,7 +378,9 @@ export const ja: Record<string, string> = {
   "guide.close.aria": "閉じる",
   // アプリ版のみ表示 (guide.ts proNoteHtml)。価格は書かない。
   "guide.proNote.html":
-    "ℹ️ 例題・計算結果・Nash はすべて無料。<strong>4人までの卓はスタックも賞金も自由に編集できます</strong>。5人以上の卓の編集、局面・賞金の保存、バウンティ（KO / PKO）の計算は 🔒 Pro（買い切り）です。",
+    "ℹ️ 例題（PKO 体験例題を含む）・計算結果・Nash はすべて無料。<strong>4人までの卓はスタックも賞金も自由に編集できます</strong>。5人以上の卓の編集、局面・賞金の保存、自分のバウンティ額（KO / PKO）の計算は 🔒 Pro（買い切り）です。",
+  "guide.proBtn": "🔓 Pro を見る / 購入を復元",
+  "guide.reviewLink": "⭐ App Store で評価・レビューを書く",
   "guide.body.html": `
         <p class="guide-intro">
           このツールはショートスタック（〜20BB）のオールイン局面に特化しています。
@@ -514,7 +523,9 @@ export const ja: Record<string, string> = {
       `,
 
   // ===== 初回ヒントバー (guide.ts) =====
-  "firstHint.html": "👋 はじめてなら: <strong>「例題・保存した局面」</strong>から1つ選ぶ → すぐ下の必要勝率とハンド表を見る",
+  "firstHint.html": "👋 まずは 1 タップで差を体感：<strong>PKO や 4人バブル</strong>の例題を選ぶと、すぐ下に必要勝率とハンド表が出ます",
+  "firstHint.tryPko": "💰 PKO の衝撃を試す",
+  "firstHint.tryBubble": "🔥 4人バブルを試す",
   "calc.limitsLink": "計算の前提と限界を見る ›",
   "firstHint.close.aria": "閉じる",
 
@@ -915,14 +926,37 @@ export const ja: Record<string, string> = {
   // ===== ペイウォール (freemium ゲート, paywall.ts) =====
   "paywall.title": "🔓 自分のテーブルを再現しよう",
   "paywall.lead": "Pro なら、自分の卓をそのまま再現して分析できます。",
+  "paywall.trigger.players.title": "🔓 5〜9人の実戦テーブルをそのまま再現",
+  "paywall.trigger.players.lead": "ファイナルテーブルの全員のスタックと賞金を入れて、自分の実戦スポットを正確に計算できます。",
+  "paywall.trigger.payouts.title": "🔓 実際の賞金配分で ICM を計算",
+  "paywall.trigger.payouts.lead": "5人以上の卓でも、店舗トナメやオンラインの実際の賞金配分をそのまま入力して分析できます。",
+  "paywall.trigger.bounty.title": "🔓 自分のバウンティ額で KO / PKO を計算",
+  "paywall.trigger.bounty.lead": "相手のバウンティ額を入れるだけで、必要勝率・ハンド表・BF・Nash に即座に反映されます。",
+  "paywall.trigger.save.title": "🔓 よく使う局面と賞金配分を保存",
+  "paywall.trigger.save.lead": "いつもの店舗トナメの賞金構造や、振り返りたい FT の局面を保存して 1 タップで呼び出せます。",
+  "paywall.trigger.header.title": "🔓 実戦 9-max と PKO をすべて解放",
+  "paywall.trigger.header.lead": "買い切り Pro で、5〜9人の自由編集・KO/PKO バウンティ計算・局面保存がすべて使えます。",
+  "paywall.trigger.guide.title": "🔓 Pro にアップグレード / 購入を復元",
+  "paywall.trigger.guide.lead": "一度の購入で、5〜9人の自由編集・KO/PKO バウンティ計算・局面保存をずっと使えます。",
+  "paywall.compare.aria": "Pro 機能による計算結果の違いの例",
+  "paywall.compare.pko.label": "実例① 6人FT・PKO（相手をカバー）",
+  "paywall.compare.pko.before": "PKOなし 47.6%",
+  "paywall.compare.pko.after": "PKO込み 34.7%",
+  "paywall.compare.pko.delta": "−12.9pt",
+  "paywall.compare.bubble9.label": "実例② 9人バブル（2番手 vs チップリーダー）",
+  "paywall.compare.bubble9.before": "チップ基準 46.5%",
+  "paywall.compare.bubble9.after": "ICM厳密 62.1%",
+  "paywall.compare.bubble9.delta": "+15.6pt",
   "paywall.feature.editStacks": "5人以上の卓を自由に編集（スタック・賞金）",
   "paywall.feature.replay": "9人までの卓で、必要勝率・ハンド表・Nash を自分の数字で確認",
   "paywall.feature.save": "局面と賞金を保存して、いつでも呼び出し",
   "paywall.feature.bounty": "バウンティ（KO / PKO）を入れた必要勝率・ハンド表・Nash",
+  "paywall.roi": "トナメ1回の参加費を1スポット守るだけで元が取れます",
   "paywall.price": "価格: {price}",
   "paywall.oneTimeNote": "買い切り・月額課金なし（一度の購入でずっと使えます）",
   "paywall.cta.upgrade": "Pro にアップグレード",
   "paywall.cta.restore": "購入を復元",
+  "paywall.legalLink": "📄 利用規約・プライバシーポリシー",
   "paywall.web.note": "この機能はアプリ版でご利用いただけます。",
   "paywall.close.aria": "閉じる",
   "paywall.comingSoon": "準備中です",

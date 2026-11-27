@@ -68,6 +68,8 @@ export const en: Record<string, string> = {
   "workspace.opponent": "Villain",
   "workspace.table": "View table layout",
   // ===== index.html: ヘッダー =====
+  "header.pro.title": "View Pro / Restore purchases",
+  "header.pro.aria": "Open Pro",
   "header.help.title": "How to use",
   "header.help.aria": "Help",
   "header.lang.title": "Switch language",
@@ -88,6 +90,8 @@ export const en: Record<string, string> = {
   "setup.presets.h2": "Scenario presets",
   "setup.presets.summary": "Examples and saved spots",
   "setup.presets.hint": "Tap to load a full situation — stacks, positions, and payouts all at once.",
+  "setup.presets.ft6Pko": "💰 6-max FT · PKO (big bounty)",
+  "setup.presets.ft4Pko": "💰 4 left bubble · PKO (covering)",
   "setup.presets.ft9": "9 left · all paid",
   "setup.presets.ftBubble": "4 left · 3 paid · you are short",
   "setup.presets.ft6": "6 left · all paid",
@@ -190,6 +194,9 @@ export const en: Record<string, string> = {
   "setup.bounty.summary.locked": "🔒 Pro",
   "setup.bounty.summary.off": "None",
   "setup.bounty.summary.empty": "enter amounts",
+  "setup.bounty.summary.exampleTag": "Example",
+  "setup.bounty.exampleNotice": "Free PKO example preview (covering the villain drops your required equity sharply). Unlock Pro to enter your own bounties.",
+  "setup.bounty.exampleCta": "Enter your own bounties with Pro →",
 
 
   // ===== index.html: 計算結果 - ICM エクイティ =====
@@ -378,7 +385,9 @@ export const en: Record<string, string> = {
   "guide.close.aria": "Close",
   // アプリ版のみ表示 (guide.ts proNoteHtml)。価格は書かない。
   "guide.proNote.html":
-    "ℹ️ Examples, results and Nash are all free. <strong>Tables with up to 4 players are fully editable (stacks and payouts)</strong>. Editing tables with 5+ players, saving spots or payouts, and bounty (KO / PKO) calculations are 🔒 Pro (one-time purchase).",
+    "ℹ️ Examples (including PKO previews), results and Nash are all free. <strong>Tables with up to 4 players are fully editable (stacks and payouts)</strong>. Editing tables with 5+ players, saving spots or payouts, and entering your own bounties (KO / PKO) are 🔒 Pro (one-time purchase).",
+  "guide.proBtn": "🔓 View Pro / Restore purchases",
+  "guide.reviewLink": "⭐ Rate & review on the App Store",
   "guide.body.html": `
         <p class="guide-intro">
           This tool focuses on short-stack (~20BB) all-in spots.
@@ -525,7 +534,9 @@ export const en: Record<string, string> = {
       `,
 
   // ===== 初回ヒントバー (guide.ts) =====
-  "firstHint.html": "👋 New here? Pick one from <strong>“Examples and saved spots”</strong> → check the required equity and hand chart right below",
+  "firstHint.html": "👋 Feel the difference in 1 tap: try a <strong>PKO or 4-player bubble</strong> example to see required equity and your hand chart below",
+  "firstHint.tryPko": "💰 Try PKO impact",
+  "firstHint.tryBubble": "🔥 Try 4-left bubble",
   "calc.limitsLink": "Assumptions and limits ›",
   "firstHint.close.aria": "Close",
 
@@ -924,14 +935,37 @@ export const en: Record<string, string> = {
   // ===== ペイウォール (freemium ゲート, paywall.ts) =====
   "paywall.title": "🔓 Recreate your own table",
   "paywall.lead": "With Pro, recreate your exact table and analyze it.",
+  "paywall.trigger.players.title": "🔓 Recreate real 5–9 player tables",
+  "paywall.trigger.players.lead": "Enter every stack and payout at your final table to calculate exact ICM equity and ranges.",
+  "paywall.trigger.payouts.title": "🔓 Calculate ICM with exact payouts",
+  "paywall.trigger.payouts.lead": "Enter your tournament’s exact payout structure even on 5–9 player tables.",
+  "paywall.trigger.bounty.title": "🔓 Calculate KO / PKO with your bounties",
+  "paywall.trigger.bounty.lead": "Enter each player’s bounty to update required equity, hand charts, BF and Nash instantly.",
+  "paywall.trigger.save.title": "🔓 Save favorite spots & payout structures",
+  "paywall.trigger.save.lead": "Store regular tournament payouts and key final-table spots to reload them in one tap.",
+  "paywall.trigger.header.title": "🔓 Unlock full 9-max & PKO analysis",
+  "paywall.trigger.header.lead": "One-time Pro unlocks 5–9 player editing, custom KO/PKO bounties, and saved spots & payouts.",
+  "paywall.trigger.guide.title": "🔓 Upgrade to Pro / Restore purchases",
+  "paywall.trigger.guide.lead": "Pay once for full 5–9 player editing, custom KO/PKO bounties, and saved spots forever.",
+  "paywall.compare.aria": "Examples of how Pro calculations change decisions",
+  "paywall.compare.pko.label": "Example 1 · 6-max FT PKO (covering villain)",
+  "paywall.compare.pko.before": "No PKO 47.6%",
+  "paywall.compare.pko.after": "With PKO 34.7%",
+  "paywall.compare.pko.delta": "−12.9pt",
+  "paywall.compare.bubble9.label": "Example 2 · 9-max bubble (2nd vs chip leader)",
+  "paywall.compare.bubble9.before": "Chips 46.5%",
+  "paywall.compare.bubble9.after": "ICM 62.1%",
+  "paywall.compare.bubble9.delta": "+15.6pt",
   "paywall.feature.editStacks": "Edit tables with 5+ players freely (stacks and payouts)",
   "paywall.feature.replay": "Check required equity, hand charts and Nash with your own numbers, up to 9 players",
   "paywall.feature.save": "Save spots and payouts and reload them anytime",
   "paywall.feature.bounty": "Required equity, hand charts and Nash with bounties (KO / PKO)",
+  "paywall.roi": "Save just one tournament buy-in spot and Pro pays for itself.",
   "paywall.price": "Price: {price}",
   "paywall.oneTimeNote": "One-time purchase · No subscription (yours forever)",
   "paywall.cta.upgrade": "Upgrade to Pro",
   "paywall.cta.restore": "Restore purchases",
+  "paywall.legalLink": "📄 Terms & Privacy Policy",
   "paywall.web.note": "This feature is available in the app version.",
   "paywall.close.aria": "Close",
   "paywall.comingSoon": "Coming soon",

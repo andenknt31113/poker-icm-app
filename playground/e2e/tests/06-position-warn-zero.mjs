@@ -8,6 +8,8 @@
 import { attachErrorCollector, assertNoErrors } from "../lib/context.mjs";
 
 const SCENARIO_IDS = [
+  "ft6Pko",
+  "ft4Pko",
   "ft9",
   "ftBubble",
   "ft6",

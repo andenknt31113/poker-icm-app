@@ -32,6 +32,7 @@ import { formatBbCompact } from "./stackUnit.js";
 import { solveSpotNash } from "./nashRange.js";
 import { loadThreeWayTable } from "./threeWay.js";
 import { hapticLight, hapticSelection } from "./haptics.js";
+import { noteHandPickedForReview } from "./reviewPrompt.js";
 
 // ===== DOM 参照 (ハンド比較タブ) =====
 const pushRangeInput = $<HTMLInputElement>("push-range");
@@ -788,6 +789,7 @@ export function initHandRange(onChange: () => void): void {
     pickR1.innerHTML = optionsHtml;
     pickR2.innerHTML = optionsHtml;
     const applyPicker = () => {
+      const prev = inspectedHand;
       const r1 = pickR1.value;
       const r2 = pickR2.value;
       if (r1 && r2) {
@@ -798,6 +800,7 @@ export function initHandRange(onChange: () => void): void {
       hapticSelection();
       syncHandPickerFromState();
       onChange();
+      if (inspectedHand && inspectedHand !== prev) noteHandPickedForReview();
     };
     pickR1.addEventListener("change", applyPicker);
     pickR2.addEventListener("change", applyPicker);
@@ -874,6 +877,7 @@ export function initHandRange(onChange: () => void): void {
       }
       nashNoteSpotKey = currentNashNoteKey();
       onChange();
+      noteHandPickedForReview();
     } finally {
       useNashBtn.disabled = false;
     }

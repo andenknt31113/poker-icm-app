@@ -1032,3 +1032,47 @@
   - PR #114 マージ後、`1.5.3 (build 3)` を Archive・アップロードし、審査待ち（`WAITING_FOR_REVIEW`）の `1.5.3 (build 2)` から差し替えて再提出予定。
   - 実機・iPad 実機・購入/復元、ASC 売上受取口座の確認は本人側で実施。
 
+
+## 2026-11-26 課金ゼロ原因診断 ＆ X ハンドクイズ第2弾（Q7〜Q12・Pro領域特化）作成
+
+- **背景**: 毎日 X（`@5K045`）告知を実施しているものの課金ゼロとの相談を受け、課金基盤・無料枠・UI 導線・ストア状況・既存クイズを点検。
+- **診断結果**:
+  - 課金基盤（ASC `pro_lifetime` APPROVED / 日本 3,480円・米国 \$19.99、RevenueCat `default` offering → `$rc_lifetime` → `pro_lifetime`）は API 応答レベルで正常（実機購入・復元と DL 数・Analytics は別途要確認）。
+  - 主なボトルネックは ①無料枠の広さ（4人卓編集・全プリセット・練習タブ全開放）× 第1弾クイズ6問中5問が3〜4人卓＋「4人卓無料」訴求、②UIに常設 Pro 導線なし、③買い切り 3,480円一択で低い入口なし、④1.5.3 却下中で公開版 1.5.2 の自動英語化・ASO刷新が未反映。
+- **作成**:
+  - `docs/PROMO_X_QUIZ_PACK_2.md`: 11/27〜12/02（各日 21:00 JST）向けの全6問（Q7〜Q12）を作成。すべて 6〜9人卓／KO・PKO バウンティの Pro 領域に特化し、`@poker-icm/core` と `playground/src/rangeEquity.ts` で実測済み。
+  - `artifacts/release-1.5.3/promo/quiz/make-quiz-cards-pack2.mjs` および 1600×900 カード画像 6 枚（`quiz-7-ft9.png` 〜 `quiz-12-ko72o.png`、git 管理外）を生成。
+- **検証**:
+  - 全6問の数値を `@poker-icm/core` + `rangeEquity.ts` で実測（第1弾 Q1〜Q3 で一致キャリブレーション済み）。
+  - 全12投稿の X ウェイト文字数（231〜267 / 280）および生成画像6枚の目視確認を完了。コード本体は未変更。
+- **残件**:
+  - X での Q7〜Q12 予約投稿（11/27 21:00 JST〜）。
+  - ASC App Analytics / RevenueCat で実 DL 数・Active Users を確認し、集客課題か転換課題かを切り分け。
+  - 1.5.3 却下に対する Apple 返信待ち（返信内容を見て 1.5.4 の Pro 導線・無料枠・価格テスト要否を判断）。
+
+## 2026-11-27 全体レビュー・¥1,980 価格改定・v1.5.4 ＆ プロモ一括実装（feat/v1.5.4-growth-paywall）
+
+- **公開・価格状況**:
+  - `1.5.3 (build 3)` が App Store で `READY_FOR_SALE` 公開済みであることを ASC API で確認（上記 11/26 の「却下中」表記は解消済み。なお練習タブは `features.ts` で既定非表示のまま）。
+  - 本人の指示（「オススメで頼むわ」「1980円かな」）に基づき、ASC API で `pro_lifetime`（`6793358923`）の買い切り価格を **日本 ¥1,980（手取り ¥1,683）／米国 $11.99（Apple 自動換算・手取り $10.19）** へ改定し読み戻し確認済み（コード変更・審査不要）。
+- **ブランチ `feat/v1.5.4-growth-paywall` の実装内容（未コミット・確認待ち）**:
+  - **アプリ本体 (`1.5.4 build 1`)**:
+    - 無料 PKO 例題（`ft6Pko` / `ft4Pko`）を追加し、未編集閲覧中のみ無料でもバウンティ計算を体感可能に（額・モード編集時は `openPaywall("bounty")`）。
+    - `workspace.css:67` で死んでいた初回ヒントバー `#first-hint-bar` を復活（1タップ PKO / 4人バブル試行ボタン付き）、オンボーディング CTA 見た目を改善。
+    - `paywall.ts` を 6 トリガー別文脈見出し・実測 Before/After 比較カード・ROI 訴求・起動時価格プリフェッチ・規約リンク（`legalModal.ts` 分離）へ刷新。ヘッダー＆ガイド内に常設の Pro / 復元入口を追加。
+    - 既存 RevenueCat SDK の `Purchases.trackCustomPaywallImpression` で匿名ペイウォール計測を最小導入（Web 非バンドル・try/catch ガード）。`legalContent.ts` / `playground/public/legal.html` / `docs/TERMS_PRIVACY_DRAFT.md` の 3 箇所を完全同期。
+    - `reviewPrompt.ts` 緩和（起動 2 回〜・手札クイック判定加算・ペイウォール閉じ後 10 分抑止・Pro 購入好機＋ガイド評価リンク）、`chop.ts` 末尾にグローバル App Store URL 追加、`project.pbxproj` を `1.5.4 (1)` へ更新。
+  - **Web 入口 (`worker/gate.ts`, `playground/public/support.html`, `playground/test/webGate.test.ts`)**:
+    - `/` を 200 OK のダークエメラルド日英 LP 化、App Store URL をグローバル化（`/jp/` 廃止）、アプリ資産の 410 遮断は維持、`support.html` にストアリンク追加。
+  - **プロモ・リリース文書**:
+    - `docs/PROMO_X_QUIZ_PACK_2.md`（¥1,980 反映・リプ実画面スクショ指示・`ct=x_jp` 手順・固定ポスト追加、全 13 投稿 250〜274/280 ウェイト検証済み）、`docs/PROMO_EN.md`（1.5.3 新機能＆`$11.99` 反映・`r/poker` 即投稿版・EN X 6 投稿 212〜270/280 検証済み）、`docs/RELEASE_1_5_4.md` 新規作成。
+- **検証（Swarm `qa-verifier` 一括実行済み）**:
+  - `npm -w @poker-icm/core run build`: PASS
+  - `npm run typecheck`: PASS
+  - `npm test`: core 124/124、playground 407/407（44 files、`legalSync` / `webGate` / `paywall` 等含む）PASS
+  - `npm run build`: PASS
+  - `cd playground && E2E_BROWSER_CHANNEL=chrome npm run e2e`: 20/20 PASS
+  - 390×844（JP/EN）の画面スクショ 4 枚を目視確認、禁則語・秘密情報 0 件。
+- **残件**:
+  - 本人確認後、`feat/v1.5.4-growth-paywall` のコミット・push・PR マージ・`1.5.4 (build 1)` Archive/提出・ASC App Privacy（`Usage Data > Product Interaction`・紐付けなし・トラッキングなし）申告を実施。
+  - 本人側で実機 ¥1,980 購入/復元テスト、ASC 売上受取口座確認、今夜 21:00 JST の X クイズ Q7 投稿＆英語圏初投稿を実施。
