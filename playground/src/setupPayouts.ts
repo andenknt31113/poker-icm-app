@@ -14,6 +14,8 @@ import { escapeHtml } from "./html.js";
 import { openConfirmModal, openPromptModal } from "./dialogModal.js";
 import { hapticLight, hapticSuccess } from "./haptics.js";
 import { STORAGE_KEYS, readJson, writeJson } from "./storage.js";
+import { getBountyMode, setBountyMode } from "./bountyState.js";
+import { renderBounty } from "./setupBounty.js";
 
 const payoutsList = $<HTMLDivElement>("payouts-list");
 const addPayoutBtn = $<HTMLButtonElement>("add-payout");
@@ -132,20 +134,27 @@ function renderSavedPayouts(): void {
 
 /** ペイ構造セクションのイベント配線と初期描画。initSetup から一度だけ呼ぶ。 */
 export function initPayoutsUI(): void {
+  const leaveFreeBountyPreviewIfNeeded = (): void => {
+    if (!isPro() && getBountyMode() !== "off") {
+      setBountyMode("off");
+      renderBounty();
+    }
+  };
+
   // freemium: ロック中のペイ金額入力はタップ/フォーカスでペイウォール。
   // (スタック入力と同じく pointerdown で先取りし、focusin はフォールバック。)
   payoutsList.addEventListener("pointerdown", (e) => {
     const el = e.target as HTMLElement;
     if (el.classList.contains("payout-amount") && !isPro() && players.length > FREE_MAX_PLAYERS) {
       e.preventDefault();
-      openPaywall();
+      openPaywall("payouts");
     }
   });
   payoutsList.addEventListener("focusin", (e) => {
     const el = e.target as HTMLElement;
     if (el.classList.contains("payout-amount") && !isPro() && players.length > FREE_MAX_PLAYERS) {
       (el as HTMLInputElement).blur();
-      openPaywall();
+      openPaywall("payouts");
     }
   });
 
@@ -157,6 +166,7 @@ export function initPayoutsUI(): void {
     const v = Number(target.value);
     if (Number.isFinite(i) && i >= 0 && i < payoutsArr.length) {
       payoutsArr[i] = Number.isFinite(v) && v >= 0 ? v : 0;
+      leaveFreeBountyPreviewIfNeeded();
       syncPayoutsInput();
       recompute();
     }
@@ -177,7 +187,7 @@ export function initPayoutsUI(): void {
     const remove = target.closest<HTMLButtonElement>(".payout-remove");
     if (!remove) return;
     if (!isPro() && players.length > FREE_MAX_PLAYERS) {
-      openPaywall();
+      openPaywall("payouts");
       return;
     }
     if (payoutsArr.length > 1) {
@@ -186,6 +196,7 @@ export function initPayoutsUI(): void {
         hapticLight();
         checkpointSetup();
         payoutsArr.splice(i, 1);
+        leaveFreeBountyPreviewIfNeeded();
         syncPayoutsInput();
         renderPayouts();
         recompute();
@@ -194,11 +205,12 @@ export function initPayoutsUI(): void {
   });
 
   addPayoutBtn.addEventListener("click", () => {
-    if (!isPro() && players.length > FREE_MAX_PLAYERS) return openPaywall();
+    if (!isPro() && players.length > FREE_MAX_PLAYERS) return openPaywall("payouts");
     if (payoutsArr.length >= MAX_PAYOUTS) return;
     hapticLight();
     checkpointSetup();
     payoutsArr.push(0);
+    leaveFreeBountyPreviewIfNeeded();
     syncPayoutsInput();
     renderPayouts();
     recompute();
@@ -212,9 +224,14 @@ export function initPayoutsUI(): void {
     .querySelectorAll<HTMLButtonElement>(".presets:not(.saved) button")
     .forEach((btn) => {
       btn.addEventListener("click", () => {
-        if (!isPro() && players.length > FREE_MAX_PLAYERS) return openPaywall();
+        if (!isPro() && players.length > FREE_MAX_PLAYERS) return openPaywall("payouts");
         const v = btn.dataset.preset;
-        if (v) { hapticLight(); checkpointSetup(); setPayouts(parseList(v)); }
+        if (v) {
+          hapticLight();
+          checkpointSetup();
+          leaveFreeBountyPreviewIfNeeded();
+          setPayouts(parseList(v));
+        }
       });
     });
 
@@ -223,7 +240,7 @@ export function initPayoutsUI(): void {
     const wrap = target.closest<HTMLSpanElement>(".saved-preset");
     if (!wrap) return;
     if (!isPro()) {
-      openPaywall();
+      openPaywall("save");
       return;
     }
     const idx = Number(wrap.dataset.i);
@@ -253,7 +270,7 @@ export function initPayoutsUI(): void {
 
   savePayoutBtn.classList.toggle("locked-pro", !isPro());
   savePayoutBtn.addEventListener("click", () => {
-    if (!isPro()) return openPaywall();
+    if (!isPro()) return openPaywall("save");
     const value = payoutsInput.value.trim();
     if (!value) return;
     void openPromptModal({

@@ -19,6 +19,7 @@
         <div class="header-row">
           <h1><span class="brand-mark" aria-hidden="true">♠</span> Poker ICM<span class="brand-sub">STUDY ROOM</span></h1>
           <div class="header-actions">
+            <button id="header-pro-btn" class="header-btn header-pro-btn" type="button" title="Pro を見る・購入を復元" aria-label="Pro" data-i18n-attr="title:header.pro.title;aria-label:header.pro.aria">Pro</button>
             <button id="help-btn" class="header-btn header-help-btn" type="button" title="使い方ガイド" aria-label="ヘルプ" data-i18n-attr="title:header.help.title;aria-label:header.help.aria">?</button>
             <button id="lang-toggle" class="header-btn header-lang-btn" type="button" title="言語切替" aria-label="言語切替" data-i18n-attr="title:header.lang.title;aria-label:header.lang.aria">EN</button>
           </div>
@@ -150,6 +151,7 @@
               <button type="button" data-bounty-mode="pko" aria-pressed="false" data-i18n="setup.bounty.mode.pko">PKO</button>
             </div>
             <p class="hint" data-i18n="setup.bounty.hint">相手を飛ばすともらえる額を、賞金と同じ単位で入れます。KO は全額、PKO は半分がその場の現金で、半分が自分のバウンティに乗ります。</p>
+            <p id="bounty-example-notice" class="hint lock-notice bounty-example-notice" role="status" hidden></p>
             <div id="bounty-inputs" hidden>
               <div class="bounty-all">
                 <label for="bounty-all" data-i18n="setup.bounty.all.label">全員に同じ額</label>
@@ -169,6 +171,8 @@
             </summary>
             <div class="spot-fold-body">
               <div class="scenario-presets">
+                <button type="button" data-scenario="ft6Pko" class="scenario-btn scenario-btn-pko" data-i18n="setup.presets.ft6Pko">💰 6人FT・PKO（高額バウンティ）</button>
+                <button type="button" data-scenario="ft4Pko" class="scenario-btn scenario-btn-pko" data-i18n="setup.presets.ft4Pko">💰 4人バブル・PKO（カバー中）</button>
                 <button type="button" data-scenario="ft9" class="scenario-btn" data-i18n="setup.presets.ft9">9-max FT 開幕</button>
                 <button type="button" data-scenario="ftBubble" class="scenario-btn" data-i18n="setup.presets.ftBubble">FT バブル (短/普通×3)</button>
                 <button type="button" data-scenario="ft6" class="scenario-btn" data-i18n="setup.presets.ft6">6 残り</button>

@@ -1,42 +1,99 @@
-// ===== ペイウォール (Pro 機能のロック時に出すモーダルシート) =====
+// ===== ペイウォール (Pro 機能のロック時・常設 Pro 入口から出すモーダルシート) =====
 //
-// freemium ゲートの UI 側。ロックされた操作 (スタック編集・プレイヤー追加/削除・
-// ランダム化・ペイ構造編集・シナリオ保存) を無料ユーザーが触ったとき
-// openPaywall() で開く。既存の .guide-modal と同じトーンのモーダルシートで、
-// 1 タップで閉じられる (過剰に押し付けない)。
+// freemium ゲートの UI 側。ロックされた操作やヘッダー / ガイドの Pro 入口から
+// openPaywall(trigger) で開く。トリガーに応じた見出し・サブコピーと、
+// 実測値ベースの Before/After ミニ比較カード・ROI 訴求・規約リンクを表示する。
+// 既存の .guide-modal と同じトーンで 1 タップ離脱可能。
 //
-// 価格・購入は 2 段構え:
+// 価格・購入・匿名表示計測は 2 段構え:
 //   - IAP 未設定 (iapConfig の公開キーが空) or web: 価格はプレースホルダ "—"、
-//     「アップグレード」「購入を復元」はタップで「準備中」トーストのみ (従来挙動)。
-//   - ネイティブ (iOS) かつ IAP 設定済み: モーダルを開くと RevenueCat の offerings
-//     から実価格を取得して表示し、実購入/復元フローを起動する。
+//     「アップグレード」「購入を復元」はタップで「準備中」トーストのみ。
+//     @revenuecat/purchases-capacitor は一切 dynamic import しない。
+//   - ネイティブ (iOS) かつ IAP 設定済み: 起動時に preloadOfferingPrice() で価格を先読みし、
+//     openPaywall(trigger) 時に Purchases.trackCustomPaywallImpression で匿名表示計測を送る。
 //
 // 重要: このモジュールは @revenuecat/purchases-capacitor を静的 import しない。
-// 実購入フローは isCapacitorNative() ガードの内側で dynamic import する
-// (通常ブラウザ向け Web バンドルに RevenueCat のコードを含めないため)。
 import { t } from "./i18n.js";
 import { isCapacitorNative } from "./capacitorEnv.js";
 import { isIapConfigured } from "./iapConfig.js";
 import { applyRevenueCatCustomerInfo, ensurePurchasesConfigured } from "./entitlement.js";
 import { hapticSuccess } from "./haptics.js";
+import { openLegalModal } from "./legalModal.js";
+import { notePaywallDismissedForReview, noteProPurchasedForReview } from "./reviewPrompt.js";
+
+export type PaywallTrigger = "players" | "payouts" | "bounty" | "save" | "header" | "guide";
 
 // RevenueCat から実価格を取得できないあいだの価格プレースホルダ。
 const PRICE_PLACEHOLDER = "—";
 
 // 型のみの参照 (import(...) 型構文はコンパイル時に消去され、実行時 import を生まない)。
+type PurchasesModule = typeof import("@revenuecat/purchases-capacitor");
+type PurchasesOffering = import("@revenuecat/purchases-capacitor").PurchasesOffering;
 type PurchasesPackage = import("@revenuecat/purchases-capacitor").PurchasesPackage;
 
 let paywallEl: HTMLDivElement | null = null;
-// 表示中の offering から選んだ Pro パッケージ (アップグレード時に購入する対象)。
+// 表示中の offering と Pro パッケージ (価格先読み & 購入対象 & 匿名表示計測の文脈に使う)。
+let cachedOffering: PurchasesOffering | null = null;
 let cachedProPackage: PurchasesPackage | null = null;
+let cachedPriceString: string | null = null;
+let offeringLoadPromise: Promise<void> | null = null;
+let purchasesModPromise: Promise<PurchasesModule> | null = null;
+let keydownBound = false;
 
 /** 実 IAP フロー (ネイティブ & キー設定済み) を使うか。 */
 function useRealIap(): boolean {
   return isCapacitorNative() && isIapConfigured();
 }
 
+/** @revenuecat/purchases-capacitor を 1 度だけ dynamic import して共有する (haptics.ts と同流儀)。 */
+function loadPurchases(): Promise<PurchasesModule> {
+  if (!purchasesModPromise) {
+    purchasesModPromise = import("@revenuecat/purchases-capacitor").catch((err) => {
+      purchasesModPromise = null;
+      throw err;
+    });
+  }
+  return purchasesModPromise;
+}
+
+/** トリガーに応じて、関連度の高い実測 Before/After 比較カードを上段・強調にして描画する。 */
+function renderCompareCardsHtml(trigger: PaywallTrigger): string {
+  const pkoCard = `
+    <div class="paywall-compare-card${trigger === "bounty" ? " is-featured" : ""}">
+      <div class="paywall-compare-label">${t("paywall.compare.pko.label")}</div>
+      <div class="paywall-compare-row">
+        <span class="paywall-compare-before">${t("paywall.compare.pko.before")}</span>
+        <span class="paywall-compare-arrow" aria-hidden="true">→</span>
+        <span class="paywall-compare-after good">${t("paywall.compare.pko.after")}</span>
+        <span class="paywall-compare-delta good">${t("paywall.compare.pko.delta")}</span>
+      </div>
+    </div>`;
+  const bubbleCard = `
+    <div class="paywall-compare-card${trigger !== "bounty" ? " is-featured" : ""}">
+      <div class="paywall-compare-label">${t("paywall.compare.bubble9.label")}</div>
+      <div class="paywall-compare-row">
+        <span class="paywall-compare-before">${t("paywall.compare.bubble9.before")}</span>
+        <span class="paywall-compare-arrow" aria-hidden="true">→</span>
+        <span class="paywall-compare-after warn">${t("paywall.compare.bubble9.after")}</span>
+        <span class="paywall-compare-delta warn">${t("paywall.compare.bubble9.delta")}</span>
+      </div>
+    </div>`;
+  return trigger === "bounty" ? `${pkoCard}${bubbleCard}` : `${bubbleCard}${pkoCard}`;
+}
+
+function updatePaywallContext(modal: HTMLDivElement, trigger: PaywallTrigger): void {
+  modal.dataset.trigger = trigger;
+  const titleEl = modal.querySelector("#paywall-title");
+  if (titleEl) titleEl.textContent = t(`paywall.trigger.${trigger}.title`);
+  const leadEl = modal.querySelector(".paywall-lead");
+  if (leadEl) leadEl.textContent = t(`paywall.trigger.${trigger}.lead`);
+  const compareEl = modal.querySelector(".paywall-compare");
+  if (compareEl) compareEl.innerHTML = renderCompareCardsHtml(trigger);
+  if (cachedPriceString) setPriceText(cachedPriceString);
+}
+
 function ensurePaywallModal(): HTMLDivElement {
-  if (paywallEl) return paywallEl;
+  if (paywallEl && paywallEl.isConnected) return paywallEl;
   const modal = document.createElement("div");
   modal.id = "paywall-modal";
   modal.className = "guide-modal paywall-modal hidden";
@@ -63,45 +120,70 @@ function ensurePaywallModal(): HTMLDivElement {
       </div>
       <div class="guide-modal-body">
         <p class="paywall-lead">${t("paywall.lead")}</p>
+        <div class="paywall-compare" aria-label="${t("paywall.compare.aria")}"></div>
         <ul class="paywall-features">
           <li>${t("paywall.feature.editStacks")}</li>
           <li>${t("paywall.feature.replay")}</li>
           <li>${t("paywall.feature.save")}</li>
           <li>${t("paywall.feature.bounty")}</li>
         </ul>
-        <p class="paywall-price">${t("paywall.price", { price: PRICE_PLACEHOLDER })}</p>
+        <p class="paywall-roi">${t("paywall.roi")}</p>
+        <p class="paywall-price">${t("paywall.price", { price: cachedPriceString ?? PRICE_PLACEHOLDER })}</p>
         <p class="paywall-one-time">${t("paywall.oneTimeNote")}</p>
         ${actionsHtml}
+        <button type="button" class="paywall-legal-link" id="paywall-legal-link">${t("paywall.legalLink")}</button>
       </div>
     </div>
   `;
   document.body.appendChild(modal);
 
-  modal.querySelector("#paywall-close")?.addEventListener("click", closePaywall);
+  modal.querySelector("#paywall-close")?.addEventListener("click", () => closePaywall(false));
   // 背景 (オーバーレイ) タップで閉じる = 1 タップで離脱できる。
   modal.addEventListener("click", (e) => {
-    if (e.target === modal) closePaywall();
+    if (e.target === modal) closePaywall(false);
   });
   modal.querySelector("#paywall-upgrade")?.addEventListener("click", onUpgradeClick);
   modal.querySelector("#paywall-restore")?.addEventListener("click", onRestoreClick);
+  modal.querySelector("#paywall-legal-link")?.addEventListener("click", () => openLegalModal());
   // Escape で閉じる (他モーダルと同じ挙動)。
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closePaywallIfOpen();
-  });
+  if (!keydownBound) {
+    keydownBound = true;
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closePaywallIfOpen();
+    });
+  }
 
   paywallEl = modal;
   return modal;
 }
 
-/** ロックされた操作を無料ユーザーが触ったときに開く。 */
-export function openPaywall(): void {
-  ensurePaywallModal().classList.remove("hidden");
-  // ネイティブ & キー設定済みのときだけ実価格を非同期で取得して反映する。
-  if (useRealIap()) void loadOfferingPrice();
+/**
+ * 起動時に RevenueCat の current offering 価格を先読みする。
+ * ペイウォール初回表示時の "—" チラつきを抑止するため、main.ts から fire-and-forget で呼ぶ。
+ * 非ネイティブ / IAP 未設定時は @revenuecat を一切 import しない。
+ */
+export function preloadOfferingPrice(): Promise<void> {
+  if (!useRealIap()) return Promise.resolve();
+  return loadOfferingPrice();
 }
 
-function closePaywall(): void {
+/** ロックされた操作や常設 Pro 入口からペイウォールを開く。 */
+export function openPaywall(trigger: PaywallTrigger = "header"): void {
+  const wasOpen = isPaywallOpen();
+  const modal = ensurePaywallModal();
+  updatePaywallContext(modal, trigger);
+  modal.classList.remove("hidden");
+  // ネイティブ & キー設定済みのときだけ実価格を取得・匿名表示計測を送る。
+  if (useRealIap()) {
+    if (!cachedProPackage) void loadOfferingPrice();
+    if (!wasOpen) void trackPaywallImpression(trigger);
+  }
+}
+
+function closePaywall(completedPurchaseOrRestore = false): void {
+  if (!isPaywallOpen()) return;
   paywallEl?.classList.add("hidden");
+  if (!completedPurchaseOrRestore) notePaywallDismissedForReview();
 }
 
 /** 表示中モーダルの価格表示を差し替える。 */
@@ -120,19 +202,49 @@ function pickProPackage(
 }
 
 /**
- * RevenueCat の current offering から実価格を取得して表示に反映する。
- * 取得失敗時はプレースホルダ "—" のまま (トーストは出さない)。
+ * RevenueCat の current offering から実価格を取得してキャッシュ・表示に反映する。
+ * 並行呼び出しは 1 本にまとめ、取得失敗時はプレースホルダ "—" のまま (トーストは出さない)。
  */
-async function loadOfferingPrice(): Promise<void> {
+function loadOfferingPrice(): Promise<void> {
+  if (!useRealIap()) return Promise.resolve();
+  if (offeringLoadPromise) return offeringLoadPromise;
+  offeringLoadPromise = (async () => {
+    try {
+      if (!(await ensurePurchasesConfigured())) return;
+      const { Purchases } = await loadPurchases();
+      const offerings = await Purchases.getOfferings();
+      cachedOffering = offerings.current ?? null;
+      const pkg = pickProPackage(offerings);
+      cachedProPackage = pkg;
+      if (pkg) {
+        cachedPriceString = pkg.product.priceString;
+        setPriceText(pkg.product.priceString);
+      }
+    } catch {
+      /* offerings 取得失敗時は "—" のまま */
+    } finally {
+      offeringLoadPromise = null;
+    }
+  })();
+  return offeringLoadPromise;
+}
+
+/**
+ * ペイウォール表示を RevenueCat へ匿名送信する (個人情報非紐付け・広告トラッキングなし)。
+ * ネイティブ & IAP 設定済み時のみ実行し、失敗は完全に無視する。
+ */
+async function trackPaywallImpression(trigger: PaywallTrigger): Promise<void> {
+  if (!useRealIap()) return;
   try {
     if (!(await ensurePurchasesConfigured())) return;
-    const { Purchases } = await import("@revenuecat/purchases-capacitor");
-    const offerings = await Purchases.getOfferings();
-    const pkg = pickProPackage(offerings);
-    cachedProPackage = pkg;
-    if (pkg) setPriceText(pkg.product.priceString);
+    const { Purchases } = await loadPurchases();
+    if (typeof Purchases.trackCustomPaywallImpression !== "function") return;
+    await Purchases.trackCustomPaywallImpression({
+      paywallId: `pro_${trigger}`,
+      ...(cachedOffering ? { offering: cachedOffering } : {}),
+    });
   } catch {
-    /* offerings 取得失敗時は "—" のまま */
+    /* 計測失敗時は何もしない */
   }
 }
 
@@ -159,11 +271,12 @@ async function onUpgradeClick(): Promise<void> {
       showToast(t("paywall.error"));
       return;
     }
-    const { Purchases } = await import("@revenuecat/purchases-capacitor");
+    const { Purchases } = await loadPurchases();
     // 価格取得前にタップされた場合に備え、パッケージ未取得なら取り直す。
     let pkg = cachedProPackage;
     if (!pkg) {
       const offerings = await Purchases.getOfferings();
+      cachedOffering = offerings.current ?? null;
       pkg = pickProPackage(offerings);
       cachedProPackage = pkg;
     }
@@ -175,8 +288,9 @@ async function onUpgradeClick(): Promise<void> {
     const active = applyRevenueCatCustomerInfo(customerInfo);
     if (active) {
       hapticSuccess();
-      closePaywall();
+      closePaywall(true);
       showToast(t("paywall.purchase.success"));
+      noteProPurchasedForReview();
     } else {
       // 購入自体は完了したが entitlement が取れない (設定ミス等) → エラー扱い。
       showToast(t("paywall.error"));
@@ -198,12 +312,12 @@ async function onRestoreClick(): Promise<void> {
       showToast(t("paywall.error"));
       return;
     }
-    const { Purchases } = await import("@revenuecat/purchases-capacitor");
+    const { Purchases } = await loadPurchases();
     const { customerInfo } = await Purchases.restorePurchases();
     const active = applyRevenueCatCustomerInfo(customerInfo);
     if (active) {
       hapticSuccess();
-      closePaywall();
+      closePaywall(true);
       showToast(t("paywall.restore.success"));
     } else {
       showToast(t("paywall.restore.notFound"));
@@ -255,13 +369,13 @@ function showComingSoonToast(): void {
 }
 
 // ===== Escape キーでの閉じ操作 =====
-// ペイウォール自身が ensurePaywallModal 内で keydown を張っており、他モジュール
-// (main / guide) からは呼ばれないため非公開にしてある。
-// guide.ts 側の Escape ハンドラは自分のモーダルだけを閉じる (相互に干渉しない)。
 function isPaywallOpen(): boolean {
   return !!paywallEl && !paywallEl.classList.contains("hidden");
 }
 
 function closePaywallIfOpen(): void {
-  if (isPaywallOpen()) closePaywall();
+  // 規約モーダルが上に重なっている間は、そちらの Escape ハンドラに任せる。
+  const legal = document.getElementById("legal-modal");
+  if (legal && !legal.classList.contains("hidden")) return;
+  if (isPaywallOpen()) closePaywall(false);
 }

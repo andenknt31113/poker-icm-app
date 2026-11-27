@@ -924,4 +924,139 @@ export default async function testReviewImprovements({ baseURL, createContext })
       await context.close();
     }
   }
+
+  // ===== 15. v1.5.4 回帰テスト =====
+  // - 初回訪問時: オンボーディング Step2 CTA がプライマリ表現、閉じた後に #first-hint-bar が表示され
+  //   1タップで無料 PKO 例題 (ft6Pko) を適用できる
+  // - 無料 PKO 例題: 必要勝率が 34.7% に急落・バウンティ行に例題表示・額タップ/モード切替で bounty トリガーペイウォールが開く
+  // - ペイウォール刷新: トリガー別見出し・Before/After比較・ROI訴求・.paywall-one-time・規約リンク表示
+  // - ヘッダー常設 Pro ボタン & ガイド内 Pro / App Store 評価リンク (無料表示 / Pro 非表示)
+  // - チョップ共有コピー末尾に綺麗なグローバル App Store URL が付く
+  // - 390px / 320px の日英で横はみ出しゼロ
+  {
+    const context = await createContext({ onboardingDone: false, pro: false, practice: false });
+    try {
+      const page = await context.newPage();
+      await page.setViewportSize({ width: 390, height: 844 });
+      const errors = attachErrorCollector(page, "v154-free-growth-ja");
+      await page.goto(baseURL, { waitUntil: "load" });
+
+      // Step1 -> Step2 -> プライマリ CTA で閉じる
+      await page.waitForSelector("#onboarding-next-btn", { state: "visible" });
+      await page.click("#onboarding-next-btn");
+      const ctaVisible = await page.locator("#onboarding-cta-setup").isVisible();
+      const ctaBg = await page.locator("#onboarding-cta-setup").evaluate((el) => getComputedStyle(el).backgroundColor);
+      if (!ctaVisible || ctaBg === "rgb(24, 35, 31)") {
+        throw new Error(`#onboarding-cta-setup がプライマリ表現になっていません: visible=${ctaVisible} bg=${ctaBg}`);
+      }
+      await page.click("#onboarding-cta-setup");
+
+      // 初回ヒントバーが表示され、1タップで PKO 例題を適用できる
+      await page.waitForSelector("#first-hint-bar", { state: "visible" });
+      await page.click('#first-hint-bar [data-quick-scenario="ft6Pko"]');
+      await page.waitForFunction(() => document.querySelectorAll("#players-list .player-row").length === 6);
+      const reqPko = (await page.locator("#hero-summary .hero-summary-item.primary .hero-summary-value").innerText()).trim();
+      if (!reqPko.includes("34.7%")) {
+        throw new Error(`無料 PKO 例題 (ft6Pko) の必要勝率が 34.7% になっていません: "${reqPko}"`);
+      }
+
+      // バウンティ折りたたみ内に例題プレビューと readonly 入力欄があり、タップで bounty ペイウォールが開く
+      const bountySummary = (await page.locator("#bounty-summary").innerText()).trim();
+      if (!bountySummary.includes("PKO") || !bountySummary.includes("例題")) {
+        throw new Error(`無料 PKO 例題のバウンティ要約が不適切: "${bountySummary}"`);
+      }
+      await page.click("#bounty-fold > summary");
+      await page.waitForSelector("#bounty-list .bounty-amount", { state: "visible" });
+      await page.locator("#bounty-list .bounty-amount").first().click();
+      await page.waitForSelector("#paywall-modal:not(.hidden)", { state: "visible" });
+      const pwTitle = (await page.locator("#paywall-title").innerText()).trim();
+      const pwOneTime = (await page.locator("#paywall-modal .paywall-one-time").innerText()).trim();
+      const pwCompare = (await page.locator("#paywall-modal .paywall-compare").innerText()).trim();
+      const pwRoi = (await page.locator("#paywall-modal .paywall-roi").innerText()).trim();
+      if (!pwTitle.includes("バウンティ") || !pwOneTime.includes("買い切り") || !pwCompare.includes("34.7%") || !pwRoi.includes("元が取れます")) {
+        throw new Error(`bounty トリガーのペイウォール内容が不十分: title="${pwTitle}" oneTime="${pwOneTime}" roi="${pwRoi}"`);
+      }
+      // モーダル下部から規約モーダルが開く
+      await page.click("#paywall-legal-link");
+      await page.waitForSelector("#legal-modal:not(.hidden)", { state: "visible" });
+      await page.click("#legal-modal-close");
+      await page.click("#paywall-close");
+
+      // ヘッダー常設 Pro ボタン: 無料では表示され、タップで header トリガーのペイウォールが開く
+      if (!(await page.locator("#header-pro-btn").isVisible())) {
+        throw new Error("無料状態でヘッダーの Pro ボタンが見えません");
+      }
+      await page.click("#header-pro-btn");
+      await page.waitForSelector("#paywall-modal:not(.hidden)", { state: "visible" });
+      const headerPwTitle = (await page.locator("#paywall-title").innerText()).trim();
+      if (!headerPwTitle.includes("9-max")) {
+        throw new Error(`header トリガーのペイウォール見出しが不適切: "${headerPwTitle}"`);
+      }
+      await page.click("#paywall-close");
+
+      // ガイドモーダルに Pro ボタンと App Store 評価リンクがある
+      await page.click("#help-btn");
+      await page.waitForSelector("#guide-modal:not(.hidden)", { state: "visible" });
+      if (!(await page.locator("#guide-pro-btn").isVisible())) {
+        throw new Error("ガイドモーダルに常設 Pro ボタンがありません");
+      }
+      const reviewHref = await page.locator("#guide-review-link").getAttribute("href");
+      if (reviewHref !== "https://apps.apple.com/app/id6793358140?action=write-review") {
+        throw new Error(`ガイドの評価リンク先が不正: "${reviewHref}"`);
+      }
+      await page.click("#guide-modal-close");
+
+      // チョップ共有コピー末尾に App Store URL が含まれる
+      await page.click('[data-jump="sec-chop"]');
+      await page.evaluate(() => {
+        Object.defineProperty(navigator, "clipboard", {
+          configurable: true,
+          value: { writeText: async (txt) => { window.__copiedChopV154 = txt; } },
+        });
+      });
+      await page.click("#chop-copy-btn");
+      await page.waitForFunction(() => Boolean(window.__copiedChopV154));
+      const copiedV154 = await page.evaluate(() => window.__copiedChopV154);
+      if (!copiedV154.trim().endsWith("https://apps.apple.com/app/id6793358140")) {
+        throw new Error(`チョップ共有末尾に App Store URL がありません: "${copiedV154}"`);
+      }
+
+      // 320px / 390px 日英で横はみ出しゼロ
+      for (const width of [320, 390]) {
+        await page.setViewportSize({ width, height: 844 });
+        if (await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)) {
+          throw new Error(`v1.5.4 JA ${width}px で横はみ出し`);
+        }
+      }
+      await page.click("#lang-toggle");
+      await page.waitForFunction(() => document.documentElement.lang === "en");
+      for (const width of [320, 390]) {
+        await page.setViewportSize({ width, height: 844 });
+        if (await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)) {
+          throw new Error(`v1.5.4 EN ${width}px で横はみ出し`);
+        }
+      }
+      assertNoErrors(errors, "v154-free-growth-ja");
+    } finally {
+      await context.close();
+    }
+  }
+
+  // Pro 状態ではヘッダーとガイドの Pro ボタンが非表示になる
+  {
+    const { context, page, errors } = await openWithState({ pro: true, tag: "v154-pro-hidden-entry" });
+    try {
+      if (await page.locator("#header-pro-btn").isVisible()) {
+        throw new Error("Pro 状態なのにヘッダーの Pro ボタンが表示されています");
+      }
+      await page.click("#help-btn");
+      await page.waitForSelector("#guide-modal:not(.hidden)", { state: "visible" });
+      if (await page.locator("#guide-pro-btn").isVisible()) {
+        throw new Error("Pro 状態なのにガイドの Pro ボタンが表示されています");
+      }
+      assertNoErrors(errors, "v154-pro-hidden-entry");
+    } finally {
+      await context.close();
+    }
+  }
 }

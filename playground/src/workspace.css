@@ -64,7 +64,7 @@
 .workspace .lock-notice { padding: 10px; background: #302b20; color: var(--warn); border-radius: 8px; }
 .workspace .preset-card { padding: 12px 18px; }
 .workspace .preset-card .section-toggle > summary { font-weight: 600; color: var(--text); }
-.workspace .first-hint-bar { display: none; }
+.workspace .first-hint-bar { order: -1; margin-bottom: 0; }
 .workspace .scenario-presets { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .workspace .scenario-btn { border-radius: 10px; min-height: 54px; background: #111c16; padding: 12px; text-align: left; border-color: var(--border); font-size: 13px; }
 .workspace .scenario-btn:hover, .workspace .scenario-btn.active { background: #2b4434; border-color: var(--accent); color: var(--text); }

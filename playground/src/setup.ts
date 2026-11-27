@@ -40,8 +40,11 @@ export function refreshProGatedUi(): void {
   renderPlayers();
   renderPayouts();
   renderBounty();
+  const pro = isPro();
   const saveScenarioBtn = document.getElementById("save-scenario-btn") as HTMLButtonElement | null;
-  saveScenarioBtn?.classList.toggle("locked-pro", !isPro());
+  saveScenarioBtn?.classList.toggle("locked-pro", !pro);
+  const headerProBtn = document.getElementById("header-pro-btn") as HTMLButtonElement | null;
+  if (headerProBtn) headerProBtn.hidden = pro;
 }
 
 // ===== 折りたたみセクションの開閉状態を localStorage に永続化 =====

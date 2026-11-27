@@ -1,8 +1,9 @@
 // ===== 局面カード: バウンティ (KO / PKO) の入力 =====
 //
 // 形式 (なし / KO / PKO) と、各プレイヤーにかかっているバウンティ額を入力する。
-// バウンティは Pro の機能: 無料のときは KO / PKO を選ぶとペイウォールを出し、
-// 計算にも入れない (判定は bountyState.activeBounty が isPro() で行う)。
+// バウンティの編集・形式切替は Pro の機能: 無料のときはタップで openPaywall("bounty") を出す。
+// ただし未編集の組み込み無料 PKO 例題を閲覧しているあいだだけ、計算結果と額の閲覧を
+// 無料で開放し（入力欄は readonly + 🔒）、バウンティの威力を 1 タップで体感できるようにする。
 import { t as tr } from "./i18n.js";
 import { escapeHtml } from "./html.js";
 import { isPro } from "./entitlement.js";
@@ -15,19 +16,28 @@ import {
   BOUNTY_MODES,
   bountySummaryText,
   getBountyMode,
+  isFreeBountyExample,
   parseBountyInput,
   setBountyMode,
   sanitizeBounty,
   type BountyMode,
 } from "./bountyState.js";
 
+function isViewingFreeBountyPreview(): boolean {
+  return !isPro() && isFreeBountyExample(players, getBountyMode());
+}
+
 export function renderBountySummary(): void {
   const el = document.getElementById("bounty-summary");
   if (!el) return;
+  const mode = getBountyMode();
+  const pro = isPro();
+  const freeExample = !pro && isFreeBountyExample(players, mode);
   el.textContent = bountySummaryText(
-    getBountyMode(),
+    mode,
     players.map((player) => sanitizeBounty(player.bounty)),
-    isPro(),
+    pro,
+    freeExample,
   );
 }
 
@@ -35,24 +45,45 @@ export function renderBounty(): void {
   renderBountySummary();
   const pro = isPro();
   const mode = getBountyMode();
-  // 無料時は保存値に関わらず計算では off 扱いなので、ボタン表示も off を選択中に揃える
-  const activeMode: BountyMode = pro ? mode : "off";
+  const freeExample = !pro && isFreeBountyExample(players, mode);
+  // 無料時は未編集の無料 PKO 例題を除き off 扱いなので、ボタン表示も揃える
+  const activeMode: BountyMode = pro || freeExample ? mode : "off";
   document.querySelectorAll<HTMLButtonElement>("[data-bounty-mode]").forEach((button) => {
     const value = button.dataset.bountyMode as BountyMode;
     const active = value === activeMode;
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
-    button.classList.toggle("locked-pro", !pro && value !== "off");
+    button.classList.toggle("locked-pro", !pro && (freeExample ? value !== activeMode : value !== "off"));
   });
+
+  const exampleNotice = document.getElementById("bounty-example-notice");
+  if (exampleNotice) {
+    exampleNotice.hidden = !freeExample;
+    if (freeExample) {
+      exampleNotice.innerHTML = `<span>${tr("setup.bounty.exampleNotice")}</span> <button type="button" class="bounty-example-upgrade" id="bounty-example-upgrade">${tr("setup.bounty.exampleCta")}</button>`;
+    } else {
+      exampleNotice.innerHTML = "";
+    }
+  }
+
+  const allInput = document.getElementById("bounty-all") as HTMLInputElement | null;
+  const allApply = document.getElementById("bounty-all-apply") as HTMLButtonElement | null;
+  if (allInput) {
+    allInput.readOnly = !pro;
+    allInput.classList.toggle("locked-pro", !pro);
+  }
+  allApply?.classList.toggle("locked-pro", !pro);
+
   const body = document.getElementById("bounty-inputs");
   const list = document.getElementById("bounty-list");
   if (!body || !list) return;
-  // 無料のとき・「なし」のときは額の入力を出さない
-  body.hidden = !pro || mode === "off";
+  // Pro でも無料 PKO 例題でもないとき・「なし」のときは額の入力を出さない
+  body.hidden = (!pro && !freeExample) || mode === "off";
   if (body.hidden) {
     list.innerHTML = "";
     return;
   }
+  const locked = !pro;
   list.innerHTML = players
     .map((player, i) => {
       const name = player.position || `#${i + 1}`;
@@ -65,15 +96,21 @@ export function renderBounty(): void {
       const head = sanitizeBounty(player.bounty);
       return `<label class="bounty-row">
         <span class="bounty-name">${escapeHtml(name)}${role}</span>
-        <input type="number" inputmode="decimal" class="bounty-amount" min="0" step="1" data-id="${player.id}" value="${head > 0 ? head : ""}" placeholder="0" aria-label="${escapeHtml(tr("setup.bounty.amount.aria", { name }))}" />
+        <span class="bounty-input-wrap">
+          <input type="number" inputmode="decimal" class="bounty-amount${locked ? " locked-pro" : ""}" min="0" step="1" data-id="${player.id}" value="${head > 0 ? head : ""}" placeholder="0" aria-label="${escapeHtml(tr("setup.bounty.amount.aria", { name }))}"${locked ? " readonly" : ""} />
+          ${locked ? `<span class="lock-badge" aria-hidden="true" title="${tr("paywall.lock.title")}">🔒</span>` : ""}
+        </span>
       </label>`;
     })
     .join("");
 }
 
 function chooseMode(next: BountyMode): void {
-  if (next !== "off" && !isPro()) {
-    openPaywall();
+  if (!isPro()) {
+    const viewingPreview = isViewingFreeBountyPreview();
+    if (next === "off" && !viewingPreview) return;
+    if (viewingPreview && next === getBountyMode()) return;
+    openPaywall("bounty");
     return;
   }
   if (next === getBountyMode()) return;
@@ -93,7 +130,27 @@ export function initBountyUI(): void {
     });
   });
 
+  document.getElementById("bounty-example-notice")?.addEventListener("click", (event) => {
+    if ((event.target as HTMLElement).closest("#bounty-example-upgrade")) {
+      openPaywall("bounty");
+    }
+  });
+
   const list = document.getElementById("bounty-list");
+  list?.addEventListener("pointerdown", (event) => {
+    const el = event.target as HTMLElement;
+    if (el.classList.contains("bounty-amount") && !isPro()) {
+      event.preventDefault();
+      openPaywall("bounty");
+    }
+  });
+  list?.addEventListener("focusin", (event) => {
+    const el = event.target as HTMLElement;
+    if (el.classList.contains("bounty-amount") && !isPro()) {
+      (el as HTMLInputElement).blur();
+      openPaywall("bounty");
+    }
+  });
   list?.addEventListener("input", (event) => {
     const input = event.target as HTMLInputElement;
     if (!input.classList.contains("bounty-amount") || !isPro()) return;
@@ -117,6 +174,18 @@ export function initBountyUI(): void {
 
   // 「全員に同じ額」: 入れた額を全員のバウンティに入れる
   const all = document.getElementById("bounty-all") as HTMLInputElement | null;
+  all?.addEventListener("pointerdown", (event) => {
+    if (!isPro()) {
+      event.preventDefault();
+      openPaywall("bounty");
+    }
+  });
+  all?.addEventListener("focusin", () => {
+    if (!isPro()) {
+      all.blur();
+      openPaywall("bounty");
+    }
+  });
   all?.addEventListener("focusout", () => {
     const raw = Number(all.value);
     if (all.value.trim() !== "" && (!Number.isFinite(raw) || raw < 0)) {
@@ -124,7 +193,11 @@ export function initBountyUI(): void {
     }
   });
   document.getElementById("bounty-all-apply")?.addEventListener("click", () => {
-    if (!all || !isPro()) return;
+    if (!isPro()) {
+      openPaywall("bounty");
+      return;
+    }
+    if (!all) return;
     const head = parseBountyInput(all.value);
     if (all.value.trim() !== "" && !(Number(all.value) >= 0)) all.value = "";
     if (players.every((player) => sanitizeBounty(player.bounty) === head)) return;

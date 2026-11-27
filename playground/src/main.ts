@@ -40,7 +40,8 @@ import { initNumberInputAutoSelect } from "./dom.js";
 
 // ===== 各機能モジュール =====
 import { initSetup, renderPlayers, refreshProGatedUi } from "./setup.js";
-import { initEntitlements, onEntitlementChange } from "./entitlement.js";
+import { initEntitlements, isPro, onEntitlementChange } from "./entitlement.js";
+import { openPaywall, preloadOfferingPrice } from "./paywall.js";
 import { initCalculator, recompute } from "./calculator.js";
 import { initHandRange } from "./handRange.js";
 import { initNashTable } from "./nashTableUI.js";
@@ -73,15 +74,23 @@ initPracticeInteractions();
 initReview();
 initProgress();
 
+// ===== ヘッダー常設 Pro 入口 =====
+const headerProBtn = document.getElementById("header-pro-btn") as HTMLButtonElement | null;
+if (headerProBtn) {
+  headerProBtn.hidden = isPro();
+  headerProBtn.addEventListener("click", () => openPaywall("header"));
+}
+
 // ===== 課金 (RevenueCat) の初期化 =====
 // Pro 権限が確定/変化したら freemium ロックの見た目を再描画し、計算も更新する。
-// initEntitlements は await しない (ネットワーク待ちで初期描画をブロックしない)。
-// web / IAP 未設定では initEntitlements は即 return するため実質ノーオペ。
+// initEntitlements / preloadOfferingPrice は await しない (初期描画をブロックしない)。
+// web / IAP 未設定ではどちらも即 return するため実質ノーオペ。
 onEntitlementChange(() => {
   refreshProGatedUi();
   recompute();
 });
 void initEntitlements();
+void preloadOfferingPrice();
 
 // ===== 初期描画 =====
 applyTab(getActiveTab());

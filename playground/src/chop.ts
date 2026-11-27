@@ -75,6 +75,9 @@ export interface ChopShareParams {
   readonly bountyNote?: string;
 }
 
+/** チョップ共有テキストの末尾に添える App Store のグローバル URL。 */
+export const CHOP_SHARE_URL = "https://apps.apple.com/app/id6793358140";
+
 /** LINE やメモへそのまま貼れるチョップ結果のテキストを組み立てる。 */
 export function formatChopShareText(params: ChopShareParams): string {
   if (params.rows.length === 0) return "";
@@ -86,5 +89,6 @@ export function formatChopShareText(params: ChopShareParams): string {
   ];
   if (params.bountyNote) lines.push(params.bountyNote);
   lines.push("— Poker ICM");
+  lines.push(CHOP_SHARE_URL);
   return lines.join("\n");
 }

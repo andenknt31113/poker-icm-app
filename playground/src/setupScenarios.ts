@@ -28,7 +28,13 @@ import { setPayouts } from "./setupPayouts.js";
 import { escapeHtml } from "./html.js";
 import { openConfirmModal, openPromptModal } from "./dialogModal.js";
 import { hapticLight, hapticSuccess } from "./haptics.js";
-import { getBountyMode, setBountyMode, isBountyMode, sanitizeBounty } from "./bountyState.js";
+import {
+  FREE_BOUNTY_EXAMPLES,
+  getBountyMode,
+  setBountyMode,
+  isBountyMode,
+  sanitizeBounty,
+} from "./bountyState.js";
 import { STORAGE_KEYS, readJson, writeJson } from "./storage.js";
 
 /** 保存するシナリオ名の最大長。 */
@@ -124,6 +130,20 @@ const SCENARIOS: Record<string, Scenario> = {
     payouts: [100],
     sb: DEFAULT_SB, bb: DEFAULT_BB, ante: 0,
   },
+  // 無料でも体験できる組み込み PKO 例題 (6人FT / 4人バブル)。
+  // 定義の単一情報源は bountyState.FREE_BOUNTY_EXAMPLES。
+  ft6Pko: {
+    players: FREE_BOUNTY_EXAMPLES.ft6Pko.players.map((p) => ({ ...p })),
+    bountyMode: FREE_BOUNTY_EXAMPLES.ft6Pko.bountyMode,
+    payouts: [...FREE_BOUNTY_EXAMPLES.ft6Pko.payouts],
+    sb: DEFAULT_SB, bb: DEFAULT_BB, ante: DEFAULT_ANTE,
+  },
+  ft4Pko: {
+    players: FREE_BOUNTY_EXAMPLES.ft4Pko.players.map((p) => ({ ...p })),
+    bountyMode: FREE_BOUNTY_EXAMPLES.ft4Pko.bountyMode,
+    payouts: [...FREE_BOUNTY_EXAMPLES.ft4Pko.payouts],
+    sb: DEFAULT_SB, bb: DEFAULT_BB, ante: DEFAULT_ANTE,
+  },
   // サテライト: 5 人卓、上位 3 人が同額入賞 (4 位以下は 0)。極端な ICM バブル圧。
   // hero は中堅スタック、villain は短いほうのバブル候補 (早いポジションから shove)。
   satellite3: {
@@ -156,8 +176,8 @@ function applyScenario(scenarioId: string): void {
   const scenario = SCENARIOS[scenarioId];
   if (!scenario) return;
   checkpointSetup();
-  // 例題にバウンティは無い
-  setBountyMode("off");
+  // 例題に指定されたバウンティ形式を反映 (通常の例題は off に戻す)
+  setBountyMode(isBountyMode(scenario.bountyMode) ? scenario.bountyMode : "off");
   // プレイヤーリスト置換
   replacePlayers(scenario.players);
   renderPlayers();
@@ -250,7 +270,7 @@ export function initScenariosUI(): void {
   const saveScenarioBtn = document.getElementById("save-scenario-btn") as HTMLButtonElement | null;
   saveScenarioBtn?.classList.toggle("locked-pro", !isPro());
   saveScenarioBtn?.addEventListener("click", () => {
-    if (!isPro()) return openPaywall();
+    if (!isPro()) return openPaywall("save");
     void openPromptModal({
       title: tr("setup.prompt.scenarioName"),
       placeholder: tr("setup.prompt.scenarioPlaceholder"),

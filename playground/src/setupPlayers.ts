@@ -9,7 +9,7 @@ import { isPro, FREE_MAX_PLAYERS } from "./entitlement.js";
 import { openPaywall } from "./paywall.js";
 import { recompute } from "./calculator.js";
 import { checkpointSetup } from "./setupUndo.js";
-import { sanitizeBounty } from "./bountyState.js";
+import { getBountyMode, sanitizeBounty, setBountyMode } from "./bountyState.js";
 import { renderBounty } from "./setupBounty.js";
 import { renderPayouts } from "./setupPayouts.js";
 import { hapticLight, hapticSelection } from "./haptics.js";
@@ -176,10 +176,18 @@ function setRole(playerId: number, role: Role): void {
   recompute();
 }
 
+function leaveFreeBountyPreviewIfNeeded(): void {
+  if (!isPro() && getBountyMode() !== "off") {
+    setBountyMode("off");
+    renderBounty();
+  }
+}
+
 function updateStack(playerId: number, value: number): void {
   const target = players.find((p) => p.id === playerId);
   if (!target) return;
   target.stack = inputValueToBb(value, getStackUnit(), getBbSize());
+  leaveFreeBountyPreviewIfNeeded();
   recompute();
 }
 
@@ -195,6 +203,7 @@ function removePlayer(playerId: number): void {
     const replacement = players.find((p) => p.role === "other");
     if (replacement) replacement.role = removed.role;
   }
+  if (!isPro() && getBountyMode() !== "off") setBountyMode("off");
   repairPositions();
   renderPlayers();
   renderPayouts(); // 3人境界を跨ぐとペイ構造側のロック表示も変わる
@@ -273,6 +282,7 @@ function randomizeStacks(): void {
   for (const p of players) {
     p.stack = RANDOM_STACK_MIN_BB + Math.floor(Math.random() * span);
   }
+  if (!isPro() && getBountyMode() !== "off") setBountyMode("off");
   renderPlayers();
   recompute();
 }
@@ -345,14 +355,14 @@ export function initPlayersUI(): void {
     const el = e.target as HTMLElement;
     if (el.classList.contains("player-stack") && !isPro() && players.length > FREE_MAX_PLAYERS) {
       e.preventDefault();
-      openPaywall();
+      openPaywall("players");
     }
   });
   playersList.addEventListener("focusin", (e) => {
     const el = e.target as HTMLElement;
     if (el.classList.contains("player-stack") && !isPro() && players.length > FREE_MAX_PLAYERS) {
       (el as HTMLInputElement).blur();
-      openPaywall();
+      openPaywall("players");
     }
   });
 
@@ -394,13 +404,13 @@ export function initPlayersUI(): void {
     bbInput.addEventListener("pointerdown", (e) => {
       if (!isPro() && players.length > FREE_MAX_PLAYERS) {
         e.preventDefault();
-        openPaywall();
+        openPaywall("players");
       }
     });
     bbInput.addEventListener("focusin", () => {
       if (!isPro() && players.length > FREE_MAX_PLAYERS) {
         bbInput.blur();
-        openPaywall();
+        openPaywall("players");
         return;
       }
       const curBb = getBbSize();
@@ -418,6 +428,7 @@ export function initPlayersUI(): void {
         p.stack = (bbInputAnchorChips![idx] ?? 0) / val;
       });
       setBbSize(val);
+      leaveFreeBountyPreviewIfNeeded();
       renderStackUnitBar(false, false);
       recompute();
     });
@@ -433,12 +444,13 @@ export function initPlayersUI(): void {
 
   document.querySelectorAll<HTMLButtonElement>("[data-bb-preset]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      if (!isPro() && players.length > FREE_MAX_PLAYERS) return openPaywall();
+      if (!isPro() && players.length > FREE_MAX_PLAYERS) return openPaywall("players");
       const val = Number(btn.dataset.bbPreset);
       if (!Number.isFinite(val) || val <= 0 || val === getBbSize()) return;
       hapticSelection();
       checkpointSetup();
       applyBbSizeChange(val);
+      if (!isPro() && getBountyMode() !== "off") setBountyMode("off");
       renderPlayers();
       recompute();
     });
@@ -452,11 +464,11 @@ export function initPlayersUI(): void {
   });
 
   addPlayerBtn.addEventListener("click", () => {
-    if (!isPro() && players.length >= FREE_MAX_PLAYERS) return openPaywall();
+    if (!isPro() && players.length >= FREE_MAX_PLAYERS) return openPaywall("players");
     addPlayer();
   });
   randomizeStacksBtn.addEventListener("click", () => {
-    if (!isPro() && players.length > FREE_MAX_PLAYERS) return openPaywall();
+    if (!isPro() && players.length > FREE_MAX_PLAYERS) return openPaywall("players");
     randomizeStacks();
   });
 }
